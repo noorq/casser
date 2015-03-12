@@ -20,7 +20,7 @@ public class Example {
 	public void test() {
 		
 		User newUser = Casser.pojo(User.class);
-		newUser.setId(123L);
+		newUser.setId(100L);
 		newUser.setName("alex");
 		newUser.setAge(34);
 		session.upsert(newUser);
