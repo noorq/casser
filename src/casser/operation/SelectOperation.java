@@ -15,6 +15,10 @@ public class SelectOperation<E> extends AbstractStreamOperation<E> {
 		return this;
 	}
 
+	public CountOperation count() {
+		return null;
+	}
+	
 	public <R> SelectOperation<R> map(Function<E, R> fn) {
 		return null;
 	}

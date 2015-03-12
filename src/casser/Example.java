@@ -1,7 +1,9 @@
 package casser;
 
 import casser.core.Casser;
+import casser.core.PreparedStreamStatement;
 import casser.core.Session;
+import casser.tuple.Tuple1;
 import casser.tuple.Tuple2;
 
 public class Example {
@@ -34,6 +36,13 @@ public class Example {
 		session.update(_user::setAge, 10).where(_user::getId, "==", 100L).async();
 		
 		session.delete().where(_user::getId, "==", 100L).async();
+		
+		
+		PreparedStreamStatement<Tuple1<String>> ps = session.select(_user::getName).where(_user::getId, "==", null).prepare();
+		
+		long cnt = ps.bind(100L).sync().count();
+		
+		cnt = session.select(_user::getName).where(_user::getId, "==", 100L).count().sync();
 		
 	}
 	
