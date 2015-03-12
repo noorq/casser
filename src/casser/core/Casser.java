@@ -1,11 +1,10 @@
 package casser.core;
 
-import casser.operation.SessionOperation;
 
 
 public final class Casser {
-
-	public static SessionOperation connect() {
+	
+	public static SessionInitializer connect(String host) {
 		return null;
 	}
 	

@@ -5,7 +5,7 @@ import java.util.function.Function;
 import casser.dsl.Getter;
 
 
-public class SelectOperation<E> extends AbstractOperation<E> {
+public class SelectOperation<E> extends AbstractStreamOperation<E> {
 
 	public <V> SelectOperation<E> where(Getter<V> getter, V val) {
 		return this;

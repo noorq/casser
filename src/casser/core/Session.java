@@ -2,8 +2,10 @@ package casser.core;
 
 import casser.dsl.Getter;
 import casser.dsl.Setter;
+import casser.operation.DeleteOperation;
 import casser.operation.SelectOperation;
 import casser.operation.UpdateOperation;
+import casser.operation.UpsertOperation;
 import casser.tuple.Tuple1;
 import casser.tuple.Tuple2;
 import casser.tuple.Tuple3;
@@ -23,6 +25,14 @@ public class Session {
 	}
 
 	public <V1> UpdateOperation update(Setter<V1> setter1, V1 v1) {
+		return null;
+	}
+	
+	public UpsertOperation upsert(Object pojo) {
+		return null;
+	}
+	
+	public DeleteOperation delete() {
 		return null;
 	}
 	
