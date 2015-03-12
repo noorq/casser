@@ -1,2 +1,2 @@
-# cassmass
-Cassandra Client
+# casser
+Yet Another Cassandra Client
