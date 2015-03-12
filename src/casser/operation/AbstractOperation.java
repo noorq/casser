@@ -2,11 +2,11 @@ package casser.operation;
 
 import java.util.concurrent.Future;
 
-import casser.core.PreparedStreamStatement;
+import casser.core.PreparedStatement;
 
 public abstract class AbstractOperation<E> {
 
-	public PreparedStreamStatement<E> prepare() {
+	public PreparedStatement<E> prepare() {
 		return null;
 	}
 	
