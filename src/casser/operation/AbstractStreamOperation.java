@@ -5,9 +5,9 @@ import java.util.stream.Stream;
 
 import casser.core.PreparedStreamStatement;
 
-public abstract class AbstractStreamOperation<E> {
+public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>> {
 
-	public PreparedStreamStatement<E> prepare() {
+	public PreparedStreamStatement<E, O> prepare() {
 		return null;
 	}
 	

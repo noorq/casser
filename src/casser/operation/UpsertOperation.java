@@ -1,5 +1,5 @@
 package casser.operation;
 
-public class UpsertOperation extends AbstractOperation<Object> {
+public class UpsertOperation extends AbstractOperation<Object, UpsertOperation> {
 
 }

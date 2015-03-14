@@ -2,9 +2,9 @@ package casser.core;
 
 import casser.operation.AbstractOperation;
 
-public class PreparedStatement<E> {
+public class PreparedStatement<E, O extends AbstractOperation<E, O>> {
 
-	public AbstractOperation<E> bind(Object... params) {
+	public AbstractOperation<E, O> bind(Object... params) {
 		return null;
 	}
 	

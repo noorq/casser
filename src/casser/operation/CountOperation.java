@@ -1,5 +1,5 @@
 package casser.operation;
 
-public class CountOperation extends AbstractOperation<Long> {
+public class CountOperation extends AbstractOperation<Long, CountOperation> {
 
 }

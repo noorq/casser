@@ -2,18 +2,8 @@ package casser.operation;
 
 import java.util.function.Function;
 
-import casser.dsl.Getter;
 
-
-public class SelectOperation<E> extends AbstractStreamOperation<E> {
-
-	public <V> SelectOperation<E> where(Getter<V> getter, String operator, V val) {
-		return this;
-	}
-
-	public <V> SelectOperation<E> and(Getter<V> getter, String operator, V val) {
-		return this;
-	}
+public class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectOperation<E>> {
 
 	public CountOperation count() {
 		return null;

@@ -4,9 +4,9 @@ import java.util.concurrent.Future;
 
 import casser.core.PreparedStatement;
 
-public abstract class AbstractOperation<E> {
+public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> {
 
-	public PreparedStatement<E> prepare() {
+	public PreparedStatement<E, O> prepare() {
 		return null;
 	}
 	
