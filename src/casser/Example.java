@@ -1,7 +1,7 @@
 package casser;
 
 import casser.core.Casser;
-import casser.core.PreparedStreamStatement;
+import casser.core.Prepared;
 import casser.core.Session;
 import casser.operation.SelectOperation;
 import casser.tuple.Tuple1;
@@ -38,8 +38,7 @@ public class Example {
 		
 		session.delete().where(_user::getId, "==", 100L).async();
 		
-		
-		PreparedStreamStatement<Tuple1<String>, SelectOperation<Tuple1<String>>> ps = session.select(_user::getName).where(_user::getId, "==", null).prepare();
+		Prepared<SelectOperation<Tuple1<String>>> ps = session.select(_user::getName).where(_user::getId, "==", null).prepare();
 		
 		long cnt = ps.bind(100L).sync().count();
 		
