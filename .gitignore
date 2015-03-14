@@ -13,3 +13,6 @@ hs_err_pid*
 /bin
 /.project
 /.classpath
+/build.sh
+/target
+/.settings
