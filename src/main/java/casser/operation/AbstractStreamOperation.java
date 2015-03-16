@@ -7,6 +7,10 @@ import casser.core.Prepared;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>> {
 
+	public String cql() {
+		return null;
+	}
+	
 	public Prepared<O> prepare() {
 		return null;
 	}
