@@ -1,7 +1,8 @@
-package casser.core;
+package casser.test.unit.core;
 
 import org.junit.Test;
 
+import casser.core.Casser;
 import casser.support.DslColumnException;
 
 public class DslTest {

@@ -1,4 +1,4 @@
-package casser.core;
+package casser.test.unit.core;
 
 public interface Account {
 
