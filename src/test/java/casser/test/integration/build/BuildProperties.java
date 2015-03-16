@@ -13,14 +13,27 @@ public final class BuildProperties {
 		private final static BuildProperties INSTANCE = new BuildProperties();
 	}
 
+	private final String cassandraConfig;
 	private final Properties props = new Properties();
 
 	private BuildProperties() {
-		loadFromClasspath("/build.properties");
+		
+		if (isRunInMaven()) {
+			this.cassandraConfig = "build-cassandra.yaml";
+			loadFromClasspath("build.properties");			
+		}
+		else {
+			this.cassandraConfig = "eclipse-cassandra.yaml";
+			loadFromClasspath("eclipse.properties");
+		}
+	}
+	
+	private boolean isRunInMaven() {
+		return System.getProperty("maven.integration.test") != null;
 	}
 	
 	private void loadFromClasspath(String resourceName) {
-		InputStream in = getClass().getResourceAsStream(resourceName);
+		InputStream in = getClass().getResourceAsStream("/" + resourceName);
 		if (in == null) {
 			throw new RuntimeException("resource is not found in classpath: " + resourceName);
 		}
@@ -34,7 +47,7 @@ public final class BuildProperties {
 	}
 	
 	public static String getCassandraConfig() {
-		return "build-cassandra.yaml";
+		return Singleton.INSTANCE.cassandraConfig;
 	}
 	
 	public static String getCassandraHost() {

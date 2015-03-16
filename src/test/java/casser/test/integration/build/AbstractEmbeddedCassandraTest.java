@@ -24,7 +24,7 @@ public abstract class AbstractEmbeddedCassandraTest {
 	private boolean keep;
 	
 	public AbstractEmbeddedCassandraTest() {
-		this(true);
+		this(false);
 	}
 	
 	public AbstractEmbeddedCassandraTest(boolean keep) {
@@ -80,6 +80,7 @@ public abstract class AbstractEmbeddedCassandraTest {
 	public void after() {
 		if (!keep && isConnected()) {
 			session.close();
+			session = null;
 			EmbeddedCassandraServerHelper.cleanEmbeddedCassandra();
 		}
 	}
