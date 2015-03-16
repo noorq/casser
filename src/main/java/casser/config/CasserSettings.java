@@ -1,4 +1,4 @@
-package casser.core;
+package casser.config;
 
 import java.util.function.Function;
 

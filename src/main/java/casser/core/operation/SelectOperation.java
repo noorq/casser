@@ -1,4 +1,4 @@
-package casser.operation;
+package casser.core.operation;
 
 import java.util.function.Function;
 

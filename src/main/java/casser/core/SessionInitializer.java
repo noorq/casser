@@ -1,8 +1,16 @@
 package casser.core;
 
+import com.datastax.driver.core.Session;
+
 
 public class SessionInitializer {
 
+	private final Session session;
+	
+	public SessionInitializer(Session session) {
+		this.session = session;
+	}
+	
 	public SessionInitializer validate(Object... dsls) {
 		return this;
 	}
@@ -20,11 +28,12 @@ public class SessionInitializer {
 	}
 
 	public SessionInitializer use(String keyspace) {
+		session.execute("USE " + keyspace);
 		return this;
 	}
 	
-	public Session get() {
-		return null;
+	public CasserSession get() {
+		return new CasserSession(session);
 	}
 
 	

@@ -1,4 +1,4 @@
-package casser.dsl;
+package casser.core.dsl;
 
 public interface Setter<V> {
 

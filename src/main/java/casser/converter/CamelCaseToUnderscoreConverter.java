@@ -1,4 +1,4 @@
-package casser.core;
+package casser.converter;
 
 import java.util.function.Function;
 

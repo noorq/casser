@@ -3,6 +3,14 @@ package casser.core;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
+import casser.config.CasserSettings;
+import casser.config.DefaultCasserSettings;
+import casser.core.reflect.DslInvocationHandler;
+import casser.core.reflect.PojoInvocationHandler;
+
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Session;
+
 
 
 public final class Casser {
@@ -21,9 +29,15 @@ public final class Casser {
 		casserSettings = overrideSettings;
 		return old;
 	}
-	
-	public static SessionInitializer connect(String host) {
-		return null;
+
+	public static SessionInitializer connect(Cluster cluster) {
+		Session session = cluster.connect();
+		return new SessionInitializer(session);
+	}
+
+	public static SessionInitializer connect(Cluster cluster, String keyspace) {
+		Session session = cluster.connect(keyspace);
+		return new SessionInitializer(session);
 	}
 	
 	public static <E> E dsl(Class<E> iface) {

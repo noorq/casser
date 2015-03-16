@@ -1,4 +1,4 @@
-package casser.tuple;
+package casser.core.tuple;
 
 public final class Tuple1<V1> {
 

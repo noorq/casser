@@ -1,18 +1,22 @@
 package casser;
 
+import com.datastax.driver.core.Cluster;
+
 import casser.core.Casser;
 import casser.core.Filter;
 import casser.core.Prepared;
-import casser.core.Session;
-import casser.operation.SelectOperation;
-import casser.tuple.Tuple1;
-import casser.tuple.Tuple2;
+import casser.core.CasserSession;
+import casser.core.operation.SelectOperation;
+import casser.core.tuple.Tuple1;
+import casser.core.tuple.Tuple2;
 
 public class Example {
 
 	static final User _user = Casser.dsl(User.class);
 	
-	Session session = Casser.connect("localhost").update(_user).get();
+	Cluster cluster = new Cluster.Builder().addContactPoint("localhost").build();
+	
+	CasserSession session = Casser.connect(cluster).use("test").update(_user).get();
 	
 	public static User mapUser(Tuple2<String, Integer> t) {
 		User user = Casser.pojo(User.class);

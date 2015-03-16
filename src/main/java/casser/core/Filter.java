@@ -1,6 +1,6 @@
 package casser.core;
 
-import casser.dsl.Getter;
+import casser.core.dsl.Getter;
 
 public final class Filter {
 

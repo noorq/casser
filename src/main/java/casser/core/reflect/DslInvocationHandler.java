@@ -1,8 +1,11 @@
-package casser.core;
+package casser.core.reflect;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
+import casser.config.CasserSettings;
+import casser.core.Casser;
+import casser.core.ColumnInformation;
 import casser.support.DslColumnException;
 
 public class DslInvocationHandler<E> implements InvocationHandler {

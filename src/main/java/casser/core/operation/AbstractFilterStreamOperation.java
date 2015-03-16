@@ -1,7 +1,7 @@
-package casser.operation;
+package casser.core.operation;
 
 import casser.core.Filter;
-import casser.dsl.Getter;
+import casser.core.dsl.Getter;
 
 public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterStreamOperation<E, O>> extends AbstractStreamOperation<E, O> {
 
