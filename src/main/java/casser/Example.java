@@ -1,6 +1,7 @@
 package casser;
 
 import casser.core.Casser;
+import casser.core.Filter;
 import casser.core.Prepared;
 import casser.core.Session;
 import casser.operation.SelectOperation;
@@ -43,7 +44,9 @@ public class Example {
 		long cnt = ps.bind(100L).sync().count();
 		
 		cnt = session.select(_user::getName).where(_user::getId, "==", 100L).count().sync();
-		
+
+		cnt = session.select(_user::getName).where(Filter.equal(_user::getId, 100L)).count().sync();
+
 	}
 	
 }
