@@ -1,5 +1,8 @@
 package casser.core;
 
+import casser.mapping.CasserMappingEntity;
+import casser.support.CasserException;
+
 import com.datastax.driver.core.Session;
 
 
@@ -57,7 +60,30 @@ public class SessionInitializer {
 	
 	private void processSingle(AutoDslType type, Object dsl) {
 		
-
+		Class<?> iface = null;
+		
+		if (dsl instanceof Class) {
+			iface = (Class<?>) dsl;
+			
+			if (!iface.isInterface()) {
+				throw new CasserException("expected interface " + iface);
+			}
+			
+		}
+		else {
+			Class<?>[] ifaces = dsl.getClass().getInterfaces();
+			if (ifaces.length != 1) {
+				throw new CasserException("supports only single interface, wrong dsl class " + dsl.getClass()
+						);
+			}
+			
+			iface = ifaces[0];
+		}
+		
+		
+		CasserMappingEntity<?> entity = new CasserMappingEntity(iface);
+		
+		
 		
 	}
 }

@@ -114,7 +114,7 @@ public class PojoInvocationHandler<E> implements InvocationHandler {
 		
 		String name = method.getName();
 		
-		if (name.startsWith("get") || name.startsWith("is")) {
+		if (name.startsWith("get") || name.startsWith("is") || name.startsWith("has")) {
 			return OperationType.GET;
 		}
 		
@@ -122,7 +122,7 @@ public class PojoInvocationHandler<E> implements InvocationHandler {
 			return OperationType.SET;
 		}
 		
-		throw new CasserException("invalid method " + method);
+		throw new CasserException("invalid pojo method " + method);
 		
 	}
 	

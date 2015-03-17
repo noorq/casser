@@ -1,4 +1,4 @@
-package casser.converter;
+package casser.config;
 
 import java.util.function.Function;
 
@@ -10,6 +10,11 @@ public enum CamelCaseToUnderscoreConverter implements Function<String, String> {
 
 	@Override
 	public String apply(String source) {
+		
+		if (source == null) {
+			throw new IllegalArgumentException("empty parameter");
+		}
+		
 		return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, source);
 	}
 

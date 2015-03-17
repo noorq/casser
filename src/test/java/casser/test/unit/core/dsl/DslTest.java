@@ -3,7 +3,7 @@ package casser.test.unit.core.dsl;
 import org.junit.Test;
 
 import casser.core.Casser;
-import casser.support.DslColumnException;
+import casser.support.DslPropertyException;
 
 public class DslTest {
 
@@ -17,8 +17,8 @@ public class DslTest {
 		try {
 			account.getId();
 		}
-		catch(DslColumnException e) {
-			System.out.println(e.getColumnInformation());
+		catch(DslPropertyException e) {
+			System.out.println(e.getProperty());
 		}
 		
 	}

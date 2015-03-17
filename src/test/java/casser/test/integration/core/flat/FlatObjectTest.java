@@ -12,7 +12,7 @@ public class FlatObjectTest extends AbstractEmbeddedCassandraTest {
 
 	User user = Casser.dsl(User.class);
 	
-	CasserSession session = Casser.init(getSession()).create(user).get();
+	CasserSession session = Casser.init(getSession()).create(User.class).get();
 	
 	@Test
 	public void testCruid() {

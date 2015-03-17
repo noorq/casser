@@ -2,21 +2,35 @@ package casser.core.reflect;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
-import casser.config.CasserSettings;
-import casser.core.Casser;
-import casser.core.ColumnInformation;
-import casser.core.PrimaryKeyInformation;
-import casser.mapping.Column;
-import casser.mapping.PrimaryKey;
-import casser.support.DslColumnException;
+import casser.mapping.CasserMappingEntity;
+import casser.mapping.CasserMappingProperty;
+import casser.support.CasserException;
+import casser.support.DslPropertyException;
 
 public class DslInvocationHandler<E> implements InvocationHandler {
 
-	private final Class<E> iface;
+	private final CasserMappingEntity<E> entity;
+	
+	private final Map<Method, CasserMappingProperty<E>> map = new HashMap<Method, CasserMappingProperty<E>>();
 	
 	public DslInvocationHandler(Class<E> iface) {
-		this.iface = iface;
+		
+		this.entity = new CasserMappingEntity<E>(iface);
+		
+		for (CasserMappingProperty<E> prop : entity.getMappingProperties()) {
+			
+			map.put(prop.getGetterMethod(), prop);
+			
+			Method setter = prop.getSetterMethod();
+			
+			if (setter != null) {
+				map.put(setter, prop);
+			}
+			
+		}
 	}
 	
 	@Override
@@ -24,44 +38,16 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			throws Throwable {
 		
 		if ("toString".equals(method.getName())) {
-			return "Casser Dsl for " + iface;
+			return "Casser Dsl for " + entity.getEntityInterface();
 		}
 		
-		String columnName = null;
+		CasserMappingProperty<E> prop = map.get(method);
 		
-		PrimaryKey primaryKey = method.getDeclaredAnnotation(PrimaryKey.class);
-		if (primaryKey != null) {
-			columnName = primaryKey.value();
-			
-			if (columnName == null || columnName.isEmpty()) {
-				columnName = getDefaultColumnName(method);
-			}
-			
-			PrimaryKeyInformation info = new PrimaryKeyInformation(columnName);
-			throw new DslColumnException(info);
+		if (prop != null) {
+			throw new DslPropertyException(prop);	
 		}
 		
-		Column column = method.getDeclaredAnnotation(Column.class);
-		if (column != null) {
-			columnName = column.value();
-		}
-		
-		if (columnName == null || columnName.isEmpty()) {
-			columnName = getDefaultColumnName(method);
-		}
-		
-		ColumnInformation info = new ColumnInformation(columnName);
-
-		throw new DslColumnException(info);
-	}
-	
-	private String getDefaultColumnName(Method method) {
-		
-		CasserSettings settings = Casser.settings();
-		
-		String propertyName = settings.getMethodNameToPropertyConverter().apply(method.getName());
-		
-		return settings.getPropertyToColumnConverter().apply(propertyName);
+		throw new CasserException("invalid method call " + method);
 	}
 
 }
