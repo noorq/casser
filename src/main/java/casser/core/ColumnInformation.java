@@ -1,7 +1,7 @@
 package casser.core;
 
 
-public final class ColumnInformation {
+public class ColumnInformation {
 
 	private final String columnName;
 	

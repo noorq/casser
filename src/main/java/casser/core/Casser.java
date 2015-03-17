@@ -1,6 +1,5 @@
 package casser.core;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
 import casser.config.CasserSettings;
@@ -64,7 +63,7 @@ public final class Casser {
 
 	@SuppressWarnings("unchecked")
 	public static <E> E pojo(Class<E> iface, ClassLoader classLoader) {
-		InvocationHandler handler = new PojoInvocationHandler();
+		PojoInvocationHandler<E> handler = new PojoInvocationHandler<E>(iface);
 		E proxy = (E) Proxy.newProxyInstance(
 		                            classLoader,
 		                            new Class[] { iface },

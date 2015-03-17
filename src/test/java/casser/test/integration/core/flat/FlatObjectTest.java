@@ -15,11 +15,6 @@ public class FlatObjectTest extends AbstractEmbeddedCassandraTest {
 	CasserSession session = Casser.init(getSession()).create(user).get();
 	
 	@Test
-	public void testFake() {
-		
-	}
-	
-	//@Test
 	public void testCruid() {
 		
 		User alex = Casser.pojo(User.class);

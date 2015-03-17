@@ -1,4 +1,4 @@
-package casser.test.unit.core;
+package casser.test.unit.core.dsl;
 
 import org.junit.Test;
 
