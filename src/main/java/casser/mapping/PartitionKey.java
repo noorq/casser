@@ -7,15 +7,11 @@ import java.lang.annotation.Target;
 
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = { ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE })
-public @interface PrimaryKey {
+public @interface PartitionKey {
 
 	String value() default "";
-
-	KeyType type();
 	
 	int ordinal();
-	
-	Ordering ordering() default Ordering.ASCENDING;
 	
 	boolean forceQuote() default false;
 

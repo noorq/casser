@@ -40,6 +40,11 @@ public final class Casser {
 	}
 	
 	public static SessionInitializer init(Session session) {
+		
+		if (session == null) {
+			throw new IllegalArgumentException("empty session");
+		}
+		
 		return new SessionInitializer(session);
 	}
 	

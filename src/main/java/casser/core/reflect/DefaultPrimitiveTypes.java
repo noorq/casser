@@ -3,7 +3,7 @@ package casser.core.reflect;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum PrimitiveTypes {
+public enum DefaultPrimitiveTypes {
 
 	BOOLEAN(boolean.class, false),
 	BYTE(byte.class, (byte)0x0),
@@ -17,20 +17,20 @@ public enum PrimitiveTypes {
 	private final Class<?> primitiveClass;
 	private final Object defaultValue;
 	
-	private final static Map<Class<?>, PrimitiveTypes> map = new HashMap<Class<?>, PrimitiveTypes>();
+	private final static Map<Class<?>, DefaultPrimitiveTypes> map = new HashMap<Class<?>, DefaultPrimitiveTypes>();
 	
 	static {
-		for (PrimitiveTypes type : PrimitiveTypes.values()) {
+		for (DefaultPrimitiveTypes type : DefaultPrimitiveTypes.values()) {
 			map.put(type.getPrimitiveClass(), type);
 		}
 	}
 	
-	private PrimitiveTypes(Class<?> primitiveClass, Object defaultValue) {
+	private DefaultPrimitiveTypes(Class<?> primitiveClass, Object defaultValue) {
 		this.primitiveClass = primitiveClass;
 		this.defaultValue = defaultValue;
 	}
 
-	public static PrimitiveTypes lookup(Class<?> primitiveClass) {
+	public static DefaultPrimitiveTypes lookup(Class<?> primitiveClass) {
 		return map.get(primitiveClass);
 	}
 	

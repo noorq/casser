@@ -46,7 +46,7 @@ public class PojoInvocationHandler<E> implements InvocationHandler {
 			
 			if (val == null && returnType.isPrimitive()) {
 				
-				PrimitiveTypes type = PrimitiveTypes.lookup(returnType);
+				DefaultPrimitiveTypes type = DefaultPrimitiveTypes.lookup(returnType);
 				if (type == null) {
 					throw new CasserException("unknown primitive type " + returnType);
 				}

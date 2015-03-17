@@ -2,6 +2,7 @@ package casser.test.integration.core.flat;
 
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import casser.core.Casser;
@@ -10,9 +11,17 @@ import casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
 public class FlatObjectTest extends AbstractEmbeddedCassandraTest {
 
-	User user = Casser.dsl(User.class);
+	User user;
 	
-	CasserSession session = Casser.init(getSession()).create(User.class).get();
+	CasserSession session;
+	
+	@Before
+	public void beforeTest() {
+		
+		user = Casser.dsl(User.class);
+		
+		session = Casser.init(getSession()).create(User.class).get();
+	}
 	
 	@Test
 	public void testCruid() {

@@ -1,6 +1,7 @@
 package casser.core;
 
 import java.io.Closeable;
+import java.util.Set;
 
 import casser.core.dsl.Getter;
 import casser.core.dsl.Setter;
@@ -11,16 +12,25 @@ import casser.core.operation.UpsertOperation;
 import casser.core.tuple.Tuple1;
 import casser.core.tuple.Tuple2;
 import casser.core.tuple.Tuple3;
+import casser.mapping.CasserMappingEntity;
 
 import com.datastax.driver.core.CloseFuture;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
-public class CasserSession implements Closeable {
+public class CasserSession extends AbstractSessionOperations implements Closeable {
 
-	private Session session;
+	private final Session session;
+	private final Set<CasserMappingEntity<?>> dropEntitiesOnClose;
 	
-	protected CasserSession(Session session) {
+	CasserSession(Session session, Set<CasserMappingEntity<?>> dropEntitiesOnClose) {
 		this.session = session;
+		this.dropEntitiesOnClose = dropEntitiesOnClose;
+	}
+	
+	@Override
+	Session currentSession() {
+		return session;
 	}
 	
 	public <V1> SelectOperation<Tuple1<V1>> select(Getter<V1> getter1) {
@@ -52,10 +62,33 @@ public class CasserSession implements Closeable {
 	}
 
 	public void close() {
+		dropEntitiesIfNeeded();
 		session.close();
 	}
 	
 	public CloseFuture closeAsync() {
+		dropEntitiesIfNeeded();
 		return session.closeAsync();
 	}
+	
+	private void dropEntitiesIfNeeded() {
+		
+		if (dropEntitiesOnClose == null || dropEntitiesOnClose.isEmpty()) {
+			return;
+		}
+		
+		for (CasserMappingEntity<?> entity : dropEntitiesOnClose) {
+			dropEntity(entity);
+		}
+		
+	}
+	
+	private void dropEntity(CasserMappingEntity<?> entity) {
+		
+		String cql = SchemaBuilder.dropTable(entity.getTableName()).build();
+		
+		doExecute(cql);
+		
+	}
+	
 }
