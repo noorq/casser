@@ -121,12 +121,20 @@
 			<scope>test</scope>
 			<exclusions>
 				<exclusion>
-					<artifactId>slf4j-log4j12</artifactId>
 					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
 				</exclusion>
 				<exclusion>
-					<artifactId>guava</artifactId>
+				    <groupId>ch.qos.logback</groupId>
+				    <artifactId>logback-core</artifactId>
+				</exclusion>
+				<exclusion>
+				    <groupId>ch.qos.logback</groupId>
+				    <artifactId>logback-classic</artifactId>
+				</exclusion>				
+				<exclusion>
 					<groupId>com.google.guava</groupId>
+					<artifactId>guava</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -185,13 +193,6 @@
 			<artifactId>jcl-over-slf4j</artifactId>
 			<version>${slf4j}</version>
 			<scope>runtime</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<version>${logback}</version>
-			<scope>test</scope>
 		</dependency>
 
 	</dependencies>

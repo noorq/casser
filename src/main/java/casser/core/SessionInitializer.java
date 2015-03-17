@@ -36,6 +36,4 @@ public class SessionInitializer {
 		return new CasserSession(session);
 	}
 
-	
-	
 }

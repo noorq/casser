@@ -40,6 +40,10 @@ public final class Casser {
 		return new SessionInitializer(session);
 	}
 	
+	public static SessionInitializer init(Session session) {
+		return new SessionInitializer(session);
+	}
+	
 	public static <E> E dsl(Class<E> iface) {
 		return dsl(iface, iface.getClassLoader());
 	}
