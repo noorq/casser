@@ -21,16 +21,23 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public class CasserSession extends AbstractSessionOperations implements Closeable {
 
 	private final Session session;
+	private final boolean showCql;
 	private final Set<CasserMappingEntity<?>> dropEntitiesOnClose;
 	
-	CasserSession(Session session, Set<CasserMappingEntity<?>> dropEntitiesOnClose) {
+	CasserSession(Session session, boolean showCql, Set<CasserMappingEntity<?>> dropEntitiesOnClose) {
 		this.session = session;
+		this.showCql = showCql;
 		this.dropEntitiesOnClose = dropEntitiesOnClose;
 	}
 	
 	@Override
 	Session currentSession() {
 		return session;
+	}
+	
+	@Override
+	boolean isShowCql() {
+		return showCql;
 	}
 	
 	public <V1> SelectOperation<Tuple1<V1>> select(Getter<V1> getter1) {

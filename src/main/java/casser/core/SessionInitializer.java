@@ -19,6 +19,7 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public class SessionInitializer extends AbstractSessionOperations {
 
 	private final Session session;
+	private boolean showCql = false;
 	private Set<CasserMappingEntity<?>> dropEntitiesOnClose = null;
 	
 	SessionInitializer(Session session) {
@@ -35,6 +36,21 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return session;
 	}
 
+	public SessionInitializer showCql() {
+		this.showCql = true;
+		return this;
+	}
+	
+	public SessionInitializer showCql(boolean enabled) {
+		this.showCql = enabled;
+		return this;
+	}
+	
+	@Override
+	boolean isShowCql() {
+		return showCql;
+	}
+	
 	public SessionInitializer validate(Object... dsls) {
 		process(AutoDslType.VALIDATE, dsls);
 		return this;
@@ -61,7 +77,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 	}
 	
 	public CasserSession get() {
-		return new CasserSession(session, dropEntitiesOnClose);
+		return new CasserSession(session, showCql, dropEntitiesOnClose);
 	}
 
 	private enum AutoDslType {
@@ -189,8 +205,6 @@ public class SessionInitializer extends AbstractSessionOperations {
 		}
 		
 		String cql = create.getQueryString();
-		
-		System.out.println("cql = " + cql);
 		
 		doExecute(cql);
 		

@@ -9,15 +9,21 @@ import com.datastax.driver.core.Session;
 
 public abstract class AbstractSessionOperations {
 
-	private final Logger logger = LoggerFactory.getLogger(getClass());
+	final Logger logger = LoggerFactory.getLogger(getClass());
 	
 	abstract Session currentSession();
+	
+	abstract boolean isShowCql();
 	
 	void doExecute(String cql) {
 		
 		try {
 			
 			logger.info("Execute query " + cql);
+			
+			if (isShowCql() && cql != null) {
+				System.out.println(cql);
+			}
 			
 			currentSession().execute(cql);
 		}
