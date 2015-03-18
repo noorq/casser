@@ -16,7 +16,6 @@ import casser.mapping.CasserMappingEntity;
 
 import com.datastax.driver.core.CloseFuture;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public class CasserSession extends AbstractSessionOperations implements Closeable {
 
@@ -92,7 +91,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	
 	private void dropEntity(CasserMappingEntity<?> entity) {
 		
-		String cql = SchemaBuilder.dropTable(entity.getTableName()).build();
+		String cql = SchemaUtil.dropTableCql(entity);
 		
 		doExecute(cql);
 		

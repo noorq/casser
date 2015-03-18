@@ -118,4 +118,10 @@ public final class SchemaUtil {
 		return null;
 	}
 
+	public static String dropTableCql(CasserMappingEntity<?> entity) {
+		
+		return SchemaBuilder.dropTable(entity.getTableName()).buildInternal();
+		
+	}
+	
 }

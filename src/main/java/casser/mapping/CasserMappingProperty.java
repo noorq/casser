@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import casser.core.Casser;
-import casser.support.CasserException;
+import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.DataType;
 
@@ -60,7 +60,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 			if (clusteringColumnn != null) {
 				
 				if (isPartitionKey) {
-					throw new CasserException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getEntityInterface());
+					throw new CasserMappingException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getEntityInterface());
 				}
 				
 				isClusteringColumn = true;
@@ -129,7 +129,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 			if (partitionKey != null) {
 				
 				if (columnName != null) {
-					throw new CasserException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getEntityInterface());
+					throw new CasserMappingException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getEntityInterface());
 				}
 				
 				columnName = partitionKey.value();
@@ -139,7 +139,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 			if (clusteringColumn != null) {
 				
 				if (columnName != null) {
-					throw new CasserException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getEntityInterface());
+					throw new CasserMappingException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getEntityInterface());
 				}
 				
 				columnName = clusteringColumn.value();
@@ -220,7 +220,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 
 		DataType dataType = SimpleDataTypes.getDataTypeByJavaClass(propertyType);
 		if (dataType == null) {
-			throw new CasserException(
+			throw new CasserMappingException(
 					"only primitive types and Set,List,Map collections are allowed, unknown type for property '" + this.getPropertyName()
 							+ "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getEntityInterface());
 		}
@@ -243,7 +243,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 				ensureTypeArguments(annotation.typeArguments().length, 1);
 				return DataType.set(resolvePrimitiveType(annotation.typeArguments()[0]));
 			default:
-				throw new CasserException("unknown collection DataType for property '" + this.getPropertyName()
+				throw new CasserMappingException("unknown collection DataType for property '" + this.getPropertyName()
 						+ "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getEntityInterface());
 			}
 		} else {
@@ -254,7 +254,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	DataType resolvePrimitiveType(DataType.Name typeName) {
 		DataType dataType = SimpleDataTypes.getDataTypeByName(typeName);
 		if (dataType == null) {
-			throw new CasserException(
+			throw new CasserMappingException(
 					"only primitive types are allowed inside collections for the property  '" + this.getPropertyName() + "' type is '"
 							+ this.getJavaType() + "' in the entity " + this.entity.getEntityInterface());
 		}
@@ -264,7 +264,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	DataType autodetectPrimitiveType(Type javaType) {
 		DataType dataType = SimpleDataTypes.getDataTypeByJavaClass(javaType);
 		if (dataType == null) {
-			throw new CasserException(
+			throw new CasserMappingException(
 					"only primitive types are allowed inside collections for the property  '" + this.getPropertyName() + "' type is '"
 							+ this.getJavaType() + "' in the entity " + this.entity.getEntityInterface());
 		}
@@ -273,7 +273,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	
 	void ensureTypeArguments(int args, int expected) {
 		if (args != expected) {
-			throw new CasserException("expected " + expected + " of typed arguments for the property  '"
+			throw new CasserMappingException("expected " + expected + " of typed arguments for the property  '"
 					+ this.getPropertyName() + "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getEntityInterface());
 		}
 	}
