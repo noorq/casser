@@ -1,4 +1,4 @@
-package casser.config;
+package casser.mapping.converter;
 
 import java.util.function.Function;
 

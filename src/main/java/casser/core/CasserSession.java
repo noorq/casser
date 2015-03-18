@@ -13,6 +13,7 @@ import casser.core.tuple.Tuple1;
 import casser.core.tuple.Tuple2;
 import casser.core.tuple.Tuple3;
 import casser.mapping.CasserMappingEntity;
+import casser.mapping.MappingUtil;
 
 import com.datastax.driver.core.CloseFuture;
 import com.datastax.driver.core.Session;
@@ -56,7 +57,12 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	}
 	
 	public UpsertOperation upsert(Object pojo) {
-		return null;
+		
+		Class<?> iface = MappingUtil.getMappingInterface(pojo);
+		
+		CasserMappingEntity<?> entity = new CasserMappingEntity(iface);
+		
+		return new UpsertOperation(entity, pojo);
 	}
 	
 	public DeleteOperation delete() {

@@ -38,7 +38,7 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			throws Throwable {
 		
 		if ("toString".equals(method.getName())) {
-			return "Casser Dsl for " + entity.getEntityInterface();
+			return "Casser Dsl for " + entity.getMappingInterface();
 		}
 		
 		CasserMappingProperty<E> prop = map.get(method);

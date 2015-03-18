@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import casser.mapping.CasserMappingEntity;
+import casser.mapping.MappingUtil;
 import casser.support.CasserException;
 
 import com.datastax.driver.core.Session;
@@ -98,26 +99,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 	
 	private void processSingle(AutoDdl type, Object dsl) {
 		
-		Class<?> iface = null;
-		
-		if (dsl instanceof Class) {
-			iface = (Class<?>) dsl;
-			
-			if (!iface.isInterface()) {
-				throw new CasserException("expected interface " + iface);
-			}
-			
-		}
-		else {
-			Class<?>[] ifaces = dsl.getClass().getInterfaces();
-			if (ifaces.length != 1) {
-				throw new CasserException("supports only single interface, wrong dsl class " + dsl.getClass()
-						);
-			}
-			
-			iface = ifaces[0];
-		}
-		
+		Class<?> iface = MappingUtil.getMappingInterface(dsl);
 		
 		CasserMappingEntity<?> entity = new CasserMappingEntity(iface);
 		
@@ -130,7 +112,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 			if (type == AutoDdl.VALIDATE) {
 				
 				if (tmd == null) {
-					throw new CasserException("table not exists " + entity.getTableName() + "for entity " + entity.getEntityInterface());
+					throw new CasserException("table not exists " + entity.getTableName() + "for entity " + entity.getMappingInterface());
 				}
 				
 				validateTable(tmd, entity);
@@ -181,7 +163,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		String cql = SchemaUtil.alterTableCql(tmd, entity, dropRemovedColumns);
 		
 		if (cql != null) {
-			throw new CasserException("schema changed for entity " + entity.getEntityInterface() + ", apply this command: " + cql);
+			throw new CasserException("schema changed for entity " + entity.getMappingInterface() + ", apply this command: " + cql);
 		}
 	}
 	

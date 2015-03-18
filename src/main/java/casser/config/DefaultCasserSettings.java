@@ -3,6 +3,9 @@ package casser.config;
 import java.lang.reflect.Method;
 import java.util.function.Function;
 
+import casser.mapping.converter.CamelCaseToUnderscoreConverter;
+import casser.mapping.converter.MethodNameToPropertyConverter;
+
 public class DefaultCasserSettings implements CasserSettings {
 
 	@Override

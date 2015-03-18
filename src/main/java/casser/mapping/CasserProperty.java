@@ -1,5 +1,8 @@
 package casser.mapping;
 
+import java.util.Optional;
+import java.util.function.Function;
+
 import com.datastax.driver.core.DataType;
 
 public interface CasserProperty<E> {
@@ -19,5 +22,9 @@ public interface CasserProperty<E> {
 	int getOrdinal();
 	
 	Ordering getOrdering();
+	
+	Optional<Function<?, ?>> getReadConverter();
+	
+	Optional<Function<?, ?>> getWriteConverter();
 	
 }

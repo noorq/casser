@@ -57,7 +57,7 @@ public class CasserMappingEntity<E> implements CasserEntity<E> {
 
 	}
 
-	public Class<E> getEntityInterface() {
+	public Class<E> getMappingInterface() {
 		return iface;
 	}	
 	

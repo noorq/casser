@@ -4,11 +4,18 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import casser.core.Casser;
+import casser.mapping.converter.DateToTimeUUIDConverter;
+import casser.mapping.converter.EnumToStringConverter;
+import casser.mapping.converter.StringToEnumConverter;
+import casser.mapping.converter.TimeUUIDToDateConverter;
 import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.DataType;
@@ -26,7 +33,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	private boolean isPartitionKey = false;
 	private boolean isClusteringColumn = false;
 	private int ordinal = 0;
-	private Ordering ordering = null;
+	private Ordering ordering = Ordering.ASCENDING;
 	
 	private Class<?> javaType = null;
 	
@@ -34,6 +41,9 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	private DataType dataType = null;
 	
 	private String columnName;
+	
+	private Optional<Function<?, ?>> readConverter = null;
+	private Optional<Function<?, ?>> writeConverter = null;
 	
 	public CasserMappingProperty(CasserMappingEntity<E> entity, Method getter) {
 		this.entity = entity;
@@ -60,7 +70,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 			if (clusteringColumnn != null) {
 				
 				if (isPartitionKey) {
-					throw new CasserMappingException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getEntityInterface());
+					throw new CasserMappingException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getMappingInterface());
 				}
 				
 				isClusteringColumn = true;
@@ -129,7 +139,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 			if (partitionKey != null) {
 				
 				if (columnName != null) {
-					throw new CasserMappingException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getEntityInterface());
+					throw new CasserMappingException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getMappingInterface());
 				}
 				
 				columnName = partitionKey.value();
@@ -139,7 +149,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 			if (clusteringColumn != null) {
 				
 				if (columnName != null) {
-					throw new CasserMappingException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getEntityInterface());
+					throw new CasserMappingException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getMappingInterface());
 				}
 				
 				columnName = clusteringColumn.value();
@@ -174,6 +184,62 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 		return setterMethod;
 	}
 	
+	@Override
+	public Optional<Function<?, ?>> getReadConverter() {
+
+		if (readConverter == null) {
+		
+			readConverter = Optional.ofNullable(resolveReadConverter());
+			
+		}
+		
+		return readConverter;
+	}
+
+	private Function<?, ?> resolveReadConverter() {
+		
+		Class<?> propertyType = getJavaType();
+
+		if (Enum.class.isAssignableFrom(propertyType)) {
+			return new StringToEnumConverter(propertyType);
+		}
+
+		DataType dataType = getDataType();
+
+		if (dataType.getName() == DataType.Name.TIMEUUID && propertyType == Date.class) {
+			return TimeUUIDToDateConverter.INSTANCE;
+		}
+
+		return null;
+	}
+	
+	@Override
+	public Optional<Function<?, ?>> getWriteConverter() {
+		
+		if (writeConverter == null) {
+			
+			writeConverter = Optional.ofNullable(resolveWriteConverter());
+			
+		}
+		
+		return writeConverter;
+	}
+	
+	private Function<?, ?> resolveWriteConverter() {
+	
+		Class<?> propertyType = getJavaType();
+
+		if (Enum.class.isAssignableFrom(propertyType)) {
+			return EnumToStringConverter.INSTANCE;
+		}
+
+		DataType dataType = getDataType();
+
+		if (dataType.getName() == DataType.Name.TIMEUUID && propertyType == Date.class) {
+			return DateToTimeUUIDConverter.INSTANCE;
+		}
+		return null;
+	}
 	
 	public static String getPropertyName(Method m) {
 		
@@ -222,7 +288,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 		if (dataType == null) {
 			throw new CasserMappingException(
 					"only primitive types and Set,List,Map collections are allowed, unknown type for property '" + this.getPropertyName()
-							+ "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getEntityInterface());
+							+ "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());
 		}
 
 		return dataType;
@@ -244,7 +310,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 				return DataType.set(resolvePrimitiveType(annotation.typeArguments()[0]));
 			default:
 				throw new CasserMappingException("unknown collection DataType for property '" + this.getPropertyName()
-						+ "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getEntityInterface());
+						+ "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());
 			}
 		} else {
 			return SimpleDataTypes.getDataTypeByName(type);
@@ -256,7 +322,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 		if (dataType == null) {
 			throw new CasserMappingException(
 					"only primitive types are allowed inside collections for the property  '" + this.getPropertyName() + "' type is '"
-							+ this.getJavaType() + "' in the entity " + this.entity.getEntityInterface());
+							+ this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());
 		}
 		return dataType;
 	}
@@ -266,7 +332,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 		if (dataType == null) {
 			throw new CasserMappingException(
 					"only primitive types are allowed inside collections for the property  '" + this.getPropertyName() + "' type is '"
-							+ this.getJavaType() + "' in the entity " + this.entity.getEntityInterface());
+							+ this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());
 		}
 		return dataType;
 	}
@@ -274,7 +340,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	void ensureTypeArguments(int args, int expected) {
 		if (args != expected) {
 			throw new CasserMappingException("expected " + expected + " of typed arguments for the property  '"
-					+ this.getPropertyName() + "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getEntityInterface());
+					+ this.getPropertyName() + "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());
 		}
 	}
 	
