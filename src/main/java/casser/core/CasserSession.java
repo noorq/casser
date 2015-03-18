@@ -62,7 +62,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		
 		CasserMappingEntity<?> entity = new CasserMappingEntity(iface);
 		
-		return new UpsertOperation(entity, pojo);
+		return new UpsertOperation(this, entity, pojo);
 	}
 	
 	public DeleteOperation delete() {
@@ -99,7 +99,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		
 		String cql = SchemaUtil.dropTableCql(entity);
 		
-		doExecute(cql);
+		execute(cql);
 		
 	}
 	

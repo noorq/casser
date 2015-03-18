@@ -2,7 +2,7 @@ package casser.mapping.convert;
 
 import java.util.function.Function;
 
-public class StringToEnumConverter implements Function<String, Object> {
+public class StringToEnumConverter implements Function<String, Enum> {
 
 	private final Class<? extends Enum> enumClass;
 
@@ -11,7 +11,7 @@ public class StringToEnumConverter implements Function<String, Object> {
 	}
 
 	@Override
-	public Object apply(String source) {
+	public Enum apply(String source) {
 		return Enum.valueOf(enumClass, source);
 	}
 

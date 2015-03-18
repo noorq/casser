@@ -23,8 +23,10 @@ public interface CasserProperty<E> {
 	
 	Ordering getOrdering();
 	
-	Optional<Function<?, ?>> getReadConverter();
+	boolean isStatic();
 	
-	Optional<Function<?, ?>> getWriteConverter();
+	Optional<Function<Object, Object>> getReadConverter();
+	
+	Optional<Function<Object, Object>> getWriteConverter();
 	
 }

@@ -1,4 +1,4 @@
-package casser.test.integration.core.flat;
+package casser.test.integration.core.simple;
 
 
 import org.junit.Assert;
@@ -9,7 +9,7 @@ import casser.core.Casser;
 import casser.core.CasserSession;
 import casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
-public class FlatObjectTest extends AbstractEmbeddedCassandraTest {
+public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
 	User user;
 	

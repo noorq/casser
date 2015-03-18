@@ -11,7 +11,7 @@ public @interface PartitionKey {
 
 	String value() default "";
 	
-	int ordinal();
+	int ordinal() default 0;
 	
 	boolean forceQuote() default false;
 

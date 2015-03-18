@@ -56,7 +56,13 @@ public final class SchemaUtil {
 		}
 
 		for (CasserMappingProperty<?> prop : columns) {
-			create.addColumn(prop.getColumnName(), prop.getDataType());
+			
+			if (prop.isStatic()) {
+				create.addStaticColumn(prop.getColumnName(), prop.getDataType());
+			}
+			else {
+				create.addColumn(prop.getColumnName(), prop.getDataType());
+			}
 		}
 
 		return create.buildInternal();
@@ -93,8 +99,8 @@ public final class SchemaUtil {
 
 			if (prop.isPartitionKey() || prop.isClusteringColumn()) {
 				throw new CasserMappingException(
-						"unable to add or alter column in the primary index "
-								+ columnName + " for entity "
+						"unable to alter column that is a part of primary key '"
+								+ columnName + "' for entity "
 								+ entity.getName());
 			}
 

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 
 import casser.core.Casser;
@@ -16,6 +17,7 @@ import casser.mapping.convert.DateToTimeUUIDConverter;
 import casser.mapping.convert.EnumToStringConverter;
 import casser.mapping.convert.StringToEnumConverter;
 import casser.mapping.convert.TimeUUIDToDateConverter;
+import casser.mapping.convert.TypedConverter;
 import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.DataType;
@@ -40,10 +42,13 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	private boolean typeInfo = false;
 	private DataType dataType = null;
 	
+	private boolean staticInfo = false;
+	private boolean isStatic = false;
+	
 	private String columnName;
 	
-	private Optional<Function<?, ?>> readConverter = null;
-	private Optional<Function<?, ?>> writeConverter = null;
+	private Optional<Function<Object, Object>> readConverter = null;
+	private Optional<Function<Object, Object>> writeConverter = null;
 	
 	public CasserMappingProperty(CasserMappingEntity<E> entity, Method getter) {
 		this.entity = entity;
@@ -124,6 +129,23 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 		ensureKeyInfo();
 		return ordering;
 	}
+	
+	@Override
+	public boolean isStatic() {
+		
+		if (!staticInfo) {
+			
+			Column column = getterMethod.getDeclaredAnnotation(Column.class);
+			if (column != null) {
+				isStatic = column.shareStatic();
+			}
+			
+			staticInfo = true;
+			
+		}
+
+		return isStatic;
+	}
 
 	@Override
 	public String getColumnName() {
@@ -185,58 +207,69 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	}
 	
 	@Override
-	public Optional<Function<?, ?>> getReadConverter() {
+	public Optional<Function<Object, Object>> getReadConverter() {
 
 		if (readConverter == null) {
-		
 			readConverter = Optional.ofNullable(resolveReadConverter());
-			
 		}
 		
 		return readConverter;
 	}
 
-	private Function<?, ?> resolveReadConverter() {
+	private Function<Object, Object> resolveReadConverter() {
 		
 		Class<?> propertyType = getJavaType();
 
 		if (Enum.class.isAssignableFrom(propertyType)) {
-			return new StringToEnumConverter(propertyType);
+			return TypedConverter.create(
+					String.class, 
+					Enum.class, 
+					new StringToEnumConverter(propertyType));
 		}
 
 		DataType dataType = getDataType();
 
 		if (dataType.getName() == DataType.Name.TIMEUUID && propertyType == Date.class) {
-			return TimeUUIDToDateConverter.INSTANCE;
+			return TypedConverter.create(
+					UUID.class, 
+					Date.class, 
+					TimeUUIDToDateConverter.INSTANCE);			
 		}
 
 		return null;
 	}
 	
 	@Override
-	public Optional<Function<?, ?>> getWriteConverter() {
+	public Optional<Function<Object, Object>> getWriteConverter() {
 		
 		if (writeConverter == null) {
-			
 			writeConverter = Optional.ofNullable(resolveWriteConverter());
-			
 		}
 		
 		return writeConverter;
 	}
 	
-	private Function<?, ?> resolveWriteConverter() {
+	private Function<Object, Object> resolveWriteConverter() {
 	
 		Class<?> propertyType = getJavaType();
 
 		if (Enum.class.isAssignableFrom(propertyType)) {
-			return EnumToStringConverter.INSTANCE;
+			
+			return TypedConverter.create(
+					Enum.class, 
+					String.class, 
+					EnumToStringConverter.INSTANCE);
+			
 		}
 
 		DataType dataType = getDataType();
 
 		if (dataType.getName() == DataType.Name.TIMEUUID && propertyType == Date.class) {
-			return DateToTimeUUIDConverter.INSTANCE;
+			
+			return TypedConverter.create(
+					Date.class, 
+					UUID.class, 
+					DateToTimeUUIDConverter.INSTANCE);			
 		}
 		return null;
 	}
@@ -244,7 +277,6 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	public static String getPropertyName(Method m) {
 		
 		String propertyName = Casser.settings().getMethodNameToPropertyConverter().apply(m.getName());
-		
 		return propertyName;
 	}
 	

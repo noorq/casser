@@ -11,7 +11,7 @@ public @interface ClusteringColumn {
 
 	String value() default "";
 
-	int ordinal();
+	int ordinal() default 0;
 	
 	Ordering ordering() default Ordering.ASCENDING;
 	

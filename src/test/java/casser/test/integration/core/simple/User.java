@@ -1,4 +1,4 @@
-package casser.test.integration.core.flat;
+package casser.test.integration.core.simple;
 
 import casser.mapping.Column;
 import casser.mapping.PartitionKey;
@@ -7,7 +7,7 @@ import casser.mapping.Table;
 @Table("user")
 public interface User {
 
-	@PartitionKey(ordinal=1)
+	@PartitionKey
 	Long getId();
 	
 	void setId(Long id);

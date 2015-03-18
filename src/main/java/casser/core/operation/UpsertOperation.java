@@ -1,18 +1,62 @@
 package casser.core.operation;
 
-import casser.mapping.CasserMappingEntity;
+import java.lang.reflect.Method;
+import java.util.Optional;
+import java.util.function.Function;
 
+import casser.core.AbstractSessionOperations;
+import casser.mapping.CasserMappingEntity;
+import casser.mapping.CasserMappingProperty;
+import casser.support.CasserMappingException;
+
+import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 public class UpsertOperation extends AbstractOperation<Object, UpsertOperation> {
 
-	public UpsertOperation(CasserMappingEntity<?> entity, Object pojo) {
+	private final Insert insert;
+	
+	public UpsertOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity<?> entity, Object pojo) {
+		super(sessionOperations);
 		
-		Insert insert = QueryBuilder.insertInto(entity.getTableName());
+		this.insert = QueryBuilder.insertInto(entity.getTableName());
+		
+		for (CasserMappingProperty<?> prop : entity.getMappingProperties()) {
+			
+			Method getter = prop.getGetterMethod();
+			
+			Object value = null;
+			try {
+				value = getter.invoke(pojo, new Object[] {});
+			} catch (ReflectiveOperationException e) {
+				throw new CasserMappingException("fail to call getter " + getter, e);
+			} catch (IllegalArgumentException e) {
+				throw new CasserMappingException("invalid getter " + getter, e);
+			}
+			
+			if (value == null) {
+				continue;
+			}
+			
+			Optional<Function<Object, Object>> converter = prop.getWriteConverter();
+			
+			if (converter.isPresent()) {
+				value = converter.get().apply(value);
+			}
+			
+			if (value != null) {
+				insert.value(prop.getColumnName(), value);
+			}
+			
+		}
 		
 		
-		
+	}
+
+	@Override
+	public BuiltStatement getBuiltStatement() {
+		return insert;
 	}
 	
 }

@@ -154,7 +154,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		
 		String cql = SchemaUtil.createTableCql(entity);
 		
-		doExecute(cql);
+		execute(cql);
 		
 	}
 	
@@ -172,7 +172,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		String cql = SchemaUtil.alterTableCql(tmd, entity, dropRemovedColumns);
 		
 		if (cql != null) {
-			doExecute(cql);
+			execute(cql);
 		}
 	}
 }
