@@ -12,10 +12,10 @@ import java.util.Set;
 import java.util.function.Function;
 
 import casser.core.Casser;
-import casser.mapping.converter.DateToTimeUUIDConverter;
-import casser.mapping.converter.EnumToStringConverter;
-import casser.mapping.converter.StringToEnumConverter;
-import casser.mapping.converter.TimeUUIDToDateConverter;
+import casser.mapping.convert.DateToTimeUUIDConverter;
+import casser.mapping.convert.EnumToStringConverter;
+import casser.mapping.convert.StringToEnumConverter;
+import casser.mapping.convert.TimeUUIDToDateConverter;
 import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.DataType;

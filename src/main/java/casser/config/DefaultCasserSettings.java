@@ -3,8 +3,8 @@ package casser.config;
 import java.lang.reflect.Method;
 import java.util.function.Function;
 
-import casser.mapping.converter.CamelCaseToUnderscoreConverter;
-import casser.mapping.converter.MethodNameToPropertyConverter;
+import casser.mapping.convert.CamelCaseToUnderscoreConverter;
+import casser.mapping.convert.MethodNameToPropertyConverter;
 
 public class DefaultCasserSettings implements CasserSettings {
 

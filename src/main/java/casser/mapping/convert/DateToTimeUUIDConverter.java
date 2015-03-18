@@ -1,4 +1,4 @@
-package casser.mapping.converter;
+package casser.mapping.convert;
 
 import java.util.Date;
 import java.util.UUID;
