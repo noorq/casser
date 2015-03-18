@@ -4,7 +4,7 @@ import casser.core.AbstractSessionOperations;
 import casser.core.Filter;
 import casser.core.dsl.Getter;
 
-public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperation<E, O>> extends AbstractOperation<E, O> {
+public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperation<E, O>> extends AbstractObjectOperation<E, O> {
 
 	public AbstractFilterOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);

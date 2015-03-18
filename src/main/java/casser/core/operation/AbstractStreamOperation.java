@@ -3,27 +3,25 @@ package casser.core.operation;
 import java.util.concurrent.Future;
 import java.util.stream.Stream;
 
+import com.datastax.driver.core.ResultSet;
+
 import casser.core.AbstractSessionOperations;
-import casser.core.Prepared;
 
-public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>> {
+public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>> extends AbstractOperation<E, O> {
 
-	private final AbstractSessionOperations sessionOperations;
-	
 	public AbstractStreamOperation(AbstractSessionOperations sessionOperations) {
-		this.sessionOperations = sessionOperations;
+		super(sessionOperations);
 	}
 	
-	public String cql() {
-		return null;
-	}
-	
-	public Prepared<O> prepare() {
-		return null;
-	}
+	public abstract Stream<E> transform(ResultSet resultSet);
 	
 	public Stream<E> sync() {
-		return null;
+		
+		ResultSet resultSet = sessionOperations.execute(getBuiltStatement());
+		
+		System.out.println("resultSet = " + resultSet);
+		
+		return transform(resultSet);
 	}
 	
 	public Future<Stream<E>> async() {

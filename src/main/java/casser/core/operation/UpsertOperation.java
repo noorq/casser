@@ -14,7 +14,7 @@ import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
-public class UpsertOperation extends AbstractOperation<ResultSet, UpsertOperation> {
+public class UpsertOperation extends AbstractObjectOperation<ResultSet, UpsertOperation> {
 
 	private final Insert insert;
 	
@@ -59,5 +59,12 @@ public class UpsertOperation extends AbstractOperation<ResultSet, UpsertOperatio
 	public BuiltStatement getBuiltStatement() {
 		return insert;
 	}
+
+	@Override
+	public ResultSet transform(ResultSet resultSet) {
+		return resultSet;
+	}
+	
+	
 	
 }

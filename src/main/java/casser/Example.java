@@ -41,7 +41,7 @@ public class Example {
 
 		session.update(_user::setAge, 10).where(_user::getId, "==", 100L).async();
 		
-		session.delete().where(_user::getId, "==", 100L).async();
+		session.delete(User.class).where(_user::getId, "==", 100L).async();
 		
 		Prepared<SelectOperation<Tuple1<String>>> ps = session.select(_user::getName).where(_user::getId, "==", null).prepare();
 		

@@ -2,10 +2,11 @@ package casser.core.operation;
 
 import casser.core.AbstractSessionOperations;
 
+import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 
 
-public class UpdateOperation extends AbstractFilterOperation<Object, UpdateOperation> {
+public class UpdateOperation extends AbstractFilterOperation<ResultSet, UpdateOperation> {
 	
 	public UpdateOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
@@ -16,5 +17,10 @@ public class UpdateOperation extends AbstractFilterOperation<Object, UpdateOpera
 		return null;
 	}
 
+	@Override
+	public ResultSet transform(ResultSet resultSet) {
+		return resultSet;
+	}
+	
 
 }

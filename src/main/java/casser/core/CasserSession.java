@@ -46,8 +46,8 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	public <V1> SelectOperation<Tuple1<V1>> select(Getter<V1> getter1) {
 		
 		CasserMappingProperty<?> p1 = resolveMappingProperty(getter1);
-		
-		return new SelectOperation<Tuple1<V1>>(this, new Tuple1.Mapper<V1>(p1));
+	
+		return new SelectOperation<Tuple1<V1>>(this, new Tuple1.Mapper<V1>(p1), p1);
 	}
 
 	public <V1, V2> SelectOperation<Tuple2<V1, V2>> select(Getter<V1> getter1, Getter<V2> getter2) {
@@ -71,8 +71,13 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		return new UpsertOperation(this, entity, pojo);
 	}
 	
-	public DeleteOperation delete() {
-		return null;
+	public DeleteOperation delete(Object dsl) {
+		
+		Class<?> iface = MappingUtil.getMappingInterface(dsl);
+		
+		CasserMappingEntity<?> entity = new CasserMappingEntity(iface);
+		
+		return new DeleteOperation(this, entity);
 	}
 	
 	public Session getSession() {
