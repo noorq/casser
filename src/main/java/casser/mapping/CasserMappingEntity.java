@@ -62,6 +62,11 @@ public class CasserMappingEntity<E> implements CasserEntity<E> {
 	}	
 	
 	@Override
+	public String getName() {
+		return iface.toString();
+	}
+
+	@Override
 	public Collection<CasserProperty<E>> getProperties() {
 		return Collections.unmodifiableCollection(props.values());
 	}

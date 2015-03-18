@@ -1,19 +1,13 @@
 package casser.core;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import casser.mapping.CasserMappingEntity;
-import casser.mapping.CasserMappingProperty;
 import casser.support.CasserException;
 
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.TableMetadata;
-import com.datastax.driver.core.schemabuilder.Create;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 
 public class SessionInitializer extends AbstractSessionOperations {
@@ -21,6 +15,8 @@ public class SessionInitializer extends AbstractSessionOperations {
 	private final Session session;
 	private boolean showCql = false;
 	private Set<CasserMappingEntity<?>> dropEntitiesOnClose = null;
+	
+	private boolean dropRemovedColumns = false;
 	
 	SessionInitializer(Session session) {
 		
@@ -46,28 +42,33 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return this;
 	}
 	
+	public SessionInitializer dropRemovedColumns(boolean enabled) {
+		this.dropRemovedColumns = enabled;
+		return this;
+	}
+	
 	@Override
 	boolean isShowCql() {
 		return showCql;
 	}
 	
 	public SessionInitializer validate(Object... dsls) {
-		process(AutoDslType.VALIDATE, dsls);
+		process(AutoDdl.VALIDATE, dsls);
 		return this;
 	}
 
 	public SessionInitializer update(Object... dsls) {
-		process(AutoDslType.UPDATE, dsls);
+		process(AutoDdl.UPDATE, dsls);
 		return this;
 	}
 
 	public SessionInitializer create(Object... dsls) {
-		process(AutoDslType.CREATE, dsls);
+		process(AutoDdl.CREATE, dsls);
 		return this;
 	}
 
 	public SessionInitializer createDrop(Object... dsls) {
-		process(AutoDslType.CREATE_DROP, dsls);
+		process(AutoDdl.CREATE_DROP, dsls);
 		return this;
 	}
 
@@ -80,14 +81,14 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return new CasserSession(session, showCql, dropEntitiesOnClose);
 	}
 
-	private enum AutoDslType {
+	private enum AutoDdl {
 		VALIDATE,
 		UPDATE,
 		CREATE,
 		CREATE_DROP;
 	}
 	
-	private void process(AutoDslType type, Object[] dsls) {
+	private void process(AutoDdl type, Object[] dsls) {
 		
 		for (Object dsl : dsls) {
 			processSingle(type, dsl);
@@ -95,7 +96,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		
 	}
 	
-	private void processSingle(AutoDslType type, Object dsl) {
+	private void processSingle(AutoDdl type, Object dsl) {
 		
 		Class<?> iface = null;
 		
@@ -120,13 +121,13 @@ public class SessionInitializer extends AbstractSessionOperations {
 		
 		CasserMappingEntity<?> entity = new CasserMappingEntity(iface);
 		
-		if (type == AutoDslType.CREATE || type == AutoDslType.CREATE_DROP) {
+		if (type == AutoDdl.CREATE || type == AutoDdl.CREATE_DROP) {
 			createNewTable(entity);
 		}
 		else {
 			TableMetadata tmd = getTableMetadata(entity);
 			
-			if (type == AutoDslType.VALIDATE) {
+			if (type == AutoDdl.VALIDATE) {
 				
 				if (tmd == null) {
 					throw new CasserException("table not exists " + entity.getTableName() + "for entity " + entity.getEntityInterface());
@@ -134,7 +135,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 				
 				validateTable(tmd, entity);
 			}
-			else if (type == AutoDslType.UPDATE) {
+			else if (type == AutoDdl.UPDATE) {
 				
 				if (tmd == null) {
 					createNewTable(entity);
@@ -146,7 +147,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 			}
 		}
 		
-		if (type == AutoDslType.CREATE_DROP) {
+		if (type == AutoDdl.CREATE_DROP) {
 			getOrCreateDropEntitiesSet().add(entity);
 		}
 		
@@ -169,42 +170,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 	
 	private void createNewTable(CasserMappingEntity<?> entity) {
 		
-		Create create = SchemaBuilder.createTable(entity.getTableName());
-		
-		List<CasserMappingProperty<?>> partitionKeys = new ArrayList<CasserMappingProperty<?>>();
-		List<CasserMappingProperty<?>> clusteringColumns = new ArrayList<CasserMappingProperty<?>>();
-		List<CasserMappingProperty<?>> columns = new ArrayList<CasserMappingProperty<?>>();
-		
-		for (CasserMappingProperty<?> prop : entity.getMappingProperties()) {
-			
-			if (prop.isPartitionKey()) {
-				partitionKeys.add(prop);
-			}
-			else if (prop.isClusteringColumn()) {
-				clusteringColumns.add(prop);
-			}
-			else {
-				columns.add(prop);
-			}
-			
-		}
-		
-		Collections.sort(partitionKeys, OrdinalBasedPropertyComparator.INSTANCE);
-		Collections.sort(clusteringColumns, OrdinalBasedPropertyComparator.INSTANCE);
-		
-		for (CasserMappingProperty<?> prop : partitionKeys) {
-			create.addPartitionKey(prop.getColumnName(), prop.getDataType());
-		}
-		
-		for (CasserMappingProperty<?> prop : clusteringColumns) {
-			create.addClusteringColumn(prop.getColumnName(), prop.getDataType());
-		}
-		
-		for (CasserMappingProperty<?> prop : columns) {
-			create.addColumn(prop.getColumnName(), prop.getDataType());
-		}
-		
-		String cql = create.getQueryString();
+		String cql = SchemaUtil.createTableCql(entity);
 		
 		doExecute(cql);
 		
@@ -212,9 +178,19 @@ public class SessionInitializer extends AbstractSessionOperations {
 	
 	private void validateTable(TableMetadata tmd, CasserMappingEntity<?> entity) {
 		
+		String cql = SchemaUtil.alterTableCql(tmd, entity, dropRemovedColumns);
+		
+		if (cql != null) {
+			throw new CasserException("schema changed for entity " + entity.getEntityInterface() + ", apply this command: " + cql);
+		}
 	}
 	
 	private void alterTable(TableMetadata tmd, CasserMappingEntity<?> entity) {
 		
+		String cql = SchemaUtil.alterTableCql(tmd, entity, dropRemovedColumns);
+		
+		if (cql != null) {
+			doExecute(cql);
+		}
 	}
 }
