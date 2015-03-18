@@ -1,6 +1,8 @@
 package casser.test.integration.core.simple;
 
 
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -8,6 +10,8 @@ import org.junit.Test;
 import casser.core.Casser;
 import casser.core.CasserSession;
 import casser.test.integration.build.AbstractEmbeddedCassandraTest;
+
+import com.datastax.driver.core.Row;
 
 public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
@@ -31,7 +35,7 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 		alex.setName("alex");
 		alex.setAge(34);
 		
-		session.upsert(alex).sync();
+		List<Row> raws = session.upsert(alex).sync().all();
 	
 		Long id = session.select(user::getId).where(user::getId, "==", 123L).sync().findFirst().get().v1;
 		

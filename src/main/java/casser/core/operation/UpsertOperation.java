@@ -9,11 +9,12 @@ import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
 import casser.support.CasserMappingException;
 
+import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
-public class UpsertOperation extends AbstractOperation<Object, UpsertOperation> {
+public class UpsertOperation extends AbstractOperation<ResultSet, UpsertOperation> {
 
 	private final Insert insert;
 	

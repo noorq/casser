@@ -13,7 +13,10 @@ import casser.core.tuple.Tuple1;
 import casser.core.tuple.Tuple2;
 import casser.core.tuple.Tuple3;
 import casser.mapping.CasserMappingEntity;
+import casser.mapping.CasserMappingProperty;
 import casser.mapping.MappingUtil;
+import casser.support.CasserMappingException;
+import casser.support.DslPropertyException;
 
 import com.datastax.driver.core.CloseFuture;
 import com.datastax.driver.core.Session;
@@ -41,7 +44,10 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	}
 	
 	public <V1> SelectOperation<Tuple1<V1>> select(Getter<V1> getter1) {
-		return null;
+		
+		CasserMappingProperty<?> p1 = resolveMappingProperty(getter1);
+		
+		return new SelectOperation<Tuple1<V1>>(this, new Tuple1.Mapper<V1>(p1));
 	}
 
 	public <V1, V2> SelectOperation<Tuple2<V1, V2>> select(Getter<V1> getter1, Getter<V2> getter2) {
@@ -100,6 +106,19 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		String cql = SchemaUtil.dropTableCql(entity);
 		
 		execute(cql);
+		
+	}
+	
+	
+	private CasserMappingProperty<?> resolveMappingProperty(Getter<?> getter) {
+		
+		try {
+			getter.get();
+			throw new CasserMappingException("getter must reference to dsl object " + getter);
+		}
+		catch(DslPropertyException e) {
+			return (CasserMappingProperty<?>) e.getProperty();
+		}
 		
 	}
 	

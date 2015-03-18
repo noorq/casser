@@ -3,11 +3,12 @@ package casser.core.operation;
 import java.util.function.Function;
 
 import casser.core.AbstractSessionOperations;
+import casser.mapping.ColumnValueProvider;
 
 
 public class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectOperation<E>> {
 
-	public SelectOperation(AbstractSessionOperations sessionOperations) {
+	public SelectOperation(AbstractSessionOperations sessionOperations, Function<ColumnValueProvider, E> mapper) {
 		super(sessionOperations);
 	}
 	
