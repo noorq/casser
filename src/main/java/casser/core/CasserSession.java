@@ -26,20 +26,22 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	private final Session session;
 	private final boolean showCql;
 	private final Set<CasserMappingEntity<?>> dropEntitiesOnClose;
+	private final MappingEntityFactory entityFactory;
 	
-	CasserSession(Session session, boolean showCql, Set<CasserMappingEntity<?>> dropEntitiesOnClose) {
+	CasserSession(Session session, boolean showCql, Set<CasserMappingEntity<?>> dropEntitiesOnClose, MappingEntityFactory mappingEntityFactory) {
 		this.session = session;
 		this.showCql = showCql;
 		this.dropEntitiesOnClose = dropEntitiesOnClose;
+		this.entityFactory = mappingEntityFactory;
 	}
 	
 	@Override
-	Session currentSession() {
+	public Session currentSession() {
 		return session;
 	}
 	
 	@Override
-	boolean isShowCql() {
+	public boolean isShowCql() {
 		return showCql;
 	}
 	
@@ -66,7 +68,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		
 		Class<?> iface = MappingUtil.getMappingInterface(pojo);
 		
-		CasserMappingEntity<?> entity = new CasserMappingEntity(iface);
+		CasserMappingEntity<?> entity = entityFactory.getEntity(iface);
 		
 		return new UpsertOperation(this, entity, pojo);
 	}
@@ -75,7 +77,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		
 		Class<?> iface = MappingUtil.getMappingInterface(dsl);
 		
-		CasserMappingEntity<?> entity = new CasserMappingEntity(iface);
+		CasserMappingEntity<?> entity = entityFactory.getEntity(iface);
 		
 		return new DeleteOperation(this, entity);
 	}

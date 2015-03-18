@@ -14,9 +14,9 @@ public abstract class AbstractSessionOperations {
 
 	final Logger logger = LoggerFactory.getLogger(getClass());
 	
-	abstract Session currentSession();
+	abstract public Session currentSession();
 	
-	abstract boolean isShowCql();
+	abstract public boolean isShowCql();
 	
 	public ResultSet execute(String cql) {
 		

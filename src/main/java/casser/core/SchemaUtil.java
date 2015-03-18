@@ -22,6 +22,10 @@ public final class SchemaUtil {
 	private SchemaUtil() {
 	}
 
+	public static String useCql(String keyspace) {
+		return "USE " + keyspace;
+	}
+	
 	public static String createTableCql(CasserMappingEntity<?> entity) {
 
 		Create create = SchemaBuilder.createTable(entity.getTableName());
