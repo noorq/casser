@@ -8,11 +8,11 @@ import casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
 public class ContextInitTest extends AbstractEmbeddedCassandraTest {
 
-	CasserSession session = Casser.init(getSession()).get();
-	
 	@Test
 	public void test() {
-		
+
+		CasserSession session = Casser.init(getSession()).get();
+
 		System.out.println("Works! " + session);
 		
 	}
