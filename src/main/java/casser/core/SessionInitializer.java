@@ -17,7 +17,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 	private boolean showCql = false;
 	private Set<CasserMappingEntity<?>> dropEntitiesOnClose = null;
 	
-	private MappingEntityFactory entityFactory = new MappingEntityFactory();
+	private CasserEntityCache entityCache = new CasserEntityCache();
 	
 	private boolean dropRemovedColumns = false;
 	
@@ -81,7 +81,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 	}
 	
 	public CasserSession get() {
-		return new CasserSession(session, showCql, dropEntitiesOnClose, entityFactory);
+		return new CasserSession(session, showCql, dropEntitiesOnClose, entityCache);
 	}
 
 	private enum AutoDdl {
@@ -103,7 +103,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		
 		Class<?> iface = MappingUtil.getMappingInterface(dsl);
 		
-		CasserMappingEntity<?> entity = entityFactory.getEntity(iface);
+		CasserMappingEntity<?> entity = entityCache.getEntity(iface);
 		
 		if (type == AutoDdl.CREATE || type == AutoDdl.CREATE_DROP) {
 			createNewTable(entity);

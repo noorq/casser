@@ -1,6 +1,8 @@
 package casser.core;
 
 import java.lang.reflect.Proxy;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import casser.config.CasserSettings;
 import casser.config.DefaultCasserSettings;
@@ -16,7 +18,9 @@ public final class Casser {
 	
 	private static volatile CasserSettings casserSettings = new DefaultCasserSettings();
 	
-	private Casser() {	
+	private static final ConcurrentMap<Class<?>, Object> cacheDsls = new  ConcurrentHashMap<Class<?>, Object>();
+	
+	private Casser() {
 	}
 	
 	public static CasserSettings settings() {
@@ -54,12 +58,25 @@ public final class Casser {
 
 	@SuppressWarnings("unchecked")
 	public static <E> E dsl(Class<E> iface, ClassLoader classLoader) {
-		DslInvocationHandler<E> handler = new DslInvocationHandler<E>(iface);
-		E proxy = (E) Proxy.newProxyInstance(
-		                            classLoader,
-		                            new Class[] { iface },
-		                            handler);
-		return proxy;
+		
+		Object instance = cacheDsls.get(iface);
+		
+		if (instance == null) {
+		
+			DslInvocationHandler<E> handler = new DslInvocationHandler<E>(iface);
+			instance = Proxy.newProxyInstance(
+			                            classLoader,
+			                            new Class[] { iface },
+			                            handler);
+			
+			Object c = cacheDsls.putIfAbsent(iface, instance);
+			if (c != null) {
+				instance = c;
+			}
+		}
+		
+		return (E) instance;
+		
 	}
 
 	public static <E> E pojo(Class<E> iface) {

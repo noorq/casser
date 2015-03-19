@@ -5,18 +5,18 @@ import java.util.concurrent.ConcurrentMap;
 
 import casser.mapping.CasserMappingEntity;
 
-public class MappingEntityFactory {
+public class CasserEntityCache {
 
-	private ConcurrentMap<Class<?>, CasserMappingEntity<?>> knownEntities = new ConcurrentHashMap<Class<?>, CasserMappingEntity<?>>();
+	private ConcurrentMap<Class<?>, CasserMappingEntity<?>> cache = new ConcurrentHashMap<Class<?>, CasserMappingEntity<?>>();
 
 	public CasserMappingEntity<?> getEntity(Class<?> iface) {
 		
-		CasserMappingEntity<?> entity = knownEntities.get(iface);
+		CasserMappingEntity<?> entity = cache.get(iface);
 		
 		if (entity == null) {
 			entity = new CasserMappingEntity(iface);
 			
-			CasserMappingEntity<?> c = knownEntities.putIfAbsent(iface, entity);
+			CasserMappingEntity<?> c = cache.putIfAbsent(iface, entity);
 			if (c != null) {
 				entity = c;
 			}
