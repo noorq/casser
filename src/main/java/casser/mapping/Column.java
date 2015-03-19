@@ -14,7 +14,7 @@ public @interface Column {
 
 	String value() default "";
 
-	boolean shareStatic() default false; 
+	boolean isStatic() default false; 
 	
 	boolean forceQuote() default false;
 }

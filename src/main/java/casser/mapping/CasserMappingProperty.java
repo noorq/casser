@@ -137,7 +137,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 			
 			Column column = getterMethod.getDeclaredAnnotation(Column.class);
 			if (column != null) {
-				isStatic = column.shareStatic();
+				isStatic = column.isStatic();
 			}
 			
 			staticInfo = true;
