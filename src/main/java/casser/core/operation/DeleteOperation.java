@@ -1,11 +1,13 @@
 package casser.core.operation;
 
 import casser.core.AbstractSessionOperations;
+import casser.core.Filter;
 import casser.mapping.CasserMappingEntity;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Delete;
+import com.datastax.driver.core.querybuilder.Delete.Where;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 
@@ -20,11 +22,24 @@ public class DeleteOperation extends AbstractFilterOperation<ResultSet, DeleteOp
 	}
 	
 	@Override
-	public BuiltStatement getBuiltStatement() {
+	public BuiltStatement buildStatement() {
 		
-		return QueryBuilder.truncate(entity.getTableName());
-		
-		//return QueryBuilder.delete().from(entity.getTableName());
+		if (filters != null && !filters.isEmpty()) {
+
+			Delete delete = QueryBuilder.delete().from(entity.getTableName());
+			
+			Where where = delete.where();
+			
+			for (Filter<?> filter : filters) {
+				where.and(filter.getClause());
+			}
+			
+			return delete;
+
+		}
+		else {
+			return QueryBuilder.truncate(entity.getTableName());
+		}
 	}
 
 	@Override

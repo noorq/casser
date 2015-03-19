@@ -12,7 +12,7 @@ public class CountOperation extends AbstractObjectOperation<Long, CountOperation
 	}
 
 	@Override
-	public BuiltStatement getBuiltStatement() {
+	public BuiltStatement buildStatement() {
 		return null;
 	}
 	

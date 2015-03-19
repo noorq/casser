@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import casser.core.AbstractSessionOperations;
+import casser.core.Filter;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
 import casser.mapping.ColumnValueProvider;
@@ -18,18 +19,30 @@ import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Selection;
+import com.datastax.driver.core.querybuilder.Select.Where;
 
 
 public class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectOperation<E>> {
 
-	protected final Function<ColumnValueProvider, E> rowMapper;
-	
-	private final Select select;
+	private final Function<ColumnValueProvider, E> rowMapper;
+	private final CasserMappingProperty<?>[] props;
 	
 	public SelectOperation(AbstractSessionOperations sessionOperations, Function<ColumnValueProvider, E> rowMapper, CasserMappingProperty<?>... props) {
 		super(sessionOperations);
-		
 		this.rowMapper = rowMapper;
+		this.props = props;	
+	}
+	
+	public CountOperation count() {
+		return null;
+	}
+	
+	public <R> SelectOperation<R> map(Function<E, R> fn) {
+		return null;
+	}
+	
+	@Override
+	public BuiltStatement buildStatement() {
 		
 		CasserMappingEntity<?> entity = null;
 		Selection selection = QueryBuilder.select();
@@ -49,21 +62,17 @@ public class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectO
 			throw new CasserMappingException("no entity or table to select data");
 		}
 		
-		this.select = selection.from(entity.getTableName());
+		Select select = selection.from(entity.getTableName());
 		
+		if (filters != null && !filters.isEmpty()) {
 		
-	}
-	
-	public CountOperation count() {
-		return null;
-	}
-	
-	public <R> SelectOperation<R> map(Function<E, R> fn) {
-		return null;
-	}
-	
-	@Override
-	public BuiltStatement getBuiltStatement() {
+			Where where = select.where();
+			
+			for (Filter<?> filter : filters) {
+				where.and(filter.getClause());
+			}
+		}
+		
 		return select;
 	}
 

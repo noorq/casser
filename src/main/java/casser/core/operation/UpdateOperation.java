@@ -13,7 +13,7 @@ public class UpdateOperation extends AbstractFilterOperation<ResultSet, UpdateOp
 	}
 	
 	@Override
-	public BuiltStatement getBuiltStatement() {
+	public BuiltStatement buildStatement() {
 		return null;
 	}
 

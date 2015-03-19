@@ -47,7 +47,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	
 	public <V1> SelectOperation<Tuple1<V1>> select(Getter<V1> getter1) {
 		
-		CasserMappingProperty<?> p1 = resolveMappingProperty(getter1);
+		CasserMappingProperty<?> p1 = MappingUtil.resolveMappingProperty(getter1);
 	
 		return new SelectOperation<Tuple1<V1>>(this, new Tuple1.Mapper<V1>(p1), p1);
 	}
@@ -117,16 +117,6 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	}
 	
 	
-	private CasserMappingProperty<?> resolveMappingProperty(Getter<?> getter) {
-		
-		try {
-			getter.get();
-			throw new CasserMappingException("getter must reference to dsl object " + getter);
-		}
-		catch(DslPropertyException e) {
-			return (CasserMappingProperty<?>) e.getProperty();
-		}
-		
-	}
+
 	
 }

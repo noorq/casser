@@ -17,7 +17,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 	
 	public Stream<E> sync() {
 		
-		ResultSet resultSet = sessionOperations.execute(getBuiltStatement());
+		ResultSet resultSet = sessionOperations.execute(buildStatement());
 		
 		System.out.println("resultSet = " + resultSet);
 		

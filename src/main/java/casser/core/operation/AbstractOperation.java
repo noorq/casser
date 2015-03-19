@@ -9,14 +9,14 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> {
 
 	protected final AbstractSessionOperations sessionOperations;
 	
-	public abstract BuiltStatement getBuiltStatement();
+	public abstract BuiltStatement buildStatement();
 	
 	public AbstractOperation(AbstractSessionOperations sessionOperations) {
 		this.sessionOperations = sessionOperations;
 	}
 	
 	public String cql() {
-		return getBuiltStatement().setForceNoValues(true).getQueryString();
+		return buildStatement().setForceNoValues(true).getQueryString();
 	}
 	
 	public Prepared<O> prepare() {

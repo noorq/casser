@@ -7,6 +7,7 @@ import java.util.function.Function;
 import casser.core.AbstractSessionOperations;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
+import casser.mapping.MappingUtil;
 import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.ResultSet;
@@ -36,15 +37,7 @@ public class UpsertOperation extends AbstractObjectOperation<ResultSet, UpsertOp
 				throw new CasserMappingException("invalid getter " + getter, e);
 			}
 			
-			if (value == null) {
-				continue;
-			}
-			
-			Optional<Function<Object, Object>> converter = prop.getWriteConverter();
-			
-			if (converter.isPresent()) {
-				value = converter.get().apply(value);
-			}
+			value = MappingUtil.prepareValueForWrite(prop, value);
 			
 			if (value != null) {
 				insert.value(prop.getColumnName(), value);
@@ -56,7 +49,7 @@ public class UpsertOperation extends AbstractObjectOperation<ResultSet, UpsertOp
 	}
 
 	@Override
-	public BuiltStatement getBuiltStatement() {
+	public BuiltStatement buildStatement() {
 		return insert;
 	}
 

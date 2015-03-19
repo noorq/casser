@@ -10,7 +10,7 @@ import com.datastax.driver.core.querybuilder.BuiltStatement;
 
 public abstract class AbstractObjectOperation<E, O extends AbstractObjectOperation<E, O>> extends AbstractOperation<E, O> {
 
-	public abstract BuiltStatement getBuiltStatement();
+	public abstract BuiltStatement buildStatement();
 	
 	public abstract E transform(ResultSet resultSet);
 	
@@ -20,7 +20,7 @@ public abstract class AbstractObjectOperation<E, O extends AbstractObjectOperati
 	
 	public E sync() {
 		
-		ResultSet resultSet = sessionOperations.execute(getBuiltStatement());
+		ResultSet resultSet = sessionOperations.execute(buildStatement());
 		
 		System.out.println("resultSet = " + resultSet);
 		
