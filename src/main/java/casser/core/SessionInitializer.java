@@ -115,7 +115,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		
 		Class<?> iface = MappingUtil.getMappingInterface(dsl);
 		
-		CasserMappingEntity<?> entity = entityCache.getEntity(iface);
+		CasserMappingEntity<?> entity = entityCache.getOrCreateEntity(iface);
 		
 		if (type == AutoDsl.CREATE || type == AutoDsl.CREATE_DROP) {
 			createNewTable(entity);

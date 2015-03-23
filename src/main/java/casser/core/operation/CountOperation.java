@@ -16,19 +16,40 @@
 package casser.core.operation;
 
 import casser.core.AbstractSessionOperations;
+import casser.core.Filter;
+import casser.mapping.CasserMappingEntity;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.driver.core.querybuilder.Select.Where;
 
-public class CountOperation extends AbstractObjectOperation<Long, CountOperation> {
+public class CountOperation extends AbstractFilterOperation<Long, CountOperation> {
 
-	public CountOperation(AbstractSessionOperations sessionOperations) {
+	private final CasserMappingEntity<?> entity;
+	
+	public CountOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity<?> entity) {
 		super(sessionOperations);
+		
+		this.entity = entity;
 	}
 
 	@Override
 	public BuiltStatement buildStatement() {
-		return null;
+		
+		Select select = QueryBuilder.select().countAll().from(entity.getTableName());
+		
+		if (filters != null && !filters.isEmpty()) {
+		
+			Where where = select.where();
+			
+			for (Filter<?> filter : filters) {
+				where.and(filter.getClause());
+			}
+		}
+		
+		return select;
 	}
 	
 	@Override

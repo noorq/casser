@@ -49,7 +49,23 @@ public class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectO
 	}
 	
 	public CountOperation count() {
-		return null;
+		
+		CasserMappingEntity<?> entity = null;
+		for (CasserMappingProperty<?> prop : props) {
+			
+			if (entity == null) {
+				entity = prop.getEntity();
+			}
+			else if (entity != prop.getEntity()) {
+				throw new CasserMappingException("you can count records only from a single entity " + entity.getMappingInterface() + " or " + prop.getEntity().getMappingInterface());
+			}
+		}
+		
+		if (entity == null) {
+			throw new CasserMappingException("no entity or table to count data");
+		}
+		
+		return new CountOperation(sessionOperations, entity);
 	}
 	
 	public <R> SelectOperation<R> map(Function<E, R> fn) {

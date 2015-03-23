@@ -21,6 +21,7 @@ import java.util.Set;
 
 import casser.core.dsl.Getter;
 import casser.core.dsl.Setter;
+import casser.core.operation.CountOperation;
 import casser.core.operation.DeleteOperation;
 import casser.core.operation.SelectOperation;
 import casser.core.operation.UpdateOperation;
@@ -167,6 +168,16 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 				p1, p2, p3, p4, p5, p6, p7);
 	}
 	
+	public CountOperation count(Object dsl) {
+		Objects.requireNonNull(dsl, "dsl is empty");
+		
+		Class<?> iface = MappingUtil.getMappingInterface(dsl);
+		
+		CasserMappingEntity<?> entity = entityCache.getOrCreateEntity(iface);
+		
+		return new CountOperation(this, entity);
+	}
+	
 	public <V> UpdateOperation update(Setter<V> setter, V v) {
 		Objects.requireNonNull(setter, "field is empty");
 		Objects.requireNonNull(v, "value is empty");
@@ -181,7 +192,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		
 		Class<?> iface = MappingUtil.getMappingInterface(pojo);
 		
-		CasserMappingEntity<?> entity = entityCache.getEntity(iface);
+		CasserMappingEntity<?> entity = entityCache.getOrCreateEntity(iface);
 		
 		return new UpsertOperation(this, entity, pojo);
 	}
@@ -191,7 +202,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		
 		Class<?> iface = MappingUtil.getMappingInterface(dsl);
 		
-		CasserMappingEntity<?> entity = entityCache.getEntity(iface);
+		CasserMappingEntity<?> entity = entityCache.getOrCreateEntity(iface);
 		
 		return new DeleteOperation(this, entity);
 	}

@@ -24,7 +24,7 @@ public class CasserEntityCache {
 
 	private ConcurrentMap<Class<?>, CasserMappingEntity<?>> cache = new ConcurrentHashMap<Class<?>, CasserMappingEntity<?>>();
 
-	public CasserMappingEntity<?> getEntity(Class<?> iface) {
+	public CasserMappingEntity<?> getOrCreateEntity(Class<?> iface) {
 		
 		CasserMappingEntity<?> entity = cache.get(iface);
 		
