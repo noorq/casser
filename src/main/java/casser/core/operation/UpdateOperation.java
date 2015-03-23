@@ -32,7 +32,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
 
 
-public class UpdateOperation extends AbstractFilterOperation<ResultSet, UpdateOperation> {
+public final class UpdateOperation extends AbstractFilterOperation<ResultSet, UpdateOperation> {
 	
 	private final CasserMappingProperty<?>[] props;
 	private final Object[] vals;

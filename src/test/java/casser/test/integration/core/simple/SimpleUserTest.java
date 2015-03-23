@@ -56,12 +56,12 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
 		String name = session.select(user::getName)
 				.where(user::getId, "==", 123L)
+				.map(t -> "_" + t.v1)
 				.sync()
 				.findFirst()
-				.get()
-				.v1;
+				.get();
 		
-		Assert.assertEquals("albert", name);
+		Assert.assertEquals("_albert", name);
 		
 		session.delete(user).where(user::getId, "==", 123L).sync();
 		

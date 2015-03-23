@@ -25,7 +25,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Where;
 
-public class CountOperation extends AbstractFilterOperation<Long, CountOperation> {
+public final class CountOperation extends AbstractFilterOperation<Long, CountOperation> {
 
 	private final CasserMappingEntity<?> entity;
 	
@@ -56,6 +56,5 @@ public class CountOperation extends AbstractFilterOperation<Long, CountOperation
 	public Long transform(ResultSet resultSet) {
 		return resultSet.one().getLong(0);
 	}
-	
-	
+
 }

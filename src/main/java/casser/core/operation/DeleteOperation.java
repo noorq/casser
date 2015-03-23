@@ -26,7 +26,7 @@ import com.datastax.driver.core.querybuilder.Delete.Where;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 
-public class DeleteOperation extends AbstractFilterOperation<ResultSet, DeleteOperation> {
+public final class DeleteOperation extends AbstractFilterOperation<ResultSet, DeleteOperation> {
 
 	private final CasserMappingEntity<?> entity;
 	

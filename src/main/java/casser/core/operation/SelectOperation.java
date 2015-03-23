@@ -37,10 +37,10 @@ import com.datastax.driver.core.querybuilder.Select.Selection;
 import com.datastax.driver.core.querybuilder.Select.Where;
 
 
-public class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectOperation<E>> {
+public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectOperation<E>> {
 
-	private final Function<ColumnValueProvider, E> rowMapper;
-	private final CasserMappingProperty<?>[] props;
+	protected final Function<ColumnValueProvider, E> rowMapper;
+	protected final CasserMappingProperty<?>[] props;
 	
 	public SelectOperation(AbstractSessionOperations sessionOperations, Function<ColumnValueProvider, E> rowMapper, CasserMappingProperty<?>... props) {
 		super(sessionOperations);
@@ -68,8 +68,8 @@ public class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectO
 		return new CountOperation(sessionOperations, entity);
 	}
 	
-	public <R> SelectOperation<R> map(Function<E, R> fn) {
-		return null;
+	public <R> SelectTransformingOperation<R, E> map(Function<E, R> fn) {
+		return new SelectTransformingOperation<R, E>(this, fn);
 	}
 	
 	@Override

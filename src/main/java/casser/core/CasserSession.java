@@ -63,7 +63,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	public boolean isShowCql() {
 		return showCql;
 	}
-	
+		
 	public <V1> SelectOperation<Tuple1<V1>> select(Getter<V1> getter1) {
 		Objects.requireNonNull(getter1, "field 1 is empty");
 		
