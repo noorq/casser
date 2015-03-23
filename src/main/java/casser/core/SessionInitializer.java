@@ -16,6 +16,7 @@
 package casser.core;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import casser.mapping.CasserMappingEntity;
@@ -37,12 +38,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 	private boolean dropRemovedColumns = false;
 	
 	SessionInitializer(Session session) {
-		
-		if (session == null) {
-			throw new IllegalArgumentException("empty session");
-		}
-		
-		this.session = session;
+		this.session = Objects.requireNonNull(session, "empty session");
 	}
 	
 	@Override
@@ -71,22 +67,22 @@ public class SessionInitializer extends AbstractSessionOperations {
 	}
 	
 	public SessionInitializer validate(Object... dsls) {
-		process(AutoDdl.VALIDATE, dsls);
+		process(AutoDsl.VALIDATE, dsls);
 		return this;
 	}
 
 	public SessionInitializer update(Object... dsls) {
-		process(AutoDdl.UPDATE, dsls);
+		process(AutoDsl.UPDATE, dsls);
 		return this;
 	}
 
 	public SessionInitializer create(Object... dsls) {
-		process(AutoDdl.CREATE, dsls);
+		process(AutoDsl.CREATE, dsls);
 		return this;
 	}
 
 	public SessionInitializer createDrop(Object... dsls) {
-		process(AutoDdl.CREATE_DROP, dsls);
+		process(AutoDsl.CREATE_DROP, dsls);
 		return this;
 	}
 
@@ -99,14 +95,14 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return new CasserSession(session, showCql, dropEntitiesOnClose, entityCache);
 	}
 
-	private enum AutoDdl {
+	private enum AutoDsl {
 		VALIDATE,
 		UPDATE,
 		CREATE,
 		CREATE_DROP;
 	}
 	
-	private void process(AutoDdl type, Object[] dsls) {
+	private void process(AutoDsl type, Object[] dsls) {
 		
 		for (Object dsl : dsls) {
 			processSingle(type, dsl);
@@ -114,19 +110,20 @@ public class SessionInitializer extends AbstractSessionOperations {
 		
 	}
 	
-	private void processSingle(AutoDdl type, Object dsl) {
+	private void processSingle(AutoDsl type, Object dsl) {
+		Objects.requireNonNull(dsl, "dsl is empty");
 		
 		Class<?> iface = MappingUtil.getMappingInterface(dsl);
 		
 		CasserMappingEntity<?> entity = entityCache.getEntity(iface);
 		
-		if (type == AutoDdl.CREATE || type == AutoDdl.CREATE_DROP) {
+		if (type == AutoDsl.CREATE || type == AutoDsl.CREATE_DROP) {
 			createNewTable(entity);
 		}
 		else {
 			TableMetadata tmd = getTableMetadata(entity);
 			
-			if (type == AutoDdl.VALIDATE) {
+			if (type == AutoDsl.VALIDATE) {
 				
 				if (tmd == null) {
 					throw new CasserException("table not exists " + entity.getTableName() + "for entity " + entity.getMappingInterface());
@@ -134,7 +131,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 				
 				validateTable(tmd, entity);
 			}
-			else if (type == AutoDdl.UPDATE) {
+			else if (type == AutoDsl.UPDATE) {
 				
 				if (tmd == null) {
 					createNewTable(entity);
@@ -146,7 +143,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 			}
 		}
 		
-		if (type == AutoDdl.CREATE_DROP) {
+		if (type == AutoDsl.CREATE_DROP) {
 			getOrCreateDropEntitiesSet().add(entity);
 		}
 		

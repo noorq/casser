@@ -20,36 +20,46 @@ import java.util.function.Function;
 import casser.mapping.CasserMappingProperty;
 import casser.mapping.ColumnValueProvider;
 
-public final class Tuple3<V1, V2, V3> {
+public final class Tuple4<V1, V2, V3, V4> {
 
 	public final V1 v1;
 	public final V2 v2;
 	public final V3 v3;
-
-	public Tuple3(V1 v1, V2 v2, V3 v3) {
+	public final V4 v4;
+	
+	public Tuple4(V1 v1, V2 v2, V3 v3, V4 v4) {
 		this.v1 = v1;
 		this.v2 = v2;
 		this.v3 = v3;
+		this.v4 = v4;
 	}
 	
-	public final static class Mapper<V1, V2, V3> implements Function<ColumnValueProvider, Tuple3<V1, V2, V3>> {
+	public final static class Mapper<V1, V2, V3, V4> implements Function<ColumnValueProvider, Tuple4<V1, V2, V3, V4>> {
 
 		private final CasserMappingProperty<?> p1;
 		private final CasserMappingProperty<?> p2;
 		private final CasserMappingProperty<?> p3;
+		private final CasserMappingProperty<?> p4;
 		
-		public Mapper(CasserMappingProperty<?> p1, CasserMappingProperty<?> p2, CasserMappingProperty<?> p3) {
+		public Mapper(
+				CasserMappingProperty<?> p1, 
+				CasserMappingProperty<?> p2, 
+				CasserMappingProperty<?> p3,
+				CasserMappingProperty<?> p4
+				) {
 			this.p1 = p1;
 			this.p2 = p2;
 			this.p3 = p3;
+			this.p4 = p4;
 		}
 		
 		@Override
-		public Tuple3<V1, V2, V3> apply(ColumnValueProvider provider) {
-			return new Tuple3<V1, V2, V3>(
+		public Tuple4<V1, V2, V3, V4> apply(ColumnValueProvider provider) {
+			return new Tuple4<V1, V2, V3, V4>(
 					provider.getColumnValue(0, p1), 
 					provider.getColumnValue(1, p2),
-					provider.getColumnValue(2, p3)
+					provider.getColumnValue(2, p3),
+					provider.getColumnValue(3, p4)
 					);
 		}
 	}

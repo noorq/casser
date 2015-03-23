@@ -18,7 +18,7 @@ package casser.core;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum FilterOperation {
+public enum FilterOperator {
 
 	EQUAL("=="),
 	
@@ -32,26 +32,26 @@ public enum FilterOperation {
 
 	LESSER_OR_EQUAL("<=");
 	
-	private final String operator;
+	private final String name;
 	
-	private final static Map<String, FilterOperation> indexByOperator = new HashMap<String, FilterOperation>();
+	private final static Map<String, FilterOperator> indexByName = new HashMap<String, FilterOperator>();
 	
 	static {
-		for (FilterOperation fo : FilterOperation.values()) {
-			indexByOperator.put(fo.getOperator(), fo);
+		for (FilterOperator fo : FilterOperator.values()) {
+			indexByName.put(fo.getName(), fo);
 		}
 	}
 	
-	private FilterOperation(String operator) {
-		this.operator = operator;
+	private FilterOperator(String name) {
+		this.name = name;
 	}
 
-	public String getOperator() {
-		return operator;
+	public String getName() {
+		return name;
 	}
 	
-	public static FilterOperation findByOperator(String operator) {
-		return indexByOperator.get(operator);
+	public static FilterOperator findByOperator(String name) {
+		return indexByName.get(name);
 	}
 	
 }

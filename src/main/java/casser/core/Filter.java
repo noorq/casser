@@ -28,18 +28,18 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 public final class Filter<V> {
 
 	private final CasserMappingProperty<?> property;
-	private final FilterOperation operation;
+	private final FilterOperator operation;
 	private final V value;
 	private final V[] values;
 	
-	private Filter(CasserMappingProperty<?> prop, FilterOperation op, V value) {
+	private Filter(CasserMappingProperty<?> prop, FilterOperator op, V value) {
 		this.property = prop;
 		this.operation = op;
 		this.value = value;
 		this.values = null;
 	}
 
-	private Filter(CasserMappingProperty<?> prop, FilterOperation op, V[] values) {
+	private Filter(CasserMappingProperty<?> prop, FilterOperator op, V[] values) {
 		this.property = prop;
 		this.operation = op;
 		this.value = null;
@@ -50,7 +50,7 @@ public final class Filter<V> {
 		return property;
 	}
 
-	public FilterOperation getOperation() {
+	public FilterOperator getOperation() {
 		return operation;
 	}
 
@@ -91,7 +91,7 @@ public final class Filter<V> {
 	}
 	
 	public static <V> Filter<V> equal(Getter<V> getter, V val) {
-		return create(getter, FilterOperation.EQUAL, val);
+		return create(getter, FilterOperator.EQUAL, val);
 	}
 
 	public static <V> Filter<V> in(Getter<V> getter, V[] vals) {
@@ -102,30 +102,35 @@ public final class Filter<V> {
 			throw new IllegalArgumentException("values array is empty");
 		}
 		
+		for (int i = 0; i != vals.length; ++i) {
+			Objects.requireNonNull(vals[i], "value[" + i + "] is empty");
+		}
+		
 		CasserMappingProperty<?> prop = MappingUtil.resolveMappingProperty(getter);
 		
-		return new Filter<V>(prop, FilterOperation.IN, vals);
+		return new Filter<V>(prop, FilterOperator.IN, vals);
 	}
 	
 	public static <V> Filter<V> greater(Getter<V> getter, V val) {
-		return create(getter, FilterOperation.GREATER, val);
+		return create(getter, FilterOperator.GREATER, val);
 	}
 	
 	public static <V> Filter<V> less(Getter<V> getter, V val) {
-		return create(getter, FilterOperation.LESSER, val);
+		return create(getter, FilterOperator.LESSER, val);
 	}
 
 	public static <V> Filter<V> greaterOrEqual(Getter<V> getter, V val) {
-		return create(getter, FilterOperation.GREATER_OR_EQUAL, val);
+		return create(getter, FilterOperator.GREATER_OR_EQUAL, val);
 	}
 
 	public static <V> Filter<V> lessOrEqual(Getter<V> getter, V val) {
-		return create(getter, FilterOperation.LESSER_OR_EQUAL, val);
+		return create(getter, FilterOperator.LESSER_OR_EQUAL, val);
 	}
 
 	public static <V> Filter<V> create(Getter<V> getter, String operator, V val) {
-
-		FilterOperation fo = FilterOperation.findByOperator(operator);
+		Objects.requireNonNull(operator, "empty operator");
+		
+		FilterOperator fo = FilterOperator.findByOperator(operator);
 		
 		if (fo == null) {
 			throw new CasserMappingException("invalid operator " + operator);
@@ -134,11 +139,12 @@ public final class Filter<V> {
 		return create(getter, fo, val);
 	}
 	
-	public static <V> Filter<V> create(Getter<V> getter, FilterOperation op, V val) {
+	public static <V> Filter<V> create(Getter<V> getter, FilterOperator op, V val) {
 		Objects.requireNonNull(getter, "empty getter");
+		Objects.requireNonNull(op, "empty op");
 		Objects.requireNonNull(val, "empty value");
 		
-		if (op == FilterOperation.IN) {
+		if (op == FilterOperator.IN) {
 			throw new IllegalArgumentException("invalid usage of the 'in' operator, use Filter.in() static method");
 		}
 		

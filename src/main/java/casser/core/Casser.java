@@ -33,7 +33,7 @@ public final class Casser {
 	
 	private static volatile CasserSettings casserSettings = new DefaultCasserSettings();
 	
-	private static final ConcurrentMap<Class<?>, Object> cacheDsls = new  ConcurrentHashMap<Class<?>, Object>();
+	private static final ConcurrentMap<Class<?>, Object> dslCache = new  ConcurrentHashMap<Class<?>, Object>();
 	
 	private Casser() {
 	}
@@ -74,7 +74,7 @@ public final class Casser {
 	@SuppressWarnings("unchecked")
 	public static <E> E dsl(Class<E> iface, ClassLoader classLoader) {
 		
-		Object instance = cacheDsls.get(iface);
+		Object instance = dslCache.get(iface);
 		
 		if (instance == null) {
 		
@@ -84,7 +84,7 @@ public final class Casser {
 			                            new Class[] { iface },
 			                            handler);
 			
-			Object c = cacheDsls.putIfAbsent(iface, instance);
+			Object c = dslCache.putIfAbsent(iface, instance);
 			if (c != null) {
 				instance = c;
 			}

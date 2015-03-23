@@ -15,6 +15,11 @@
  */
 package casser.core.tuple;
 
+import java.util.function.Function;
+
+import casser.mapping.CasserMappingProperty;
+import casser.mapping.ColumnValueProvider;
+
 public final class Tuple2<V1, V2> {
 
 	public final V1 v1;
@@ -25,4 +30,20 @@ public final class Tuple2<V1, V2> {
 		this.v2 = v2;
 	}
 
+	public final static class Mapper<V1, V2> implements Function<ColumnValueProvider, Tuple2<V1, V2>> {
+
+		private final CasserMappingProperty<?> p1;
+		private final CasserMappingProperty<?> p2;
+		
+		public Mapper(CasserMappingProperty<?> p1, CasserMappingProperty<?> p2) {
+			this.p1 = p1;
+			this.p2 = p2;
+		}
+		
+		@Override
+		public Tuple2<V1, V2> apply(ColumnValueProvider provider) {
+			return new Tuple2<V1, V2>(provider.getColumnValue(0, p1), provider.getColumnValue(1, p2));
+		}
+	}
+	
 }
