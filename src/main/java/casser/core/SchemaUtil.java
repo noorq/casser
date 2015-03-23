@@ -23,6 +23,7 @@ import java.util.Set;
 
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
+import casser.mapping.Ordering;
 import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.ColumnMetadata;
@@ -30,6 +31,7 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.schemabuilder.Alter;
 import com.datastax.driver.core.schemabuilder.Create;
+import com.datastax.driver.core.schemabuilder.Create.Options;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public final class SchemaUtil {
@@ -84,6 +86,16 @@ public final class SchemaUtil {
 			}
 		}
 
+		if (!clusteringColumns.isEmpty()) {
+			
+			Options options = create.withOptions();
+			
+			for (CasserMappingProperty<?> prop : clusteringColumns) {
+				options.clusteringOrder(prop.getColumnName(), mapDirection(prop.getOrdering()));
+			}
+			
+		}
+		
 		return create.buildInternal();
 		
 	}
@@ -149,4 +161,13 @@ public final class SchemaUtil {
 		
 	}
 	
+	private static SchemaBuilder.Direction mapDirection(Ordering o) {
+		switch(o) {
+		case ASCENDING:
+			return SchemaBuilder.Direction.ASC;
+		case DESCENDING:
+			return SchemaBuilder.Direction.DESC;
+		}
+		throw new CasserMappingException("unknown ordering " + o);
+	}
 }

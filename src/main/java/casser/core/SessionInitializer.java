@@ -18,6 +18,8 @@ package casser.core;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.MappingUtil;
@@ -25,12 +27,14 @@ import casser.support.CasserException;
 
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.TableMetadata;
+import com.google.common.util.concurrent.MoreExecutors;
 
 
 public class SessionInitializer extends AbstractSessionOperations {
 
 	private final Session session;
 	private boolean showCql = false;
+	private Executor executor = MoreExecutors.sameThreadExecutor();
 	private Set<CasserMappingEntity<?>> dropEntitiesOnClose = null;
 	
 	private CasserEntityCache entityCache = new CasserEntityCache();
@@ -46,6 +50,11 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return session;
 	}
 
+	@Override
+	public Executor getExecutor() {
+		return executor;
+	}
+
 	public SessionInitializer showCql() {
 		this.showCql = true;
 		return this;
@@ -56,6 +65,17 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return this;
 	}
 	
+	public SessionInitializer withExecutor(Executor executor) {
+		Objects.requireNonNull(executor, "empty executor");
+		this.executor = executor;
+		return this;
+	}
+
+	public SessionInitializer withCachingExecutor() {
+		this.executor = Executors.newCachedThreadPool();
+		return this;
+	}
+
 	public SessionInitializer dropRemovedColumns(boolean enabled) {
 		this.dropRemovedColumns = enabled;
 		return this;
@@ -92,7 +112,11 @@ public class SessionInitializer extends AbstractSessionOperations {
 	}
 	
 	public CasserSession get() {
-		return new CasserSession(session, showCql, dropEntitiesOnClose, entityCache);
+		return new CasserSession(session, 
+				showCql, 
+				dropEntitiesOnClose, 
+				entityCache,
+				executor);
 	}
 
 	private enum AutoDsl {

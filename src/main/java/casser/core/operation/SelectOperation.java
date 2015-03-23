@@ -15,6 +15,9 @@
  */
 package casser.core.operation;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Function;
@@ -23,14 +26,17 @@ import java.util.stream.StreamSupport;
 
 import casser.core.AbstractSessionOperations;
 import casser.core.Filter;
+import casser.core.dsl.Getter;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
 import casser.mapping.ColumnValueProvider;
+import casser.mapping.MappingUtil;
 import casser.mapping.RowColumnValueProvider;
 import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
+import com.datastax.driver.core.querybuilder.Ordering;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Selection;
@@ -41,6 +47,9 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
 	protected final Function<ColumnValueProvider, E> rowMapper;
 	protected final CasserMappingProperty<?>[] props;
+	
+	protected List<Ordering> ordering = null;
+	protected Integer limit = null;
 	
 	public SelectOperation(AbstractSessionOperations sessionOperations, Function<ColumnValueProvider, E> rowMapper, CasserMappingProperty<?>... props) {
 		super(sessionOperations);
@@ -72,6 +81,45 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		return new SelectTransformingOperation<R, E>(this, fn);
 	}
 	
+	public SelectOperation<E> asc(Getter<?> getter) {
+		Objects.requireNonNull(getter, "property is null");
+		CasserMappingProperty<?> prop = MappingUtil.resolveMappingProperty(getter);
+		return asc(prop);
+	}
+
+	private SelectOperation<E> asc(CasserMappingProperty<?> prop) {
+		
+		if (!prop.isClusteringColumn()) {
+			throw new CasserMappingException("property must be a clustering column " + prop.getPropertyName());
+		}
+		
+		getOrCreateOrdering().add(QueryBuilder.asc(prop.getColumnName()));
+		
+		return this;
+	}
+	
+	public SelectOperation<E> desc(Getter<?> getter) {
+		Objects.requireNonNull(getter, "property is null");
+		CasserMappingProperty<?> prop = MappingUtil.resolveMappingProperty(getter);
+		return desc(prop);
+	}
+
+	private SelectOperation<E> desc(CasserMappingProperty<?> prop) {
+
+		if (!prop.isClusteringColumn()) {
+			throw new CasserMappingException("property must be a clustering column " + prop.getPropertyName());
+		}
+
+		getOrCreateOrdering().add(QueryBuilder.desc(prop.getColumnName()));
+
+		return this;
+	}
+	
+	public SelectOperation<E> limit(Integer limit) {
+		this.limit = limit;
+		return this;
+	}
+	
 	@Override
 	public BuiltStatement buildStatement() {
 		
@@ -95,6 +143,14 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		
 		Select select = selection.from(entity.getTableName());
 		
+		if (ordering != null && !ordering.isEmpty()) {
+			select.orderBy(ordering.toArray(new Ordering[ordering.size()]));
+		}
+		
+		if (limit != null) {
+			select.limit(limit.intValue());
+		}
+		
 		if (filters != null && !filters.isEmpty()) {
 		
 			Where where = select.where();
@@ -116,5 +172,11 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
 	}
 
-	
+
+	private List<Ordering> getOrCreateOrdering() {
+		if (ordering == null) {
+			ordering = new ArrayList<Ordering>();
+		}
+		return ordering;
+	}
 }

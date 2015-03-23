@@ -18,6 +18,7 @@ package casser.core;
 import java.io.Closeable;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 import casser.core.dsl.Getter;
 import casser.core.dsl.Setter;
@@ -43,15 +44,21 @@ import com.datastax.driver.core.Session;
 public class CasserSession extends AbstractSessionOperations implements Closeable {
 
 	private final Session session;
-	private final boolean showCql;
+	private volatile boolean showCql;
 	private final Set<CasserMappingEntity<?>> dropEntitiesOnClose;
 	private final CasserEntityCache entityCache;
+	private final Executor executor;
 	
-	CasserSession(Session session, boolean showCql, Set<CasserMappingEntity<?>> dropEntitiesOnClose, CasserEntityCache entityCache) {
+	CasserSession(Session session, 
+			boolean showCql, 
+			Set<CasserMappingEntity<?>> dropEntitiesOnClose, 
+			CasserEntityCache entityCache, 
+			Executor executor) {
 		this.session = session;
 		this.showCql = showCql;
 		this.dropEntitiesOnClose = dropEntitiesOnClose;
 		this.entityCache = entityCache;
+		this.executor = executor;
 	}
 	
 	@Override
@@ -63,7 +70,22 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	public boolean isShowCql() {
 		return showCql;
 	}
-		
+
+	public CasserSession showCql() {
+		this.showCql = true;
+		return this;
+	}
+	
+	public CasserSession showCql(boolean showCql) {
+		this.showCql = showCql;
+		return this;
+	}
+	
+	@Override
+	public Executor getExecutor() {
+		return executor;
+	}
+
 	public <V1> SelectOperation<Tuple1<V1>> select(Getter<V1> getter1) {
 		Objects.requireNonNull(getter1, "field 1 is empty");
 		

@@ -19,6 +19,10 @@ import java.util.concurrent.Future;
 import java.util.stream.Stream;
 
 import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.ResultSetFuture;
+import com.google.common.base.Function;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import casser.core.AbstractSessionOperations;
 
@@ -32,15 +36,25 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 	
 	public Stream<E> sync() {
 		
-		ResultSet resultSet = sessionOperations.execute(buildStatement());
-		
-		System.out.println("resultSet = " + resultSet);
-		
+		ResultSet resultSet = sessionOperations.executeAsync(buildStatement()).getUninterruptibly();
+
 		return transform(resultSet);
 	}
 	
 	public Future<Stream<E>> async() {
-		return null;
+		
+		ResultSetFuture resultSetFuture = sessionOperations.executeAsync(buildStatement());
+
+		ListenableFuture<Stream<E>> future = Futures.transform(resultSetFuture, new Function<ResultSet, Stream<E>>() {
+
+			@Override
+			public Stream<E> apply(ResultSet resultSet) {
+				return transform(resultSet);
+			}
+
+		}, sessionOperations.getExecutor());
+		
+		return future;
 	}
 	
 	

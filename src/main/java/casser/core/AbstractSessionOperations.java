@@ -15,6 +15,8 @@
  */
 package casser.core;
 
+import java.util.concurrent.Executor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +24,7 @@ import casser.support.CasserException;
 
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 
@@ -32,6 +35,8 @@ public abstract class AbstractSessionOperations {
 	abstract public Session currentSession();
 	
 	abstract public boolean isShowCql();
+	
+	abstract public Executor getExecutor();
 	
 	public ResultSet execute(String cql) {
 		
@@ -53,7 +58,7 @@ public abstract class AbstractSessionOperations {
 		
 	}
 	
-	public ResultSet execute(BuiltStatement statement) {
+	public ResultSetFuture executeAsync(BuiltStatement statement) {
 		
 		try {
 			
@@ -69,11 +74,11 @@ public abstract class AbstractSessionOperations {
 				
 				System.out.println(cql);
 				
-				return currentSession().execute(regular);
+				return currentSession().executeAsync(regular);
 			}
 			else {
 
-				return currentSession().execute(statement);
+				return currentSession().executeAsync(statement);
 
 			}
 			

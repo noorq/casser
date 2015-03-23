@@ -47,6 +47,8 @@ public class CompondKeyTest extends AbstractEmbeddedCassandraTest {
 		
 		Timeline post = Casser.pojo(Timeline.class);
 		
+		session.showCql(false);
+		
 		for (int i = 0; i != 100; ++i) {
 		
 			post.setUserId(userId);
@@ -56,8 +58,10 @@ public class CompondKeyTest extends AbstractEmbeddedCassandraTest {
 			session.upsert(post).sync();
 		}
 		
+		session.showCql(true);
+		
 		session.select(timeline::getUserId, timeline::getTimestamp, timeline::getText)
-		.where(timeline::getUserId, "==", userId).sync()
+		.where(timeline::getUserId, "==", userId).desc(timeline::getTimestamp).limit(5).sync()
 		.forEach(t -> System.out.println(t));
 		
 	}
