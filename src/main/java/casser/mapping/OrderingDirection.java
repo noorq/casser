@@ -15,15 +15,17 @@
  */
 package casser.mapping;
 
-public enum Ordering {
+import casser.support.CasserMappingException;
 
-	ASCENDING("ASC"),
+public enum OrderingDirection {
 
-	DESCENDING("DESC");
+	ASC("ASC"),
+
+	DESC("DESC");
 
 	private final String cql;
 
-	private Ordering(String cql) {
+	private OrderingDirection(String cql) {
 		this.cql = cql;
 	}
 
@@ -31,4 +33,18 @@ public enum Ordering {
 		return cql;
 	}
 	
+	
+	public static OrderingDirection parseString(String name) {
+		
+		if (ASC.cql.equalsIgnoreCase(name)) {
+			return ASC;
+		}
+
+		else if (DESC.cql.equalsIgnoreCase(name)) {
+			return DESC;
+		}
+		
+		throw new CasserMappingException("invalid ordering direction name " + name);
+
+	}
 }

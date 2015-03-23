@@ -28,7 +28,7 @@ public @interface ClusteringColumn {
 
 	int ordinal() default 0;
 	
-	Ordering ordering() default Ordering.ASCENDING;
+	OrderingDirection ordering() default OrderingDirection.ASC;
 	
 	boolean forceQuote() default false;
 

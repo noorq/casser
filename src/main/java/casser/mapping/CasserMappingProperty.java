@@ -50,7 +50,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	private boolean isPartitionKey = false;
 	private boolean isClusteringColumn = false;
 	private int ordinal = 0;
-	private Ordering ordering = Ordering.ASCENDING;
+	private OrderingDirection ordering = OrderingDirection.ASC;
 	
 	private Class<?> javaType = null;
 	
@@ -140,7 +140,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	}
 
 	@Override
-	public Ordering getOrdering() {
+	public OrderingDirection getOrdering() {
 		ensureKeyInfo();
 		return ordering;
 	}

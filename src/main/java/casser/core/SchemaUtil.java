@@ -23,7 +23,7 @@ import java.util.Set;
 
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
-import casser.mapping.Ordering;
+import casser.mapping.OrderingDirection;
 import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.ColumnMetadata;
@@ -161,11 +161,11 @@ public final class SchemaUtil {
 		
 	}
 	
-	private static SchemaBuilder.Direction mapDirection(Ordering o) {
+	private static SchemaBuilder.Direction mapDirection(OrderingDirection o) {
 		switch(o) {
-		case ASCENDING:
+		case ASC:
 			return SchemaBuilder.Direction.ASC;
-		case DESCENDING:
+		case DESC:
 			return SchemaBuilder.Direction.DESC;
 		}
 		throw new CasserMappingException("unknown ordering " + o);

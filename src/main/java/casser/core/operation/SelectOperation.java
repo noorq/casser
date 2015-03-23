@@ -31,6 +31,7 @@ import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
 import casser.mapping.ColumnValueProvider;
 import casser.mapping.MappingUtil;
+import casser.mapping.OrderingDirection;
 import casser.mapping.RowColumnValueProvider;
 import casser.support.CasserMappingException;
 
@@ -81,40 +82,33 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		return new SelectTransformingOperation<R, E>(this, fn);
 	}
 	
-	public SelectOperation<E> asc(Getter<?> getter) {
-		Objects.requireNonNull(getter, "property is null");
-		CasserMappingProperty<?> prop = MappingUtil.resolveMappingProperty(getter);
-		return asc(prop);
+	public SelectOperation<E> orderBy(Getter<?> getter, String direction) {
+		Objects.requireNonNull(direction, "direction is null");
+		return orderBy(getter, OrderingDirection.parseString(direction));
 	}
-
-	private SelectOperation<E> asc(CasserMappingProperty<?> prop) {
+	
+	public SelectOperation<E> orderBy(Getter<?> getter, OrderingDirection direction) {
+		Objects.requireNonNull(getter, "property is null");
+		Objects.requireNonNull(direction, "direction is null");
+		
+		CasserMappingProperty<?> prop = MappingUtil.resolveMappingProperty(getter);
 		
 		if (!prop.isClusteringColumn()) {
 			throw new CasserMappingException("property must be a clustering column " + prop.getPropertyName());
 		}
-		
-		getOrCreateOrdering().add(QueryBuilder.asc(prop.getColumnName()));
-		
-		return this;
-	}
-	
-	public SelectOperation<E> desc(Getter<?> getter) {
-		Objects.requireNonNull(getter, "property is null");
-		CasserMappingProperty<?> prop = MappingUtil.resolveMappingProperty(getter);
-		return desc(prop);
-	}
 
-	private SelectOperation<E> desc(CasserMappingProperty<?> prop) {
-
-		if (!prop.isClusteringColumn()) {
-			throw new CasserMappingException("property must be a clustering column " + prop.getPropertyName());
+		switch(direction) {
+			case ASC:
+				getOrCreateOrdering().add(QueryBuilder.asc(prop.getColumnName()));
+				return this;
+			case DESC:
+				getOrCreateOrdering().add(QueryBuilder.desc(prop.getColumnName()));
+				return this;
 		}
-
-		getOrCreateOrdering().add(QueryBuilder.desc(prop.getColumnName()));
-
-		return this;
+		
+		throw new CasserMappingException("unknown ordering direction " + direction);
 	}
-	
+
 	public SelectOperation<E> limit(Integer limit) {
 		this.limit = limit;
 		return this;

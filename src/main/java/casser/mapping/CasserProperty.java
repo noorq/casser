@@ -36,7 +36,7 @@ public interface CasserProperty<E> {
 	
 	int getOrdinal();
 	
-	Ordering getOrdering();
+	OrderingDirection getOrdering();
 	
 	boolean isStatic();
 	

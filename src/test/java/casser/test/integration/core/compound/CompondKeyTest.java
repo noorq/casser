@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import casser.core.Casser;
 import casser.core.CasserSession;
+import casser.mapping.OrderingDirection;
 import casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
 public class CompondKeyTest extends AbstractEmbeddedCassandraTest {
@@ -61,7 +62,8 @@ public class CompondKeyTest extends AbstractEmbeddedCassandraTest {
 		session.showCql(true);
 		
 		session.select(timeline::getUserId, timeline::getTimestamp, timeline::getText)
-		.where(timeline::getUserId, "==", userId).desc(timeline::getTimestamp).limit(5).sync()
+		.where(timeline::getUserId, "==", userId)
+		.orderBy(timeline::getTimestamp, "desc").limit(5).sync()
 		.forEach(t -> System.out.println(t));
 		
 	}
