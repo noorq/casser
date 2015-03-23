@@ -42,5 +42,12 @@ public final class Tuple1<V1> {
 			return new Tuple1<V1>(provider.getColumnValue(0, p1));
 		}
 	}
+
+
+	@Override
+	public String toString() {
+		return "Tuple1 [v1=" + v1 + "]";
+	}
+	
 	
 }

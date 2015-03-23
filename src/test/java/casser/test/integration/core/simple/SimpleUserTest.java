@@ -35,7 +35,7 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 		
 		user = Casser.dsl(User.class);
 		
-		session = Casser.init(getSession()).showCql().create(User.class).get();
+		session = Casser.init(getSession()).showCql().createDrop(User.class).get();
 	}
 	
 	@Test

@@ -360,7 +360,14 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 						+ "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());
 			}
 		} else {
-			return SimpleDataTypes.getDataTypeByName(type);
+			DataType dataType = SimpleDataTypes.getDataTypeByName(type);
+			
+			if (dataType == null) {
+				throw new CasserMappingException("unknown DataType for property '" + this.getPropertyName()
+						+ "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());
+			}
+			
+			return dataType;
 		}
 	}
 	

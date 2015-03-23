@@ -66,4 +66,12 @@ public final class Tuple5<V1, V2, V3, V4, V5> {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return "Tuple5 [v1=" + v1 + ", v2=" + v2 + ", v3=" + v3 + ", v4=" + v4
+				+ ", v5=" + v5 + "]";
+	}
+
+	
+	
 }

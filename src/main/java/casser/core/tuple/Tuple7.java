@@ -78,4 +78,12 @@ public final class Tuple7<V1, V2, V3, V4, V5, V6, V7> {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return "Tuple7 [v1=" + v1 + ", v2=" + v2 + ", v3=" + v3 + ", v4=" + v4
+				+ ", v5=" + v5 + ", v6=" + v6 + ", v7=" + v7 + "]";
+	}
+
+	
+	
 }

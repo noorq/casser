@@ -48,7 +48,12 @@ public class SimpleDataTypes {
 
 		for (DataType dataType : DataType.allPrimitiveTypes()) {
 
-			if (dataType.equals(DataType.counter()) || dataType.equals(DataType.ascii()) || dataType.equals(DataType.uuid())) {
+			nameToDataTypeMap.put(dataType.getName(), dataType);
+			
+			if (dataType.equals(DataType.counter()) || 
+				dataType.equals(DataType.ascii()) || 
+				dataType.equals(DataType.timeuuid()
+					)) {
 				continue;
 			}
 			
@@ -66,7 +71,6 @@ public class SimpleDataTypes {
 				simpleTypes.add(primitiveJavaClass);
 			}
 
-			nameToDataTypeMap.put(dataType.getName(), dataType);
 		}
 
 		javaClassToDataTypeMap.put(String.class, DataType.text());
