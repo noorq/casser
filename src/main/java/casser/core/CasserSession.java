@@ -167,8 +167,13 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 				p1, p2, p3, p4, p5, p6, p7);
 	}
 	
-	public <V1> UpdateOperation update(Setter<V1> setter1, V1 v1) {
-		return null;
+	public <V> UpdateOperation update(Setter<V> setter, V v) {
+		Objects.requireNonNull(setter, "field is empty");
+		Objects.requireNonNull(v, "value is empty");
+
+		CasserMappingProperty<?> p = MappingUtil.resolveMappingProperty(setter);
+		
+		return new UpdateOperation(this, p, v);
 	}
 	
 	public UpsertOperation upsert(Object pojo) {

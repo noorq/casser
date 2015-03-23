@@ -48,14 +48,17 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 		
 		session.upsert(alex).sync();
 	
-		Long id = session.select(user::getId)
+		session.update(user::setName, "albert").set(user::setAge, 35)
+			.where(user::getId, "==", 123L).sync();
+		
+		String name = session.select(user::getName)
 				.where(user::getId, "==", 123L)
 				.sync()
 				.findFirst()
 				.get()
 				.v1;
 		
-		Assert.assertEquals(Long.valueOf(123L), id);
+		Assert.assertEquals("albert", name);
 		
 		session.delete(user).where(user::getId, "==", 123L).sync();
 		

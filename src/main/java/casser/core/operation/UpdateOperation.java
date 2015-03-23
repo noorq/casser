@@ -15,21 +15,94 @@
  */
 package casser.core.operation;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import casser.core.AbstractSessionOperations;
+import casser.core.Filter;
+import casser.core.dsl.Setter;
+import casser.mapping.CasserMappingEntity;
+import casser.mapping.CasserMappingProperty;
+import casser.mapping.MappingUtil;
+import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Update;
 
 
 public class UpdateOperation extends AbstractFilterOperation<ResultSet, UpdateOperation> {
 	
-	public UpdateOperation(AbstractSessionOperations sessionOperations) {
+	private final CasserMappingProperty<?>[] props;
+	private final Object[] vals;
+	
+	public UpdateOperation(AbstractSessionOperations sessionOperations, CasserMappingProperty<?> p, Object v) {
 		super(sessionOperations);
+		
+		this.props = new CasserMappingProperty<?>[1];
+		this.vals = new Object[1];
+		
+		this.props[0] = p;
+		this.vals[0] = v;
+	}
+
+	public UpdateOperation(UpdateOperation other, CasserMappingProperty<?> p, Object v) {
+		super(other.sessionOperations);
+		
+		this.props = Arrays.copyOf(other.props, other.props.length + 1);
+		this.vals = Arrays.copyOf(other.vals, other.vals.length + 1);
+		
+		this.props[other.props.length] = p;
+		this.vals[other.vals.length] = v;
+	}
+	
+	public <V> UpdateOperation set(Setter<V> setter, V v) {
+		Objects.requireNonNull(setter, "field is empty");
+		Objects.requireNonNull(v, "value is empty");
+
+		CasserMappingProperty<?> p = MappingUtil.resolveMappingProperty(setter);
+		
+		return new UpdateOperation(this, p, v);
 	}
 	
 	@Override
 	public BuiltStatement buildStatement() {
-		return null;
+		
+		CasserMappingEntity<?> entity = null;
+		
+		for (CasserMappingProperty<?> prop : props) {
+			if (entity == null) {
+				entity = prop.getEntity();
+			}
+			else if (entity != prop.getEntity()) {
+				throw new CasserMappingException("you can update columns only for a single entity " + entity.getMappingInterface() + " or " + prop.getEntity().getMappingInterface());
+			}
+		}
+		
+		if (entity == null) {
+			throw new CasserMappingException("no entity or table to update data");
+		}
+		
+		
+		Update update = QueryBuilder.update(entity.getTableName());
+		
+		for (int i = 0; i != props.length; ++i) {
+			
+			Object value = MappingUtil.prepareValueForWrite(props[i], vals[i]);
+			
+			update.with(QueryBuilder.set(props[i].getColumnName(), value));
+		
+		}
+		
+		if (filters != null && !filters.isEmpty()) {
+			
+			for (Filter<?> filter : filters) {
+				update.where(filter.getClause());
+			}
+		}
+		
+		return update;
 	}
 
 	@Override

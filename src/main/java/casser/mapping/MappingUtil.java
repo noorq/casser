@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import casser.core.dsl.Getter;
+import casser.core.dsl.Setter;
 import casser.support.CasserMappingException;
 import casser.support.DslPropertyException;
 
@@ -57,14 +58,25 @@ public final class MappingUtil {
 		
 		try {
 			getter.get();
-			throw new CasserMappingException("getter must reference to dsl object " + getter);
+			throw new CasserMappingException("getter must reference to a dsl object " + getter);
 		}
 		catch(DslPropertyException e) {
 			return (CasserMappingProperty<?>) e.getProperty();
 		}
 		
 	}
-	
+
+	public static CasserMappingProperty<?> resolveMappingProperty(Setter<?> setter) {
+		
+		try {
+			setter.set(null);
+			throw new CasserMappingException("setter must reference to a dsl object " + setter);
+		}
+		catch(DslPropertyException e) {
+			return (CasserMappingProperty<?>) e.getProperty();
+		}
+		
+	}
 	public static Object prepareValueForWrite(CasserMappingProperty<?> prop, Object value) {
 		
 		if (value != null) {

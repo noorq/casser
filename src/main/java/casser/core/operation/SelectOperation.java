@@ -69,7 +69,7 @@ public class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectO
 				entity = prop.getEntity();
 			}
 			else if (entity != prop.getEntity()) {
-				throw new CasserMappingException("you can select columns only from single entity " + entity.getMappingInterface() + " or " + prop.getEntity().getMappingInterface());
+				throw new CasserMappingException("you can select columns only from a single entity " + entity.getMappingInterface() + " or " + prop.getEntity().getMappingInterface());
 			}
 		}
 		
