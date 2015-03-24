@@ -1,5 +1,5 @@
 # casser
-Yet Another Cassandra Client
+Java 8 Cassandra Client
 
 ### Features
 
