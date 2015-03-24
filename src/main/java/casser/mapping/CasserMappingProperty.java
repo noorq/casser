@@ -170,6 +170,9 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 			Column column = getterMethod.getDeclaredAnnotation(Column.class);
 			if (column != null) {
 				columnName = column.value();
+				if (column.forceQuote()) {
+					columnName = CqlUtil.forceQuote(columnName);
+				}
 			}
 
 			PartitionKey partitionKey = getterMethod.getDeclaredAnnotation(PartitionKey.class);
@@ -180,6 +183,9 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 				}
 				
 				columnName = partitionKey.value();
+				if (partitionKey.forceQuote()) {
+					columnName = CqlUtil.forceQuote(columnName);
+				}
 			}
 			
 			ClusteringColumn clusteringColumn = getterMethod.getDeclaredAnnotation(ClusteringColumn.class);
@@ -190,6 +196,9 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 				}
 				
 				columnName = clusteringColumn.value();
+				if (clusteringColumn.forceQuote()) {
+					columnName = CqlUtil.forceQuote(columnName);
+				}
 			}
 			
 			if (columnName == null || columnName.isEmpty()) {
@@ -299,8 +308,8 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 		
 		Class<?> propertyType = getJavaType();
 
-		Qualify annotation = getterMethod.getDeclaredAnnotation(Qualify.class);
-		if (annotation != null && annotation.type() != null) {
+		DataTypeName annotation = getterMethod.getDeclaredAnnotation(DataTypeName.class);
+		if (annotation != null && annotation.value() != null) {
 			return qualifyAnnotatedType(annotation);
 		}
 
@@ -333,6 +342,12 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 
 		DataType dataType = SimpleDataTypes.getDataTypeByJavaClass(propertyType);
 		if (dataType == null) {
+			
+			UserDefinedType userDefinedType = propertyType.getDeclaredAnnotation(UserDefinedType.class);
+			if (userDefinedType != null) {
+				
+			}
+
 			throw new CasserMappingException(
 					"only primitive types and Set,List,Map collections are allowed, unknown type for property '" + this.getPropertyName()
 							+ "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());
@@ -341,20 +356,20 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 		return dataType;
 	}
 	
-	private DataType qualifyAnnotatedType(Qualify annotation) {
-		DataType.Name type = annotation.type();
+	private DataType qualifyAnnotatedType(DataTypeName annotation) {
+		DataType.Name type = annotation.value();
 		if (type.isCollection()) {
 			switch (type) {
 			case MAP:
-				ensureTypeArguments(annotation.typeArguments().length, 2);
-				return DataType.map(resolvePrimitiveType(annotation.typeArguments()[0]),
-						resolvePrimitiveType(annotation.typeArguments()[1]));
+				ensureTypeArguments(annotation.typeParameters().length, 2);
+				return DataType.map(resolvePrimitiveType(annotation.typeParameters()[0]),
+						resolvePrimitiveType(annotation.typeParameters()[1]));
 			case LIST:
-				ensureTypeArguments(annotation.typeArguments().length, 1);
-				return DataType.list(resolvePrimitiveType(annotation.typeArguments()[0]));
+				ensureTypeArguments(annotation.typeParameters().length, 1);
+				return DataType.list(resolvePrimitiveType(annotation.typeParameters()[0]));
 			case SET:
-				ensureTypeArguments(annotation.typeArguments().length, 1);
-				return DataType.set(resolvePrimitiveType(annotation.typeArguments()[0]));
+				ensureTypeArguments(annotation.typeParameters().length, 1);
+				return DataType.set(resolvePrimitiveType(annotation.typeParameters()[0]));
 			default:
 				throw new CasserMappingException("unknown collection DataType for property '" + this.getPropertyName()
 						+ "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());

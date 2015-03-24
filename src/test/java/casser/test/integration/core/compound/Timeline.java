@@ -22,7 +22,7 @@ import java.util.UUID;
 import casser.mapping.ClusteringColumn;
 import casser.mapping.Column;
 import casser.mapping.PartitionKey;
-import casser.mapping.Qualify;
+import casser.mapping.DataTypeName;
 
 import com.datastax.driver.core.DataType.Name;
 
@@ -34,7 +34,7 @@ public interface Timeline {
 	void setUserId(UUID uid);
 	
 	@ClusteringColumn
-	@Qualify(type=Name.TIMEUUID)
+	@DataTypeName(Name.TIMEUUID)
 	Date getTimestamp();
 	
 	void setTimestamp(Date ts);

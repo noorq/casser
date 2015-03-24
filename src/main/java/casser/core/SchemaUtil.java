@@ -23,6 +23,7 @@ import java.util.Set;
 
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
+import casser.mapping.CqlUtil;
 import casser.mapping.OrderingDirection;
 import casser.support.CasserMappingException;
 
@@ -39,12 +40,17 @@ public final class SchemaUtil {
 	private SchemaUtil() {
 	}
 
-	public static String useCql(String keyspace) {
-		return "USE " + keyspace;
+	public static String useCql(String keyspace, boolean forceQuote) {
+		if (forceQuote) {
+			return "USE " + keyspace;
+		}
+		else {
+			return "USE" + CqlUtil.forceQuote(keyspace);
+		}
 	}
 	
 	public static String createTableCql(CasserMappingEntity<?> entity) {
-
+		
 		Create create = SchemaBuilder.createTable(entity.getTableName());
 
 		List<CasserMappingProperty<?>> partitionKeys = new ArrayList<CasserMappingProperty<?>>();
@@ -75,7 +81,7 @@ public final class SchemaUtil {
 		for (CasserMappingProperty<?> prop : clusteringColumns) {
 			create.addClusteringColumn(prop.getColumnName(), prop.getDataType());
 		}
-
+		
 		for (CasserMappingProperty<?> prop : columns) {
 			
 			if (prop.isStatic()) {

@@ -16,17 +16,18 @@
 package casser.mapping;
 
 import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import com.datastax.driver.core.DataType;
 
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Qualify {
+@Target(value = { ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+public @interface Field {
 
-	DataType.Name type();
-
-	DataType.Name[] typeArguments() default {};
-
+	String value() default "";
+	
+	boolean forceQuote() default false;
 }

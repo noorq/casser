@@ -107,7 +107,12 @@ public class SessionInitializer extends AbstractSessionOperations {
 	}
 
 	public SessionInitializer use(String keyspace) {
-		session.execute(SchemaUtil.useCql(keyspace));
+		session.execute(SchemaUtil.useCql(keyspace, false));
+		return this;
+	}
+	
+	public SessionInitializer use(String keyspace, boolean forceQuote) {
+		session.execute(SchemaUtil.useCql(keyspace, forceQuote));
 		return this;
 	}
 	

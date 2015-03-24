@@ -99,12 +99,13 @@ public class CasserMappingEntity<E> implements CasserEntity<E> {
 			
 			if (table != null) {
 				tableName = table.value();
+				if (table.forceQuote()) {
+					tableName = CqlUtil.forceQuote(tableName);
+				}
 			}
 			
 			if (tableName == null || tableName.isEmpty()) {
-				
 				tableName = getDefaultTableName();
-				
 			}
 		}
 		
