@@ -38,7 +38,7 @@ public class CompondKeyTest extends AbstractEmbeddedCassandraTest {
 		
 		timeline = Casser.dsl(Timeline.class);
 		
-		session = Casser.init(getSession()).showCql().createDrop(Timeline.class).get();
+		session = Casser.init(getSession()).showCql().add(Timeline.class).autoCreateDrop().get();
 	}
 	
 	@Test

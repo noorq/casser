@@ -17,7 +17,6 @@ package casser.core;
 
 import java.io.Closeable;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Executor;
 
 import casser.core.dsl.Getter;
@@ -47,22 +46,22 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	private final Session session;
 	private volatile String usingKeyspace;
 	private volatile boolean showCql;
-	private final Set<CasserMappingEntity<?>> dropEntitiesOnClose;
 	private final CasserMappingRepository mappingRepository;
 	private final Executor executor;
+	private final boolean dropSchemaOnClose;
 	
 	CasserSession(Session session, 
 			String usingKeyspace,
 			boolean showCql, 
-			Set<CasserMappingEntity<?>> dropEntitiesOnClose, 
 			CasserMappingRepository mappingRepository, 
-			Executor executor) {
+			Executor executor,
+			boolean dropSchemaOnClose) {
 		this.session = session;
 		this.usingKeyspace = Objects.requireNonNull(usingKeyspace, "keyspace needs to be selected before creating session");
 		this.showCql = showCql;
-		this.dropEntitiesOnClose = dropEntitiesOnClose;
-		this.mappingRepository = mappingRepository;
+		this.mappingRepository = mappingRepository.setReadOnly();
 		this.executor = executor;
+		this.dropSchemaOnClose = dropSchemaOnClose;
 	}
 	
 	@Override
@@ -243,24 +242,30 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	}
 
 	public void close() {
-		dropEntitiesIfNeeded();
+		
+		if (session.isClosed()) {
+			return;
+		}
+		
+		if (dropSchemaOnClose) {
+			dropSchema();
+		}
+		
 		session.close();
 	}
 	
 	public CloseFuture closeAsync() {
-		dropEntitiesIfNeeded();
+
+		if (!session.isClosed() && dropSchemaOnClose) {
+			dropSchema();
+		}
+
 		return session.closeAsync();
 	}
 	
-	private void dropEntitiesIfNeeded() {
+	private void dropSchema() {
 		
-		if (dropEntitiesOnClose == null || dropEntitiesOnClose.isEmpty()) {
-			return;
-		}
-		
-		for (CasserMappingEntity<?> entity : dropEntitiesOnClose) {
-			dropEntity(entity);
-		}
+		mappingRepository.getKnownEntities().forEach(e -> dropEntity(e));
 		
 	}
 	

@@ -28,6 +28,24 @@ public final class MappingUtil {
 	private MappingUtil() {
 	}
 
+	public static String getUserDefinedTypeName(Class<?> clazz) {
+		
+		UserDefinedType userDefinedType = clazz.getDeclaredAnnotation(UserDefinedType.class);
+		
+		if (userDefinedType != null) {
+			
+			String name = userDefinedType.value();
+
+			if (name != null && name.isEmpty()) {
+				name = null;
+			}
+			
+			return name;
+		}
+		
+		return null;
+	}
+	
 	public static Class<?> getMappingInterface(Object entity) {
 		
 		Class<?> iface = null;

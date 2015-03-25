@@ -40,7 +40,7 @@ public interface Timeline {
 Session initialization:
 ```
 Timeline timeline = Casser.dsl(Timeline.class);
-CasserSession session = Casser.init(getSession()).showCql().createDrop(Timeline.class).get();
+CasserSession session = Casser.init(getSession()).showCql().add(Timeline.class).autoCreateDrop().get();
 ```
 
 Select information:

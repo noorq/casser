@@ -17,26 +17,53 @@ package casser.mapping;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.HashMap;
+import java.util.Map;
 
+import casser.support.CasserException;
 import casser.support.CasserMappingException;
 
 public class CasserMappingRepository {
 
-	private ConcurrentMap<Class<?>, CasserMappingEntity<?>> entityMap = new ConcurrentHashMap<Class<?>, CasserMappingEntity<?>>();
+	private final Map<Class<?>, CasserMappingEntity<?>> entityMap = new HashMap<Class<?>, CasserMappingEntity<?>>();
 
-	private ConcurrentMap<String, CasserMappingUserType<?>> udtMap = new ConcurrentHashMap<String, CasserMappingUserType<?>>();
+	private final Map<String, CasserMappingUserType<?>> udtMap = new HashMap<String, CasserMappingUserType<?>>();
+
+	private boolean readOnly = false;
 	
-	public void addEntities(Object[] dsls) {
+	public CasserMappingRepository setReadOnly() {
+		this.readOnly = true;
+		return this;
+	}
+	
+	public void addUserType(String name, Class<?> userTypeClass) {
 		
-		for (Object dsl : dsls) {
-			
-			Class<?> iface = MappingUtil.getMappingInterface(dsl);
-			
-			entityMap.putIfAbsent(iface, new CasserMappingEntity(iface));
-			
+		if (readOnly) {
+			throw new CasserException("read-only mode");
 		}
+		
+		udtMap.putIfAbsent(name, new CasserMappingUserType(userTypeClass));
+		
+	}
+	
+	public Collection<CasserMappingUserType<?>> getKnownUserTypes() {
+		return Collections.unmodifiableCollection(udtMap.values());
+	}
+	
+	public CasserMappingUserType<?> findUserType(Class<?> userTypeClass) {
+		return udtMap.get(userTypeClass);
+	}
+	
+	public void addEntity(Object dsl) {
+		
+		if (readOnly) {
+			throw new CasserException("read-only mode");
+		}
+
+		Class<?> iface = MappingUtil.getMappingInterface(dsl);
+			
+		entityMap.putIfAbsent(iface, new CasserMappingEntity(iface));
+		
 	}
 	
 	public Collection<CasserMappingEntity<?>> getKnownEntities() {

@@ -15,21 +15,25 @@
  */
 package casser.core;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import casser.core.tuple.Tuple2;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingRepository;
 import casser.mapping.MappingUtil;
-import casser.support.CasserException;
-import casser.support.Requires;
+import casser.mapping.SimpleDataTypes;
+import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.TableMetadata;
+import com.datastax.driver.core.UserType;
 import com.google.common.util.concurrent.MoreExecutors;
 
 
@@ -39,13 +43,15 @@ public class SessionInitializer extends AbstractSessionOperations {
 	private String usingKeyspace;
 	private boolean showCql = false;
 	private Executor executor = MoreExecutors.sameThreadExecutor();
-	private Set<CasserMappingEntity<?>> dropEntitiesOnClose = null;
 	
 	private CasserMappingRepository mappingRepository = new CasserMappingRepository();
 	
 	private boolean dropRemovedColumns = false;
 	
 	private KeyspaceMetadata keyspaceMetadata;
+	
+	private final List<Object> initList = new ArrayList<Object>();
+	private AutoDsl autoDsl = AutoDsl.UPDATE;
 	
 	SessionInitializer(Session session) {
 		this.session = Objects.requireNonNull(session, "empty session");
@@ -98,26 +104,41 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return showCql;
 	}
 	
-	public SessionInitializer validate(Object... dsls) {
-		initialize(AutoDsl.VALIDATE, dsls);
+	public SessionInitializer add(Object... dsls) {
+		Objects.requireNonNull(dsls, "dsls is empty");
+		int len = dsls.length;
+		for (int i = 0; i != len; ++i) {
+			Object obj = Objects.requireNonNull(dsls[i], "element " + i + " is empty");
+			initList.add(obj);
+		}
+		return this;
+	}
+	
+	public SessionInitializer autoValidate() {
+		this.autoDsl = AutoDsl.VALIDATE;
 		return this;
 	}
 
-	public SessionInitializer update(Object... dsls) {
-		initialize(AutoDsl.UPDATE, dsls);
+	public SessionInitializer autoUpdate() {
+		this.autoDsl = AutoDsl.UPDATE;
 		return this;
 	}
 
-	public SessionInitializer create(Object... dsls) {
-		initialize(AutoDsl.CREATE, dsls);
+	public SessionInitializer autoCreate() {
+		this.autoDsl = AutoDsl.CREATE;
 		return this;
 	}
 
-	public SessionInitializer createDrop(Object... dsls) {
-		initialize(AutoDsl.CREATE_DROP, dsls);
+	public SessionInitializer autoCreateDrop() {
+		this.autoDsl = AutoDsl.CREATE_DROP;
 		return this;
 	}
 
+	public SessionInitializer auto(AutoDsl autoDsl) {
+		this.autoDsl = autoDsl;
+		return this;
+	}
+	
 	public SessionInitializer use(String keyspace) {
 		session.execute(SchemaUtil.useCql(keyspace, false));
 		this.usingKeyspace = keyspace;
@@ -131,75 +152,71 @@ public class SessionInitializer extends AbstractSessionOperations {
 	}
 	
 	public CasserSession get() {
+		initialize();
 		return new CasserSession(session, 
 				usingKeyspace,
 				showCql, 
-				dropEntitiesOnClose, 
 				mappingRepository,
-				executor);
+				executor,
+				autoDsl == AutoDsl.CREATE_DROP);
 	}
 
-	private enum AutoDsl {
-		VALIDATE,
-		UPDATE,
-		CREATE,
-		CREATE_DROP;
-	}
-	
-	private void initialize(AutoDsl type, Object[] dsls) {
+	private void initialize() {
 		
 		Objects.requireNonNull(usingKeyspace, "please define keyspace by 'use' operator");
-		Requires.nonNullArray(dsls);
-		
-		KeyspaceMetadata keyspaceMetadata = getKeyspaceMetadata();
-		
-		mappingRepository.addEntities(dsls);
 
-		for (CasserMappingEntity<?> entity : mappingRepository.getKnownEntities()) {
-			initializeTable(type, entity);
-		}
+		initList.forEach(e -> mappingRepository.addEntity(e));
+
+		Map<String, Class<?>> map = collectUserDefinedTypes();
+
+		TableOperations tableOps = new TableOperations(this, dropRemovedColumns);
+		UserTypeOperations userTypeOps = new UserTypeOperations(this);
 		
-	}
-	
-	private void initializeTable(AutoDsl type, CasserMappingEntity<?> entity) {
+		switch(autoDsl) {
 		
-		if (type == AutoDsl.CREATE || type == AutoDsl.CREATE_DROP) {
-			createNewTable(entity);
-		}
-		else {
-			TableMetadata tmd = getTableMetadata(entity);
+		case CREATE:
+		case CREATE_DROP:
+			mappingRepository.getKnownEntities()
+				.forEach(e -> tableOps.createTable(e));
+			break;
 			
-			if (type == AutoDsl.VALIDATE) {
-				
-				if (tmd == null) {
-					throw new CasserException("table not exists " + entity.getTableName() + "for entity " + entity.getMappingInterface());
-				}
-				
-				validateTable(tmd, entity);
-			}
-			else if (type == AutoDsl.UPDATE) {
-				
-				if (tmd == null) {
-					createNewTable(entity);
-				}
-				else {
-					alterTable(tmd, entity);
-				}
-				
-			}
+		case VALIDATE:
+			mappingRepository.getKnownEntities()
+				.forEach(e -> tableOps.validateTable(getTableMetadata(e), e));
+			break;
+			
+		case UPDATE:
+			mappingRepository.getKnownEntities()
+				.forEach(e -> tableOps.updateTable(getTableMetadata(e), e));
+			break;
+		
 		}
 		
-		if (type == AutoDsl.CREATE_DROP) {
-			getOrCreateDropEntitiesSet().add(entity);
-		}
 		
 	}
 	
-	private Set<CasserMappingEntity<?>> getOrCreateDropEntitiesSet() {
-		if (dropEntitiesOnClose == null) {
-			dropEntitiesOnClose = new HashSet<CasserMappingEntity<?>>();
-		}
-		return dropEntitiesOnClose;
+
+	
+	private Map<String, Class<?>> collectUserDefinedTypes() {
+
+		Map<String, Class<?>> map = new HashMap<String, Class<?>>();
+		
+		mappingRepository.getKnownEntities().stream()
+		.flatMap(e -> e.getMappingProperties().stream())
+		.map(p -> p.getJavaType())
+		.filter(c -> SimpleDataTypes.getDataTypeByJavaClass(c) == null)
+		.map(c -> new Tuple2<String, Class<?>>(MappingUtil.getUserDefinedTypeName(c), c))
+		.filter(t -> t.v1 != null)
+		.forEach(t -> {
+
+			Class<?> old = map.putIfAbsent(t.v1, t.v2);
+			if (old != null) {
+				throw new CasserMappingException("found UserDefinedType " + t.v1 + " in two classes " + old + " and " + t.v2);
+			}
+
+		});
+		
+		return map;
 	}
 	
 	private KeyspaceMetadata getKeyspaceMetadata() {
@@ -214,30 +231,8 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return getKeyspaceMetadata().getTable(tableName.toLowerCase());
 		
 	}
-	
-	private void createNewTable(CasserMappingEntity<?> entity) {
-		
-		String cql = SchemaUtil.createTableCql(entity);
-		
-		execute(cql);
-		
-	}
-	
-	private void validateTable(TableMetadata tmd, CasserMappingEntity<?> entity) {
-		
-		String cql = SchemaUtil.alterTableCql(tmd, entity, dropRemovedColumns);
-		
-		if (cql != null) {
-			throw new CasserException("schema changed for entity " + entity.getMappingInterface() + ", apply this command: " + cql);
-		}
-	}
-	
-	private void alterTable(TableMetadata tmd, CasserMappingEntity<?> entity) {
-		
-		String cql = SchemaUtil.alterTableCql(tmd, entity, dropRemovedColumns);
-		
-		if (cql != null) {
-			execute(cql);
-		}
+
+	private UserType getUserType(String name) {
+		return getKeyspaceMetadata().getUserType(name.toLowerCase());
 	}
 }

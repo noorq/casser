@@ -31,7 +31,7 @@ public class Example {
 	
 	Cluster cluster = new Cluster.Builder().addContactPoint("localhost").build();
 	
-	CasserSession session = Casser.connect(cluster).use("test").update(_user).get();
+	CasserSession session = Casser.connect(cluster).use("test").add(_user).autoUpdate().get();
 	
 	public static User mapUser(Tuple2<String, Integer> t) {
 		User user = Casser.pojo(User.class);
