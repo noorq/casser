@@ -36,6 +36,7 @@ import casser.core.tuple.Tuple6;
 import casser.core.tuple.Tuple7;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
+import casser.mapping.CasserMappingRepository;
 import casser.mapping.MappingUtil;
 
 import com.datastax.driver.core.CloseFuture;
@@ -44,26 +45,34 @@ import com.datastax.driver.core.Session;
 public class CasserSession extends AbstractSessionOperations implements Closeable {
 
 	private final Session session;
+	private volatile String usingKeyspace;
 	private volatile boolean showCql;
 	private final Set<CasserMappingEntity<?>> dropEntitiesOnClose;
-	private final CasserEntityCache entityCache;
+	private final CasserMappingRepository mappingRepository;
 	private final Executor executor;
 	
 	CasserSession(Session session, 
+			String usingKeyspace,
 			boolean showCql, 
 			Set<CasserMappingEntity<?>> dropEntitiesOnClose, 
-			CasserEntityCache entityCache, 
+			CasserMappingRepository mappingRepository, 
 			Executor executor) {
 		this.session = session;
+		this.usingKeyspace = Objects.requireNonNull(usingKeyspace, "keyspace needs to be selected before creating session");
 		this.showCql = showCql;
 		this.dropEntitiesOnClose = dropEntitiesOnClose;
-		this.entityCache = entityCache;
+		this.mappingRepository = mappingRepository;
 		this.executor = executor;
 	}
 	
 	@Override
 	public Session currentSession() {
 		return session;
+	}
+	
+	@Override
+	public String usingKeyspace() {
+		return usingKeyspace;
 	}
 	
 	@Override
@@ -195,7 +204,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		
 		Class<?> iface = MappingUtil.getMappingInterface(dsl);
 		
-		CasserMappingEntity<?> entity = entityCache.getOrCreateEntity(iface);
+		CasserMappingEntity<?> entity = mappingRepository.getEntity(iface);
 		
 		return new CountOperation(this, entity);
 	}
@@ -214,7 +223,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		
 		Class<?> iface = MappingUtil.getMappingInterface(pojo);
 		
-		CasserMappingEntity<?> entity = entityCache.getOrCreateEntity(iface);
+		CasserMappingEntity<?> entity = mappingRepository.getEntity(iface);
 		
 		return new UpsertOperation(this, entity, pojo);
 	}
@@ -224,7 +233,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		
 		Class<?> iface = MappingUtil.getMappingInterface(dsl);
 		
-		CasserMappingEntity<?> entity = entityCache.getOrCreateEntity(iface);
+		CasserMappingEntity<?> entity = mappingRepository.getEntity(iface);
 		
 		return new DeleteOperation(this, entity);
 	}

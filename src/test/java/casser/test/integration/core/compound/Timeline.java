@@ -21,8 +21,8 @@ import java.util.UUID;
 
 import casser.mapping.ClusteringColumn;
 import casser.mapping.Column;
-import casser.mapping.PartitionKey;
 import casser.mapping.DataTypeName;
+import casser.mapping.PartitionKey;
 
 import com.datastax.driver.core.DataType.Name;
 

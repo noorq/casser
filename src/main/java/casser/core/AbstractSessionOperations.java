@@ -34,6 +34,8 @@ public abstract class AbstractSessionOperations {
 	
 	abstract public Session currentSession();
 	
+	abstract public String usingKeyspace();
+	
 	abstract public boolean isShowCql();
 	
 	abstract public Executor getExecutor();

@@ -22,9 +22,12 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import casser.mapping.CasserMappingEntity;
+import casser.mapping.CasserMappingRepository;
 import casser.mapping.MappingUtil;
 import casser.support.CasserException;
+import casser.support.Requires;
 
+import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.TableMetadata;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -33,16 +36,20 @@ import com.google.common.util.concurrent.MoreExecutors;
 public class SessionInitializer extends AbstractSessionOperations {
 
 	private final Session session;
+	private String usingKeyspace;
 	private boolean showCql = false;
 	private Executor executor = MoreExecutors.sameThreadExecutor();
 	private Set<CasserMappingEntity<?>> dropEntitiesOnClose = null;
 	
-	private CasserEntityCache entityCache = new CasserEntityCache();
+	private CasserMappingRepository mappingRepository = new CasserMappingRepository();
 	
 	private boolean dropRemovedColumns = false;
 	
+	private KeyspaceMetadata keyspaceMetadata;
+	
 	SessionInitializer(Session session) {
 		this.session = Objects.requireNonNull(session, "empty session");
+		this.usingKeyspace = session.getLoggedKeyspace(); // can be null
 	}
 	
 	@Override
@@ -50,6 +57,11 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return session;
 	}
 
+	@Override
+	public String usingKeyspace() {
+		return usingKeyspace;
+	}
+	
 	@Override
 	public Executor getExecutor() {
 		return executor;
@@ -87,40 +99,43 @@ public class SessionInitializer extends AbstractSessionOperations {
 	}
 	
 	public SessionInitializer validate(Object... dsls) {
-		process(AutoDsl.VALIDATE, dsls);
+		initialize(AutoDsl.VALIDATE, dsls);
 		return this;
 	}
 
 	public SessionInitializer update(Object... dsls) {
-		process(AutoDsl.UPDATE, dsls);
+		initialize(AutoDsl.UPDATE, dsls);
 		return this;
 	}
 
 	public SessionInitializer create(Object... dsls) {
-		process(AutoDsl.CREATE, dsls);
+		initialize(AutoDsl.CREATE, dsls);
 		return this;
 	}
 
 	public SessionInitializer createDrop(Object... dsls) {
-		process(AutoDsl.CREATE_DROP, dsls);
+		initialize(AutoDsl.CREATE_DROP, dsls);
 		return this;
 	}
 
 	public SessionInitializer use(String keyspace) {
 		session.execute(SchemaUtil.useCql(keyspace, false));
+		this.usingKeyspace = keyspace;
 		return this;
 	}
 	
 	public SessionInitializer use(String keyspace, boolean forceQuote) {
 		session.execute(SchemaUtil.useCql(keyspace, forceQuote));
+		this.usingKeyspace = keyspace;
 		return this;
 	}
 	
 	public CasserSession get() {
 		return new CasserSession(session, 
+				usingKeyspace,
 				showCql, 
 				dropEntitiesOnClose, 
-				entityCache,
+				mappingRepository,
 				executor);
 	}
 
@@ -131,20 +146,22 @@ public class SessionInitializer extends AbstractSessionOperations {
 		CREATE_DROP;
 	}
 	
-	private void process(AutoDsl type, Object[] dsls) {
+	private void initialize(AutoDsl type, Object[] dsls) {
 		
-		for (Object dsl : dsls) {
-			processSingle(type, dsl);
+		Objects.requireNonNull(usingKeyspace, "please define keyspace by 'use' operator");
+		Requires.nonNullArray(dsls);
+		
+		KeyspaceMetadata keyspaceMetadata = getKeyspaceMetadata();
+		
+		mappingRepository.addEntities(dsls);
+
+		for (CasserMappingEntity<?> entity : mappingRepository.getKnownEntities()) {
+			initializeTable(type, entity);
 		}
 		
 	}
 	
-	private void processSingle(AutoDsl type, Object dsl) {
-		Objects.requireNonNull(dsl, "dsl is empty");
-		
-		Class<?> iface = MappingUtil.getMappingInterface(dsl);
-		
-		CasserMappingEntity<?> entity = entityCache.getOrCreateEntity(iface);
+	private void initializeTable(AutoDsl type, CasserMappingEntity<?> entity) {
 		
 		if (type == AutoDsl.CREATE || type == AutoDsl.CREATE_DROP) {
 			createNewTable(entity);
@@ -185,11 +202,16 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return dropEntitiesOnClose;
 	}
 	
+	private KeyspaceMetadata getKeyspaceMetadata() {
+		if (keyspaceMetadata == null) {
+			keyspaceMetadata = session.getCluster().getMetadata().getKeyspace(usingKeyspace.toLowerCase());
+		}
+		return keyspaceMetadata;
+	}
+	
 	private TableMetadata getTableMetadata(CasserMappingEntity<?> entity) {
-		
 		String tableName = entity.getTableName();
-		
-		return session.getCluster().getMetadata().getKeyspace(session.getLoggedKeyspace().toLowerCase()).getTable(tableName.toLowerCase());
+		return getKeyspaceMetadata().getTable(tableName.toLowerCase());
 		
 	}
 	
