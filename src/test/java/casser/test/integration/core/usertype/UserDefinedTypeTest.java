@@ -18,7 +18,7 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		
 		account = Casser.dsl(Account.class);
 		
-		//session = Casser.init(getSession()).showCql().createDrop(Account.class).get();
+		//session = Casser.init(getSession()).showCql().add(Account.class).autoCreateDrop().get();
 	}
 	
 	@Test

@@ -46,8 +46,8 @@ public class CasserMappingRepository {
 		
 	}
 	
-	public Collection<CasserMappingUserType<?>> getKnownUserTypes() {
-		return Collections.unmodifiableCollection(udtMap.values());
+	public Map<String, CasserMappingUserType<?>> knownUserTypes() {
+		return Collections.unmodifiableMap(udtMap);
 	}
 	
 	public CasserMappingUserType<?> findUserType(Class<?> userTypeClass) {
@@ -66,7 +66,7 @@ public class CasserMappingRepository {
 		
 	}
 	
-	public Collection<CasserMappingEntity<?>> getKnownEntities() {
+	public Collection<CasserMappingEntity<?>> knownEntities() {
 		return Collections.unmodifiableCollection(entityMap.values());
 	}
 	

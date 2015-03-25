@@ -50,7 +50,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	private final Executor executor;
 	private final boolean dropSchemaOnClose;
 	
-	CasserSession(Session session, 
+	CasserSession(Session session,
 			String usingKeyspace,
 			boolean showCql, 
 			CasserMappingRepository mappingRepository, 
@@ -265,7 +265,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	
 	private void dropSchema() {
 		
-		mappingRepository.getKnownEntities().forEach(e -> dropEntity(e));
+		mappingRepository.knownEntities().forEach(e -> dropEntity(e));
 		
 	}
 	

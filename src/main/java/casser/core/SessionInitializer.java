@@ -166,8 +166,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		Objects.requireNonNull(usingKeyspace, "please define keyspace by 'use' operator");
 
 		initList.forEach(e -> mappingRepository.addEntity(e));
-
-		Map<String, Class<?>> map = collectUserDefinedTypes();
+		collectUserDefinedTypes().forEach((n, c) -> mappingRepository.addUserType(n, c));
 
 		TableOperations tableOps = new TableOperations(this, dropRemovedColumns);
 		UserTypeOperations userTypeOps = new UserTypeOperations(this);
@@ -176,17 +175,28 @@ public class SessionInitializer extends AbstractSessionOperations {
 		
 		case CREATE:
 		case CREATE_DROP:
-			mappingRepository.getKnownEntities()
+			
+			mappingRepository.knownUserTypes()
+				.forEach( (k, v) -> userTypeOps.createUserType(k, v));
+			
+			mappingRepository.knownEntities()
 				.forEach(e -> tableOps.createTable(e));
+			
 			break;
 			
 		case VALIDATE:
-			mappingRepository.getKnownEntities()
+			mappingRepository.knownUserTypes()
+				.forEach( (k, v) -> userTypeOps.validateUserType(k, getUserType(k), v));
+			
+			mappingRepository.knownEntities()
 				.forEach(e -> tableOps.validateTable(getTableMetadata(e), e));
 			break;
 			
 		case UPDATE:
-			mappingRepository.getKnownEntities()
+			mappingRepository.knownUserTypes()
+				.forEach( (k, v) -> userTypeOps.updateUserType(k, getUserType(k), v));
+
+			mappingRepository.knownEntities()
 				.forEach(e -> tableOps.updateTable(getTableMetadata(e), e));
 			break;
 		
@@ -196,12 +206,11 @@ public class SessionInitializer extends AbstractSessionOperations {
 	}
 	
 
-	
 	private Map<String, Class<?>> collectUserDefinedTypes() {
 
 		Map<String, Class<?>> map = new HashMap<String, Class<?>>();
 		
-		mappingRepository.getKnownEntities().stream()
+		mappingRepository.knownEntities().stream()
 		.flatMap(e -> e.getMappingProperties().stream())
 		.map(p -> p.getJavaType())
 		.filter(c -> SimpleDataTypes.getDataTypeByJavaClass(c) == null)
