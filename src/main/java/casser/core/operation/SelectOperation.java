@@ -135,7 +135,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 			throw new CasserMappingException("no entity or table to select data");
 		}
 		
-		Select select = selection.from(entity.getTableName());
+		Select select = selection.from(entity.getName());
 		
 		if (ordering != null && !ordering.isEmpty()) {
 			select.orderBy(ordering.toArray(new Ordering[ordering.size()]));

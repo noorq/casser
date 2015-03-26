@@ -140,13 +140,13 @@ public class SessionInitializer extends AbstractSessionOperations {
 	}
 	
 	public SessionInitializer use(String keyspace) {
-		session.execute(SchemaUtil.useCql(keyspace, false));
+		session.execute(SchemaUtil.use(keyspace, false));
 		this.usingKeyspace = keyspace;
 		return this;
 	}
 	
 	public SessionInitializer use(String keyspace, boolean forceQuote) {
-		session.execute(SchemaUtil.useCql(keyspace, forceQuote));
+		session.execute(SchemaUtil.use(keyspace, forceQuote));
 		this.usingKeyspace = keyspace;
 		return this;
 	}
@@ -236,7 +236,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 	}
 	
 	private TableMetadata getTableMetadata(CasserMappingEntity<?> entity) {
-		String tableName = entity.getTableName();
+		String tableName = entity.getName();
 		return getKeyspaceMetadata().getTable(tableName.toLowerCase());
 		
 	}

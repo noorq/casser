@@ -15,8 +15,12 @@
  */
 package casser.mapping;
 
+import java.util.Collection;
+
 public interface CasserUserType<E> {
 
-	public String getName();
+	String getName();
+	
+	Collection<CasserProperty<E>> getProperties();
 	
 }

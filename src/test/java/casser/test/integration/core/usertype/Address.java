@@ -1,50 +1,41 @@
+/*
+ *      Copyright (C) 2015 Noorq, Inc.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
 package casser.test.integration.core.usertype;
 
 import casser.mapping.Field;
 import casser.mapping.UserDefinedType;
 
 @UserDefinedType("address")
-public class Address {
+public interface Address {
 
 	@Field("line_1")
-	private String street;
+	String getStreet();
 
-	private String city;
+	void setStreet(String street);
 
-	private int zip;
+	String getCity();
 
-	private String country;
+	void setCity(String city);
 
-	public String getStreet() {
-		return street;
-	}
+	int getZip();
 
-	public void setStreet(String street) {
-		this.street = street;
-	}
+	void setZip(int zip);
 
-	public String getCity() {
-		return city;
-	}
+	String getCountry();
 
-	public void setCity(String city) {
-		this.city = city;
-	}
-
-	public int getZip() {
-		return zip;
-	}
-
-	public void setZip(int zip) {
-		this.zip = zip;
-	}
-
-	public String getCountry() {
-		return country;
-	}
-
-	public void setCountry(String country) {
-		this.country = country;
-	}
+	void setCountry(String country);
 
 }

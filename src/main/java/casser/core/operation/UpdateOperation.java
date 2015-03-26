@@ -85,7 +85,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		}
 		
 		
-		Update update = QueryBuilder.update(entity.getTableName());
+		Update update = QueryBuilder.update(entity.getName());
 		
 		for (int i = 0; i != props.length; ++i) {
 			

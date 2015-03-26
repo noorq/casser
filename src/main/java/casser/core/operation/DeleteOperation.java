@@ -41,7 +41,7 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 		
 		if (filters != null && !filters.isEmpty()) {
 
-			Delete delete = QueryBuilder.delete().from(entity.getTableName());
+			Delete delete = QueryBuilder.delete().from(entity.getName());
 			
 			Where where = delete.where();
 			
@@ -53,7 +53,7 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 
 		}
 		else {
-			return QueryBuilder.truncate(entity.getTableName());
+			return QueryBuilder.truncate(entity.getName());
 		}
 	}
 

@@ -26,6 +26,7 @@ import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 
 public abstract class AbstractSessionOperations {
@@ -40,27 +41,13 @@ public abstract class AbstractSessionOperations {
 	
 	abstract public Executor getExecutor();
 	
-	public ResultSet execute(String cql) {
+	public ResultSet execute(Statement statement) {
 		
-		try {
-			
-			if (logger.isInfoEnabled()) {
-				logger.info("Execute query " + cql);
-			}
-			
-			if (isShowCql() && cql != null) {
-				System.out.println(cql);
-			}
-			
-			return currentSession().execute(cql);
-		}
-		catch(RuntimeException e) {
-			throw translateException(e);
-		}
+		return executeAsync(statement).getUninterruptibly();
 		
 	}
 	
-	public ResultSetFuture executeAsync(BuiltStatement statement) {
+	public ResultSetFuture executeAsync(Statement statement) {
 		
 		try {
 			
@@ -70,19 +57,29 @@ public abstract class AbstractSessionOperations {
 			
 			if (isShowCql()) {
 				
-				RegularStatement regular = statement.setForceNoValues(true);
-				
-				String cql = regular.getQueryString();
-				
-				System.out.println(cql);
-				
-				return currentSession().executeAsync(regular);
-			}
-			else {
+				if (statement instanceof BuiltStatement) {
+					
+					BuiltStatement builtStatement = (BuiltStatement) statement;
 
-				return currentSession().executeAsync(statement);
+					RegularStatement regularStatement = builtStatement.setForceNoValues(true);
+					
+					System.out.println(regularStatement.getQueryString());
+				}
+				else if (statement instanceof RegularStatement) {
+					
+					RegularStatement regularStatement = (RegularStatement) statement;
+					
+					System.out.println(regularStatement.getQueryString());
+					
+				}
+				else {
+					System.out.println(statement.toString());
+				}
+				
 
 			}
+			
+			return currentSession().executeAsync(statement);
 			
 		}
 		catch(RuntimeException e) {

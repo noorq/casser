@@ -15,10 +15,16 @@
  */
 package casser.core;
 
+import java.util.List;
+
 import casser.mapping.CasserMappingEntity;
 import casser.support.CasserException;
 
+import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.TableMetadata;
+import com.datastax.driver.core.querybuilder.Batch;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.schemabuilder.SchemaStatement;
 
 public final class TableOperations {
 
@@ -31,23 +37,19 @@ public final class TableOperations {
 	}
 	
 	public void createTable(CasserMappingEntity<?> entity) {
-		
-		String cql = SchemaUtil.createTableCql(entity);
-		
-		sessionOps.execute(cql);
-		
+		sessionOps.execute(SchemaUtil.createTable(entity));
 	}
 	
 	public void validateTable(TableMetadata tmd, CasserMappingEntity<?> entity) {
 		
 		if (tmd == null) {
-			throw new CasserException("table not exists " + entity.getTableName() + "for entity " + entity.getMappingInterface());
+			throw new CasserException("table not exists " + entity.getName() + "for entity " + entity.getMappingInterface());
 		}
 		
-		String cql = SchemaUtil.alterTableCql(tmd, entity, dropRemovedColumns);
+		List<SchemaStatement> list = SchemaUtil.alterTable(tmd, entity, dropRemovedColumns);
 		
-		if (cql != null) {
-			throw new CasserException("schema changed for entity " + entity.getMappingInterface() + ", apply this command: " + cql);
+		if (!list.isEmpty()) {
+			throw new CasserException("schema changed for entity " + entity.getMappingInterface() + ", apply this command: " + list);
 		}
 	}
 	
@@ -57,10 +59,11 @@ public final class TableOperations {
 			createTable(entity);
 		}
 		
-		String cql = SchemaUtil.alterTableCql(tmd, entity, dropRemovedColumns);
+		List<SchemaStatement> list = SchemaUtil.alterTable(tmd, entity, dropRemovedColumns);
 		
-		if (cql != null) {
-			sessionOps.execute(cql);
+		if (!list.isEmpty()) {
+			Batch b = QueryBuilder.batch(list.toArray(new RegularStatement[list.size()]));
+			sessionOps.execute(b);
 		}
 	}
 	

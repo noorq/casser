@@ -15,15 +15,6 @@
  */
 package casser.mapping;
 
-public class CasserMappingUserType<E> implements CasserUserType<E> {
-
-	public CasserMappingUserType(Class<E> clazz) {
-		
-	}
-	
-	@Override
-	public String getName() {
-		return null;
-	}
-
+public enum CasserEntityType {
+	TABLE, USER_DEFINED_TYPE;
 }

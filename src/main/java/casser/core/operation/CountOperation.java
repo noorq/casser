@@ -38,7 +38,7 @@ public final class CountOperation extends AbstractFilterOperation<Long, CountOpe
 	@Override
 	public BuiltStatement buildStatement() {
 		
-		Select select = QueryBuilder.select().countAll().from(entity.getTableName());
+		Select select = QueryBuilder.select().countAll().from(entity.getName());
 		
 		if (filters != null && !filters.isEmpty()) {
 		

@@ -27,7 +27,7 @@ public class CasserMappingRepository {
 
 	private final Map<Class<?>, CasserMappingEntity<?>> entityMap = new HashMap<Class<?>, CasserMappingEntity<?>>();
 
-	private final Map<String, CasserMappingUserType<?>> udtMap = new HashMap<String, CasserMappingUserType<?>>();
+	private final Map<String, CasserMappingEntity<?>> udtMap = new HashMap<String, CasserMappingEntity<?>>();
 
 	private boolean readOnly = false;
 	
@@ -42,15 +42,15 @@ public class CasserMappingRepository {
 			throw new CasserException("read-only mode");
 		}
 		
-		udtMap.putIfAbsent(name, new CasserMappingUserType(userTypeClass));
+		udtMap.putIfAbsent(name, new CasserMappingEntity(userTypeClass));
 		
 	}
 	
-	public Map<String, CasserMappingUserType<?>> knownUserTypes() {
+	public Map<String, CasserMappingEntity<?>> knownUserTypes() {
 		return Collections.unmodifiableMap(udtMap);
 	}
 	
-	public CasserMappingUserType<?> findUserType(Class<?> userTypeClass) {
+	public CasserMappingEntity<?> findUserType(Class<?> userTypeClass) {
 		return udtMap.get(userTypeClass);
 	}
 	

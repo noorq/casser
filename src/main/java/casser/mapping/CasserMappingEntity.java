@@ -72,12 +72,17 @@ public class CasserMappingEntity<E> implements CasserEntity<E> {
 
 	}
 
+	@Override
+	public CasserEntityType getType() {
+		return CasserEntityType.TABLE;
+	}
+
 	public Class<E> getMappingInterface() {
 		return iface;
 	}	
 	
 	@Override
-	public String getName() {
+	public String toString() {
 		return iface.toString();
 	}
 
@@ -91,7 +96,7 @@ public class CasserMappingEntity<E> implements CasserEntity<E> {
 	}
 
 	@Override
-	public String getTableName() {
+	public String getName() {
 		
 		if (tableName == null) {
 			

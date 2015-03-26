@@ -19,9 +19,9 @@ import java.util.Collection;
 
 public interface CasserEntity<E> {
 
-	String getName();
+	CasserEntityType getType();
 	
-	String getTableName();
+	String getName();
 	
 	Collection<CasserProperty<E>> getProperties();
 	

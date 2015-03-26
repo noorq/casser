@@ -270,10 +270,8 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	}
 	
 	private void dropEntity(CasserMappingEntity<?> entity) {
-		
-		String cql = SchemaUtil.dropTableCql(entity);
-		
-		execute(cql);
+				
+		execute(SchemaUtil.dropTable(entity));
 		
 	}
 	

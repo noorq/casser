@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import casser.mapping.CasserEntityType;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
 import casser.mapping.CqlUtil;
@@ -29,29 +30,49 @@ import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.RegularStatement;
+import com.datastax.driver.core.SimpleStatement;
 import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.schemabuilder.Alter;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.Create.Options;
+import com.datastax.driver.core.schemabuilder.CreateType;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.driver.core.schemabuilder.SchemaStatement;
 
 public final class SchemaUtil {
 
 	private SchemaUtil() {
 	}
 
-	public static String useCql(String keyspace, boolean forceQuote) {
+	public static RegularStatement use(String keyspace, boolean forceQuote) {
 		if (forceQuote) {
-			return "USE " + keyspace;
+			return new SimpleStatement("USE" + CqlUtil.forceQuote(keyspace));
 		}
 		else {
-			return "USE" + CqlUtil.forceQuote(keyspace);
+			return new SimpleStatement("USE " + keyspace);
 		}
 	}
+
+	public static SchemaStatement createUserType(CasserMappingEntity<?> entity) {
 	
-	public static String createTableCql(CasserMappingEntity<?> entity) {
+		if (entity.getType() != CasserEntityType.USER_DEFINED_TYPE) {
+			throw new CasserMappingException("expected user defined type entity " + entity);
+		}
+
+		CreateType create = SchemaBuilder.createType(entity.getName());
+
 		
-		Create create = SchemaBuilder.createTable(entity.getTableName());
+		return create;
+	}
+	
+	public static SchemaStatement createTable(CasserMappingEntity<?> entity) {
+		
+		if (entity.getType() != CasserEntityType.TABLE) {
+			throw new CasserMappingException("expected table entity " + entity);
+		}
+		
+		Create create = SchemaBuilder.createTable(entity.getName());
 
 		List<CasserMappingProperty<?>> partitionKeys = new ArrayList<CasserMappingProperty<?>>();
 		List<CasserMappingProperty<?>> clusteringColumns = new ArrayList<CasserMappingProperty<?>>();
@@ -102,16 +123,20 @@ public final class SchemaUtil {
 			
 		}
 		
-		return create.buildInternal();
+		return create;
 		
 	}
 
-	public static String alterTableCql(TableMetadata tmd,
+	public static List<SchemaStatement> alterTable(TableMetadata tmd,
 			CasserMappingEntity<?> entity, boolean dropRemovedColumns) {
 
-		boolean altered = false;
+		if (entity.getType() != CasserEntityType.TABLE) {
+			throw new CasserMappingException("expected table entity " + entity);
+		}
+
+		List<SchemaStatement> result = new ArrayList<SchemaStatement>();
 		
-		Alter alter = SchemaBuilder.alterTable(entity.getTableName());
+		Alter alter = SchemaBuilder.alterTable(entity.getName());
 
 		final Set<String> visitedColumns = dropRemovedColumns ? new HashSet<String>()
 				: Collections.<String> emptySet();
@@ -138,32 +163,40 @@ public final class SchemaUtil {
 				throw new CasserMappingException(
 						"unable to alter column that is a part of primary key '"
 								+ columnName + "' for entity "
-								+ entity.getName());
+								+ entity);
 			}
 
 			if (columnMetadata == null) {
 
-				alter.addColumn(columnName).type(columnDataType);
-				altered = true;
+				result.add(alter.addColumn(columnName).type(columnDataType));
 				
 			} else {
 
-				alter.alterColumn(columnName).type(columnDataType);
-				altered = true;
+				result.add(alter.alterColumn(columnName).type(columnDataType));
 				
 			}
 		}
-
-		if (altered) {
-			return alter.buildInternal();
+		
+		if (dropRemovedColumns) {
+			for (ColumnMetadata cm : tmd.getColumns()) {
+				if (!visitedColumns.contains(cm.getName())) {
+			
+					result.add(alter.dropColumn(cm.getName()));	
+					
+				}
+			}
 		}
 		
-		return null;
+		return result;
 	}
 
-	public static String dropTableCql(CasserMappingEntity<?> entity) {
+	public static SchemaStatement dropTable(CasserMappingEntity<?> entity) {
 		
-		return SchemaBuilder.dropTable(entity.getTableName()).buildInternal();
+		if (entity.getType() != CasserEntityType.TABLE) {
+			throw new CasserMappingException("expected table entity " + entity);
+		}
+
+		return SchemaBuilder.dropTable(entity.getName());
 		
 	}
 	

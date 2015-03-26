@@ -15,7 +15,7 @@
  */
 package casser.core;
 
-import casser.mapping.CasserMappingUserType;
+import casser.mapping.CasserMappingEntity;
 
 import com.datastax.driver.core.UserType;
 
@@ -27,16 +27,18 @@ public final class UserTypeOperations {
 		this.sessionOps = sessionOps;
 	}
 	
-	public void createUserType(String name, CasserMappingUserType<?> type) {
+	public void createUserType(String name, CasserMappingEntity<?> entity) {
+		
+		
 		
 	}
 
-	public void validateUserType(String name, UserType userType, CasserMappingUserType<?> type) {
+	public void validateUserType(String name, UserType userType, CasserMappingEntity<?> entity) {
 		
 	}
 
 	
-	public void updateUserType(String name, UserType userType, CasserMappingUserType<?> type) {
+	public void updateUserType(String name, UserType userType, CasserMappingEntity<?> entity) {
 		
 	}
 

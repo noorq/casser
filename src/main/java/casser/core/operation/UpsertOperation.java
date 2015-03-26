@@ -35,7 +35,7 @@ public final class UpsertOperation extends AbstractObjectOperation<ResultSet, Up
 	public UpsertOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity<?> entity, Object pojo) {
 		super(sessionOperations);
 		
-		this.insert = QueryBuilder.insertInto(entity.getTableName());
+		this.insert = QueryBuilder.insertInto(entity.getName());
 		
 		for (CasserMappingProperty<?> prop : entity.getMappingProperties()) {
 			
