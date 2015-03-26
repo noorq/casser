@@ -7,6 +7,7 @@ Current status: Active development
 
 * Leverages Java 8 language capabilities to build CQL queries
 * Simple function-style API
+* Reactive
 
 ### Requirements
 
