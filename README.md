@@ -1,5 +1,5 @@
 # casser
-Java 8 Cassandra Client
+Java 8 Cassandra Client ![build](https://travis-ci.org/noorq/casser.svg)
 
 ### Features
 
