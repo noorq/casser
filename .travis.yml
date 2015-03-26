@@ -2,7 +2,7 @@ language: java
 script: "mvn deploy --settings .travis-oss-settings.xml"
 
 jdk:
-  - oraclejdk7
+  - oraclejdk8
 
 env:
   global:
