@@ -1,5 +1,5 @@
 language: java
-script: "mvn deploy --settings .travis-oss-settings.xml"
+script: "mvn install --settings .travis-oss-settings.xml"
 
 jdk:
   - oraclejdk8
