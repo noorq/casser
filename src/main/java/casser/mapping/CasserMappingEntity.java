@@ -136,7 +136,7 @@ public class CasserMappingEntity<E> implements CasserEntity<E> {
 			return CasserEntityType.USER_DEFINED_TYPE;
 		}
 
-		throw new CasserMappingException("unknown entity type " + iface);
+		throw new CasserMappingException("entity must be annotated by @Table or @UserDefinedType " + iface);
 	}
 	
 }
