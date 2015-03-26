@@ -1,6 +1,8 @@
 # casser            ![build](https://travis-ci.org/noorq/casser.svg?branch=master)
 Java 8 Cassandra Client
 
+Current status: Active development
+
 ### Features
 
 * Leverages Java 8 language capabilities to build CQL queries
