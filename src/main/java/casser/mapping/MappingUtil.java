@@ -15,9 +15,11 @@
  */
 package casser.mapping;
 
+import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.Function;
 
+import casser.core.Casser;
 import casser.core.dsl.Getter;
 import casser.core.dsl.Setter;
 import casser.support.CasserMappingException;
@@ -28,86 +30,191 @@ public final class MappingUtil {
 	private MappingUtil() {
 	}
 
-	public static String getUserDefinedTypeName(Class<?> clazz) {
-		
-		UserDefinedType userDefinedType = clazz.getDeclaredAnnotation(UserDefinedType.class);
-		
-		if (userDefinedType != null) {
-			
-			String name = userDefinedType.value();
+	public static String getColumnName(Method getterMethod) {
 
-			if (name != null && name.isEmpty()) {
-				name = null;
+		String columnName = null;
+
+		Column column = getterMethod.getDeclaredAnnotation(Column.class);
+		if (column != null) {
+			columnName = column.value();
+			if (column.forceQuote()) {
+				columnName = CqlUtil.forceQuote(columnName);
 			}
-			
-			return name;
 		}
-		
-		return null;
+
+		PartitionKey partitionKey = getterMethod
+				.getDeclaredAnnotation(PartitionKey.class);
+		if (partitionKey != null) {
+
+			if (columnName != null) {
+				throw new CasserMappingException(
+						"property can be annotated only by single column type "
+								+ getterMethod);
+			}
+
+			columnName = partitionKey.value();
+			if (partitionKey.forceQuote()) {
+				columnName = CqlUtil.forceQuote(columnName);
+			}
+		}
+
+		ClusteringColumn clusteringColumn = getterMethod
+				.getDeclaredAnnotation(ClusteringColumn.class);
+		if (clusteringColumn != null) {
+
+			if (columnName != null) {
+				throw new CasserMappingException(
+						"property can be annotated only by single column type "
+								+ getterMethod);
+			}
+
+			columnName = clusteringColumn.value();
+			if (clusteringColumn.forceQuote()) {
+				columnName = CqlUtil.forceQuote(columnName);
+			}
+		}
+
+		if (columnName == null || columnName.isEmpty()) {
+			columnName = getDefaultColumnName(getterMethod);
+		}
+
+		return columnName;
 	}
-	
+
+	public static String getPropertyName(Method getter) {
+		String propertyName = Casser.settings()
+				.getMethodNameToPropertyConverter().apply(getter.getName());
+		return propertyName;
+	}
+
+	public static String getDefaultColumnName(Method getter) {
+		return Casser.settings().getPropertyToColumnConverter()
+				.apply(getPropertyName(getter));
+	}
+
+	public static String getUserDefinedTypeName(Class<?> iface, boolean required) {
+
+		String userTypeName = null;
+
+		UserDefinedType userDefinedType = iface
+				.getDeclaredAnnotation(UserDefinedType.class);
+
+		if (userDefinedType != null) {
+			userTypeName = userDefinedType.value();
+
+			if (userDefinedType.forceQuote()) {
+				userTypeName = CqlUtil.forceQuote(userTypeName);
+			}
+
+		} else if (required) {
+			throw new CasserMappingException(
+					"entity must have annotation @UserDefinedType " + iface);
+		}
+
+		if (userTypeName == null || userTypeName.isEmpty()) {
+			userTypeName = getDefaultName(iface);
+		}
+
+		return userTypeName;
+	}
+
+	public static String getTableName(Class<?> iface, boolean required) {
+
+		String tableName = null;
+
+		Table table = iface.getDeclaredAnnotation(Table.class);
+
+		if (table != null) {
+			tableName = table.value();
+
+			if (table.forceQuote()) {
+				tableName = CqlUtil.forceQuote(tableName);
+			}
+
+		} else if (required) {
+			throw new CasserMappingException(
+					"entity must have annotation @Table " + iface);
+		}
+
+		if (tableName == null || tableName.isEmpty()) {
+			tableName = getDefaultName(iface);
+		}
+
+		return tableName;
+	}
+
+	public static String getDefaultName(Class<?> iface) {
+		return Casser.settings().getPropertyToColumnConverter()
+				.apply(iface.getSimpleName());
+	}
+
 	public static Class<?> getMappingInterface(Object entity) {
-		
+
 		Class<?> iface = null;
-		
+
 		if (entity instanceof Class) {
 			iface = (Class<?>) entity;
-			
+
 			if (!iface.isInterface()) {
 				throw new CasserMappingException("expected interface " + iface);
 			}
-			
-		}
-		else {
+
+		} else {
 			Class<?>[] ifaces = entity.getClass().getInterfaces();
 			if (ifaces.length != 1) {
-				throw new CasserMappingException("supports only single interface, wrong dsl class " + entity.getClass()
-						);
+				throw new CasserMappingException(
+						"supports only single interface, wrong dsl class "
+								+ entity.getClass());
 			}
-			
+
 			iface = ifaces[0];
 		}
-		
+
 		return iface;
-		
-	}
-	
-	public static CasserMappingProperty<?> resolveMappingProperty(Getter<?> getter) {
-		
-		try {
-			getter.get();
-			throw new CasserMappingException("getter must reference to a dsl object " + getter);
-		}
-		catch(DslPropertyException e) {
-			return (CasserMappingProperty<?>) e.getProperty();
-		}
-		
+
 	}
 
-	public static CasserMappingProperty<?> resolveMappingProperty(Setter<?> setter) {
-		
+	public static CasserMappingProperty<?> resolveMappingProperty(
+			Getter<?> getter) {
+
 		try {
-			setter.set(null);
-			throw new CasserMappingException("setter must reference to a dsl object " + setter);
-		}
-		catch(DslPropertyException e) {
+			getter.get();
+			throw new CasserMappingException(
+					"getter must reference to a dsl object " + getter);
+		} catch (DslPropertyException e) {
 			return (CasserMappingProperty<?>) e.getProperty();
 		}
-		
+
 	}
-	public static Object prepareValueForWrite(CasserMappingProperty<?> prop, Object value) {
-		
+
+	public static CasserMappingProperty<?> resolveMappingProperty(
+			Setter<?> setter) {
+
+		try {
+			setter.set(null);
+			throw new CasserMappingException(
+					"setter must reference to a dsl object " + setter);
+		} catch (DslPropertyException e) {
+			return (CasserMappingProperty<?>) e.getProperty();
+		}
+
+	}
+
+	public static Object prepareValueForWrite(CasserMappingProperty<?> prop,
+			Object value) {
+
 		if (value != null) {
-			
-			Optional<Function<Object, Object>> converter = prop.getWriteConverter();
-			
+
+			Optional<Function<Object, Object>> converter = prop
+					.getWriteConverter();
+
 			if (converter.isPresent()) {
 				value = converter.get().apply(value);
 			}
-			
+
 		}
-		
+
 		return value;
 	}
-	
+
 }

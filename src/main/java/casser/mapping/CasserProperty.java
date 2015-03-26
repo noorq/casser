@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.schemabuilder.UDTType;
 
 public interface CasserProperty<E> {
 
@@ -29,6 +30,8 @@ public interface CasserProperty<E> {
 	Class<?> getJavaType();
 	
 	DataType getDataType();
+	
+	UDTType getUDTType();
 
 	boolean isPartitionKey();
 

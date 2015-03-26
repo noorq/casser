@@ -18,7 +18,7 @@ package casser.test.integration.core.usertype;
 import casser.mapping.Field;
 import casser.mapping.UserDefinedType;
 
-@UserDefinedType("address")
+@UserDefinedType("address0")
 public interface Address {
 
 	@Field("line_1")

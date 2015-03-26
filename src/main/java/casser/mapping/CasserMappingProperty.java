@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
-import casser.core.Casser;
 import casser.mapping.convert.DateToTimeUUIDConverter;
 import casser.mapping.convert.EnumToStringConverter;
 import casser.mapping.convert.StringToEnumConverter;
@@ -36,6 +35,8 @@ import casser.mapping.convert.TypedConverter;
 import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.driver.core.schemabuilder.UDTType;
 
 public class CasserMappingProperty<E> implements CasserProperty<E> {
 
@@ -44,7 +45,8 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	private final Method getterMethod;
 	private Method setterMethod;
 	
-	private final String propertyName;
+	private Optional<String> propertyName = Optional.empty();
+	private Optional<String> columnName = Optional.empty();
 	
 	private boolean keyInfo = false;
 	private boolean isPartitionKey = false;
@@ -52,15 +54,13 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	private int ordinal = 0;
 	private OrderingDirection ordering = OrderingDirection.ASC;
 	
-	private Class<?> javaType = null;
+	private Optional<Class<?>> javaType = Optional.empty();
 	
 	private boolean typeInfo = false;
 	private DataType dataType = null;
+	private UDTType udtType = null;
 	
-	private boolean staticInfo = false;
-	private boolean isStatic = false;
-	
-	private String columnName;
+	private Optional<Boolean> isStatic = Optional.empty();
 	
 	private Optional<Function<Object, Object>> readConverter = null;
 	private Optional<Function<Object, Object>> writeConverter = null;
@@ -68,59 +68,33 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	public CasserMappingProperty(CasserMappingEntity<E> entity, Method getter) {
 		this.entity = entity;
 		this.getterMethod = getter;
-		this.propertyName = getPropertyName(getter);
 	}
 	
 	@Override
 	public CasserMappingEntity<E> getEntity() {
 		return entity;
 	}
-	
-	private void ensureKeyInfo() {
-		if (!keyInfo) {
-			PartitionKey partitionKey = getterMethod.getDeclaredAnnotation(PartitionKey.class);
-			
-			if (partitionKey != null) {
-				isPartitionKey = true;
-				ordinal = partitionKey.ordinal();
-			}
-			
-			ClusteringColumn clusteringColumnn = getterMethod.getDeclaredAnnotation(ClusteringColumn.class);
-			
-			if (clusteringColumnn != null) {
-				
-				if (isPartitionKey) {
-					throw new CasserMappingException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getMappingInterface());
-				}
-				
-				isClusteringColumn = true;
-				ordinal = clusteringColumnn.ordinal();
-				ordering = clusteringColumnn.ordering();
-			}
-			
-			keyInfo = true;
-		}
-	}
 
     @Override
 	public Class<?> getJavaType() {
-		if (javaType == null) {
-			javaType = getterMethod.getReturnType();
+		if (!javaType.isPresent()) {
+			javaType = Optional.of(getterMethod.getReturnType());
 		}
-		return javaType;
+		return javaType.get();
 	}
 	
 	@Override
 	public DataType getDataType() {
-
-		if (!typeInfo) {
-			dataType = resolveDataType();
-			typeInfo = true;
-		}
-		
+		ensureTypeInfo();
 		return dataType;
 	}
 
+	@Override
+	public UDTType getUDTType() {
+		ensureTypeInfo();
+		return udtType;
+	}
+		
 	@Override
 	public boolean isPartitionKey() {
 		ensureKeyInfo();
@@ -148,78 +122,42 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	@Override
 	public boolean isStatic() {
 		
-		if (!staticInfo) {
+		if (!isStatic.isPresent()) {
 			
 			Column column = getterMethod.getDeclaredAnnotation(Column.class);
 			if (column != null) {
-				isStatic = column.isStatic();
+				isStatic = Optional.of(column.isStatic());
 			}
-			
-			staticInfo = true;
-			
+			else {
+				isStatic = Optional.of(false);
+			}
+
 		}
 
-		return isStatic;
+		return isStatic.get().booleanValue();
 	}
 
 	@Override
 	public String getColumnName() {
 		
-		if (columnName == null) {
-			
-			Column column = getterMethod.getDeclaredAnnotation(Column.class);
-			if (column != null) {
-				columnName = column.value();
-				if (column.forceQuote()) {
-					columnName = CqlUtil.forceQuote(columnName);
-				}
-			}
-
-			PartitionKey partitionKey = getterMethod.getDeclaredAnnotation(PartitionKey.class);
-			if (partitionKey != null) {
-				
-				if (columnName != null) {
-					throw new CasserMappingException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getMappingInterface());
-				}
-				
-				columnName = partitionKey.value();
-				if (partitionKey.forceQuote()) {
-					columnName = CqlUtil.forceQuote(columnName);
-				}
-			}
-			
-			ClusteringColumn clusteringColumn = getterMethod.getDeclaredAnnotation(ClusteringColumn.class);
-			if (clusteringColumn != null) {
-				
-				if (columnName != null) {
-					throw new CasserMappingException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getMappingInterface());
-				}
-				
-				columnName = clusteringColumn.value();
-				if (clusteringColumn.forceQuote()) {
-					columnName = CqlUtil.forceQuote(columnName);
-				}
-			}
-			
-			if (columnName == null || columnName.isEmpty()) {
-				columnName = getDefaultColumnName();
-			}
-			
+		if (!columnName.isPresent()) {
+			columnName = Optional.of(MappingUtil.getColumnName(getterMethod));
 		}
 		
-		return columnName;
+		return columnName.get();
 	}
 	
-	private String getDefaultColumnName() {
-		return Casser.settings().getPropertyToColumnConverter().apply(propertyName);
-	}
-
 	public void setSetterMethod(Method setterMethod) {
 		this.setterMethod = setterMethod;
 	}
 
 	public String getPropertyName() {
-		return propertyName;
+		
+		if (!propertyName.isPresent()) {
+			propertyName = Optional.of(MappingUtil.getPropertyName(getterMethod));
+		}
+		
+		return propertyName.get();
 	}
 
 	public Method getGetterMethod() {
@@ -298,12 +236,16 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 		return null;
 	}
 	
-	public static String getPropertyName(Method m) {
-		
-		String propertyName = Casser.settings().getMethodNameToPropertyConverter().apply(m.getName());
-		return propertyName;
+	private void ensureTypeInfo() {
+		if (!typeInfo) {
+			dataType = resolveDataType();
+			if (dataType == null) {
+				udtType = resolveUDTType();
+			}
+			typeInfo = true;
+		}		
 	}
-	
+
 	private DataType resolveDataType() {
 		
 		Class<?> propertyType = getJavaType();
@@ -318,7 +260,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 		}
 
 		if (isMap()) {
-			Type[] args = getTypeArguments();
+			Type[] args = getTypeParameters();
 			ensureTypeArguments(args.length, 2);
 
 			return DataType.map(autodetectPrimitiveType(args[0]),
@@ -326,7 +268,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 		}
 
 		if (isCollectionLike()) {
-			Type[] args = getTypeArguments();
+			Type[] args = getTypeParameters();
 			ensureTypeArguments(args.length, 1);
 
 			if (Set.class.isAssignableFrom(propertyType)) {
@@ -340,20 +282,47 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 			}
 		}
 
-		DataType dataType = SimpleDataTypes.getDataTypeByJavaClass(propertyType);
-		if (dataType == null) {
-			
-			UserDefinedType userDefinedType = propertyType.getDeclaredAnnotation(UserDefinedType.class);
-			if (userDefinedType != null) {
-				
-			}
+		return SimpleDataTypes.getDataTypeByJavaClass(propertyType);
+	}
+	
+	private UDTType resolveUDTType() {
+		
+		Class<?> propertyType = getJavaType();
 
-			throw new CasserMappingException(
-					"only primitive types and Set,List,Map collections are allowed, unknown type for property '" + this.getPropertyName()
-							+ "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());
+		String udtName = MappingUtil.getUserDefinedTypeName(propertyType, false);
+		
+		if (udtName != null) {
+			return SchemaBuilder.frozen(udtName);
 		}
-
-		return dataType;
+		
+		return null;
+		
+	}
+	
+	private void ensureKeyInfo() {
+		if (!keyInfo) {
+			PartitionKey partitionKey = getterMethod.getDeclaredAnnotation(PartitionKey.class);
+			
+			if (partitionKey != null) {
+				isPartitionKey = true;
+				ordinal = partitionKey.ordinal();
+			}
+			
+			ClusteringColumn clusteringColumnn = getterMethod.getDeclaredAnnotation(ClusteringColumn.class);
+			
+			if (clusteringColumnn != null) {
+				
+				if (isPartitionKey) {
+					throw new CasserMappingException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getMappingInterface());
+				}
+				
+				isClusteringColumn = true;
+				ordinal = clusteringColumnn.ordinal();
+				ordering = clusteringColumnn.ordering();
+			}
+			
+			keyInfo = true;
+		}
 	}
 	
 	private DataType qualifyAnnotatedType(DataTypeName annotation) {
@@ -428,7 +397,7 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 		return Collection.class.isAssignableFrom(rawType);
 	}
 	
-	Type[] getTypeArguments() {
+	Type[] getTypeParameters() {
 		
 		Type javaType = (Type) getJavaType();
 		

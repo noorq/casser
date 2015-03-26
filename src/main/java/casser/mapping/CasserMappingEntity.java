@@ -20,23 +20,31 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import casser.config.CasserSettings;
 import casser.core.Casser;
+import casser.support.CasserMappingException;
 
 public class CasserMappingEntity<E> implements CasserEntity<E> {
 
 	private final Class<E> iface;
-	private String tableName;
+	private final CasserEntityType type;
+	private String name;
 	private final Map<String, CasserMappingProperty<E>> props = new HashMap<String, CasserMappingProperty<E>>();
 	
 	public CasserMappingEntity(Class<E> iface) {
+		this(iface, autoDetectType(iface));
+	}
+	
+	public CasserMappingEntity(Class<E> iface, CasserEntityType type) {
 		
 		if (iface == null || !iface.isInterface()) {
 			throw new IllegalArgumentException("invalid parameter " + iface);
 		}
 		
 		this.iface = iface;
+		this.type = Objects.requireNonNull(type, "type is empty");
 		
 		CasserSettings settings = Casser.settings();
 		
@@ -58,7 +66,7 @@ public class CasserMappingEntity<E> implements CasserEntity<E> {
 			
 			if (settings.getSetterMethodDetector().apply(m)) {
 				
-				String propertyName = CasserMappingProperty.getPropertyName(m);
+				String propertyName = MappingUtil.getPropertyName(m);
 
 				CasserMappingProperty<E> prop = props.get(propertyName);
 				
@@ -74,7 +82,7 @@ public class CasserMappingEntity<E> implements CasserEntity<E> {
 
 	@Override
 	public CasserEntityType getType() {
-		return CasserEntityType.TABLE;
+		return type;
 	}
 
 	public Class<E> getMappingInterface() {
@@ -98,27 +106,37 @@ public class CasserMappingEntity<E> implements CasserEntity<E> {
 	@Override
 	public String getName() {
 		
-		if (tableName == null) {
+		if (name == null) {
 			
-			Table table = iface.getDeclaredAnnotation(Table.class);
+			switch(type) {
 			
-			if (table != null) {
-				tableName = table.value();
-				if (table.forceQuote()) {
-					tableName = CqlUtil.forceQuote(tableName);
-				}
+			case TABLE:
+				name = MappingUtil.getTableName(iface, true);
+				break;
+				
+			case USER_DEFINED_TYPE:
+				name = MappingUtil.getUserDefinedTypeName(iface, true);
+				break;
 			}
 			
-			if (tableName == null || tableName.isEmpty()) {
-				tableName = getDefaultTableName();
-			}
 		}
 		
-		return tableName;
+		return name;
 	}
 	
-	private String getDefaultTableName() {
-		return Casser.settings().getPropertyToColumnConverter().apply(iface.getSimpleName());
+	private static CasserEntityType autoDetectType(Class<?> iface) {
+		
+		Objects.requireNonNull(iface, "empty iface");
+		
+		if (null != iface.getDeclaredAnnotation(Table.class)) {
+			return CasserEntityType.TABLE;
+		}
+
+		else if (null != iface.getDeclaredAnnotation(UserDefinedType.class)) {
+			return CasserEntityType.USER_DEFINED_TYPE;
+		}
+
+		throw new CasserMappingException("unknown entity type " + iface);
 	}
 	
 }

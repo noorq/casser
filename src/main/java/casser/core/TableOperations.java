@@ -57,6 +57,7 @@ public final class TableOperations {
 		
 		if (tmd == null) {
 			createTable(entity);
+			return;
 		}
 		
 		List<SchemaStatement> list = SchemaUtil.alterTable(tmd, entity, dropRemovedColumns);

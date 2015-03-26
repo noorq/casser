@@ -27,18 +27,16 @@ public final class UserTypeOperations {
 		this.sessionOps = sessionOps;
 	}
 	
-	public void createUserType(String name, CasserMappingEntity<?> entity) {
-		
-		
-		
+	public void createUserType(CasserMappingEntity<?> entity) {
+		sessionOps.execute(SchemaUtil.createUserType(entity));
 	}
 
-	public void validateUserType(String name, UserType userType, CasserMappingEntity<?> entity) {
+	public void validateUserType(UserType userType, CasserMappingEntity<?> entity) {
 		
 	}
 
 	
-	public void updateUserType(String name, UserType userType, CasserMappingEntity<?> entity) {
+	public void updateUserType(UserType userType, CasserMappingEntity<?> entity) {
 		
 	}
 

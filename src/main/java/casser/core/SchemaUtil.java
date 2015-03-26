@@ -62,6 +62,17 @@ public final class SchemaUtil {
 
 		CreateType create = SchemaBuilder.createType(entity.getName());
 
+		for (CasserMappingProperty<?> prop : entity.getMappingProperties()) {
+			
+			String columnName = prop.getColumnName();
+			
+			if (prop.isPartitionKey() || prop.isClusteringColumn()) {
+				throw new CasserMappingException("primary key columns are not supported in UserDefinedType for column " + columnName + " in entity " + entity);
+			}
+ 			
+			create.addColumn(columnName, prop.getDataType());
+			
+		}
 		
 		return create;
 	}
@@ -100,16 +111,45 @@ public final class SchemaUtil {
 		}
 
 		for (CasserMappingProperty<?> prop : clusteringColumns) {
-			create.addClusteringColumn(prop.getColumnName(), prop.getDataType());
+			
+			if (prop.getDataType() != null) {
+				create.addClusteringColumn(prop.getColumnName(), prop.getDataType());
+			}
+			else if (prop.getUDTType() != null) {
+				create.addUDTClusteringColumn(prop.getColumnName(), prop.getUDTType());
+			}
+			else {
+				throwNoMapping(prop);
+			}
+			
 		}
 		
 		for (CasserMappingProperty<?> prop : columns) {
 			
 			if (prop.isStatic()) {
-				create.addStaticColumn(prop.getColumnName(), prop.getDataType());
+				
+				if (prop.getDataType() != null) {
+					create.addStaticColumn(prop.getColumnName(), prop.getDataType());
+				}
+				else if (prop.getUDTType() != null) {
+					create.addUDTStaticColumn(prop.getColumnName(), prop.getUDTType());
+				}
+				else {
+					throwNoMapping(prop);
+				}
 			}
 			else {
-				create.addColumn(prop.getColumnName(), prop.getDataType());
+				
+				if (prop.getDataType() != null) {
+					create.addColumn(prop.getColumnName(), prop.getDataType());
+				}
+				else if (prop.getUDTType() != null) {
+					create.addUDTColumn(prop.getColumnName(), prop.getUDTType());
+				}
+				else {
+					throwNoMapping(prop);
+				}
+				
 			}
 		}
 
@@ -208,5 +248,13 @@ public final class SchemaUtil {
 			return SchemaBuilder.Direction.DESC;
 		}
 		throw new CasserMappingException("unknown ordering " + o);
+	}
+	
+	public static void throwNoMapping(CasserMappingProperty<?> prop) {
+		
+		throw new CasserMappingException(
+				"only primitive types and Set,List,Map collections and UserDefinedTypes are allowed, unknown type for property '" + prop.getPropertyName()
+						+ "' type is '" + prop.getJavaType() + "' in the entity " + prop.getEntity());
+
 	}
 }

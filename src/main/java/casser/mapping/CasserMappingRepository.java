@@ -42,12 +42,12 @@ public class CasserMappingRepository {
 			throw new CasserException("read-only mode");
 		}
 		
-		udtMap.putIfAbsent(name, new CasserMappingEntity(userTypeClass));
+		udtMap.putIfAbsent(name, new CasserMappingEntity(userTypeClass, CasserEntityType.USER_DEFINED_TYPE));
 		
 	}
 	
-	public Map<String, CasserMappingEntity<?>> knownUserTypes() {
-		return Collections.unmodifiableMap(udtMap);
+	public Collection<CasserMappingEntity<?>> knownUserTypes() {
+		return Collections.unmodifiableCollection(udtMap.values());
 	}
 	
 	public CasserMappingEntity<?> findUserType(Class<?> userTypeClass) {
@@ -62,7 +62,7 @@ public class CasserMappingRepository {
 
 		Class<?> iface = MappingUtil.getMappingInterface(dsl);
 			
-		entityMap.putIfAbsent(iface, new CasserMappingEntity(iface));
+		entityMap.putIfAbsent(iface, new CasserMappingEntity(iface, CasserEntityType.TABLE));
 		
 	}
 	

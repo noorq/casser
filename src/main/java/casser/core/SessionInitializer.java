@@ -177,7 +177,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		case CREATE_DROP:
 			
 			mappingRepository.knownUserTypes()
-				.forEach( (k, v) -> userTypeOps.createUserType(k, v));
+				.forEach(e -> userTypeOps.createUserType(e));
 			
 			mappingRepository.knownEntities()
 				.forEach(e -> tableOps.createTable(e));
@@ -186,7 +186,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 			
 		case VALIDATE:
 			mappingRepository.knownUserTypes()
-				.forEach( (k, v) -> userTypeOps.validateUserType(k, getUserType(k), v));
+				.forEach(e -> userTypeOps.validateUserType(getUserType(e), e));
 			
 			mappingRepository.knownEntities()
 				.forEach(e -> tableOps.validateTable(getTableMetadata(e), e));
@@ -194,7 +194,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 			
 		case UPDATE:
 			mappingRepository.knownUserTypes()
-				.forEach( (k, v) -> userTypeOps.updateUserType(k, getUserType(k), v));
+				.forEach(e -> userTypeOps.updateUserType(getUserType(e), e));
 
 			mappingRepository.knownEntities()
 				.forEach(e -> tableOps.updateTable(getTableMetadata(e), e));
@@ -214,7 +214,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		.flatMap(e -> e.getMappingProperties().stream())
 		.map(p -> p.getJavaType())
 		.filter(c -> SimpleDataTypes.getDataTypeByJavaClass(c) == null)
-		.map(c -> new Tuple2<String, Class<?>>(MappingUtil.getUserDefinedTypeName(c), c))
+		.map(c -> new Tuple2<String, Class<?>>(MappingUtil.getUserDefinedTypeName(c, false), c))
 		.filter(t -> t.v1 != null)
 		.forEach(t -> {
 
@@ -241,7 +241,8 @@ public class SessionInitializer extends AbstractSessionOperations {
 		
 	}
 
-	private UserType getUserType(String name) {
-		return getKeyspaceMetadata().getUserType(name.toLowerCase());
+	private UserType getUserType(CasserMappingEntity<?> entity) {
+		String userTypeName = entity.getName();
+		return getKeyspaceMetadata().getUserType(userTypeName.toLowerCase());
 	}
 }
