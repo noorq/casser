@@ -28,7 +28,7 @@ import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
-public final class UpsertOperation extends AbstractObjectOperation<ResultSet, UpsertOperation> {
+public final class UpsertOperation extends AbstractEntityOperation<ResultSet, UpsertOperation> {
 
 	private final Insert insert;
 	

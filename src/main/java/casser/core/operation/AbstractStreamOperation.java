@@ -15,16 +15,15 @@
  */
 package casser.core.operation;
 
-import java.util.concurrent.Future;
 import java.util.stream.Stream;
+
+import casser.core.AbstractSessionOperations;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
-import casser.core.AbstractSessionOperations;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>> extends AbstractOperation<E, O> {
 
@@ -41,7 +40,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 		return transform(resultSet);
 	}
 	
-	public Future<Stream<E>> async() {
+	public ListenableFuture<Stream<E>> async() {
 		
 		ResultSetFuture resultSetFuture = sessionOperations.executeAsync(buildStatement());
 

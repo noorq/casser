@@ -15,6 +15,9 @@
  */
 package casser.test.unit.core.dsl;
 
+import casser.mapping.Table;
+
+@Table
 public interface Account {
 
 	String getId();

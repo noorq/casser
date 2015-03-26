@@ -15,8 +15,6 @@
  */
 package casser.core.operation;
 
-import java.util.concurrent.Future;
-
 import casser.core.AbstractSessionOperations;
 
 import com.datastax.driver.core.ResultSet;
@@ -26,13 +24,13 @@ import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-public abstract class AbstractObjectOperation<E, O extends AbstractObjectOperation<E, O>> extends AbstractOperation<E, O> {
+public abstract class AbstractEntityOperation<E, O extends AbstractEntityOperation<E, O>> extends AbstractOperation<E, O> {
 
 	public abstract BuiltStatement buildStatement();
 	
 	public abstract E transform(ResultSet resultSet);
 	
-	public AbstractObjectOperation(AbstractSessionOperations sessionOperations) {
+	public AbstractEntityOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
 	}
 	
@@ -43,7 +41,7 @@ public abstract class AbstractObjectOperation<E, O extends AbstractObjectOperati
 		return transform(resultSet);
 	}
 	
-	public Future<E> async() {
+	public ListenableFuture<E> async() {
 
 		ResultSetFuture resultSetFuture = sessionOperations.executeAsync(buildStatement());
 
