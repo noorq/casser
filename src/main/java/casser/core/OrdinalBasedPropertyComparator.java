@@ -19,12 +19,11 @@ import java.util.Comparator;
 
 import casser.mapping.CasserMappingProperty;
 
-public enum OrdinalBasedPropertyComparator implements Comparator<CasserMappingProperty<?>> {
+public enum OrdinalBasedPropertyComparator implements Comparator<CasserMappingProperty> {
 
 	INSTANCE;
 
-
-	public int compare(CasserMappingProperty<?> o1, CasserMappingProperty<?> o2) {
+	public int compare(CasserMappingProperty o1, CasserMappingProperty o2) {
 
 		Integer ordinal1 = o1.getOrdinal();
 		Integer ordinal2 = o2.getOrdinal();

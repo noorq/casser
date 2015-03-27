@@ -15,13 +15,13 @@
  */
 package casser.test.integration.core.usertype;
 
-import casser.mapping.Field;
+import casser.mapping.Column;
 import casser.mapping.UserDefinedType;
 
 @UserDefinedType("address0")
 public interface Address {
 
-	@Field("line_1")
+	@Column("line_1")
 	String getStreet();
 
 	void setStreet(String street);

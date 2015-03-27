@@ -26,18 +26,18 @@ import casser.config.CasserSettings;
 import casser.core.Casser;
 import casser.support.CasserMappingException;
 
-public class CasserMappingEntity<E> implements CasserEntity<E> {
+public class CasserMappingEntity implements CasserEntity {
 
-	private final Class<E> iface;
+	private final Class<?> iface;
 	private final CasserEntityType type;
 	private String name;
-	private final Map<String, CasserMappingProperty<E>> props = new HashMap<String, CasserMappingProperty<E>>();
+	private final Map<String, CasserMappingProperty> props = new HashMap<String, CasserMappingProperty>();
 	
-	public CasserMappingEntity(Class<E> iface) {
+	public CasserMappingEntity(Class<?> iface) {
 		this(iface, autoDetectType(iface));
 	}
 	
-	public CasserMappingEntity(Class<E> iface, CasserEntityType type) {
+	public CasserMappingEntity(Class<?> iface, CasserEntityType type) {
 		
 		if (iface == null || !iface.isInterface()) {
 			throw new IllegalArgumentException("invalid parameter " + iface);
@@ -54,7 +54,7 @@ public class CasserMappingEntity<E> implements CasserEntity<E> {
 			
 			if (settings.getGetterMethodDetector().apply(m)) {
 				
-				CasserMappingProperty<E> prop = new CasserMappingProperty<E>(this, m);
+				CasserMappingProperty prop = new CasserMappingProperty(this, m);
 				
 				props.put(prop.getPropertyName(), prop);
 				
@@ -68,7 +68,7 @@ public class CasserMappingEntity<E> implements CasserEntity<E> {
 				
 				String propertyName = MappingUtil.getPropertyName(m);
 
-				CasserMappingProperty<E> prop = props.get(propertyName);
+				CasserMappingProperty prop = props.get(propertyName);
 				
 				if (prop != null) {
 					prop.setSetterMethod(m);
@@ -85,7 +85,7 @@ public class CasserMappingEntity<E> implements CasserEntity<E> {
 		return type;
 	}
 
-	public Class<E> getMappingInterface() {
+	public Class<?> getMappingInterface() {
 		return iface;
 	}	
 	
@@ -95,11 +95,11 @@ public class CasserMappingEntity<E> implements CasserEntity<E> {
 	}
 
 	@Override
-	public Collection<CasserProperty<E>> getProperties() {
+	public Collection<CasserProperty> getProperties() {
 		return Collections.unmodifiableCollection(props.values());
 	}
 
-	public Collection<CasserMappingProperty<E>> getMappingProperties() {
+	public Collection<CasserMappingProperty> getMappingProperties() {
 		return Collections.unmodifiableCollection(props.values());
 	}
 

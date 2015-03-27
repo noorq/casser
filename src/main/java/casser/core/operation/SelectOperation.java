@@ -29,6 +29,7 @@ import casser.core.Filter;
 import casser.core.dsl.Getter;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
+import casser.mapping.CasserMappingRepository;
 import casser.mapping.ColumnValueProvider;
 import casser.mapping.MappingUtil;
 import casser.mapping.OrderingDirection;
@@ -47,12 +48,12 @@ import com.datastax.driver.core.querybuilder.Select.Where;
 public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectOperation<E>> {
 
 	protected final Function<ColumnValueProvider, E> rowMapper;
-	protected final CasserMappingProperty<?>[] props;
+	protected final CasserMappingProperty[] props;
 	
 	protected List<Ordering> ordering = null;
 	protected Integer limit = null;
 	
-	public SelectOperation(AbstractSessionOperations sessionOperations, Function<ColumnValueProvider, E> rowMapper, CasserMappingProperty<?>... props) {
+	public SelectOperation(AbstractSessionOperations sessionOperations, Function<ColumnValueProvider, E> rowMapper, CasserMappingProperty... props) {
 		super(sessionOperations);
 		this.rowMapper = rowMapper;
 		this.props = props;	
@@ -60,8 +61,8 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	
 	public CountOperation count() {
 		
-		CasserMappingEntity<?> entity = null;
-		for (CasserMappingProperty<?> prop : props) {
+		CasserMappingEntity entity = null;
+		for (CasserMappingProperty prop : props) {
 			
 			if (entity == null) {
 				entity = prop.getEntity();
@@ -75,7 +76,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 			throw new CasserMappingException("no entity or table to count data");
 		}
 		
-		return new CountOperation(sessionOperations, entity);
+		return new CountOperation(sessionOps, entity);
 	}
 	
 	public <R> SelectTransformingOperation<R, E> map(Function<E, R> fn) {
@@ -91,7 +92,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		Objects.requireNonNull(getter, "property is null");
 		Objects.requireNonNull(direction, "direction is null");
 		
-		CasserMappingProperty<?> prop = MappingUtil.resolveMappingProperty(getter);
+		CasserMappingProperty prop = MappingUtil.resolveMappingProperty(getter);
 		
 		if (!prop.isClusteringColumn()) {
 			throw new CasserMappingException("property must be a clustering column " + prop.getPropertyName());
@@ -117,10 +118,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	@Override
 	public BuiltStatement buildStatement() {
 		
-		CasserMappingEntity<?> entity = null;
+		CasserMappingEntity entity = null;
 		Selection selection = QueryBuilder.select();
 		
-		for (CasserMappingProperty<?> prop : props) {
+		for (CasserMappingProperty prop : props) {
 			selection = selection.column(prop.getColumnName());
 			
 			if (entity == null) {
@@ -150,7 +151,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 			Where where = select.where();
 			
 			for (Filter<?> filter : filters) {
-				where.and(filter.getClause());
+				where.and(filter.getClause(sessionOps.getValuePreparer()));
 			}
 		}
 		
@@ -160,9 +161,11 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	@Override
 	public Stream<E> transform(ResultSet resultSet) {
 
+		CasserMappingRepository repository = sessionOps.getRepository();
+		
 		return StreamSupport.stream(
 				Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED)
-				, false).map(r -> new RowColumnValueProvider(r)).map(rowMapper);
+				, false).map(r -> new RowColumnValueProvider(repository, r)).map(rowMapper);
 
 	}
 

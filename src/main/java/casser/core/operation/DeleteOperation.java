@@ -28,9 +28,9 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 public final class DeleteOperation extends AbstractFilterOperation<ResultSet, DeleteOperation> {
 
-	private final CasserMappingEntity<?> entity;
+	private final CasserMappingEntity entity;
 	
-	public DeleteOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity<?> entity) {
+	public DeleteOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity entity) {
 		super(sessionOperations);
 		
 		this.entity = entity;
@@ -46,7 +46,7 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 			Where where = delete.where();
 			
 			for (Filter<?> filter : filters) {
-				where.and(filter.getClause());
+				where.and(filter.getClause(sessionOps.getValuePreparer()));
 			}
 			
 			return delete;

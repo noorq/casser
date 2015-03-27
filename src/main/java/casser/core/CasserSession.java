@@ -36,7 +36,9 @@ import casser.core.tuple.Tuple7;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
 import casser.mapping.CasserMappingRepository;
+import casser.mapping.ColumnValuePreparer;
 import casser.mapping.MappingUtil;
+import casser.mapping.StatementColumnValuePreparer;
 
 import com.datastax.driver.core.CloseFuture;
 import com.datastax.driver.core.Session;
@@ -50,6 +52,8 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	private final Executor executor;
 	private final boolean dropSchemaOnClose;
 	
+	private final StatementColumnValuePreparer valuePreparer;
+	
 	CasserSession(Session session,
 			String usingKeyspace,
 			boolean showCql, 
@@ -62,6 +66,8 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		this.mappingRepository = mappingRepository.setReadOnly();
 		this.executor = executor;
 		this.dropSchemaOnClose = dropSchemaOnClose;
+		
+		this.valuePreparer = new StatementColumnValuePreparer(this.mappingRepository);
 	}
 	
 	@Override
@@ -93,11 +99,21 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	public Executor getExecutor() {
 		return executor;
 	}
+	
+	@Override
+	public CasserMappingRepository getRepository() {
+		return mappingRepository;
+	}
+	
+	@Override
+	public ColumnValuePreparer getValuePreparer() {
+		return valuePreparer;
+	}
 
 	public <V1> SelectOperation<Tuple1<V1>> select(Getter<V1> getter1) {
 		Objects.requireNonNull(getter1, "field 1 is empty");
 		
-		CasserMappingProperty<?> p1 = MappingUtil.resolveMappingProperty(getter1);
+		CasserMappingProperty p1 = MappingUtil.resolveMappingProperty(getter1);
 		return new SelectOperation<Tuple1<V1>>(this, new Tuple1.Mapper<V1>(p1), p1);
 	}
 
@@ -105,8 +121,8 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		Objects.requireNonNull(getter1, "field 1 is empty");
 		Objects.requireNonNull(getter2, "field 2 is empty");
 		
-		CasserMappingProperty<?> p1 = MappingUtil.resolveMappingProperty(getter1);
-		CasserMappingProperty<?> p2 = MappingUtil.resolveMappingProperty(getter2);
+		CasserMappingProperty p1 = MappingUtil.resolveMappingProperty(getter1);
+		CasserMappingProperty p2 = MappingUtil.resolveMappingProperty(getter2);
 		return new SelectOperation<Tuple2<V1, V2>>(this, new Tuple2.Mapper<V1, V2>(p1, p2), p1, p2);
 	}
 
@@ -115,9 +131,9 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		Objects.requireNonNull(getter2, "field 2 is empty");
 		Objects.requireNonNull(getter3, "field 3 is empty");
 		
-		CasserMappingProperty<?> p1 = MappingUtil.resolveMappingProperty(getter1);
-		CasserMappingProperty<?> p2 = MappingUtil.resolveMappingProperty(getter2);
-		CasserMappingProperty<?> p3 = MappingUtil.resolveMappingProperty(getter3);
+		CasserMappingProperty p1 = MappingUtil.resolveMappingProperty(getter1);
+		CasserMappingProperty p2 = MappingUtil.resolveMappingProperty(getter2);
+		CasserMappingProperty p3 = MappingUtil.resolveMappingProperty(getter3);
 		return new SelectOperation<Tuple3<V1, V2, V3>>(this, new Tuple3.Mapper<V1, V2, V3>(p1, p2, p3), p1, p2, p3);
 	}
 
@@ -128,10 +144,10 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		Objects.requireNonNull(getter3, "field 3 is empty");
 		Objects.requireNonNull(getter4, "field 4 is empty");
 		
-		CasserMappingProperty<?> p1 = MappingUtil.resolveMappingProperty(getter1);
-		CasserMappingProperty<?> p2 = MappingUtil.resolveMappingProperty(getter2);
-		CasserMappingProperty<?> p3 = MappingUtil.resolveMappingProperty(getter3);
-		CasserMappingProperty<?> p4 = MappingUtil.resolveMappingProperty(getter4);
+		CasserMappingProperty p1 = MappingUtil.resolveMappingProperty(getter1);
+		CasserMappingProperty p2 = MappingUtil.resolveMappingProperty(getter2);
+		CasserMappingProperty p3 = MappingUtil.resolveMappingProperty(getter3);
+		CasserMappingProperty p4 = MappingUtil.resolveMappingProperty(getter4);
 		return new SelectOperation<Tuple4<V1, V2, V3, V4>>(this, new Tuple4.Mapper<V1, V2, V3, V4>(p1, p2, p3, p4), p1, p2, p3, p4);
 	}
 
@@ -143,11 +159,11 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		Objects.requireNonNull(getter4, "field 4 is empty");
 		Objects.requireNonNull(getter5, "field 5 is empty");
 		
-		CasserMappingProperty<?> p1 = MappingUtil.resolveMappingProperty(getter1);
-		CasserMappingProperty<?> p2 = MappingUtil.resolveMappingProperty(getter2);
-		CasserMappingProperty<?> p3 = MappingUtil.resolveMappingProperty(getter3);
-		CasserMappingProperty<?> p4 = MappingUtil.resolveMappingProperty(getter4);
-		CasserMappingProperty<?> p5 = MappingUtil.resolveMappingProperty(getter5);
+		CasserMappingProperty p1 = MappingUtil.resolveMappingProperty(getter1);
+		CasserMappingProperty p2 = MappingUtil.resolveMappingProperty(getter2);
+		CasserMappingProperty p3 = MappingUtil.resolveMappingProperty(getter3);
+		CasserMappingProperty p4 = MappingUtil.resolveMappingProperty(getter4);
+		CasserMappingProperty p5 = MappingUtil.resolveMappingProperty(getter5);
 		return new SelectOperation<Tuple5<V1, V2, V3, V4, V5>>(this, 
 				new Tuple5.Mapper<V1, V2, V3, V4, V5>(p1, p2, p3, p4, p5), 
 				p1, p2, p3, p4, p5);
@@ -163,12 +179,12 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		Objects.requireNonNull(getter5, "field 5 is empty");
 		Objects.requireNonNull(getter6, "field 6 is empty");
 		
-		CasserMappingProperty<?> p1 = MappingUtil.resolveMappingProperty(getter1);
-		CasserMappingProperty<?> p2 = MappingUtil.resolveMappingProperty(getter2);
-		CasserMappingProperty<?> p3 = MappingUtil.resolveMappingProperty(getter3);
-		CasserMappingProperty<?> p4 = MappingUtil.resolveMappingProperty(getter4);
-		CasserMappingProperty<?> p5 = MappingUtil.resolveMappingProperty(getter5);
-		CasserMappingProperty<?> p6 = MappingUtil.resolveMappingProperty(getter6);
+		CasserMappingProperty p1 = MappingUtil.resolveMappingProperty(getter1);
+		CasserMappingProperty p2 = MappingUtil.resolveMappingProperty(getter2);
+		CasserMappingProperty p3 = MappingUtil.resolveMappingProperty(getter3);
+		CasserMappingProperty p4 = MappingUtil.resolveMappingProperty(getter4);
+		CasserMappingProperty p5 = MappingUtil.resolveMappingProperty(getter5);
+		CasserMappingProperty p6 = MappingUtil.resolveMappingProperty(getter6);
 		return new SelectOperation<Tuple6<V1, V2, V3, V4, V5, V6>>(this, 
 				new Tuple6.Mapper<V1, V2, V3, V4, V5, V6>(p1, p2, p3, p4, p5, p6), 
 				p1, p2, p3, p4, p5, p6);
@@ -186,13 +202,13 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		Objects.requireNonNull(getter6, "field 6 is empty");
 		Objects.requireNonNull(getter7, "field 7 is empty");
 		
-		CasserMappingProperty<?> p1 = MappingUtil.resolveMappingProperty(getter1);
-		CasserMappingProperty<?> p2 = MappingUtil.resolveMappingProperty(getter2);
-		CasserMappingProperty<?> p3 = MappingUtil.resolveMappingProperty(getter3);
-		CasserMappingProperty<?> p4 = MappingUtil.resolveMappingProperty(getter4);
-		CasserMappingProperty<?> p5 = MappingUtil.resolveMappingProperty(getter5);
-		CasserMappingProperty<?> p6 = MappingUtil.resolveMappingProperty(getter6);
-		CasserMappingProperty<?> p7 = MappingUtil.resolveMappingProperty(getter7);
+		CasserMappingProperty p1 = MappingUtil.resolveMappingProperty(getter1);
+		CasserMappingProperty p2 = MappingUtil.resolveMappingProperty(getter2);
+		CasserMappingProperty p3 = MappingUtil.resolveMappingProperty(getter3);
+		CasserMappingProperty p4 = MappingUtil.resolveMappingProperty(getter4);
+		CasserMappingProperty p5 = MappingUtil.resolveMappingProperty(getter5);
+		CasserMappingProperty p6 = MappingUtil.resolveMappingProperty(getter6);
+		CasserMappingProperty p7 = MappingUtil.resolveMappingProperty(getter7);
 		return new SelectOperation<Tuple7<V1, V2, V3, V4, V5, V6, V7>>(this, 
 				new Tuple7.Mapper<V1, V2, V3, V4, V5, V6, V7>(p1, p2, p3, p4, p5, p6, p7), 
 				p1, p2, p3, p4, p5, p6, p7);
@@ -203,7 +219,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		
 		Class<?> iface = MappingUtil.getMappingInterface(dsl);
 		
-		CasserMappingEntity<?> entity = mappingRepository.getEntity(iface);
+		CasserMappingEntity entity = mappingRepository.getEntity(iface);
 		
 		return new CountOperation(this, entity);
 	}
@@ -212,7 +228,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		Objects.requireNonNull(setter, "field is empty");
 		Objects.requireNonNull(v, "value is empty");
 
-		CasserMappingProperty<?> p = MappingUtil.resolveMappingProperty(setter);
+		CasserMappingProperty p = MappingUtil.resolveMappingProperty(setter);
 		
 		return new UpdateOperation(this, p, v);
 	}
@@ -222,7 +238,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		
 		Class<?> iface = MappingUtil.getMappingInterface(pojo);
 		
-		CasserMappingEntity<?> entity = mappingRepository.getEntity(iface);
+		CasserMappingEntity entity = mappingRepository.getEntity(iface);
 		
 		return new UpsertOperation(this, entity, pojo);
 	}
@@ -232,7 +248,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		
 		Class<?> iface = MappingUtil.getMappingInterface(dsl);
 		
-		CasserMappingEntity<?> entity = mappingRepository.getEntity(iface);
+		CasserMappingEntity entity = mappingRepository.getEntity(iface);
 		
 		return new DeleteOperation(this, entity);
 	}
@@ -265,13 +281,24 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	
 	private void dropSchema() {
 		
-		mappingRepository.knownEntities().forEach(e -> dropEntity(e));
+		mappingRepository.entities().forEach(e -> dropEntity(e));
 		
 	}
 	
-	private void dropEntity(CasserMappingEntity<?> entity) {
+	private void dropEntity(CasserMappingEntity entity) {
 				
-		execute(SchemaUtil.dropTable(entity));
+		switch(entity.getType()) {
+		
+		case TABLE:
+			execute(SchemaUtil.dropTable(entity));
+			break;
+			
+		case USER_DEFINED_TYPE:
+			execute(SchemaUtil.dropUserType(entity));
+			break;
+		
+		}
+
 		
 	}
 	

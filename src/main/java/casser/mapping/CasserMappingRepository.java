@@ -19,16 +19,22 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import casser.support.CasserException;
 import casser.support.CasserMappingException;
 
+import com.datastax.driver.core.UserType;
+import com.datastax.driver.core.schemabuilder.UDTType;
+
 public class CasserMappingRepository {
 
-	private final Map<Class<?>, CasserMappingEntity<?>> entityMap = new HashMap<Class<?>, CasserMappingEntity<?>>();
+	private static final Optional<CasserEntityType> OPTIONAL_UDT = Optional.of(CasserEntityType.USER_DEFINED_TYPE);
+	
+	private final Map<Class<?>, CasserMappingEntity> entityMap = new HashMap<Class<?>, CasserMappingEntity>();
 
-	private final Map<String, CasserMappingEntity<?>> udtMap = new HashMap<String, CasserMappingEntity<?>>();
-
+	private final Map<String, UserType> userTypeMap = new HashMap<String, UserType>();
+	
 	private boolean readOnly = false;
 	
 	public CasserMappingRepository setReadOnly() {
@@ -36,46 +42,70 @@ public class CasserMappingRepository {
 		return this;
 	}
 	
-	public void addUserType(String name, Class<?> userTypeClass) {
+	public void addUserType(String name, UserType userType) {
 		
 		if (readOnly) {
 			throw new CasserException("read-only mode");
 		}
 		
-		udtMap.putIfAbsent(name, new CasserMappingEntity(userTypeClass, CasserEntityType.USER_DEFINED_TYPE));
+		userTypeMap.putIfAbsent(name, userType);
 		
 	}
-	
-	public Collection<CasserMappingEntity<?>> knownUserTypes() {
-		return Collections.unmodifiableCollection(udtMap.values());
+
+	public void add(Object dsl) {
+		add(dsl, Optional.empty());
 	}
 	
-	public CasserMappingEntity<?> findUserType(Class<?> userTypeClass) {
-		return udtMap.get(userTypeClass);
-	}
-	
-	public void addEntity(Object dsl) {
-		
+	public void add(Object dsl, Optional<CasserEntityType> type) {
+
 		if (readOnly) {
 			throw new CasserException("read-only mode");
 		}
 
 		Class<?> iface = MappingUtil.getMappingInterface(dsl);
-			
-		entityMap.putIfAbsent(iface, new CasserMappingEntity(iface, CasserEntityType.TABLE));
+		
+		if (!entityMap.containsKey(iface)) {
+
+			CasserMappingEntity entity = type.isPresent() ? 
+					new CasserMappingEntity(iface, type.get()) :
+						new CasserMappingEntity(iface);
+
+			if (null == entityMap.putIfAbsent(iface, entity)) {
+				
+				addUserDefinedTypes(entity.getMappingProperties());
+				
+			}
+
+		}
 		
 	}
 	
-	public Collection<CasserMappingEntity<?>> knownEntities() {
+	private void addUserDefinedTypes(Collection<CasserMappingProperty> props) {
+		
+		for (CasserMappingProperty prop : props) {
+			
+			UDTType type = prop.getUDTType();
+			
+			if (type != null) {
+				
+				add(prop.getJavaType(), OPTIONAL_UDT);
+				
+			}
+			
+		}
+		
+	}
+
+	public Collection<CasserMappingEntity> entities() {
 		return Collections.unmodifiableCollection(entityMap.values());
 	}
 	
-	public CasserMappingEntity<?> getEntity(Class<?> iface) {
+	public CasserMappingEntity getEntity(Class<?> iface) {
 		
-		CasserMappingEntity<?> entity = entityMap.get(iface);
+		CasserMappingEntity entity = entityMap.get(iface);
 		
 		if (entity == null) {
-			throw new CasserMappingException("please add all entities in SessionInitializer, unknown entity interface " + iface);
+			throw new CasserMappingException("please add all entities in SessionInitializer, unknown entity " + iface);
 		}
 		
 		return entity;

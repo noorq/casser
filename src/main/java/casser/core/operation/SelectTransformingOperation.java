@@ -13,7 +13,7 @@ public final class SelectTransformingOperation<R, E> extends AbstractFilterStrea
 	private final Function<E, R> fn;
 	
 	public SelectTransformingOperation(SelectOperation<E> src, Function<E, R> fn) {
-		super(src.sessionOperations);
+		super(src.sessionOps);
 		
 		this.src = src;
 		this.fn = fn;

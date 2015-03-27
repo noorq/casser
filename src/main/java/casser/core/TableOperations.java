@@ -36,11 +36,11 @@ public final class TableOperations {
 		this.dropRemovedColumns = dropRemovedColumns;
 	}
 	
-	public void createTable(CasserMappingEntity<?> entity) {
+	public void createTable(CasserMappingEntity entity) {
 		sessionOps.execute(SchemaUtil.createTable(entity));
 	}
 	
-	public void validateTable(TableMetadata tmd, CasserMappingEntity<?> entity) {
+	public void validateTable(TableMetadata tmd, CasserMappingEntity entity) {
 		
 		if (tmd == null) {
 			throw new CasserException("table not exists " + entity.getName() + "for entity " + entity.getMappingInterface());
@@ -53,7 +53,7 @@ public final class TableOperations {
 		}
 	}
 	
-	public void updateTable(TableMetadata tmd, CasserMappingEntity<?> entity) {
+	public void updateTable(TableMetadata tmd, CasserMappingEntity entity) {
 		
 		if (tmd == null) {
 			createTable(entity);

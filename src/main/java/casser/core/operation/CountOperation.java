@@ -27,9 +27,9 @@ import com.datastax.driver.core.querybuilder.Select.Where;
 
 public final class CountOperation extends AbstractFilterOperation<Long, CountOperation> {
 
-	private final CasserMappingEntity<?> entity;
+	private final CasserMappingEntity entity;
 	
-	public CountOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity<?> entity) {
+	public CountOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity entity) {
 		super(sessionOperations);
 		
 		this.entity = entity;
@@ -45,7 +45,7 @@ public final class CountOperation extends AbstractFilterOperation<Long, CountOpe
 			Where where = select.where();
 			
 			for (Filter<?> filter : filters) {
-				where.and(filter.getClause());
+				where.and(filter.getClause(sessionOps.getValuePreparer()));
 			}
 		}
 		

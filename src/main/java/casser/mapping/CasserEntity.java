@@ -17,12 +17,12 @@ package casser.mapping;
 
 import java.util.Collection;
 
-public interface CasserEntity<E> {
+public interface CasserEntity {
 
 	CasserEntityType getType();
 	
 	String getName();
 	
-	Collection<CasserProperty<E>> getProperties();
+	Collection<CasserProperty> getProperties();
 	
 }

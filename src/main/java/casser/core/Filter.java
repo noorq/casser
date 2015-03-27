@@ -19,6 +19,7 @@ import java.util.Objects;
 
 import casser.core.dsl.Getter;
 import casser.mapping.CasserMappingProperty;
+import casser.mapping.ColumnValuePreparer;
 import casser.mapping.MappingUtil;
 import casser.support.CasserMappingException;
 
@@ -27,26 +28,26 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 public final class Filter<V> {
 
-	private final CasserMappingProperty<?> property;
+	private final CasserMappingProperty property;
 	private final FilterOperator operation;
 	private final V value;
 	private final V[] values;
 	
-	private Filter(CasserMappingProperty<?> prop, FilterOperator op, V value) {
+	private Filter(CasserMappingProperty prop, FilterOperator op, V value) {
 		this.property = prop;
 		this.operation = op;
 		this.value = value;
 		this.values = null;
 	}
 
-	private Filter(CasserMappingProperty<?> prop, FilterOperator op, V[] values) {
+	private Filter(CasserMappingProperty prop, FilterOperator op, V[] values) {
 		this.property = prop;
 		this.operation = op;
 		this.value = null;
 		this.values = values;
 	}
 	
-	public CasserMappingProperty<?> getProperty() {
+	public CasserMappingProperty getProperty() {
 		return property;
 	}
 
@@ -58,31 +59,32 @@ public final class Filter<V> {
 		return value;
 	}
 
-	public Clause getClause() {
+	public Clause getClause(ColumnValuePreparer valuePreparer) {
 		
 		switch(operation) {
 		
 		case EQUAL:
-			return QueryBuilder.eq(property.getColumnName(), MappingUtil.prepareValueForWrite(property, value));
+			return QueryBuilder.eq(property.getColumnName(), 
+					valuePreparer.prepareColumnValue(value, property));
 		
 		case IN:
 			Object[] preparedValues = new Object[values.length];
 			for (int i = 0; i != values.length; ++i) {
-				preparedValues[i] = MappingUtil.prepareValueForWrite(property, values[i]);
+				preparedValues[i] = valuePreparer.prepareColumnValue(values[i], property);
 			}
 			return QueryBuilder.in(property.getColumnName(), preparedValues);
 			
 		case LESSER:
-			return QueryBuilder.lt(property.getColumnName(), MappingUtil.prepareValueForWrite(property, value));
+			return QueryBuilder.lt(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
 
 		case LESSER_OR_EQUAL:
-			return QueryBuilder.lte(property.getColumnName(), MappingUtil.prepareValueForWrite(property, value));
+			return QueryBuilder.lte(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
 
 		case GREATER:
-			return QueryBuilder.gt(property.getColumnName(), MappingUtil.prepareValueForWrite(property, value));
+			return QueryBuilder.gt(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
 
 		case GREATER_OR_EQUAL:
-			return QueryBuilder.gte(property.getColumnName(), MappingUtil.prepareValueForWrite(property, value));
+			return QueryBuilder.gte(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
 
 		default:
 			throw new CasserMappingException("unknown filter operation " + operation);
@@ -106,7 +108,7 @@ public final class Filter<V> {
 			Objects.requireNonNull(vals[i], "value[" + i + "] is empty");
 		}
 		
-		CasserMappingProperty<?> prop = MappingUtil.resolveMappingProperty(getter);
+		CasserMappingProperty prop = MappingUtil.resolveMappingProperty(getter);
 		
 		return new Filter<V>(prop, FilterOperator.IN, vals);
 	}
@@ -148,7 +150,7 @@ public final class Filter<V> {
 			throw new IllegalArgumentException("invalid usage of the 'in' operator, use Filter.in() static method");
 		}
 		
-		CasserMappingProperty<?> prop = MappingUtil.resolveMappingProperty(getter);
+		CasserMappingProperty prop = MappingUtil.resolveMappingProperty(getter);
 		
 		return new Filter<V>(prop, op, val);
 	}

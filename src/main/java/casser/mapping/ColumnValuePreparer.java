@@ -15,12 +15,8 @@
  */
 package casser.mapping;
 
-import java.util.Collection;
+public interface ColumnValuePreparer {
 
-public interface CasserUserType<E> {
-
-	String getName();
-	
-	Collection<CasserProperty<E>> getProperties();
+	Object prepareColumnValue(Object source, CasserMappingProperty prop);
 	
 }

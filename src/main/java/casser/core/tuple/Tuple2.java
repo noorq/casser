@@ -32,10 +32,10 @@ public final class Tuple2<V1, V2> {
 
 	public final static class Mapper<V1, V2> implements Function<ColumnValueProvider, Tuple2<V1, V2>> {
 
-		private final CasserMappingProperty<?> p1;
-		private final CasserMappingProperty<?> p2;
+		private final CasserMappingProperty p1;
+		private final CasserMappingProperty p2;
 		
-		public Mapper(CasserMappingProperty<?> p1, CasserMappingProperty<?> p2) {
+		public Mapper(CasserMappingProperty p1, CasserMappingProperty p2) {
 			this.p1 = p1;
 			this.p2 = p2;
 		}

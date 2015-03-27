@@ -20,23 +20,27 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import casser.mapping.convert.ConverterRepositoryAware;
+
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.Row;
 
-public class RowColumnValueProvider implements ColumnValueProvider {
+public final class RowColumnValueProvider implements ColumnValueProvider {
 
+	private final CasserMappingRepository repository;
 	private final Row source;
 	private final ColumnDefinitions columnDefinitions;
 	
-	public RowColumnValueProvider(Row source) {
+	public RowColumnValueProvider(CasserMappingRepository repository, Row source) {
+		this.repository = repository;
 		this.source = source;
 		this.columnDefinitions = source.getColumnDefinitions();
 	}
 	
 	@Override
-	public <V> V getColumnValue(int columnIndex, CasserMappingProperty<?> property) {
+	public <V> V getColumnValue(int columnIndex, CasserMappingProperty property) {
 
 		if (source.isNull(columnIndex)) {
 			return null;
@@ -67,7 +71,14 @@ public class RowColumnValueProvider implements ColumnValueProvider {
 			Optional<Function<Object, Object>> converter = property.getReadConverter();
 			
 			if (converter.isPresent()) {
-				value = converter.get().apply(value);
+				
+				Function<Object, Object> fn = converter.get();
+				
+				if (fn instanceof ConverterRepositoryAware) {
+					((ConverterRepositoryAware) fn).setRepository(repository);
+				}
+				
+				value = fn.apply(value);
 			}
 			
 		}

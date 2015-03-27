@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import casser.core.Casser;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
 import casser.support.CasserException;
@@ -27,15 +28,15 @@ import casser.support.DslPropertyException;
 
 public class DslInvocationHandler<E> implements InvocationHandler {
 
-	private final CasserMappingEntity<E> entity;
+	private final CasserMappingEntity entity;
 	
-	private final Map<Method, CasserMappingProperty<E>> map = new HashMap<Method, CasserMappingProperty<E>>();
+	private final Map<Method, CasserMappingProperty> map = new HashMap<Method, CasserMappingProperty>();
 	
 	public DslInvocationHandler(Class<E> iface) {
 		
-		this.entity = new CasserMappingEntity<E>(iface);
+		this.entity = new CasserMappingEntity(iface);
 		
-		for (CasserMappingProperty<E> prop : entity.getMappingProperties()) {
+		for (CasserMappingProperty prop : entity.getMappingProperties()) {
 			
 			map.put(prop.getGetterMethod(), prop);
 			
@@ -56,9 +57,16 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			return "Casser Dsl for " + entity.getMappingInterface();
 		}
 		
-		CasserMappingProperty<E> prop = map.get(method);
+		CasserMappingProperty prop = map.get(method);
 		
 		if (prop != null) {
+			
+			if (prop.getUDTType() != null) {
+				
+				return Casser.dsl(prop.getJavaType());
+				
+			}
+			
 			throw new DslPropertyException(prop);	
 		}
 		

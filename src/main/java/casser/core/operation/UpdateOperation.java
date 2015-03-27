@@ -34,21 +34,21 @@ import com.datastax.driver.core.querybuilder.Update;
 
 public final class UpdateOperation extends AbstractFilterOperation<ResultSet, UpdateOperation> {
 	
-	private final CasserMappingProperty<?>[] props;
+	private final CasserMappingProperty[] props;
 	private final Object[] vals;
 	
-	public UpdateOperation(AbstractSessionOperations sessionOperations, CasserMappingProperty<?> p, Object v) {
+	public UpdateOperation(AbstractSessionOperations sessionOperations, CasserMappingProperty p, Object v) {
 		super(sessionOperations);
 		
-		this.props = new CasserMappingProperty<?>[1];
+		this.props = new CasserMappingProperty[1];
 		this.vals = new Object[1];
 		
 		this.props[0] = p;
 		this.vals[0] = v;
 	}
 
-	public UpdateOperation(UpdateOperation other, CasserMappingProperty<?> p, Object v) {
-		super(other.sessionOperations);
+	public UpdateOperation(UpdateOperation other, CasserMappingProperty p, Object v) {
+		super(other.sessionOps);
 		
 		this.props = Arrays.copyOf(other.props, other.props.length + 1);
 		this.vals = Arrays.copyOf(other.vals, other.vals.length + 1);
@@ -61,7 +61,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(setter, "field is empty");
 		Objects.requireNonNull(v, "value is empty");
 
-		CasserMappingProperty<?> p = MappingUtil.resolveMappingProperty(setter);
+		CasserMappingProperty p = MappingUtil.resolveMappingProperty(setter);
 		
 		return new UpdateOperation(this, p, v);
 	}
@@ -69,9 +69,9 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 	@Override
 	public BuiltStatement buildStatement() {
 		
-		CasserMappingEntity<?> entity = null;
+		CasserMappingEntity entity = null;
 		
-		for (CasserMappingProperty<?> prop : props) {
+		for (CasserMappingProperty prop : props) {
 			if (entity == null) {
 				entity = prop.getEntity();
 			}
@@ -89,7 +89,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		
 		for (int i = 0; i != props.length; ++i) {
 			
-			Object value = MappingUtil.prepareValueForWrite(props[i], vals[i]);
+			Object value = sessionOps.getValuePreparer().prepareColumnValue(vals[i], props[i]);
 			
 			update.with(QueryBuilder.set(props[i].getColumnName(), value));
 		
@@ -98,7 +98,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		if (filters != null && !filters.isEmpty()) {
 			
 			for (Filter<?> filter : filters) {
-				update.where(filter.getClause());
+				update.where(filter.getClause(sessionOps.getValuePreparer()));
 			}
 		}
 		

@@ -25,9 +25,10 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = { ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE })
-public @interface Field {
+public @interface Rename {
 
-	String value() default "";
-	
-	boolean forceQuote() default false;
+	String from() default "";
+
+	String to() default "";
+
 }

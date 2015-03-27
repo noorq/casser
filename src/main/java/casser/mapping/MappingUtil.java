@@ -174,7 +174,7 @@ public final class MappingUtil {
 
 	}
 
-	public static CasserMappingProperty<?> resolveMappingProperty(
+	public static CasserMappingProperty resolveMappingProperty(
 			Getter<?> getter) {
 
 		try {
@@ -182,12 +182,12 @@ public final class MappingUtil {
 			throw new CasserMappingException(
 					"getter must reference to a dsl object " + getter);
 		} catch (DslPropertyException e) {
-			return (CasserMappingProperty<?>) e.getProperty();
+			return (CasserMappingProperty) e.getProperty();
 		}
 
 	}
 
-	public static CasserMappingProperty<?> resolveMappingProperty(
+	public static CasserMappingProperty resolveMappingProperty(
 			Setter<?> setter) {
 
 		try {
@@ -195,12 +195,12 @@ public final class MappingUtil {
 			throw new CasserMappingException(
 					"setter must reference to a dsl object " + setter);
 		} catch (DslPropertyException e) {
-			return (CasserMappingProperty<?>) e.getProperty();
+			return (CasserMappingProperty) e.getProperty();
 		}
 
 	}
 
-	public static Object prepareValueForWrite(CasserMappingProperty<?> prop,
+	public static Object prepareValueForWrite(CasserMappingProperty prop,
 			Object value) {
 
 		if (value != null) {

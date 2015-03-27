@@ -36,14 +36,14 @@ public abstract class AbstractEntityOperation<E, O extends AbstractEntityOperati
 	
 	public E sync() {
 		
-		ResultSet resultSet = sessionOperations.executeAsync(buildStatement()).getUninterruptibly();
+		ResultSet resultSet = sessionOps.executeAsync(buildStatement()).getUninterruptibly();
 
 		return transform(resultSet);
 	}
 	
 	public ListenableFuture<E> async() {
 
-		ResultSetFuture resultSetFuture = sessionOperations.executeAsync(buildStatement());
+		ResultSetFuture resultSetFuture = sessionOps.executeAsync(buildStatement());
 
 		ListenableFuture<E> future = Futures.transform(resultSetFuture, new Function<ResultSet, E>() {
 
@@ -52,7 +52,7 @@ public abstract class AbstractEntityOperation<E, O extends AbstractEntityOperati
 				return transform(resultSet);
 			}
 
-		}, sessionOperations.getExecutor());
+		}, sessionOps.getExecutor());
 		
 		return future;
 	}

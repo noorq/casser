@@ -54,7 +54,7 @@ public final class SchemaUtil {
 		}
 	}
 
-	public static SchemaStatement createUserType(CasserMappingEntity<?> entity) {
+	public static SchemaStatement createUserType(CasserMappingEntity entity) {
 	
 		if (entity.getType() != CasserEntityType.USER_DEFINED_TYPE) {
 			throw new CasserMappingException("expected user defined type entity " + entity);
@@ -62,7 +62,7 @@ public final class SchemaUtil {
 
 		CreateType create = SchemaBuilder.createType(entity.getName());
 
-		for (CasserMappingProperty<?> prop : entity.getMappingProperties()) {
+		for (CasserMappingProperty prop : entity.getMappingProperties()) {
 			
 			String columnName = prop.getColumnName();
 			
@@ -77,7 +77,11 @@ public final class SchemaUtil {
 		return create;
 	}
 	
-	public static SchemaStatement createTable(CasserMappingEntity<?> entity) {
+	public static SchemaStatement dropUserType(CasserMappingEntity entity) {
+		return SchemaBuilder.dropType(entity.getName());
+	}
+	
+	public static SchemaStatement createTable(CasserMappingEntity entity) {
 		
 		if (entity.getType() != CasserEntityType.TABLE) {
 			throw new CasserMappingException("expected table entity " + entity);
@@ -85,11 +89,11 @@ public final class SchemaUtil {
 		
 		Create create = SchemaBuilder.createTable(entity.getName());
 
-		List<CasserMappingProperty<?>> partitionKeys = new ArrayList<CasserMappingProperty<?>>();
-		List<CasserMappingProperty<?>> clusteringColumns = new ArrayList<CasserMappingProperty<?>>();
-		List<CasserMappingProperty<?>> columns = new ArrayList<CasserMappingProperty<?>>();
+		List<CasserMappingProperty> partitionKeys = new ArrayList<CasserMappingProperty>();
+		List<CasserMappingProperty> clusteringColumns = new ArrayList<CasserMappingProperty>();
+		List<CasserMappingProperty> columns = new ArrayList<CasserMappingProperty>();
 
-		for (CasserMappingProperty<?> prop : entity.getMappingProperties()) {
+		for (CasserMappingProperty prop : entity.getMappingProperties()) {
 
 			if (prop.isPartitionKey()) {
 				partitionKeys.add(prop);
@@ -106,11 +110,11 @@ public final class SchemaUtil {
 		Collections.sort(clusteringColumns,
 				OrdinalBasedPropertyComparator.INSTANCE);
 
-		for (CasserMappingProperty<?> prop : partitionKeys) {
+		for (CasserMappingProperty prop : partitionKeys) {
 			create.addPartitionKey(prop.getColumnName(), prop.getDataType());
 		}
 
-		for (CasserMappingProperty<?> prop : clusteringColumns) {
+		for (CasserMappingProperty prop : clusteringColumns) {
 			
 			if (prop.getDataType() != null) {
 				create.addClusteringColumn(prop.getColumnName(), prop.getDataType());
@@ -124,7 +128,7 @@ public final class SchemaUtil {
 			
 		}
 		
-		for (CasserMappingProperty<?> prop : columns) {
+		for (CasserMappingProperty prop : columns) {
 			
 			if (prop.isStatic()) {
 				
@@ -157,7 +161,7 @@ public final class SchemaUtil {
 			
 			Options options = create.withOptions();
 			
-			for (CasserMappingProperty<?> prop : clusteringColumns) {
+			for (CasserMappingProperty prop : clusteringColumns) {
 				options.clusteringOrder(prop.getColumnName(), mapDirection(prop.getOrdering()));
 			}
 			
@@ -168,7 +172,7 @@ public final class SchemaUtil {
 	}
 
 	public static List<SchemaStatement> alterTable(TableMetadata tmd,
-			CasserMappingEntity<?> entity, boolean dropRemovedColumns) {
+			CasserMappingEntity entity, boolean dropRemovedColumns) {
 
 		if (entity.getType() != CasserEntityType.TABLE) {
 			throw new CasserMappingException("expected table entity " + entity);
@@ -181,7 +185,7 @@ public final class SchemaUtil {
 		final Set<String> visitedColumns = dropRemovedColumns ? new HashSet<String>()
 				: Collections.<String> emptySet();
 
-		for (CasserMappingProperty<?> prop : entity.getMappingProperties()) {
+		for (CasserMappingProperty prop : entity.getMappingProperties()) {
 
 			String columnName = prop.getColumnName();
 			DataType columnDataType = prop.getDataType();
@@ -230,7 +234,7 @@ public final class SchemaUtil {
 		return result;
 	}
 
-	public static SchemaStatement dropTable(CasserMappingEntity<?> entity) {
+	public static SchemaStatement dropTable(CasserMappingEntity entity) {
 		
 		if (entity.getType() != CasserEntityType.TABLE) {
 			throw new CasserMappingException("expected table entity " + entity);
@@ -250,7 +254,7 @@ public final class SchemaUtil {
 		throw new CasserMappingException("unknown ordering " + o);
 	}
 	
-	public static void throwNoMapping(CasserMappingProperty<?> prop) {
+	public static void throwNoMapping(CasserMappingProperty prop) {
 		
 		throw new CasserMappingException(
 				"only primitive types and Set,List,Map collections and UserDefinedTypes are allowed, unknown type for property '" + prop.getPropertyName()

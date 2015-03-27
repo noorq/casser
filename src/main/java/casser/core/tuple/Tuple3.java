@@ -34,11 +34,11 @@ public final class Tuple3<V1, V2, V3> {
 	
 	public final static class Mapper<V1, V2, V3> implements Function<ColumnValueProvider, Tuple3<V1, V2, V3>> {
 
-		private final CasserMappingProperty<?> p1;
-		private final CasserMappingProperty<?> p2;
-		private final CasserMappingProperty<?> p3;
+		private final CasserMappingProperty p1;
+		private final CasserMappingProperty p2;
+		private final CasserMappingProperty p3;
 		
-		public Mapper(CasserMappingProperty<?> p1, CasserMappingProperty<?> p2, CasserMappingProperty<?> p3) {
+		public Mapper(CasserMappingProperty p1, CasserMappingProperty p2, CasserMappingProperty p3) {
 			this.p1 = p1;
 			this.p2 = p2;
 			this.p3 = p3;

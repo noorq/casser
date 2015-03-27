@@ -21,9 +21,9 @@ import java.util.function.Function;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.schemabuilder.UDTType;
 
-public interface CasserProperty<E> {
+public interface CasserProperty {
 
-	CasserEntity<E> getEntity();
+	CasserEntity getEntity();
 	
 	String getColumnName();
 	
@@ -32,6 +32,8 @@ public interface CasserProperty<E> {
 	DataType getDataType();
 	
 	UDTType getUDTType();
+	
+	String getUDTName();
 
 	boolean isPartitionKey();
 

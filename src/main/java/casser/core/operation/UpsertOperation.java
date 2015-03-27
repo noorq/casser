@@ -32,12 +32,12 @@ public final class UpsertOperation extends AbstractEntityOperation<ResultSet, Up
 
 	private final Insert insert;
 	
-	public UpsertOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity<?> entity, Object pojo) {
+	public UpsertOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity entity, Object pojo) {
 		super(sessionOperations);
 		
 		this.insert = QueryBuilder.insertInto(entity.getName());
 		
-		for (CasserMappingProperty<?> prop : entity.getMappingProperties()) {
+		for (CasserMappingProperty prop : entity.getMappingProperties()) {
 			
 			Method getter = prop.getGetterMethod();
 			
@@ -50,7 +50,7 @@ public final class UpsertOperation extends AbstractEntityOperation<ResultSet, Up
 				throw new CasserMappingException("invalid getter " + getter, e);
 			}
 			
-			value = MappingUtil.prepareValueForWrite(prop, value);
+			value = sessionOps.getValuePreparer().prepareColumnValue(value, prop);
 			
 			if (value != null) {
 				insert.value(prop.getColumnName(), value);

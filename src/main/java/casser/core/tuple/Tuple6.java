@@ -42,15 +42,15 @@ public final class Tuple6<V1, V2, V3, V4, V5, V6> {
 		Function<ColumnValueProvider, 
 		Tuple6<V1, V2, V3, V4, V5, V6>> {
 
-		private final CasserMappingProperty<?> p1, p2, p3, p4, p5, p6;
+		private final CasserMappingProperty p1, p2, p3, p4, p5, p6;
 		
 		public Mapper(
-				CasserMappingProperty<?> p1, 
-				CasserMappingProperty<?> p2, 
-				CasserMappingProperty<?> p3,
-				CasserMappingProperty<?> p4,
-				CasserMappingProperty<?> p5,
-				CasserMappingProperty<?> p6
+				CasserMappingProperty p1, 
+				CasserMappingProperty p2, 
+				CasserMappingProperty p3,
+				CasserMappingProperty p4,
+				CasserMappingProperty p5,
+				CasserMappingProperty p6
 				) {
 			this.p1 = p1;
 			this.p2 = p2;

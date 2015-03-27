@@ -15,7 +15,7 @@
  */
 package casser.test.integration.core.usertype;
 
-import java.util.regex.Pattern;
+import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -27,8 +27,11 @@ import casser.test.integration.build.AbstractEmbeddedCassandraTest;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
+import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.schemabuilder.Create;
@@ -40,6 +43,9 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 	Account account;
 	
 	CasserSession csession;
+	
+	
+	UserType fullname;
 	
 	@Before
 	public void beforeTest() {
@@ -81,7 +87,7 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		KeyspaceMetadata km = session.getCluster().getMetadata().getKeyspace(session.getLoggedKeyspace());
 		
 		UserType address = km.getUserType("address");
-		UserType fullname = km.getUserType("fullname");
+		fullname = km.getUserType("fullname");
 		
 		Create create = SchemaBuilder.createTable("users");
 		
@@ -108,6 +114,7 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		
 		Session session = getSession();
 		
+		/*
 		Select select = QueryBuilder.select().column("\"name\".\"lastname\"").from("users");
 		
 		System.out.println(select);
@@ -115,9 +122,45 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		ResultSet resultSet = session.execute("SELECT \"name\".\"lastname\" FROM users;");
 		
 		System.out.println("resultSet = " + resultSet);
+		*/
 		
+		UUID id = UUID.randomUUID();
 		
+		UDTValue v = fullname.newValue();
+		v.setString("firstname", "alex");
+		v.setString("lastname", "s");
 		
-		//csession.select(account.getAddress()::getStreet).sync();
+		Insert insert = QueryBuilder.insertInto("users").value("id", id).value("name", v);
+		System.out.println(insert.getQueryString());
+		session.execute(insert);
+		
+		Select select = QueryBuilder.select().column("name\".\"firstname").from("users");
+
+		System.out.println(select.getQueryString());
+		ResultSet resultSet = session.execute(select);
+		
+		for (Row row : resultSet) {
+			//System.out.println("row = " + row.getUDTValue(0));
+			System.out.println("row = " + row.getString(0));
+			
+		}
+		
+		System.out.println("resultSet = " + resultSet);
+		
+		Address addr = Casser.pojo(Address.class);
+		addr.setStreet("1 st");
+		addr.setCity("San Jose");
+		
+		Account acc = Casser.pojo(Account.class);
+		acc.setId(123L);
+		acc.setAddress(addr);
+
+		String cql = csession.upsert(acc).cql();
+		
+		System.out.println("cql = " + cql);
+		
+		//csession.insert(account::setId, 123L).value(account::getAddress, addr).sync();
+		
+		//csession.select(account.getAddress()::getStreet).sync().forEach(System.out::println);
 	}
 }

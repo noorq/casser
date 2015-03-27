@@ -36,16 +36,16 @@ public final class Tuple4<V1, V2, V3, V4> {
 	
 	public final static class Mapper<V1, V2, V3, V4> implements Function<ColumnValueProvider, Tuple4<V1, V2, V3, V4>> {
 
-		private final CasserMappingProperty<?> p1;
-		private final CasserMappingProperty<?> p2;
-		private final CasserMappingProperty<?> p3;
-		private final CasserMappingProperty<?> p4;
+		private final CasserMappingProperty p1;
+		private final CasserMappingProperty p2;
+		private final CasserMappingProperty p3;
+		private final CasserMappingProperty p4;
 		
 		public Mapper(
-				CasserMappingProperty<?> p1, 
-				CasserMappingProperty<?> p2, 
-				CasserMappingProperty<?> p3,
-				CasserMappingProperty<?> p4
+				CasserMappingProperty p1, 
+				CasserMappingProperty p2, 
+				CasserMappingProperty p3,
+				CasserMappingProperty p4
 				) {
 			this.p1 = p1;
 			this.p2 = p2;

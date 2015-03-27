@@ -16,19 +16,16 @@
 package casser.core;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import casser.core.tuple.Tuple2;
+import casser.mapping.CasserEntityType;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingRepository;
-import casser.mapping.MappingUtil;
-import casser.mapping.SimpleDataTypes;
-import casser.support.CasserMappingException;
+import casser.mapping.ColumnValuePreparer;
+import casser.mapping.StatementColumnValuePreparer;
 
 import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Session;
@@ -71,6 +68,16 @@ public class SessionInitializer extends AbstractSessionOperations {
 	@Override
 	public Executor getExecutor() {
 		return executor;
+	}
+	
+	@Override
+	public CasserMappingRepository getRepository() {
+		return mappingRepository;
+	}
+	
+	@Override
+	public ColumnValuePreparer getValuePreparer() {
+		return new StatementColumnValuePreparer(mappingRepository);
 	}
 
 	public SessionInitializer showCql() {
@@ -165,8 +172,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		
 		Objects.requireNonNull(usingKeyspace, "please define keyspace by 'use' operator");
 
-		initList.forEach(e -> mappingRepository.addEntity(e));
-		collectUserDefinedTypes().forEach((n, c) -> mappingRepository.addUserType(n, c));
+		initList.forEach(dsl -> mappingRepository.add(dsl));
 
 		TableOperations tableOps = new TableOperations(this, dropRemovedColumns);
 		UserTypeOperations userTypeOps = new UserTypeOperations(this);
@@ -176,56 +182,38 @@ public class SessionInitializer extends AbstractSessionOperations {
 		case CREATE:
 		case CREATE_DROP:
 			
-			mappingRepository.knownUserTypes()
+			mappingRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.USER_DEFINED_TYPE)
 				.forEach(e -> userTypeOps.createUserType(e));
 			
-			mappingRepository.knownEntities()
+			mappingRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
 				.forEach(e -> tableOps.createTable(e));
 			
 			break;
 			
 		case VALIDATE:
-			mappingRepository.knownUserTypes()
+			mappingRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.USER_DEFINED_TYPE)
 				.forEach(e -> userTypeOps.validateUserType(getUserType(e), e));
 			
-			mappingRepository.knownEntities()
+			mappingRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
 				.forEach(e -> tableOps.validateTable(getTableMetadata(e), e));
 			break;
 			
 		case UPDATE:
-			mappingRepository.knownUserTypes()
+			mappingRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.USER_DEFINED_TYPE)
 				.forEach(e -> userTypeOps.updateUserType(getUserType(e), e));
 
-			mappingRepository.knownEntities()
+			mappingRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
 				.forEach(e -> tableOps.updateTable(getTableMetadata(e), e));
 			break;
 		
 		}
 		
+		KeyspaceMetadata km = getKeyspaceMetadata();
 		
-	}
-	
-
-	private Map<String, Class<?>> collectUserDefinedTypes() {
-
-		Map<String, Class<?>> map = new HashMap<String, Class<?>>();
+		for (UserType userType : km.getUserTypes()) {
+			mappingRepository.addUserType(userType.getTypeName(), userType);
+		}
 		
-		mappingRepository.knownEntities().stream()
-		.flatMap(e -> e.getMappingProperties().stream())
-		.map(p -> p.getJavaType())
-		.filter(c -> SimpleDataTypes.getDataTypeByJavaClass(c) == null)
-		.map(c -> new Tuple2<String, Class<?>>(MappingUtil.getUserDefinedTypeName(c, false), c))
-		.filter(t -> t.v1 != null)
-		.forEach(t -> {
-
-			Class<?> old = map.putIfAbsent(t.v1, t.v2);
-			if (old != null) {
-				throw new CasserMappingException("found UserDefinedType " + t.v1 + " in two classes " + old + " and " + t.v2);
-			}
-
-		});
-		
-		return map;
 	}
 	
 	private KeyspaceMetadata getKeyspaceMetadata() {
@@ -235,13 +223,13 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return keyspaceMetadata;
 	}
 	
-	private TableMetadata getTableMetadata(CasserMappingEntity<?> entity) {
+	private TableMetadata getTableMetadata(CasserMappingEntity entity) {
 		String tableName = entity.getName();
 		return getKeyspaceMetadata().getTable(tableName.toLowerCase());
 		
 	}
 
-	private UserType getUserType(CasserMappingEntity<?> entity) {
+	private UserType getUserType(CasserMappingEntity entity) {
 		String userTypeName = entity.getName();
 		return getKeyspaceMetadata().getUserType(userTypeName.toLowerCase());
 	}

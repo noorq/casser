@@ -32,15 +32,18 @@ import casser.mapping.convert.EnumToStringConverter;
 import casser.mapping.convert.StringToEnumConverter;
 import casser.mapping.convert.TimeUUIDToDateConverter;
 import casser.mapping.convert.TypedConverter;
+import casser.mapping.convert.EntityToUDTValueConverter;
+import casser.mapping.convert.UDTValueToEntityConverter;
 import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.datastax.driver.core.schemabuilder.UDTType;
 
-public class CasserMappingProperty<E> implements CasserProperty<E> {
+public class CasserMappingProperty implements CasserProperty {
 
-	private final CasserMappingEntity<E> entity; 
+	private final CasserMappingEntity entity; 
 	
 	private final Method getterMethod;
 	private Method setterMethod;
@@ -59,19 +62,20 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	private boolean typeInfo = false;
 	private DataType dataType = null;
 	private UDTType udtType = null;
+	private String udtName = null;
 	
 	private Optional<Boolean> isStatic = Optional.empty();
 	
 	private Optional<Function<Object, Object>> readConverter = null;
 	private Optional<Function<Object, Object>> writeConverter = null;
 	
-	public CasserMappingProperty(CasserMappingEntity<E> entity, Method getter) {
+	public CasserMappingProperty(CasserMappingEntity entity, Method getter) {
 		this.entity = entity;
 		this.getterMethod = getter;
 	}
 	
 	@Override
-	public CasserMappingEntity<E> getEntity() {
+	public CasserMappingEntity getEntity() {
 		return entity;
 	}
 
@@ -93,6 +97,12 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	public UDTType getUDTType() {
 		ensureTypeInfo();
 		return udtType;
+	}
+	
+	@Override
+	public String getUDTName() {
+		ensureTypeInfo();
+		return udtName;
 	}
 		
 	@Override
@@ -180,6 +190,17 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 
 	private Function<Object, Object> resolveReadConverter() {
 		
+		if (getUDTType() != null) {
+			
+			Class<Object> javaType = (Class<Object>) getJavaType();
+			
+			return TypedConverter.create(
+					UDTValue.class,
+					javaType,
+					new UDTValueToEntityConverter(javaType));
+
+		}
+		
 		Class<?> propertyType = getJavaType();
 
 		if (Enum.class.isAssignableFrom(propertyType)) {
@@ -213,6 +234,17 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	
 	private Function<Object, Object> resolveWriteConverter() {
 	
+		if (getUDTType() != null) {
+			
+			Class<Object> javaType = (Class<Object>) getJavaType();
+			
+			return TypedConverter.create(
+					javaType, 
+					UDTValue.class, 
+					new EntityToUDTValueConverter(getUDTName()));
+
+		}
+		
 		Class<?> propertyType = getJavaType();
 
 		if (Enum.class.isAssignableFrom(propertyType)) {
@@ -238,9 +270,19 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 	
 	private void ensureTypeInfo() {
 		if (!typeInfo) {
+			
 			dataType = resolveDataType();
+			
 			if (dataType == null) {
-				udtType = resolveUDTType();
+				
+				Class<?> propertyType = getJavaType();
+
+				 this.udtName = MappingUtil.getUserDefinedTypeName(propertyType, false);
+				
+				if (this.udtName != null) {
+					this.udtType = SchemaBuilder.frozen(udtName);
+				}
+				
 			}
 			typeInfo = true;
 		}		
@@ -283,20 +325,6 @@ public class CasserMappingProperty<E> implements CasserProperty<E> {
 		}
 
 		return SimpleDataTypes.getDataTypeByJavaClass(propertyType);
-	}
-	
-	private UDTType resolveUDTType() {
-		
-		Class<?> propertyType = getJavaType();
-
-		String udtName = MappingUtil.getUserDefinedTypeName(propertyType, false);
-		
-		if (udtName != null) {
-			return SchemaBuilder.frozen(udtName);
-		}
-		
-		return null;
-		
 	}
 	
 	private void ensureKeyInfo() {

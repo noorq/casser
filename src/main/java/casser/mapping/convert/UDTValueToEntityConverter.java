@@ -13,29 +13,34 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package casser.core.operation;
+package casser.mapping.convert;
 
-import casser.core.AbstractSessionOperations;
-import casser.core.Prepared;
+import java.util.function.Function;
 
-import com.datastax.driver.core.querybuilder.BuiltStatement;
+import casser.mapping.CasserMappingRepository;
 
-public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> {
+import com.datastax.driver.core.UDTValue;
 
-	protected final AbstractSessionOperations sessionOps;
+public final class UDTValueToEntityConverter implements Function<UDTValue, Object>, ConverterRepositoryAware {
+
+	private final Class<?> iface;
+	private CasserMappingRepository repository;
 	
-	public abstract BuiltStatement buildStatement();
-	
-	public AbstractOperation(AbstractSessionOperations sessionOperations) {
-		this.sessionOps = sessionOperations;
+	public UDTValueToEntityConverter(Class<?> iface) {
+		this.iface = iface;
 	}
-	
-	public String cql() {
-		return buildStatement().setForceNoValues(true).getQueryString();
+
+	@Override
+	public void setRepository(CasserMappingRepository repository) {
+		this.repository = repository;
 	}
-	
-	public Prepared<O> prepare() {
+
+	@Override
+	public Object apply(UDTValue source) {
+		
+		System.out.println("UDTValue to interface " + source);
+		
 		return null;
 	}
-	
+
 }

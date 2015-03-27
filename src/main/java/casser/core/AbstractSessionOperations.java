@@ -20,6 +20,8 @@ import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import casser.mapping.CasserMappingRepository;
+import casser.mapping.ColumnValuePreparer;
 import casser.support.CasserException;
 
 import com.datastax.driver.core.RegularStatement;
@@ -40,6 +42,10 @@ public abstract class AbstractSessionOperations {
 	abstract public boolean isShowCql();
 	
 	abstract public Executor getExecutor();
+	
+	abstract public CasserMappingRepository getRepository();
+	
+	abstract public ColumnValuePreparer getValuePreparer();
 	
 	public ResultSet execute(Statement statement) {
 		
