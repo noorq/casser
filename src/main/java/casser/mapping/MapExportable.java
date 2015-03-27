@@ -13,10 +13,14 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package casser.test.unit.core.dsl;
+package casser.mapping;
 
-public interface WrongAccount {
+import java.util.Map;
 
-	void id();
+public interface MapExportable {
+
+	public static final String TO_MAP_METHOD = "toMap";
+	
+	Map<String, Object> toMap();
 	
 }

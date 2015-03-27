@@ -15,44 +15,52 @@
  */
 package casser.test.unit.core.dsl;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 import casser.core.Casser;
 import casser.support.CasserException;
 
-public class PojoTest {
-
-	Account account = Casser.pojo(Account.class);
+public class WrapperTest {
 	
 	@Test
-	public void testObject() throws Exception {
+	public void testWrap() throws Exception {
 		
-		Assert.assertNull(account.getId());
+		Map<String, Object> map = new HashMap<String, Object>();
+	
+		map.put("id", 123L);
+		map.put("active", Boolean.TRUE);
+		map.put("unknownField", "he-he");
 		
-		account.setId("testAcc");
-
-		Assert.assertEquals("testAcc", account.getId());
-
+		Account account = Casser.wrap(map, Account.class);
+		
+		Assert.assertEquals(Long.valueOf(123L), account.id());
+		Assert.assertTrue(account.active());
 		
 	}
 	
 	@Test
 	public void testPrimitive() throws Exception {
 		
-		Assert.assertFalse(account.isActive());
+		Map<String, Object> map = new HashMap<String, Object>();
 		
-		account.setActive(true);
-
-		Assert.assertEquals(true, account.isActive());
-
+		map.put("id", 123L);
 		
+		Account account = Casser.wrap(map, Account.class);
+		
+		Assert.assertFalse(account.active());
+				
 	}
 	
 	@Test(expected=CasserException.class)
 	public void testWrongMethods() throws Exception {
 		
-		Casser.pojo(WrongAccount.class);
+		WrongAccount wrongAccount = Casser.wrap(new HashMap<String, Object>(), WrongAccount.class);
+		
+		wrongAccount.id();
 
 	}
 	

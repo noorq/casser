@@ -19,8 +19,10 @@ import java.lang.reflect.Method;
 import java.util.function.Function;
 
 import casser.core.Instantiator;
+import casser.core.WrapperInstantiator;
 import casser.core.reflect.ReflectionDslInstantiator;
 import casser.core.reflect.ReflectionPojoInstantiator;
+import casser.core.reflect.ReflectionWrapperInstantiator;
 import casser.mapping.convert.CamelCaseToUnderscoreConverter;
 import casser.mapping.convert.MethodNameToPropertyConverter;
 
@@ -56,6 +58,9 @@ public class DefaultCasserSettings implements CasserSettings {
 		return ReflectionPojoInstantiator.INSTANCE;
 	}
 
-	
-	
+	@Override
+	public WrapperInstantiator getWrapperInstantiator() {
+		return ReflectionWrapperInstantiator.INSTANCE;
+	}
+
 }

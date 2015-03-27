@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 import java.util.function.Function;
 
 import casser.core.Instantiator;
+import casser.core.WrapperInstantiator;
 
 public interface CasserSettings {
 
@@ -33,5 +34,7 @@ public interface CasserSettings {
 	Instantiator getDslInstantiator();
 
 	Instantiator getPojoInstantiator();
+	
+	WrapperInstantiator getWrapperInstantiator();
 
 }

@@ -15,17 +15,14 @@
  */
 package casser.test.unit.core.dsl;
 
+import casser.mapping.MapExportable;
 import casser.mapping.Table;
 
 @Table
-public interface Account {
+public interface Account extends MapExportable {
 
-	String getId();
+	Long id();
 	
-	void setId(String acc);
-	
-	boolean isActive();
-
-	void setActive(boolean a);
+	boolean active();
 	
 }

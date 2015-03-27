@@ -13,10 +13,12 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package casser.test.unit.core.dsl;
+package casser.core;
 
-public interface WrongAccount {
+import java.util.Map;
 
-	void id();
-	
+public interface WrapperInstantiator {
+
+	 <E> E instantiate(Map<String, Object> map, Class<E> iface, ClassLoader classLoader);
+	 
 }

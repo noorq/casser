@@ -15,15 +15,12 @@
  */
 package casser.core;
 
-import java.lang.reflect.Proxy;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import casser.config.CasserSettings;
 import casser.config.DefaultCasserSettings;
-import casser.core.reflect.DslInvocationHandler;
-import casser.core.reflect.PojoInvocationHandler;
-import casser.mapping.convert.UDTValueWritable;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
@@ -96,6 +93,14 @@ public final class Casser {
 
 	public static <E> E pojo(Class<E> iface, ClassLoader classLoader) {
 		return settings.getPojoInstantiator().instantiate(iface, classLoader);
+	}
+	
+	public static <E> E wrap(Map<String, Object> map, Class<E> iface) {
+		return wrap(map, iface, iface.getClassLoader());
+	}
+
+	public static <E> E wrap(Map<String, Object> map, Class<E> iface, ClassLoader classLoader) {
+		return settings.getWrapperInstantiator().instantiate(map, iface, classLoader);
 	}
 
 }
