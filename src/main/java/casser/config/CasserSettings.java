@@ -18,6 +18,8 @@ package casser.config;
 import java.lang.reflect.Method;
 import java.util.function.Function;
 
+import casser.core.Instantiator;
+
 public interface CasserSettings {
 
 	Function<String, String> getMethodNameToPropertyConverter();
@@ -27,6 +29,9 @@ public interface CasserSettings {
 	Function<Method, Boolean> getGetterMethodDetector();
 	
 	Function<Method, Boolean> getSetterMethodDetector();
-	
+
+	Instantiator getDslInstantiator();
+
+	Instantiator getPojoInstantiator();
 
 }

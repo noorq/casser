@@ -18,6 +18,9 @@ package casser.config;
 import java.lang.reflect.Method;
 import java.util.function.Function;
 
+import casser.core.Instantiator;
+import casser.core.reflect.ReflectionDslInstantiator;
+import casser.core.reflect.ReflectionPojoInstantiator;
 import casser.mapping.convert.CamelCaseToUnderscoreConverter;
 import casser.mapping.convert.MethodNameToPropertyConverter;
 
@@ -43,4 +46,16 @@ public class DefaultCasserSettings implements CasserSettings {
 		return SetterMethodDetector.INSTANCE;
 	}
 
+	@Override
+	public Instantiator getDslInstantiator() {
+		return ReflectionDslInstantiator.INSTANCE;
+	}
+
+	@Override
+	public Instantiator getPojoInstantiator() {
+		return ReflectionPojoInstantiator.INSTANCE;
+	}
+
+	
+	
 }

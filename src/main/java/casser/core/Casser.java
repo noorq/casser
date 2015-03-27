@@ -32,7 +32,7 @@ import com.datastax.driver.core.Session;
 
 public final class Casser {
 	
-	private static volatile CasserSettings casserSettings = new DefaultCasserSettings();
+	private static volatile CasserSettings settings = new DefaultCasserSettings();
 	
 	private static final ConcurrentMap<Class<?>, Object> dslCache = new  ConcurrentHashMap<Class<?>, Object>();
 	
@@ -40,12 +40,12 @@ public final class Casser {
 	}
 	
 	public static CasserSettings settings() {
-		return casserSettings;
+		return settings;
 	}
 
 	public static CasserSettings configure(CasserSettings overrideSettings) {
-		CasserSettings old = casserSettings;
-		casserSettings = overrideSettings;
+		CasserSettings old = settings;
+		settings = overrideSettings;
 		return old;
 	}
 
@@ -72,18 +72,13 @@ public final class Casser {
 		return dsl(iface, iface.getClassLoader());
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <E> E dsl(Class<E> iface, ClassLoader classLoader) {
 		
 		Object instance = dslCache.get(iface);
 		
 		if (instance == null) {
 		
-			DslInvocationHandler<E> handler = new DslInvocationHandler<E>(iface);
-			instance = Proxy.newProxyInstance(
-			                            classLoader,
-			                            new Class[] { iface },
-			                            handler);
+			instance = settings.getDslInstantiator().instantiate(iface, classLoader);
 			
 			Object c = dslCache.putIfAbsent(iface, instance);
 			if (c != null) {
@@ -99,14 +94,8 @@ public final class Casser {
 		return pojo(iface, iface.getClassLoader());
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <E> E pojo(Class<E> iface, ClassLoader classLoader) {
-		PojoInvocationHandler<E> handler = new PojoInvocationHandler<E>(iface);
-		E proxy = (E) Proxy.newProxyInstance(
-		                            classLoader,
-		                            new Class[] { iface, UDTValueWritable.class },
-		                            handler);
-		return proxy;
+		return settings.getPojoInstantiator().instantiate(iface, classLoader);
 	}
 
 }
