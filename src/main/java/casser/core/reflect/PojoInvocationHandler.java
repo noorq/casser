@@ -22,7 +22,10 @@ import java.util.Map;
 
 import casser.config.CasserSettings;
 import casser.core.Casser;
+import casser.mapping.convert.UDTValueWritable;
 import casser.support.CasserException;
+
+import com.datastax.driver.core.UDTValue;
 
 public class PojoInvocationHandler<E> implements InvocationHandler {
 
@@ -45,6 +48,16 @@ public class PojoInvocationHandler<E> implements InvocationHandler {
 		
 		if ("toString".equals(method.getName())) {
 			return "Casser Pojo for " + iface;
+		}
+		
+		if (UDTValueWritable.READ_FROM_METHOD.equals(method.getName()) &&
+				args != null && args.length == 1 && args[0] instanceof UDTValue) {
+			return readFromInternal((UDTValue) args[0]);
+		}
+		
+		if (UDTValueWritable.WRITE_METHOD.equals(method.getName()) &&
+				args != null && args.length == 1 && args[0] instanceof UDTValue) {
+			return writeInternal((UDTValue) args[0]);
 		}
 		
 		Operation op = methodToIndex.get(method);
@@ -78,6 +91,14 @@ public class PojoInvocationHandler<E> implements InvocationHandler {
 		return null;
 	}
 	
+	private Object readFromInternal(UDTValue udtValue) {
+		return null;
+	}
+
+	private Object writeInternal(UDTValue udtValue) {
+		return null;
+	}
+
 	private int initializeMethods() {
 		
 		Map<String, Integer> props = new HashMap<String, Integer>();

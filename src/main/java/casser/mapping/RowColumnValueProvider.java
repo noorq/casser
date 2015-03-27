@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import casser.mapping.convert.ConverterRepositoryAware;
-
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
@@ -66,17 +64,10 @@ public final class RowColumnValueProvider implements ColumnValueProvider {
 
 		if (value != null) {
 
-			Optional<Function<Object, Object>> converter = property.getReadConverter();
+			Optional<Function<Object, Object>> converter = property.getReadConverter(repository);
 			
 			if (converter.isPresent()) {
-				
-				Function<Object, Object> fn = converter.get();
-				
-				if (fn instanceof ConverterRepositoryAware) {
-					((ConverterRepositoryAware) fn).setRepository(repository);
-				}
-				
-				value = fn.apply(value);
+				value = converter.get().apply(value);
 			}
 			
 		}

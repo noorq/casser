@@ -23,6 +23,7 @@ import casser.config.CasserSettings;
 import casser.config.DefaultCasserSettings;
 import casser.core.reflect.DslInvocationHandler;
 import casser.core.reflect.PojoInvocationHandler;
+import casser.mapping.convert.UDTValueWritable;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
@@ -103,7 +104,7 @@ public final class Casser {
 		PojoInvocationHandler<E> handler = new PojoInvocationHandler<E>(iface);
 		E proxy = (E) Proxy.newProxyInstance(
 		                            classLoader,
-		                            new Class[] { iface },
+		                            new Class[] { iface, UDTValueWritable.class },
 		                            handler);
 		return proxy;
 	}

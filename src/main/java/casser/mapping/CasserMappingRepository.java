@@ -48,8 +48,12 @@ public class CasserMappingRepository {
 			throw new CasserException("read-only mode");
 		}
 		
-		userTypeMap.putIfAbsent(name, userType);
+		userTypeMap.putIfAbsent(name.toLowerCase(), userType);
 		
+	}
+	
+	public UserType findUserType(String name) {
+		return userTypeMap.get(name.toLowerCase());
 	}
 
 	public void add(Object dsl) {

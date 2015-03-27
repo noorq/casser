@@ -17,30 +17,44 @@ package casser.mapping.convert;
 
 import java.util.function.Function;
 
-import casser.mapping.CasserMappingRepository;
+import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.UDTValue;
+import com.datastax.driver.core.UserType;
 
-public final class EntityToUDTValueConverter implements Function<Object, UDTValue>, ConverterRepositoryAware {
+public final class EntityToUDTValueConverter implements Function<Object, UDTValue> {
 
-	private final String udtName;
-	private CasserMappingRepository repository;
+	private final UserType userType;
 	
-	public EntityToUDTValueConverter(String udtName) {
-		this.udtName = udtName;
+	public EntityToUDTValueConverter(UserType userType) {
+		this.userType = userType;
 	}
 	
-	@Override
-	public void setRepository(CasserMappingRepository repository) {
-		this.repository = repository;
-	}
-
 	@Override
 	public UDTValue apply(Object source) {
 		
-		System.out.println("Convert interface to UDTValue " + source);
+		/*
+		if (repository == null) {
+			throw new CasserMappingException("empty repository");
+		}
 		
-		return null;
+		UserType userType = repository.findUserType(udtName);
+		if (userType == null) {
+			throw new CasserMappingException("UserType not found for " + udtName);
+		}
+		*/
+		
+		UDTValue udtValue = userType.newValue();
+		
+		if (!(source instanceof UDTValueWritable)) {
+			throw new CasserMappingException("instance must be UDTValueWritable " + source);
+		}
+		
+		UDTValueWritable writable = (UDTValueWritable) source;
+		
+		writable.write(udtValue);
+		
+		return udtValue;
 	}
 
 }

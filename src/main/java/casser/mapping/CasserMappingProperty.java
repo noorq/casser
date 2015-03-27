@@ -28,16 +28,17 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import casser.mapping.convert.DateToTimeUUIDConverter;
+import casser.mapping.convert.EntityToUDTValueConverter;
 import casser.mapping.convert.EnumToStringConverter;
 import casser.mapping.convert.StringToEnumConverter;
 import casser.mapping.convert.TimeUUIDToDateConverter;
 import casser.mapping.convert.TypedConverter;
-import casser.mapping.convert.EntityToUDTValueConverter;
 import casser.mapping.convert.UDTValueToEntityConverter;
 import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
+import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.datastax.driver.core.schemabuilder.UDTType;
 
@@ -179,16 +180,16 @@ public class CasserMappingProperty implements CasserProperty {
 	}
 	
 	@Override
-	public Optional<Function<Object, Object>> getReadConverter() {
+	public Optional<Function<Object, Object>> getReadConverter(CasserMappingRepository repository) {
 
 		if (readConverter == null) {
-			readConverter = Optional.ofNullable(resolveReadConverter());
+			readConverter = Optional.ofNullable(resolveReadConverter(repository));
 		}
 		
 		return readConverter;
 	}
 
-	private Function<Object, Object> resolveReadConverter() {
+	private Function<Object, Object> resolveReadConverter(CasserMappingRepository repository) {
 		
 		if (getUDTType() != null) {
 			
@@ -223,25 +224,30 @@ public class CasserMappingProperty implements CasserProperty {
 	}
 	
 	@Override
-	public Optional<Function<Object, Object>> getWriteConverter() {
+	public Optional<Function<Object, Object>> getWriteConverter(CasserMappingRepository repository) {
 		
 		if (writeConverter == null) {
-			writeConverter = Optional.ofNullable(resolveWriteConverter());
+			writeConverter = Optional.ofNullable(resolveWriteConverter(repository));
 		}
 		
 		return writeConverter;
 	}
 	
-	private Function<Object, Object> resolveWriteConverter() {
+	private Function<Object, Object> resolveWriteConverter(CasserMappingRepository repository) {
 	
 		if (getUDTType() != null) {
 			
 			Class<Object> javaType = (Class<Object>) getJavaType();
 			
+			UserType userType = repository.findUserType(getUDTName());
+			if (userType == null) {
+				throw new CasserMappingException("UserType not found for " + getUDTName());
+			}
+			
 			return TypedConverter.create(
 					javaType, 
 					UDTValue.class, 
-					new EntityToUDTValueConverter(getUDTName()));
+					new EntityToUDTValueConverter(userType));
 
 		}
 		

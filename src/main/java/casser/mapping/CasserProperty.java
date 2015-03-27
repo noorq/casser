@@ -45,8 +45,8 @@ public interface CasserProperty {
 	
 	boolean isStatic();
 	
-	Optional<Function<Object, Object>> getReadConverter();
+	Optional<Function<Object, Object>> getReadConverter(CasserMappingRepository repository);
 	
-	Optional<Function<Object, Object>> getWriteConverter();
+	Optional<Function<Object, Object>> getWriteConverter(CasserMappingRepository repository);
 	
 }

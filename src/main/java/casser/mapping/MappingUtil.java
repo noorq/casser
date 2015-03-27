@@ -16,12 +16,11 @@
 package casser.mapping;
 
 import java.lang.reflect.Method;
-import java.util.Optional;
-import java.util.function.Function;
 
 import casser.core.Casser;
 import casser.core.dsl.Getter;
 import casser.core.dsl.Setter;
+import casser.mapping.convert.UDTValueWritable;
 import casser.support.CasserMappingException;
 import casser.support.DslPropertyException;
 
@@ -161,15 +160,32 @@ public final class MappingUtil {
 
 		} else {
 			Class<?>[] ifaces = entity.getClass().getInterfaces();
-			if (ifaces.length != 1) {
-				throw new CasserMappingException(
-						"supports only single interface, wrong dsl class "
-								+ entity.getClass());
+			
+			int len = ifaces.length;
+			for (int i = 0; i != len; ++i) {
+				
+				iface = ifaces[0];
+				
+				if (UDTValueWritable.class.isAssignableFrom(iface)) {
+					continue;
+				}
+				
+				if (iface.getDeclaredAnnotation(Table.class) != null ||
+						iface.getDeclaredAnnotation(UserDefinedType.class) != null) {
+					
+					break;
+					
+				}
+				
 			}
+			
 
-			iface = ifaces[0];
 		}
 
+		if (iface == null) {
+			throw new CasserMappingException("dsl interface not found for " + entity);
+		}
+		
 		return iface;
 
 	}
@@ -200,21 +216,5 @@ public final class MappingUtil {
 
 	}
 
-	public static Object prepareValueForWrite(CasserMappingProperty prop,
-			Object value) {
-
-		if (value != null) {
-
-			Optional<Function<Object, Object>> converter = prop
-					.getWriteConverter();
-
-			if (converter.isPresent()) {
-				value = converter.get().apply(value);
-			}
-
-		}
-
-		return value;
-	}
 
 }

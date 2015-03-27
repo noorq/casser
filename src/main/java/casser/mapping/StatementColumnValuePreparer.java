@@ -18,8 +18,6 @@ package casser.mapping;
 import java.util.Optional;
 import java.util.function.Function;
 
-import casser.mapping.convert.ConverterRepositoryAware;
-
 
 public final class StatementColumnValuePreparer implements ColumnValuePreparer {
 
@@ -34,18 +32,10 @@ public final class StatementColumnValuePreparer implements ColumnValuePreparer {
 
 		if (value != null) {
 
-			Optional<Function<Object, Object>> converter = prop
-					.getWriteConverter();
+			Optional<Function<Object, Object>> converter = prop.getWriteConverter(repository);
 
 			if (converter.isPresent()) {
-				
-				Function<Object, Object> fn = converter.get();
-				
-				if (fn instanceof ConverterRepositoryAware) {
-					((ConverterRepositoryAware) fn).setRepository(repository);
-				}
-				
-				value = fn.apply(value);
+				value = converter.get().apply(value);
 			}
 
 		}
