@@ -17,7 +17,6 @@ package casser.core;
 
 import java.util.Objects;
 
-import casser.core.dsl.Getter;
 import casser.mapping.CasserMappingProperty;
 import casser.mapping.ColumnValuePreparer;
 import casser.mapping.MappingUtil;

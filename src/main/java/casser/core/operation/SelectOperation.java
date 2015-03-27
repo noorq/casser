@@ -26,7 +26,7 @@ import java.util.stream.StreamSupport;
 
 import casser.core.AbstractSessionOperations;
 import casser.core.Filter;
-import casser.core.dsl.Getter;
+import casser.core.Getter;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
 import casser.mapping.MappingUtil;

@@ -19,7 +19,6 @@ import java.io.Closeable;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-import casser.core.dsl.Getter;
 import casser.core.dsl.Setter;
 import casser.core.operation.CountOperation;
 import casser.core.operation.DeleteOperation;

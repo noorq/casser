@@ -17,7 +17,7 @@ package casser.core.collection;
 
 import java.util.List;
 
-import casser.core.dsl.Getter;
+import casser.core.Getter;
 
 public final class CList {
 

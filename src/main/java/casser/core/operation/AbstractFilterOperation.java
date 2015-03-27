@@ -20,7 +20,7 @@ import java.util.List;
 
 import casser.core.AbstractSessionOperations;
 import casser.core.Filter;
-import casser.core.dsl.Getter;
+import casser.core.Getter;
 
 public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperation<E, O>> extends AbstractEntityOperation<E, O> {
 

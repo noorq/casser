@@ -18,7 +18,7 @@ package casser.mapping;
 import java.lang.reflect.Method;
 
 import casser.core.Casser;
-import casser.core.dsl.Getter;
+import casser.core.Getter;
 import casser.core.dsl.Setter;
 import casser.mapping.convert.UDTValueWritable;
 import casser.support.CasserMappingException;

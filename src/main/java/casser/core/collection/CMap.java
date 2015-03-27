@@ -17,7 +17,7 @@ package casser.core.collection;
 
 import java.util.Map;
 
-import casser.core.dsl.Getter;
+import casser.core.Getter;
 
 public final class CMap {
 
