@@ -16,8 +16,6 @@
 package casser.core;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import casser.config.CasserSettings;
 import casser.config.DefaultCasserSettings;
@@ -30,8 +28,6 @@ import com.datastax.driver.core.Session;
 public final class Casser {
 	
 	private static volatile CasserSettings settings = new DefaultCasserSettings();
-	
-	private static final ConcurrentMap<Class<?>, Object> dslCache = new  ConcurrentHashMap<Class<?>, Object>();
 	
 	private Casser() {
 	}
@@ -70,21 +66,7 @@ public final class Casser {
 	}
 
 	public static <E> E dsl(Class<E> iface, ClassLoader classLoader) {
-		
-		Object instance = dslCache.get(iface);
-		
-		if (instance == null) {
-		
-			instance = settings.getDslInstantiator().instantiate(iface, classLoader);
-			
-			Object c = dslCache.putIfAbsent(iface, instance);
-			if (c != null) {
-				instance = c;
-			}
-		}
-		
-		return (E) instance;
-		
+		return settings.getDslInstantiator().instantiate(iface, classLoader);
 	}
 	
 	public static <E> E wrap(Map<String, Object> map, Class<E> iface) {
