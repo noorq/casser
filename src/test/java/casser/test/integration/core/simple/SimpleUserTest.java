@@ -22,7 +22,7 @@ import org.junit.Test;
 
 import casser.core.Casser;
 import casser.core.CasserSession;
-import casser.core.FilterOperator;
+import casser.core.Operator;
 import casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
 public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
@@ -73,7 +73,7 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 		session.update(user::name, "albert").set(user::age, 35)
 			.where(user::id, "==", 123L).sync();
 		
-		long cnt = session.count(user).where(user::id, FilterOperator.EQUAL, 123L).sync();
+		long cnt = session.count(user).where(user::id, Operator.EQ, 123L).sync();
 		Assert.assertEquals(1L, cnt);
 
 		String name = session.select(user::name)

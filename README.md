@@ -23,20 +23,15 @@ Entity definition:
 public interface Timeline {
 
 	@PartitionKey
-	UUID getUserId();
-	
-	void setUserId(UUID uid);
+	UUID userId();
 	
 	@ClusteringColumn
 	@DataTypeName(Name.TIMEUUID)
-	Date getTimestamp();
-	
-	void setTimestamp(Date ts);
+	Date timestamp();
 	
 	@Column
-	String getText();
+	String text();
 	
-	void setText(String text);
 }
 ```
 
@@ -48,17 +43,17 @@ CasserSession session = Casser.init(getSession()).showCql().add(Timeline.class).
 
 Select information:
 ```
-session.select(timeline::getUserId, timeline::getTimestamp, timeline::getText)
-  .where(timeline::getUserId, "==", userId)
-  .orderBy(timeline::getTimestamp, "desc").limit(5).sync()
+session.select(timeline::userId, timeline::timestamp, timeline::text)
+  .where(timeline::userId, Operator.EQ, userId)
+  .orderBy(timeline::timestamp, "desc").limit(5).sync()
   .forEach(System.out::println);
 ```
 
 Insert information:
 ```
-Timeline post = Casser.pojo(Timeline.class);
-post.setUserId(userId);
-post.setTimestamp(new Date(postTime+1000L*i));
-post.setText("hello");
+TimelineImpl post = new TimelineImpl();
+post.userId=userId;
+post.timestamp=new Date(postTime+1000L*i);
+post.text="hello";
 session.upsert(post).sync();
 ```

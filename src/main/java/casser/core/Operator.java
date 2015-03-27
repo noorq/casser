@@ -18,31 +18,31 @@ package casser.core;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum FilterOperator {
+public enum Operator {
 
-	EQUAL("=="),
+	EQ("=="),
 	
 	IN("in"),
 
-	GREATER(">"),
+	GT(">"),
 
-	LESSER("<"),
+	LT("<"),
 
-	GREATER_OR_EQUAL(">="),
+	GTE(">="),
 
-	LESSER_OR_EQUAL("<=");
+	LTE("<=");
 	
 	private final String name;
 	
-	private final static Map<String, FilterOperator> indexByName = new HashMap<String, FilterOperator>();
+	private final static Map<String, Operator> indexByName = new HashMap<String, Operator>();
 	
 	static {
-		for (FilterOperator fo : FilterOperator.values()) {
+		for (Operator fo : Operator.values()) {
 			indexByName.put(fo.getName(), fo);
 		}
 	}
 	
-	private FilterOperator(String name) {
+	private Operator(String name) {
 		this.name = name;
 	}
 
@@ -50,7 +50,7 @@ public enum FilterOperator {
 		return name;
 	}
 	
-	public static FilterOperator findByOperator(String name) {
+	public static Operator findByOperator(String name) {
 		return indexByName.get(name);
 	}
 	

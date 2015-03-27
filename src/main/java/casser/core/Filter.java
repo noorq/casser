@@ -28,18 +28,18 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 public final class Filter<V> {
 
 	private final CasserMappingProperty property;
-	private final FilterOperator operation;
+	private final Operator operation;
 	private final V value;
 	private final V[] values;
 	
-	private Filter(CasserMappingProperty prop, FilterOperator op, V value) {
+	private Filter(CasserMappingProperty prop, Operator op, V value) {
 		this.property = prop;
 		this.operation = op;
 		this.value = value;
 		this.values = null;
 	}
 
-	private Filter(CasserMappingProperty prop, FilterOperator op, V[] values) {
+	private Filter(CasserMappingProperty prop, Operator op, V[] values) {
 		this.property = prop;
 		this.operation = op;
 		this.value = null;
@@ -50,7 +50,7 @@ public final class Filter<V> {
 		return property;
 	}
 
-	public FilterOperator getOperation() {
+	public Operator getOperation() {
 		return operation;
 	}
 
@@ -62,7 +62,7 @@ public final class Filter<V> {
 		
 		switch(operation) {
 		
-		case EQUAL:
+		case EQ:
 			return QueryBuilder.eq(property.getColumnName(), 
 					valuePreparer.prepareColumnValue(value, property));
 		
@@ -73,16 +73,16 @@ public final class Filter<V> {
 			}
 			return QueryBuilder.in(property.getColumnName(), preparedValues);
 			
-		case LESSER:
+		case LT:
 			return QueryBuilder.lt(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
 
-		case LESSER_OR_EQUAL:
+		case LTE:
 			return QueryBuilder.lte(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
 
-		case GREATER:
+		case GT:
 			return QueryBuilder.gt(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
 
-		case GREATER_OR_EQUAL:
+		case GTE:
 			return QueryBuilder.gte(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
 
 		default:
@@ -92,7 +92,7 @@ public final class Filter<V> {
 	}
 	
 	public static <V> Filter<V> equal(Getter<V> getter, V val) {
-		return create(getter, FilterOperator.EQUAL, val);
+		return create(getter, Operator.EQ, val);
 	}
 
 	public static <V> Filter<V> in(Getter<V> getter, V[] vals) {
@@ -109,29 +109,29 @@ public final class Filter<V> {
 		
 		CasserMappingProperty prop = MappingUtil.resolveMappingProperty(getter);
 		
-		return new Filter<V>(prop, FilterOperator.IN, vals);
+		return new Filter<V>(prop, Operator.IN, vals);
 	}
 	
 	public static <V> Filter<V> greater(Getter<V> getter, V val) {
-		return create(getter, FilterOperator.GREATER, val);
+		return create(getter, Operator.GT, val);
 	}
 	
 	public static <V> Filter<V> less(Getter<V> getter, V val) {
-		return create(getter, FilterOperator.LESSER, val);
+		return create(getter, Operator.LT, val);
 	}
 
 	public static <V> Filter<V> greaterOrEqual(Getter<V> getter, V val) {
-		return create(getter, FilterOperator.GREATER_OR_EQUAL, val);
+		return create(getter, Operator.GTE, val);
 	}
 
 	public static <V> Filter<V> lessOrEqual(Getter<V> getter, V val) {
-		return create(getter, FilterOperator.LESSER_OR_EQUAL, val);
+		return create(getter, Operator.LTE, val);
 	}
 
 	public static <V> Filter<V> create(Getter<V> getter, String operator, V val) {
 		Objects.requireNonNull(operator, "empty operator");
 		
-		FilterOperator fo = FilterOperator.findByOperator(operator);
+		Operator fo = Operator.findByOperator(operator);
 		
 		if (fo == null) {
 			throw new CasserMappingException("invalid operator " + operator);
@@ -140,12 +140,12 @@ public final class Filter<V> {
 		return create(getter, fo, val);
 	}
 	
-	public static <V> Filter<V> create(Getter<V> getter, FilterOperator op, V val) {
+	public static <V> Filter<V> create(Getter<V> getter, Operator op, V val) {
 		Objects.requireNonNull(getter, "empty getter");
 		Objects.requireNonNull(op, "empty op");
 		Objects.requireNonNull(val, "empty value");
 		
-		if (op == FilterOperator.IN) {
+		if (op == Operator.IN) {
 			throw new IllegalArgumentException("invalid usage of the 'in' operator, use Filter.in() static method");
 		}
 		
