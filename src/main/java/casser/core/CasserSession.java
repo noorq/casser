@@ -19,7 +19,6 @@ import java.io.Closeable;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-import casser.core.dsl.Setter;
 import casser.core.operation.CountOperation;
 import casser.core.operation.DeleteOperation;
 import casser.core.operation.SelectOperation;
@@ -228,11 +227,11 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		return new CountOperation(this, entity);
 	}
 	
-	public <V> UpdateOperation update(Setter<V> setter, V v) {
-		Objects.requireNonNull(setter, "field is empty");
+	public <V> UpdateOperation update(Getter<V> getter, V v) {
+		Objects.requireNonNull(getter, "field is empty");
 		Objects.requireNonNull(v, "value is empty");
 
-		CasserMappingProperty p = MappingUtil.resolveMappingProperty(setter);
+		CasserMappingProperty p = MappingUtil.resolveMappingProperty(getter);
 		
 		return new UpdateOperation(this, p, v);
 	}

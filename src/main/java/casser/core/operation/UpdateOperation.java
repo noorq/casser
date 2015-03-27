@@ -20,7 +20,7 @@ import java.util.Objects;
 
 import casser.core.AbstractSessionOperations;
 import casser.core.Filter;
-import casser.core.dsl.Setter;
+import casser.core.Getter;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
 import casser.mapping.MappingUtil;
@@ -57,11 +57,11 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		this.vals[other.vals.length] = v;
 	}
 	
-	public <V> UpdateOperation set(Setter<V> setter, V v) {
-		Objects.requireNonNull(setter, "field is empty");
+	public <V> UpdateOperation set(Getter<V> getter, V v) {
+		Objects.requireNonNull(getter, "field is empty");
 		Objects.requireNonNull(v, "value is empty");
 
-		CasserMappingProperty p = MappingUtil.resolveMappingProperty(setter);
+		CasserMappingProperty p = MappingUtil.resolveMappingProperty(getter);
 		
 		return new UpdateOperation(this, p, v);
 	}

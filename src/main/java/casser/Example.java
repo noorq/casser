@@ -15,15 +15,15 @@
  */
 package casser;
 
-import com.datastax.driver.core.Cluster;
-
 import casser.core.Casser;
+import casser.core.CasserSession;
 import casser.core.Filter;
 import casser.core.Prepared;
-import casser.core.CasserSession;
 import casser.core.operation.SelectOperation;
 import casser.core.tuple.Tuple1;
 import casser.core.tuple.Tuple2;
+
+import com.datastax.driver.core.Cluster;
 
 public class Example {
 
@@ -54,7 +54,7 @@ public class Example {
 
 		User user = session.select(_user::getName, _user::getAge).where(_user::getId, "==", 100L).map(Example::mapUser).sync().findFirst().get();
 
-		session.update(_user::setAge, 10).where(_user::getId, "==", 100L).async();
+		session.update(_user::getAge, 10).where(_user::getId, "==", 100L).async();
 		
 		session.delete(User.class).where(_user::getId, "==", 100L).async();
 		
