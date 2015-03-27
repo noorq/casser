@@ -19,7 +19,7 @@ import casser.mapping.Column;
 import casser.mapping.PartitionKey;
 import casser.mapping.Table;
 
-@Table("user")
+@Table("simple_users")
 public interface User {
 
 	@PartitionKey

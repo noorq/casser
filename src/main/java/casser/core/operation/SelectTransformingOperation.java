@@ -17,11 +17,11 @@ public final class SelectTransformingOperation<R, E> extends AbstractFilterStrea
 		
 		this.src = src;
 		this.fn = fn;
+		this.filters = src.filters;
 	}
 	
 	@Override
 	public BuiltStatement buildStatement() {
-		src.filters = this.filters;
 		return src.buildStatement();
 	}
 

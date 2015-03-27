@@ -25,6 +25,9 @@ import casser.core.CasserSession;
 import casser.core.Operator;
 import casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
+
 public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
 	User user = Casser.dsl(User.class);
@@ -61,7 +64,7 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 	}
 	
 	@Test
-	public void testCruid() {
+	public void testCruid() throws Exception {
 		
 		UserImpl newUser = new UserImpl();
 		newUser.id = 100L;
@@ -69,9 +72,10 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 		newUser.age = 34;
 		
 		session.upsert(newUser).sync();
-	
-		session.update(user::name, "albert").set(user::age, 35)
-			.where(user::id, "==", 123L).sync();
+		
+		session.update(user::name, "albert")
+					.set(user::age, 35)
+					.where(user::id, "==", 123L).sync();
 		
 		long cnt = session.count(user).where(user::id, Operator.EQ, 123L).sync();
 		Assert.assertEquals(1L, cnt);
