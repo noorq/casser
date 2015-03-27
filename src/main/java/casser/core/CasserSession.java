@@ -34,11 +34,11 @@ import casser.core.tuple.Tuple7;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
 import casser.mapping.CasserMappingRepository;
-import casser.mapping.ColumnValuePreparer;
-import casser.mapping.ColumnValueProvider;
 import casser.mapping.MappingUtil;
-import casser.mapping.RowColumnValueProvider;
-import casser.mapping.StatementColumnValuePreparer;
+import casser.mapping.value.ColumnValuePreparer;
+import casser.mapping.value.ColumnValueProvider;
+import casser.mapping.value.RowColumnValueProvider;
+import casser.mapping.value.StatementColumnValuePreparer;
 
 import com.datastax.driver.core.CloseFuture;
 import com.datastax.driver.core.Session;

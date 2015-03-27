@@ -24,10 +24,10 @@ import java.util.concurrent.Executors;
 import casser.mapping.CasserEntityType;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingRepository;
-import casser.mapping.ColumnValuePreparer;
-import casser.mapping.ColumnValueProvider;
-import casser.mapping.RowColumnValueProvider;
-import casser.mapping.StatementColumnValuePreparer;
+import casser.mapping.value.ColumnValuePreparer;
+import casser.mapping.value.ColumnValueProvider;
+import casser.mapping.value.RowColumnValueProvider;
+import casser.mapping.value.StatementColumnValuePreparer;
 
 import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Session;

@@ -13,10 +13,13 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package casser.mapping;
+package casser.mapping.value;
 
-public interface ColumnValuePreparer {
+import casser.mapping.CasserMappingProperty;
 
-	Object prepareColumnValue(Object source, CasserMappingProperty prop);
+
+public interface ColumnValueProvider {
+
+	<V> V getColumnValue(Object source, int columnIndex, CasserMappingProperty property);
 	
 }

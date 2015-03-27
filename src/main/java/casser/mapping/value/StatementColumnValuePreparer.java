@@ -13,10 +13,13 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package casser.mapping;
+package casser.mapping.value;
 
 import java.util.Optional;
 import java.util.function.Function;
+
+import casser.mapping.CasserMappingProperty;
+import casser.mapping.CasserMappingRepository;
 
 
 public final class StatementColumnValuePreparer implements ColumnValuePreparer {

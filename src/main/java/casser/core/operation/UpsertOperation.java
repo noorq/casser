@@ -15,13 +15,10 @@
  */
 package casser.core.operation;
 
-import java.lang.reflect.Method;
-
 import casser.core.AbstractSessionOperations;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
-import casser.mapping.MappingUtil;
-import casser.support.CasserMappingException;
+import casser.mapping.value.BeanColumnValueProvider;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
@@ -39,16 +36,7 @@ public final class UpsertOperation extends AbstractEntityOperation<ResultSet, Up
 		
 		for (CasserMappingProperty prop : entity.getMappingProperties()) {
 			
-			Method getter = prop.getGetterMethod();
-			
-			Object value = null;
-			try {
-				value = getter.invoke(pojo, new Object[] {});
-			} catch (ReflectiveOperationException e) {
-				throw new CasserMappingException("fail to call getter " + getter, e);
-			} catch (IllegalArgumentException e) {
-				throw new CasserMappingException("invalid getter " + getter, e);
-			}
+			Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
 			
 			value = sessionOps.getValuePreparer().prepareColumnValue(value, prop);
 			

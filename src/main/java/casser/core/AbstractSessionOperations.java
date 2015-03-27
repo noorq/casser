@@ -20,8 +20,8 @@ import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import casser.mapping.ColumnValuePreparer;
-import casser.mapping.ColumnValueProvider;
+import casser.mapping.value.ColumnValuePreparer;
+import casser.mapping.value.ColumnValueProvider;
 import casser.support.CasserException;
 
 import com.datastax.driver.core.RegularStatement;

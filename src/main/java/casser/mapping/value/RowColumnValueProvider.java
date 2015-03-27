@@ -13,12 +13,15 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package casser.mapping;
+package casser.mapping.value;
 
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+
+import casser.mapping.CasserMappingProperty;
+import casser.mapping.CasserMappingRepository;
 
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.DataType;
@@ -34,8 +37,10 @@ public final class RowColumnValueProvider implements ColumnValueProvider {
 	}
 	
 	@Override
-	public <V> V getColumnValue(Row source, int columnIndex, CasserMappingProperty property) {
+	public <V> V getColumnValue(Object sourceObj, int columnIndex, CasserMappingProperty property) {
 
+		Row source = (Row) sourceObj;
+		
 		if (source.isNull(columnIndex)) {
 			return null;
 		}

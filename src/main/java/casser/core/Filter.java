@@ -18,8 +18,8 @@ package casser.core;
 import java.util.Objects;
 
 import casser.mapping.CasserMappingProperty;
-import casser.mapping.ColumnValuePreparer;
 import casser.mapping.MappingUtil;
+import casser.mapping.value.ColumnValuePreparer;
 import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.querybuilder.Clause;

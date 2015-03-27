@@ -18,7 +18,7 @@ package casser.core.tuple;
 import java.util.function.Function;
 
 import casser.mapping.CasserMappingProperty;
-import casser.mapping.ColumnValueProvider;
+import casser.mapping.value.ColumnValueProvider;
 
 import com.datastax.driver.core.Row;
 

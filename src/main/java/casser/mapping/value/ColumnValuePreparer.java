@@ -13,12 +13,12 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package casser.mapping;
+package casser.mapping.value;
 
-import com.datastax.driver.core.Row;
+import casser.mapping.CasserMappingProperty;
 
-public interface ColumnValueProvider {
+public interface ColumnValuePreparer {
 
-	<V> V getColumnValue(Row row, int columnIndex, CasserMappingProperty property);
+	Object prepareColumnValue(Object source, CasserMappingProperty prop);
 	
 }
