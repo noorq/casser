@@ -9,7 +9,6 @@ import org.junit.Test;
 
 import casser.core.Casser;
 import casser.core.CasserSession;
-import casser.core.collection.CMap;
 import casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
 import com.datastax.driver.core.DataType;

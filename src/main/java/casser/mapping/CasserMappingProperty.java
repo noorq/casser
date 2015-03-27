@@ -45,9 +45,7 @@ import com.datastax.driver.core.schemabuilder.UDTType;
 public class CasserMappingProperty implements CasserProperty {
 
 	private final CasserMappingEntity entity; 
-	
-	private final Method getterMethod;
-	private Method setterMethod;
+	private final Method getter;
 	
 	private Optional<String> propertyName = Optional.empty();
 	private Optional<String> columnName = Optional.empty();
@@ -72,7 +70,7 @@ public class CasserMappingProperty implements CasserProperty {
 	
 	public CasserMappingProperty(CasserMappingEntity entity, Method getter) {
 		this.entity = entity;
-		this.getterMethod = getter;
+		this.getter = getter;
 	}
 	
 	@Override
@@ -83,7 +81,7 @@ public class CasserMappingProperty implements CasserProperty {
     @Override
 	public Class<?> getJavaType() {
 		if (!javaType.isPresent()) {
-			javaType = Optional.of(getterMethod.getReturnType());
+			javaType = Optional.of(getter.getReturnType());
 		}
 		return javaType.get();
 	}
@@ -135,7 +133,7 @@ public class CasserMappingProperty implements CasserProperty {
 		
 		if (!isStatic.isPresent()) {
 			
-			Column column = getterMethod.getDeclaredAnnotation(Column.class);
+			Column column = getter.getDeclaredAnnotation(Column.class);
 			if (column != null) {
 				isStatic = Optional.of(column.isStatic());
 			}
@@ -152,31 +150,23 @@ public class CasserMappingProperty implements CasserProperty {
 	public String getColumnName() {
 		
 		if (!columnName.isPresent()) {
-			columnName = Optional.of(MappingUtil.getColumnName(getterMethod));
+			columnName = Optional.of(MappingUtil.getColumnName(getter));
 		}
 		
 		return columnName.get();
 	}
 	
-	public void setSetterMethod(Method setterMethod) {
-		this.setterMethod = setterMethod;
-	}
-
 	public String getPropertyName() {
 		
 		if (!propertyName.isPresent()) {
-			propertyName = Optional.of(MappingUtil.getPropertyName(getterMethod));
+			propertyName = Optional.of(MappingUtil.getPropertyName(getter));
 		}
 		
 		return propertyName.get();
 	}
 
 	public Method getGetterMethod() {
-		return getterMethod;
-	}
-
-	public Method getSetterMethod() {
-		return setterMethod;
+		return getter;
 	}
 	
 	@Override
@@ -298,7 +288,7 @@ public class CasserMappingProperty implements CasserProperty {
 		
 		Class<?> propertyType = getJavaType();
 
-		DataTypeName annotation = getterMethod.getDeclaredAnnotation(DataTypeName.class);
+		DataTypeName annotation = getter.getDeclaredAnnotation(DataTypeName.class);
 		if (annotation != null && annotation.value() != null) {
 			return qualifyAnnotatedType(annotation);
 		}
@@ -335,14 +325,14 @@ public class CasserMappingProperty implements CasserProperty {
 	
 	private void ensureKeyInfo() {
 		if (!keyInfo) {
-			PartitionKey partitionKey = getterMethod.getDeclaredAnnotation(PartitionKey.class);
+			PartitionKey partitionKey = getter.getDeclaredAnnotation(PartitionKey.class);
 			
 			if (partitionKey != null) {
 				isPartitionKey = true;
 				ordinal = partitionKey.ordinal();
 			}
 			
-			ClusteringColumn clusteringColumnn = getterMethod.getDeclaredAnnotation(ClusteringColumn.class);
+			ClusteringColumn clusteringColumnn = getter.getDeclaredAnnotation(ClusteringColumn.class);
 			
 			if (clusteringColumnn != null) {
 				

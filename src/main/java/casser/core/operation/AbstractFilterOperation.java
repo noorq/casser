@@ -20,6 +20,7 @@ import java.util.List;
 
 import casser.core.AbstractSessionOperations;
 import casser.core.Filter;
+import casser.core.FilterOperator;
 import casser.core.Getter;
 
 public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperation<E, O>> extends AbstractEntityOperation<E, O> {
@@ -37,6 +38,13 @@ public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperati
 		return (O) this;
 	}
 
+	public <V> O where(Getter<V> getter, FilterOperator operator, V val) {
+		
+		addFilter(Filter.create(getter, operator, val));
+		
+		return (O) this;
+	}
+	
 	public <V> O where(Filter<V> filter) {
 
 		addFilter(filter);
@@ -45,6 +53,13 @@ public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperati
 	}
 
 	public <V> O and(Getter<V> getter, String operator, V val) {
+		
+		addFilter(Filter.create(getter, operator, val));
+		
+		return (O) this;
+	}
+
+	public <V> O and(Getter<V> getter, FilterOperator operator, V val) {
 		
 		addFilter(Filter.create(getter, operator, val));
 		

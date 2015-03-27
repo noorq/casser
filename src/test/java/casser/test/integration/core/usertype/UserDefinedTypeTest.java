@@ -47,6 +47,53 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 	
 	UserType fullname;
 	
+	public static class AccountImpl implements Account {
+
+		long id;
+		Address address;
+		
+		@Override
+		public long id() {
+			return id;
+		}
+
+		@Override
+		public Address address() {
+			return address;
+		}
+		
+	}
+	
+	public static class AddressImpl implements Address {
+
+		String street;
+		String city;
+		int zip;
+		String country;
+		
+		@Override
+		public String street() {
+			return street;
+		}
+
+		@Override
+		public String city() {
+			return city;
+		}
+
+		@Override
+		public int zip() {
+			return zip;
+		}
+
+		@Override
+		public String country() {
+			return country;
+		}
+		
+	}
+	
+	
 	@Before
 	public void beforeTest() {
 		
@@ -147,13 +194,13 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		
 		System.out.println("resultSet = " + resultSet);
 		
-		Address addr = Casser.pojo(Address.class);
-		addr.setStreet("1 st");
-		addr.setCity("San Jose");
+		AddressImpl addr = new AddressImpl();
+		addr.street = "1 st";
+		addr.city = "San Jose";
 		
-		Account acc = Casser.pojo(Account.class);
-		acc.setId(123L);
-		acc.setAddress(addr);
+		AccountImpl acc = new AccountImpl();
+		acc.id = 123L;
+		acc.address = addr;
 
 		String cql = csession.upsert(acc).cql();
 		

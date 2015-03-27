@@ -22,12 +22,8 @@ import casser.mapping.Table;
 public interface Account {
 
 	@PartitionKey
-	long getId();
+	long id();
 	
-	void setId(long id);
-	
-	Address getAddress();
-	
-	void setAddress(Address address);
+	Address address();
 	
 }

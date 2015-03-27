@@ -33,9 +33,7 @@ public enum GetterMethodDetector implements Function<Method, Boolean> {
 			return false;
 		}
 		
-		String methodName = method.getName();
-		
-	    return methodName.startsWith("get") || methodName.startsWith("is") || methodName.startsWith("has");
+		return true;
 	    
 	}
 

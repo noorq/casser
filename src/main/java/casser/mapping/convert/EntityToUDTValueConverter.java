@@ -17,6 +17,8 @@ package casser.mapping.convert;
 
 import java.util.function.Function;
 
+import casser.mapping.MapExportable;
+import casser.mapping.UDTUtil;
 import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.UDTValue;
@@ -33,26 +35,15 @@ public final class EntityToUDTValueConverter implements Function<Object, UDTValu
 	@Override
 	public UDTValue apply(Object source) {
 		
-		/*
-		if (repository == null) {
-			throw new CasserMappingException("empty repository");
-		}
-		
-		UserType userType = repository.findUserType(udtName);
-		if (userType == null) {
-			throw new CasserMappingException("UserType not found for " + udtName);
-		}
-		*/
-		
 		UDTValue udtValue = userType.newValue();
 		
-		if (!(source instanceof UDTValueWritable)) {
-			throw new CasserMappingException("instance must be UDTValueWritable " + source);
+		if (!(source instanceof MapExportable)) {
+			throw new CasserMappingException("instance must be MapExportable " + source);
 		}
 		
-		UDTValueWritable writable = (UDTValueWritable) source;
+		MapExportable exportable = (MapExportable) source;
 		
-		writable.write(udtValue);
+		UDTUtil.write(udtValue, exportable.toMap());
 		
 		return udtValue;
 	}

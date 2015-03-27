@@ -15,10 +15,11 @@
  */
 package casser.mapping.convert;
 
+import java.util.Map;
 import java.util.function.Function;
 
 import casser.core.Casser;
-import casser.support.CasserMappingException;
+import casser.mapping.UDTUtil;
 
 import com.datastax.driver.core.UDTValue;
 
@@ -33,17 +34,10 @@ public final class UDTValueToEntityConverter implements Function<UDTValue, Objec
 	@Override
 	public Object apply(UDTValue source) {
 		
-		Object obj = Casser.pojo(iface);
+		Map<String, Object> map = UDTUtil.wrap(source);
 		
-		if (!(obj instanceof UDTValueWritable)) {
-			throw new CasserMappingException("instance must be UDTValueWritable " + obj);
-		}
+		return Casser.wrap(map, iface);
 		
-		UDTValueWritable writable = (UDTValueWritable) obj;
-
-		writable.readFrom(source);
-		
-		return obj;
 	}
 
 }

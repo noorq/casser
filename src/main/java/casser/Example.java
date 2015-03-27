@@ -27,44 +27,83 @@ import com.datastax.driver.core.Cluster;
 
 public class Example {
 
-	static final User _user = Casser.dsl(User.class);
+	static final User user = Casser.dsl(User.class);
 	
 	Cluster cluster = new Cluster.Builder().addContactPoint("localhost").build();
 	
-	CasserSession session = Casser.connect(cluster).use("test").add(_user).autoUpdate().get();
+	CasserSession session = Casser.connect(cluster).use("test").add(user).autoUpdate().get();
 	
-	public static User mapUser(Tuple2<String, Integer> t) {
-		User user = Casser.pojo(User.class);
-		user.setName(t.v1);
-		user.setAge(t.v2);
-		return user;
+	public static User mapUser(final Tuple2<String, Integer> t) {
+		
+		return new User() {
+
+			@Override
+			public Long id() {
+				return null;
+			}
+
+			@Override
+			public String name() {
+				return t.v1;
+			}
+
+			@Override
+			public Integer age() {
+				return t.v2;
+			}
+			
+		};
+		
+	}
+	
+	public static class UserImpl implements User {
+		
+		Long id;
+		String name;
+		Integer age;
+		
+		@Override
+		public Long id() {
+			return id;
+		}
+		
+		@Override
+		public String name() {
+			return name;
+		}
+		
+		@Override
+		public Integer age() {
+			return age;
+		}
+		
 	}
 	
 	public void test() {
 		
-		User newUser = Casser.pojo(User.class);
-		newUser.setId(100L);
-		newUser.setName("alex");
-		newUser.setAge(34);
+		UserImpl newUser = new UserImpl();
+		newUser.id = 100L;
+		newUser.name = "alex";
+		newUser.age = 34;
 		session.upsert(newUser);
 		
-		String nameAndAge = session.select(_user::getName, _user::getAge).where(_user::getId, "==", 100L).sync().findFirst().map(t -> {
+		String nameAndAge = session.select(user::name, user::age).where(user::id, "==", 100L).sync().findFirst().map(t -> {
 			return t.v1 + ":" +  t.v2;
 		}).get();
 
-		User user = session.select(_user::getName, _user::getAge).where(_user::getId, "==", 100L).map(Example::mapUser).sync().findFirst().get();
+		User userTmp = session.select(user::name, user::age).where(user::id, "==", 100L).map(Example::mapUser).sync().findFirst().get();
 
-		session.update(_user::getAge, 10).where(_user::getId, "==", 100L).async();
+		session.update(user::age, 10).where(user::id, "==", 100L).async();
 		
-		session.delete(User.class).where(_user::getId, "==", 100L).async();
+		session.delete(User.class).where(user::id, "==", 100L).async();
 		
-		Prepared<SelectOperation<Tuple1<String>>> ps = session.select(_user::getName).where(_user::getId, "==", null).prepare();
+		Prepared<SelectOperation<Tuple1<String>>> ps = session.select(user::name).where(user::id, "==", null).prepare();
 		
 		long cnt = ps.bind(100L).sync().count();
 		
-		cnt = session.select(_user::getName).where(_user::getId, "==", 100L).count().sync();
+		cnt = session.select(user::name).where(user::id, "==", 100L).count().sync();
 
-		cnt = session.select(_user::getName).where(Filter.equal(_user::getId, 100L)).count().sync();
+		cnt = session.select(user::name).where(Filter.equal(user::id, 100L)).count().sync();
 
 	}
 	

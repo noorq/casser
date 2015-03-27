@@ -29,14 +29,12 @@ public class DslTest {
 		
 		System.out.println("account = " + account);
 		
-		/*
 		try {
 			account.id();
 		}
 		catch(DslPropertyException e) {
 			System.out.println(e.getProperty());
 		}
-		*/
 		
 	}
 	

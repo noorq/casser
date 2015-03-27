@@ -31,20 +31,13 @@ import com.datastax.driver.core.DataType.Name;
 public interface Timeline {
 
 	@PartitionKey
-	UUID getUserId();
-	
-	void setUserId(UUID uid);
+	UUID userId();
 	
 	@ClusteringColumn
 	@DataTypeName(Name.TIMEUUID)
-	Date getTimestamp();
-	
-	void setTimestamp(Date ts);
+	Date timestamp();
 	
 	@Column
-	String getText();
-	
-	void setText(String text);
-	
+	String text();
 	
 }

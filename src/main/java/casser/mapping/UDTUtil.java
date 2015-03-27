@@ -13,17 +13,34 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package casser.mapping.convert;
+package casser.mapping;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import com.datastax.driver.core.UDTValue;
 
-public interface UDTValueWritable {
+public final class UDTUtil {
 
-	public static final String READ_FROM_METHOD = "readFrom";
-	public static final String WRITE_METHOD = "write";
+	private UDTUtil() {
+		
+	}
 	
-	void readFrom(UDTValue value);
+	public static Map<String, Object> wrap(UDTValue source) {
+		
+		/**
+		 * TODO: Implement it!
+		 */
+		
+		return new HashMap<String, Object>();
+	}
 	
-	void write(UDTValue value);
+	public static void write(UDTValue udtValue, Map<String, Object> map) {
+
+		/**
+		 * TODO: Implement it!
+		 */
+
+	}
 	
 }

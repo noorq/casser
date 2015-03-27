@@ -23,17 +23,11 @@ import casser.core.WrapperInstantiator;
 
 public interface CasserSettings {
 
-	Function<String, String> getMethodNameToPropertyConverter();
-
 	Function<String, String> getPropertyToColumnConverter();
 	
 	Function<Method, Boolean> getGetterMethodDetector();
-	
-	Function<Method, Boolean> getSetterMethodDetector();
 
 	Instantiator getDslInstantiator();
-
-	Instantiator getPojoInstantiator();
 	
 	WrapperInstantiator getWrapperInstantiator();
 

@@ -20,16 +20,10 @@ import casser.mapping.Table;
 @Table("user")
 public interface User {
 
-	Long getId();
+	Long id();
 	
-	void setId(Long id);
+	String name();
 	
-	String getName();
-	
-	void setName(String name);
-	
-	Integer getAge();
-	
-	void setAge(Integer age);
+	Integer age();
 	
 }

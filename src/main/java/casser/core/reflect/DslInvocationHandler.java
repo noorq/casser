@@ -40,12 +40,6 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			
 			map.put(prop.getGetterMethod(), prop);
 			
-			Method setter = prop.getSetterMethod();
-			
-			if (setter != null) {
-				map.put(setter, prop);
-			}
-			
 		}
 	}
 	

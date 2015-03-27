@@ -86,14 +86,6 @@ public final class Casser {
 		return (E) instance;
 		
 	}
-
-	public static <E> E pojo(Class<E> iface) {
-		return pojo(iface, iface.getClassLoader());
-	}
-
-	public static <E> E pojo(Class<E> iface, ClassLoader classLoader) {
-		return settings.getPojoInstantiator().instantiate(iface, classLoader);
-	}
 	
 	public static <E> E wrap(Map<String, Object> map, Class<E> iface) {
 		return wrap(map, iface, iface.getClassLoader());

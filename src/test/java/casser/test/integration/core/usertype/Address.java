@@ -22,20 +22,12 @@ import casser.mapping.UserDefinedType;
 public interface Address {
 
 	@Column("line_1")
-	String getStreet();
+	String street();
 
-	void setStreet(String street);
+	String city();
 
-	String getCity();
+	int zip();
 
-	void setCity(String city);
-
-	int getZip();
-
-	void setZip(int zip);
-
-	String getCountry();
-
-	void setCountry(String country);
+	String country();
 
 }

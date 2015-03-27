@@ -19,7 +19,6 @@ import java.lang.reflect.Method;
 
 import casser.core.Casser;
 import casser.core.Getter;
-import casser.mapping.convert.UDTValueWritable;
 import casser.support.CasserMappingException;
 import casser.support.DslPropertyException;
 
@@ -80,9 +79,7 @@ public final class MappingUtil {
 	}
 
 	public static String getPropertyName(Method getter) {
-		String propertyName = Casser.settings()
-				.getMethodNameToPropertyConverter().apply(getter.getName());
-		return propertyName;
+		return getter.getName();
 	}
 
 	public static String getDefaultColumnName(Method getter) {
@@ -165,7 +162,7 @@ public final class MappingUtil {
 				
 				iface = ifaces[0];
 				
-				if (UDTValueWritable.class.isAssignableFrom(iface)) {
+				if (MapExportable.class.isAssignableFrom(iface)) {
 					continue;
 				}
 				

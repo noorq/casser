@@ -62,22 +62,6 @@ public class CasserMappingEntity implements CasserEntity {
 			
 		}
 
-		for (Method m : all) {
-			
-			if (settings.getSetterMethodDetector().apply(m)) {
-				
-				String propertyName = MappingUtil.getPropertyName(m);
-
-				CasserMappingProperty prop = props.get(propertyName);
-				
-				if (prop != null) {
-					prop.setSetterMethod(m);
-				}
-				
-			}
-			
-		}
-
 	}
 
 	@Override

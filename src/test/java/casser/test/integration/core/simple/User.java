@@ -23,17 +23,11 @@ import casser.mapping.Table;
 public interface User {
 
 	@PartitionKey
-	Long getId();
-	
-	void setId(Long id);
+	Long id();
 	
 	@Column("override_name")
-	String getName();
+	String name();
 	
-	void setName(String name);
-	
-	Integer getAge();
-	
-	void setAge(Integer age);
+	Integer age();
 	
 }

@@ -29,15 +29,38 @@ import casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
 public class CompondKeyTest extends AbstractEmbeddedCassandraTest {
 
-	Timeline timeline;
+	Timeline timeline = Casser.dsl(Timeline.class);
 	
 	CasserSession session;
 	
+	public static class TimelineImpl implements Timeline {
+
+		UUID userId;
+		Date timestamp;
+		String text;
+		
+		@Override
+		public UUID userId() {
+			return userId;
+		}
+
+		@Override
+		public Date timestamp() {
+			return timestamp;
+		}
+
+		@Override
+		public String text() {
+			return text;
+		}
+		
+		
+		
+	}
+	
 	@Before
 	public void beforeTest() {
-		
-		timeline = Casser.dsl(Timeline.class);
-		
+
 		session = Casser.init(getSession()).showCql().add(Timeline.class).autoCreateDrop().get();
 	}
 	
@@ -47,15 +70,14 @@ public class CompondKeyTest extends AbstractEmbeddedCassandraTest {
 		UUID userId = UUID.randomUUID();
 		long postTime = System.currentTimeMillis() - 100000L;
 		
-		Timeline post = Casser.pojo(Timeline.class);
-		
 		session.showCql(false);
 		
 		for (int i = 0; i != 100; ++i) {
 		
-			post.setUserId(userId);
-			post.setTimestamp(new Date(postTime+1000L*i));
-			post.setText("hello");
+			TimelineImpl post = new TimelineImpl();
+			post.userId = userId;
+			post.timestamp = new Date(postTime+1000L*i);
+			post.text = "hello";
 			
 			session.upsert(post).sync();
 		}
@@ -65,10 +87,11 @@ public class CompondKeyTest extends AbstractEmbeddedCassandraTest {
 		final Mutable<Date> d = new Mutable<Date>(null);
 		final Mutable<Integer> c = new Mutable<Integer>(0);
 		
-		session.select(timeline::getUserId, timeline::getTimestamp, timeline::getText)
-		.where(timeline::getUserId, "==", userId)
-		.orderBy(timeline::getTimestamp, "desc").limit(5).sync()
+		session.select(timeline::userId, timeline::timestamp, timeline::text)
+		.where(timeline::userId, "==", userId)
+		.orderBy(timeline::timestamp, "desc").limit(5).sync()
 		.forEach(t -> {
+			
 			//System.out.println(t); 
 			c.set(c.get() + 1);
 			

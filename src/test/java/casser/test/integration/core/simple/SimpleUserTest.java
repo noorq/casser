@@ -22,40 +22,62 @@ import org.junit.Test;
 
 import casser.core.Casser;
 import casser.core.CasserSession;
+import casser.core.FilterOperator;
 import casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
 public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
-	User user;
+	User user = Casser.dsl(User.class);
 	
 	CasserSession session;
 	
 	@Before
 	public void beforeTest() {
 		
-		user = Casser.dsl(User.class);
-		
 		session = Casser.init(getSession()).showCql().add(User.class).autoCreateDrop().get();
+	}
+	
+	public static class UserImpl implements User {
+		
+		Long id;
+		String name;
+		Integer age;
+		
+		@Override
+		public Long id() {
+			return id;
+		}
+		
+		@Override
+		public String name() {
+			return name;
+		}
+		
+		@Override
+		public Integer age() {
+			return age;
+		}
+		
 	}
 	
 	@Test
 	public void testCruid() {
 		
-		User alex = Casser.pojo(User.class);
-		alex.setId(123L);
-		alex.setName("alex");
-		alex.setAge(34);
+		UserImpl newUser = new UserImpl();
+		newUser.id = 100L;
+		newUser.name = "alex";
+		newUser.age = 34;
 		
-		session.upsert(alex).sync();
+		session.upsert(newUser).sync();
 	
-		session.update(user::getName, "albert").set(user::getAge, 35)
-			.where(user::getId, "==", 123L).sync();
+		session.update(user::name, "albert").set(user::age, 35)
+			.where(user::id, "==", 123L).sync();
 		
-		long cnt = session.count(user).where(user::getId, "==", 123L).sync();
+		long cnt = session.count(user).where(user::id, FilterOperator.EQUAL, 123L).sync();
 		Assert.assertEquals(1L, cnt);
 
-		String name = session.select(user::getName)
-				.where(user::getId, "==", 123L)
+		String name = session.select(user::name)
+				.where(user::id, "==", 123L)
 				.map(t -> "_" + t.v1)
 				.sync()
 				.findFirst()
@@ -63,7 +85,7 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 		
 		Assert.assertEquals("_albert", name);
 		
-		session.delete(user).where(user::getId, "==", 123L).sync();
+		session.delete(user).where(user::id, "==", 123L).sync();
 		
 	}
 	
