@@ -30,21 +30,19 @@ import com.datastax.driver.core.Row;
 public final class RowColumnValueProvider implements ColumnValueProvider {
 
 	private final CasserMappingRepository repository;
-	private final Row source;
-	private final ColumnDefinitions columnDefinitions;
 	
-	public RowColumnValueProvider(CasserMappingRepository repository, Row source) {
+	public RowColumnValueProvider(CasserMappingRepository repository) {
 		this.repository = repository;
-		this.source = source;
-		this.columnDefinitions = source.getColumnDefinitions();
 	}
 	
 	@Override
-	public <V> V getColumnValue(int columnIndex, CasserMappingProperty property) {
+	public <V> V getColumnValue(Row source, int columnIndex, CasserMappingProperty property) {
 
 		if (source.isNull(columnIndex)) {
 			return null;
 		}
+		
+		ColumnDefinitions columnDefinitions = source.getColumnDefinitions();
 		
 		DataType columnType = columnDefinitions.getType(columnIndex);
 

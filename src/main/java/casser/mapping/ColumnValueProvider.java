@@ -15,8 +15,10 @@
  */
 package casser.mapping;
 
+import com.datastax.driver.core.Row;
+
 public interface ColumnValueProvider {
 
-	<V> V getColumnValue(int columnIndex, CasserMappingProperty property);
+	<V> V getColumnValue(Row row, int columnIndex, CasserMappingProperty property);
 	
 }

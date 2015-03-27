@@ -20,6 +20,8 @@ import java.util.function.Function;
 import casser.mapping.CasserMappingProperty;
 import casser.mapping.ColumnValueProvider;
 
+import com.datastax.driver.core.Row;
+
 public final class Tuple4<V1, V2, V3, V4> {
 
 	public final V1 v1;
@@ -34,19 +36,21 @@ public final class Tuple4<V1, V2, V3, V4> {
 		this.v4 = v4;
 	}
 	
-	public final static class Mapper<V1, V2, V3, V4> implements Function<ColumnValueProvider, Tuple4<V1, V2, V3, V4>> {
+	public final static class Mapper<V1, V2, V3, V4> implements Function<Row, Tuple4<V1, V2, V3, V4>> {
 
+		private final ColumnValueProvider provider;
 		private final CasserMappingProperty p1;
 		private final CasserMappingProperty p2;
 		private final CasserMappingProperty p3;
 		private final CasserMappingProperty p4;
 		
-		public Mapper(
+		public Mapper(ColumnValueProvider provider, 
 				CasserMappingProperty p1, 
 				CasserMappingProperty p2, 
 				CasserMappingProperty p3,
 				CasserMappingProperty p4
 				) {
+			this.provider = provider;
 			this.p1 = p1;
 			this.p2 = p2;
 			this.p3 = p3;
@@ -54,12 +58,12 @@ public final class Tuple4<V1, V2, V3, V4> {
 		}
 		
 		@Override
-		public Tuple4<V1, V2, V3, V4> apply(ColumnValueProvider provider) {
+		public Tuple4<V1, V2, V3, V4> apply(Row row) {
 			return new Tuple4<V1, V2, V3, V4>(
-					provider.getColumnValue(0, p1), 
-					provider.getColumnValue(1, p2),
-					provider.getColumnValue(2, p3),
-					provider.getColumnValue(3, p4)
+					provider.getColumnValue(row, 0, p1), 
+					provider.getColumnValue(row, 1, p2),
+					provider.getColumnValue(row, 2, p3),
+					provider.getColumnValue(row, 3, p4)
 					);
 		}
 	}

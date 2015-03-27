@@ -20,6 +20,8 @@ import java.util.function.Function;
 import casser.mapping.CasserMappingProperty;
 import casser.mapping.ColumnValueProvider;
 
+import com.datastax.driver.core.Row;
+
 public final class Tuple1<V1> {
 
 	public final V1 v1;
@@ -28,17 +30,19 @@ public final class Tuple1<V1> {
 		this.v1 = v1;
 	}
 
-	public final static class Mapper<V1> implements Function<ColumnValueProvider, Tuple1<V1>> {
+	public final static class Mapper<V1> implements Function<Row, Tuple1<V1>> {
 
+		private final ColumnValueProvider provider;
 		private final CasserMappingProperty p1;
 		
-		public Mapper(CasserMappingProperty p1) {
+		public Mapper(ColumnValueProvider provider, CasserMappingProperty p1) {
+			this.provider = provider;
 			this.p1 = p1;
 		}
 		
 		@Override
-		public Tuple1<V1> apply(ColumnValueProvider provider) {
-			return new Tuple1<V1>(provider.getColumnValue(0, p1));
+		public Tuple1<V1> apply(Row row) {
+			return new Tuple1<V1>(provider.getColumnValue(row, 0, p1));
 		}
 	}
 

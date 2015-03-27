@@ -25,6 +25,8 @@ import casser.mapping.CasserEntityType;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingRepository;
 import casser.mapping.ColumnValuePreparer;
+import casser.mapping.ColumnValueProvider;
+import casser.mapping.RowColumnValueProvider;
 import casser.mapping.StatementColumnValuePreparer;
 
 import com.datastax.driver.core.KeyspaceMetadata;
@@ -71,8 +73,8 @@ public class SessionInitializer extends AbstractSessionOperations {
 	}
 	
 	@Override
-	public CasserMappingRepository getRepository() {
-		return mappingRepository;
+	public ColumnValueProvider getValueProvider() {
+		return new RowColumnValueProvider(mappingRepository);
 	}
 	
 	@Override

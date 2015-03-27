@@ -29,14 +29,12 @@ import casser.core.Filter;
 import casser.core.dsl.Getter;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
-import casser.mapping.CasserMappingRepository;
-import casser.mapping.ColumnValueProvider;
 import casser.mapping.MappingUtil;
 import casser.mapping.OrderingDirection;
-import casser.mapping.RowColumnValueProvider;
 import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Ordering;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
@@ -47,13 +45,13 @@ import com.datastax.driver.core.querybuilder.Select.Where;
 
 public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectOperation<E>> {
 
-	protected final Function<ColumnValueProvider, E> rowMapper;
+	protected final Function<Row, E> rowMapper;
 	protected final CasserMappingProperty[] props;
 	
 	protected List<Ordering> ordering = null;
 	protected Integer limit = null;
 	
-	public SelectOperation(AbstractSessionOperations sessionOperations, Function<ColumnValueProvider, E> rowMapper, CasserMappingProperty... props) {
+	public SelectOperation(AbstractSessionOperations sessionOperations, Function<Row, E> rowMapper, CasserMappingProperty... props) {
 		super(sessionOperations);
 		this.rowMapper = rowMapper;
 		this.props = props;	
@@ -160,12 +158,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
 	@Override
 	public Stream<E> transform(ResultSet resultSet) {
-
-		CasserMappingRepository repository = sessionOps.getRepository();
 		
 		return StreamSupport.stream(
 				Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED)
-				, false).map(r -> new RowColumnValueProvider(repository, r)).map(rowMapper);
+				, false).map(rowMapper);
 
 	}
 
