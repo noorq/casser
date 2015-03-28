@@ -1,18 +1,20 @@
 # casser            ![build](https://travis-ci.org/noorq/casser.svg?branch=master)
-Java 8 Cassandra Client
+Cutting edge Java 8 Cassandra Client
 
 Current status: Active development
 
 ### Features
 
 * Leverages Java 8 language capabilities to build CQL queries
-* Simple function-style API
-* Reactive
+* Simple function-style stream API
+* Reactive asynchronous and synchronous API
+* Provides Java mapping for Tables and User Defined Types
 
 ### Requirements
 
 * Only JVM 8
-* Datastax Driver
+* Latest Datastax Driver 2.1.5
+* Latest Cassandra
 * Maven
 
 ### Example
