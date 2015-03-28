@@ -202,12 +202,10 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		acc.id = 123L;
 		acc.address = addr;
 
-		String cql = csession.upsert(acc).cql();
-		
-		System.out.println("cql = " + cql);
+		csession.upsert(acc).sync();
 		
 		//csession.insert(account::setId, 123L).value(account::getAddress, addr).sync();
 		
-		//csession.select(account.getAddress()::getStreet).sync().forEach(System.out::println);
+		csession.select(account.address()::street).sync().forEach(System.out::println);
 	}
 }

@@ -15,8 +15,12 @@
  */
 package casser.core;
 
-public interface Instantiator {
+import java.util.Optional;
 
-	 <E> E instantiate(Class<E> iface, ClassLoader classLoader);
+import casser.core.reflect.CasserPropertyNode;
+
+public interface DslInstantiator {
+
+	 <E> E instantiate(Class<E> iface, ClassLoader classLoader, Optional<CasserPropertyNode> parent);
 	 
 }

@@ -33,7 +33,7 @@ public class DslTest {
 			account.id();
 		}
 		catch(DslPropertyException e) {
-			System.out.println(e.getProperty());
+			System.out.println(e.getPropertyNode().getProperty());
 		}
 		
 	}

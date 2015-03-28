@@ -19,26 +19,40 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import casser.core.Casser;
 import casser.mapping.CasserMappingEntity;
 import casser.mapping.CasserMappingProperty;
 import casser.support.CasserException;
+import casser.support.CasserMappingException;
 import casser.support.DslPropertyException;
 
 public class DslInvocationHandler<E> implements InvocationHandler {
 
 	private final CasserMappingEntity entity;
+	private final Optional<CasserPropertyNode> parent;
 	
 	private final Map<Method, CasserMappingProperty> map = new HashMap<Method, CasserMappingProperty>();
 	
-	public DslInvocationHandler(Class<E> iface) {
+	private final Map<Method, Object> udtMap = new HashMap<Method, Object>();
+
+	public DslInvocationHandler(Class<E> iface, ClassLoader classLoader, Optional<CasserPropertyNode> parent) {
 		
 		this.entity = new CasserMappingEntity(iface);
+		this.parent = parent;
 		
 		for (CasserMappingProperty prop : entity.getMappingProperties()) {
 			
 			map.put(prop.getGetterMethod(), prop);
+			
+			if (prop.getUDTType() != null) {
+				
+				Object childDsl = Casser.dsl(prop.getJavaType(), classLoader,
+						Optional.of(new CasserPropertyNode(prop, parent)));
+				
+				udtMap.put(prop.getGetterMethod(), childDsl);
+			}
 			
 		}
 	}
@@ -48,7 +62,7 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			throws Throwable {
 		
 		if ("toString".equals(method.getName())) {
-			return "Casser Dsl for " + entity.getMappingInterface();
+			return "Dsl:" + entity.getMappingInterface();
 		}
 		
 		CasserMappingProperty prop = map.get(method);
@@ -57,11 +71,18 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			
 			if (prop.getUDTType() != null) {
 				
-				return Casser.dsl(prop.getJavaType());
+				Object childDsl = udtMap.get(method);
+				
+				if (childDsl != null) {
+					return childDsl;
+				}
+				else {
+					throw new CasserMappingException("childDsl not found for " + method);
+				}
 				
 			}
 			
-			throw new DslPropertyException(prop);	
+			throw new DslPropertyException(new CasserPropertyNode(prop, parent));	
 		}
 		
 		throw new CasserException("invalid method call " + method);

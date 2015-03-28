@@ -15,23 +15,21 @@
  */
 package casser.support;
 
-import casser.mapping.CasserProperty;
+import casser.core.reflect.CasserPropertyNode;
 
 public class DslPropertyException extends CasserException {
 
 	private static final long serialVersionUID = -2745598205929757758L;
 
-	private final CasserProperty property;
+	private final CasserPropertyNode propertyNode;
 	
-	public DslPropertyException(CasserProperty property) {
-		super("DSL Property Exception");
-		this.property = property;
+	public DslPropertyException(CasserPropertyNode propertyNode) {
+		super("DSL PropertyNode Exception");
+		this.propertyNode = propertyNode;
 	}
 
-	public CasserProperty getProperty() {
-		return property;
+	public CasserPropertyNode getPropertyNode() {
+		return propertyNode;
 	}
-	
-	
-	
+
 }

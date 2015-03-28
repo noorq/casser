@@ -16,17 +16,18 @@
 package casser.core.reflect;
 
 import java.lang.reflect.Proxy;
+import java.util.Optional;
 
-import casser.core.Instantiator;
+import casser.core.DslInstantiator;
 
-public enum ReflectionDslInstantiator implements Instantiator {
+public enum ReflectionDslInstantiator implements DslInstantiator {
 
 	INSTANCE;
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public <E> E instantiate(Class<E> iface, ClassLoader classLoader) {
-		DslInvocationHandler<E> handler = new DslInvocationHandler<E>(iface);
+	public <E> E instantiate(Class<E> iface, ClassLoader classLoader, Optional<CasserPropertyNode> parent) {
+		DslInvocationHandler<E> handler = new DslInvocationHandler<E>(iface, classLoader, parent);
 		E proxy = (E) Proxy.newProxyInstance(
 		                            classLoader,
 		                            new Class[] { iface },

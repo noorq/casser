@@ -21,6 +21,9 @@ public final class CqlUtil {
 	}
 
 	public static String forceQuote(String identity) {
+		if (identity.startsWith("\"")) {
+			return identity;
+		}
 		return "\"" + identity + "\"";
 	}
 	

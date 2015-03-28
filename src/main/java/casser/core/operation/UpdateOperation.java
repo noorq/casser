@@ -21,8 +21,8 @@ import java.util.Objects;
 import casser.core.AbstractSessionOperations;
 import casser.core.Filter;
 import casser.core.Getter;
+import casser.core.reflect.CasserPropertyNode;
 import casser.mapping.CasserMappingEntity;
-import casser.mapping.CasserMappingProperty;
 import casser.mapping.MappingUtil;
 import casser.support.CasserMappingException;
 
@@ -34,20 +34,20 @@ import com.datastax.driver.core.querybuilder.Update;
 
 public final class UpdateOperation extends AbstractFilterOperation<ResultSet, UpdateOperation> {
 	
-	private final CasserMappingProperty[] props;
+	private final CasserPropertyNode[] props;
 	private final Object[] vals;
 	
-	public UpdateOperation(AbstractSessionOperations sessionOperations, CasserMappingProperty p, Object v) {
+	public UpdateOperation(AbstractSessionOperations sessionOperations, CasserPropertyNode p, Object v) {
 		super(sessionOperations);
 		
-		this.props = new CasserMappingProperty[1];
+		this.props = new CasserPropertyNode[1];
 		this.vals = new Object[1];
 		
 		this.props[0] = p;
 		this.vals[0] = v;
 	}
 
-	public UpdateOperation(UpdateOperation other, CasserMappingProperty p, Object v) {
+	public UpdateOperation(UpdateOperation other, CasserPropertyNode p, Object v) {
 		super(other.sessionOps);
 		
 		this.props = Arrays.copyOf(other.props, other.props.length + 1);
@@ -61,7 +61,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(getter, "field is empty");
 		Objects.requireNonNull(v, "value is empty");
 
-		CasserMappingProperty p = MappingUtil.resolveMappingProperty(getter);
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(getter);
 		
 		return new UpdateOperation(this, p, v);
 	}
@@ -71,7 +71,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		
 		CasserMappingEntity entity = null;
 		
-		for (CasserMappingProperty prop : props) {
+		for (CasserPropertyNode prop : props) {
 			if (entity == null) {
 				entity = prop.getEntity();
 			}
@@ -89,7 +89,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		
 		for (int i = 0; i != props.length; ++i) {
 			
-			Object value = sessionOps.getValuePreparer().prepareColumnValue(vals[i], props[i]);
+			Object value = sessionOps.getValuePreparer().prepareColumnValue(vals[i], props[i].getProperty());
 			
 			update.with(QueryBuilder.set(props[i].getColumnName(), value));
 		

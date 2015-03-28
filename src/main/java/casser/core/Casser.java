@@ -16,11 +16,13 @@
 package casser.core;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import casser.config.CasserSettings;
 import casser.config.DefaultCasserSettings;
+import casser.core.reflect.CasserPropertyNode;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
@@ -70,16 +72,20 @@ public final class Casser {
 	}
 	
 	public static <E> E dsl(Class<E> iface) {
-		return dsl(iface, iface.getClassLoader());
+		return dsl(iface, iface.getClassLoader(), Optional.empty());
 	}
 
 	public static <E> E dsl(Class<E> iface, ClassLoader classLoader) {
+		return dsl(iface, classLoader, Optional.empty());
+	}
+	
+	public static <E> E dsl(Class<E> iface, ClassLoader classLoader, Optional<CasserPropertyNode> parent) {
 		
 		Object instance = dslCache.get(iface);
 		
 		if (instance == null) {
 		
-			instance = settings.getDslInstantiator().instantiate(iface, classLoader);
+			instance = settings.getDslInstantiator().instantiate(iface, classLoader, parent);
 			
 			Object c = dslCache.putIfAbsent(iface, instance);
 			if (c != null) {

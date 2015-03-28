@@ -18,7 +18,7 @@ package casser.config;
 import java.lang.reflect.Method;
 import java.util.function.Function;
 
-import casser.core.Instantiator;
+import casser.core.DslInstantiator;
 import casser.core.WrapperInstantiator;
 import casser.core.reflect.ReflectionDslInstantiator;
 import casser.core.reflect.ReflectionWrapperInstantiator;
@@ -37,7 +37,7 @@ public class DefaultCasserSettings implements CasserSettings {
 	}
 
 	@Override
-	public Instantiator getDslInstantiator() {
+	public DslInstantiator getDslInstantiator() {
 		return ReflectionDslInstantiator.INSTANCE;
 	}
 

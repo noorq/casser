@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 
 import casser.core.Casser;
 import casser.core.Getter;
+import casser.core.reflect.CasserPropertyNode;
 import casser.support.CasserMappingException;
 import casser.support.DslPropertyException;
 
@@ -186,15 +187,15 @@ public final class MappingUtil {
 
 	}
 
-	public static CasserMappingProperty resolveMappingProperty(
+	public static CasserPropertyNode resolveMappingProperty(
 			Getter<?> getter) {
 
 		try {
 			getter.get();
 			throw new CasserMappingException(
-					"getter must reference to a dsl object " + getter);
+					"getter must reference to the dsl object " + getter);
 		} catch (DslPropertyException e) {
-			return (CasserMappingProperty) e.getProperty();
+			return e.getPropertyNode();
 		}
 
 	}

@@ -17,6 +17,7 @@ package casser.core;
 
 import java.util.Objects;
 
+import casser.core.reflect.CasserPropertyNode;
 import casser.mapping.CasserMappingProperty;
 import casser.mapping.MappingUtil;
 import casser.mapping.value.ColumnValuePreparer;
@@ -107,9 +108,9 @@ public final class Filter<V> {
 			Objects.requireNonNull(vals[i], "value[" + i + "] is empty");
 		}
 		
-		CasserMappingProperty prop = MappingUtil.resolveMappingProperty(getter);
+		CasserPropertyNode prop = MappingUtil.resolveMappingProperty(getter);
 		
-		return new Filter<V>(prop, Operator.IN, vals);
+		return new Filter<V>(prop.getProperty(), Operator.IN, vals);
 	}
 	
 	public static <V> Filter<V> greater(Getter<V> getter, V val) {
@@ -149,9 +150,9 @@ public final class Filter<V> {
 			throw new IllegalArgumentException("invalid usage of the 'in' operator, use Filter.in() static method");
 		}
 		
-		CasserMappingProperty prop = MappingUtil.resolveMappingProperty(getter);
+		CasserPropertyNode prop = MappingUtil.resolveMappingProperty(getter);
 		
-		return new Filter<V>(prop, op, val);
+		return new Filter<V>(prop.getProperty(), op, val);
 	}
 	
 }

@@ -18,7 +18,7 @@ package casser.config;
 import java.lang.reflect.Method;
 import java.util.function.Function;
 
-import casser.core.Instantiator;
+import casser.core.DslInstantiator;
 import casser.core.WrapperInstantiator;
 
 public interface CasserSettings {
@@ -27,7 +27,7 @@ public interface CasserSettings {
 	
 	Function<Method, Boolean> getGetterMethodDetector();
 
-	Instantiator getDslInstantiator();
+	DslInstantiator getDslInstantiator();
 	
 	WrapperInstantiator getWrapperInstantiator();
 

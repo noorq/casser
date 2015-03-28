@@ -17,6 +17,7 @@ package casser.core.tuple;
 
 import java.util.function.Function;
 
+import casser.core.reflect.CasserPropertyNode;
 import casser.mapping.CasserMappingProperty;
 import casser.mapping.value.ColumnValueProvider;
 
@@ -45,16 +46,16 @@ public final class Tuple4<V1, V2, V3, V4> {
 		private final CasserMappingProperty p4;
 		
 		public Mapper(ColumnValueProvider provider, 
-				CasserMappingProperty p1, 
-				CasserMappingProperty p2, 
-				CasserMappingProperty p3,
-				CasserMappingProperty p4
+				CasserPropertyNode p1, 
+				CasserPropertyNode p2, 
+				CasserPropertyNode p3,
+				CasserPropertyNode p4
 				) {
 			this.provider = provider;
-			this.p1 = p1;
-			this.p2 = p2;
-			this.p3 = p3;
-			this.p4 = p4;
+			this.p1 = p1.getProperty();
+			this.p2 = p2.getProperty();
+			this.p3 = p3.getProperty();
+			this.p4 = p4.getProperty();
 		}
 		
 		@Override
