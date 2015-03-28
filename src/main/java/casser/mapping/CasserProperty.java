@@ -24,6 +24,8 @@ import com.datastax.driver.core.schemabuilder.UDTType;
 public interface CasserProperty {
 
 	CasserEntity getEntity();
+
+	String getPropertyName(); 
 	
 	String getColumnName();
 	

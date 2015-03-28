@@ -38,7 +38,6 @@ import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
-import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.datastax.driver.core.schemabuilder.UDTType;
 
@@ -156,6 +155,7 @@ public class CasserMappingProperty implements CasserProperty {
 		return columnName.get();
 	}
 	
+	@Override
 	public String getPropertyName() {
 		
 		if (!propertyName.isPresent()) {
@@ -188,7 +188,7 @@ public class CasserMappingProperty implements CasserProperty {
 			return TypedConverter.create(
 					UDTValue.class,
 					javaType,
-					new UDTValueToEntityConverter(javaType));
+					new UDTValueToEntityConverter(javaType, repository));
 
 		}
 		
@@ -229,15 +229,10 @@ public class CasserMappingProperty implements CasserProperty {
 			
 			Class<Object> javaType = (Class<Object>) getJavaType();
 			
-			UserType userType = repository.findUserType(getUDTName());
-			if (userType == null) {
-				throw new CasserMappingException("UserType not found for " + getUDTName());
-			}
-			
 			return TypedConverter.create(
 					javaType, 
 					UDTValue.class, 
-					new EntityToUDTValueConverter(userType));
+					new EntityToUDTValueConverter(javaType, getUDTName(), repository));
 
 		}
 		

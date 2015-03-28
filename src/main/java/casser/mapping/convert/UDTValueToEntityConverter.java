@@ -19,22 +19,36 @@ import java.util.Map;
 import java.util.function.Function;
 
 import casser.core.Casser;
-import casser.mapping.UDTUtil;
+import casser.mapping.CasserMappingEntity;
+import casser.mapping.CasserMappingRepository;
+import casser.mapping.UDTValueMap;
+import casser.mapping.value.UDTColumnValueProvider;
+import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.UDTValue;
 
 public final class UDTValueToEntityConverter implements Function<UDTValue, Object> {
 
 	private final Class<?> iface;
+	private final CasserMappingRepository repository;
+	private final CasserMappingEntity entity;
 	
-	public UDTValueToEntityConverter(Class<?> iface) {
+	public UDTValueToEntityConverter(Class<?> iface, CasserMappingRepository repository) {
 		this.iface = iface;
+		this.repository = repository;
+		this.entity = repository.getEntity(iface);
+		
+		if (this.entity == null) {
+			throw new CasserMappingException("entity not found for " + iface);
+		}
 	}
 
 	@Override
 	public Object apply(UDTValue source) {
 		
-		Map<String, Object> map = UDTUtil.wrap(source);
+		Map<String, Object> map = new UDTValueMap(source, 
+				new UDTColumnValueProvider(repository),
+				entity);
 		
 		return Casser.wrap(map, iface);
 		

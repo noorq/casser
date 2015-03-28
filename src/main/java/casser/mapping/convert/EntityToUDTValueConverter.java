@@ -15,10 +15,16 @@
  */
 package casser.mapping.convert;
 
+import java.nio.ByteBuffer;
+import java.util.Map;
 import java.util.function.Function;
 
+import casser.mapping.CasserMappingEntity;
+import casser.mapping.CasserMappingProperty;
+import casser.mapping.CasserMappingRepository;
 import casser.mapping.MapExportable;
-import casser.mapping.UDTUtil;
+import casser.mapping.value.BeanColumnValueProvider;
+import casser.mapping.value.UDTColumnValuePreparer;
 import casser.support.CasserMappingException;
 
 import com.datastax.driver.core.UDTValue;
@@ -26,10 +32,27 @@ import com.datastax.driver.core.UserType;
 
 public final class EntityToUDTValueConverter implements Function<Object, UDTValue> {
 
+	private final CasserMappingRepository repository;
 	private final UserType userType;
+	private final CasserMappingEntity entity;
+	private final UDTColumnValuePreparer valuePreparer;
 	
-	public EntityToUDTValueConverter(UserType userType) {
-		this.userType = userType;
+	public EntityToUDTValueConverter(Class<?> iface, String udtName, CasserMappingRepository repository) {
+		
+		this.repository = repository;
+		
+		this.userType = repository.findUserType(udtName);
+		if (this.userType == null) {
+			throw new CasserMappingException("UserType not found for " + udtName + " with type " + iface);
+		}
+		
+		this.entity = repository.getEntity(iface);
+		
+		if (this.entity == null) {
+			throw new CasserMappingException("entity not found for " + iface);
+		}
+		
+		this.valuePreparer = new UDTColumnValuePreparer(this.userType, this.repository);
 	}
 	
 	@Override
@@ -37,15 +60,58 @@ public final class EntityToUDTValueConverter implements Function<Object, UDTValu
 		
 		UDTValue udtValue = userType.newValue();
 		
-		if (!(source instanceof MapExportable)) {
-			throw new CasserMappingException("instance must be MapExportable " + source);
+		if (source instanceof MapExportable) {
+			
+			MapExportable exportable = (MapExportable) source;
+			
+			Map<String, Object> propertyToValueMap = exportable.toMap();
+			
+			for (Map.Entry<String, Object> entry : propertyToValueMap.entrySet()) {
+				
+				Object value = entry.getValue();
+				
+				if (value == null) {
+					continue;
+				}
+				
+				CasserMappingProperty prop = entity.getMappingProperty(entity.getName());
+				
+				if (prop != null) {
+					
+					write(udtValue, value, prop);
+					
+				}
+				
+			}
+			
 		}
-		
-		MapExportable exportable = (MapExportable) source;
-		
-		UDTUtil.write(udtValue, exportable.toMap());
-		
+		else {
+
+			for (CasserMappingProperty prop : entity.getMappingProperties()) {
+				
+				Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(source, -1, prop);
+				
+				if (value != null) {
+					write(udtValue, value, prop);
+				}
+				
+			}
+			
+		}
+
 		return udtValue;
+	}
+
+	private void write(UDTValue udtValue, Object value,
+			CasserMappingProperty prop) {
+		
+		ByteBuffer bytes = (ByteBuffer) valuePreparer.prepareColumnValue(value, prop);
+		
+		if (bytes != null) {
+		
+			udtValue.setBytesUnsafe(prop.getColumnName(), bytes);
+			
+		}
 	}
 
 }

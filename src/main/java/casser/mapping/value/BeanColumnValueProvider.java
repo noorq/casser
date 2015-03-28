@@ -25,7 +25,7 @@ public enum BeanColumnValueProvider implements ColumnValueProvider {
 	INSTANCE;
 	
 	@Override
-	public <V> V getColumnValue(Object bean, int columnIndex,
+	public <V> V getColumnValue(Object bean, int columnIndexUnused,
 			CasserMappingProperty property) {
 
 		Method getter = property.getGetterMethod();

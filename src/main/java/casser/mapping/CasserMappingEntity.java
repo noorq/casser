@@ -82,9 +82,18 @@ public class CasserMappingEntity implements CasserEntity {
 	public Collection<CasserProperty> getProperties() {
 		return Collections.unmodifiableCollection(props.values());
 	}
+	
+	@Override
+	public CasserProperty getProperty(String name) {
+		return props.get(name);
+	}
 
 	public Collection<CasserMappingProperty> getMappingProperties() {
 		return Collections.unmodifiableCollection(props.values());
+	}
+	
+	public CasserMappingProperty getMappingProperty(String name) {
+		return props.get(name);
 	}
 
 	@Override

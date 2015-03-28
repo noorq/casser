@@ -25,4 +25,6 @@ public interface CasserEntity {
 	
 	Collection<CasserProperty> getProperties();
 	
+	CasserProperty getProperty(String name);
+	
 }
