@@ -17,6 +17,17 @@ Current status: Active development
 * Latest Cassandra
 * Maven
 
+### Maven
+
+Active development dependency:
+```
+<dependency>
+	<groupId>com.noorq.casser</groupId>
+	<artifactId>casser-core</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+</dependency>
+```
+
 ### Example
 
 Entity definition:
