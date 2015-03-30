@@ -43,12 +43,12 @@ public class Example {
 
 			@Override
 			public String name() {
-				return t.v1;
+				return t._1;
 			}
 
 			@Override
 			public Integer age() {
-				return t.v2;
+				return t._2;
 			}
 			
 		};
@@ -87,7 +87,7 @@ public class Example {
 		session.upsert(newUser);
 		
 		String nameAndAge = session.select(user::name, user::age).where(user::id, "==", 100L).sync().findFirst().map(t -> {
-			return t.v1 + ":" +  t.v2;
+			return t._1 + ":" +  t._2;
 		}).get();
 
 		User userTmp = session.select(user::name, user::age).where(user::id, "==", 100L).map(Example::mapUser).sync().findFirst().get();

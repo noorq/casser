@@ -22,21 +22,21 @@ import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.mapping.CasserMappingProperty;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
 
-public final class Tuple4<V1, V2, V3, V4> {
+public final class Tuple4<A, B, C, D> {
 
-	public final V1 v1;
-	public final V2 v2;
-	public final V3 v3;
-	public final V4 v4;
+	public final A _1;
+	public final B _2;
+	public final C _3;
+	public final D _4;
 	
-	public Tuple4(V1 v1, V2 v2, V3 v3, V4 v4) {
-		this.v1 = v1;
-		this.v2 = v2;
-		this.v3 = v3;
-		this.v4 = v4;
+	public Tuple4(A v1, B v2, C v3, D v4) {
+		this._1 = v1;
+		this._2 = v2;
+		this._3 = v3;
+		this._4 = v4;
 	}
 	
-	public final static class Mapper<V1, V2, V3, V4> implements Function<Row, Tuple4<V1, V2, V3, V4>> {
+	public final static class Mapper<A, B, C, D> implements Function<Row, Tuple4<A, B, C, D>> {
 
 		private final ColumnValueProvider provider;
 		private final CasserMappingProperty p1;
@@ -58,8 +58,8 @@ public final class Tuple4<V1, V2, V3, V4> {
 		}
 		
 		@Override
-		public Tuple4<V1, V2, V3, V4> apply(Row row) {
-			return new Tuple4<V1, V2, V3, V4>(
+		public Tuple4<A, B, C, D> apply(Row row) {
+			return new Tuple4<A, B, C, D>(
 					provider.getColumnValue(row, 0, p1), 
 					provider.getColumnValue(row, 1, p2),
 					provider.getColumnValue(row, 2, p3),
@@ -70,7 +70,7 @@ public final class Tuple4<V1, V2, V3, V4> {
 
 	@Override
 	public String toString() {
-		return "Tuple4 [v1=" + v1 + ", v2=" + v2 + ", v3=" + v3 + ", v4=" + v4
+		return "Tuple4 [_1=" + _1 + ", _2=" + _2 + ", _3=" + _3 + ", _4=" + _4
 				+ "]";
 	}
 

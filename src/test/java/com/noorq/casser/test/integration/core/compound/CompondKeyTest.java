@@ -97,9 +97,9 @@ public class CompondKeyTest extends AbstractEmbeddedCassandraTest {
 			
 			Date cd = d.get();
 			if (cd != null) {
-				Assert.assertTrue(cd.after(t.v2));
+				Assert.assertTrue(cd.after(t._2));
 			}
-			d.set(t.v2);
+			d.set(t._2);
 			
 			});
 		

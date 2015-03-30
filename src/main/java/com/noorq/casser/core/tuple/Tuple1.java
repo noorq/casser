@@ -22,15 +22,15 @@ import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.mapping.CasserMappingProperty;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
 
-public final class Tuple1<V1> {
+public final class Tuple1<A> {
 
-	public final V1 v1;
+	public final A _1;
 
-	public Tuple1(V1 v1) {
-		this.v1 = v1;
+	public Tuple1(A v1) {
+		this._1 = v1;
 	}
 
-	public final static class Mapper<V1> implements Function<Row, Tuple1<V1>> {
+	public final static class Mapper<A> implements Function<Row, Tuple1<A>> {
 
 		private final ColumnValueProvider provider;
 		private final CasserMappingProperty p1;
@@ -41,15 +41,15 @@ public final class Tuple1<V1> {
 		}
 		
 		@Override
-		public Tuple1<V1> apply(Row row) {
-			return new Tuple1<V1>(provider.getColumnValue(row, 0, p1));
+		public Tuple1<A> apply(Row row) {
+			return new Tuple1<A>(provider.getColumnValue(row, 0, p1));
 		}
 	}
 
 
 	@Override
 	public String toString() {
-		return "Tuple1 [v1=" + v1 + "]";
+		return "Tuple1 [_1=" + _1 + "]";
 	}
 	
 	

@@ -22,19 +22,19 @@ import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.mapping.CasserMappingProperty;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
 
-public final class Tuple3<V1, V2, V3> {
+public final class Tuple3<A, B, C> {
 
-	public final V1 v1;
-	public final V2 v2;
-	public final V3 v3;
+	public final A _1;
+	public final B _2;
+	public final C _3;
 
-	public Tuple3(V1 v1, V2 v2, V3 v3) {
-		this.v1 = v1;
-		this.v2 = v2;
-		this.v3 = v3;
+	public Tuple3(A v1, B v2, C v3) {
+		this._1 = v1;
+		this._2 = v2;
+		this._3 = v3;
 	}
 	
-	public final static class Mapper<V1, V2, V3> implements Function<Row, Tuple3<V1, V2, V3>> {
+	public final static class Mapper<A, B, C> implements Function<Row, Tuple3<A, B, C>> {
 
 		private final ColumnValueProvider provider;
 		private final CasserMappingProperty p1;
@@ -52,8 +52,8 @@ public final class Tuple3<V1, V2, V3> {
 		}
 		
 		@Override
-		public Tuple3<V1, V2, V3> apply(Row row) {
-			return new Tuple3<V1, V2, V3>(
+		public Tuple3<A, B, C> apply(Row row) {
+			return new Tuple3<A, B, C>(
 					provider.getColumnValue(row, 0, p1), 
 					provider.getColumnValue(row, 1, p2),
 					provider.getColumnValue(row, 2, p3)
@@ -63,7 +63,7 @@ public final class Tuple3<V1, V2, V3> {
 
 	@Override
 	public String toString() {
-		return "Tuple3 [v1=" + v1 + ", v2=" + v2 + ", v3=" + v3 + "]";
+		return "Tuple3 [_1=" + _1 + ", _2=" + _2 + ", _3=" + _3 + "]";
 	}
 
 	

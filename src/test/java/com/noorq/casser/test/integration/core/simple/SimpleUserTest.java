@@ -81,7 +81,7 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
 		String name = session.select(user::name)
 				.where(user::id, "==", 123L)
-				.map(t -> "_" + t.v1)
+				.map(t -> "_" + t._1)
 				.sync()
 				.findFirst()
 				.get();
