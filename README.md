@@ -21,11 +21,24 @@ Current status: Active development
 
 Active development dependency:
 ```
-<dependency>
-	<groupId>com.noorq.casser</groupId>
-	<artifactId>casser-core</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
-</dependency>
+<dependencies>
+	<dependency>
+		<groupId>com.noorq.casser</groupId>
+		<artifactId>casser-core</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</dependency>
+</dependencies>
+
+<repositories>
+    <repository>
+        <id>oss-sonatype</id>
+        <name>oss-sonatype</name>
+        <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        <snapshots>
+            <enabled>true</enabled>
+        </snapshots>
+    </repository>
+</repositories>
 ```
 
 ### Example
