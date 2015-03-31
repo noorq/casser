@@ -45,6 +45,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 	private CasserMappingRepository mappingRepository = new CasserMappingRepository();
 	
 	private boolean dropRemovedColumns = false;
+	private boolean dropRemovedIndexes = false;
 	
 	private KeyspaceMetadata keyspaceMetadata;
 	
@@ -106,7 +107,12 @@ public class SessionInitializer extends AbstractSessionOperations {
 		this.dropRemovedColumns = enabled;
 		return this;
 	}
-	
+
+	public SessionInitializer dropRemovedIndexes(boolean enabled) {
+		this.dropRemovedIndexes = enabled;
+		return this;
+	}
+
 	@Override
 	public boolean isShowCql() {
 		return showCql;

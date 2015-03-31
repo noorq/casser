@@ -19,7 +19,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.schemabuilder.UDTType;
+import com.noorq.casser.support.Either;
 
 public interface CasserProperty {
 
@@ -29,14 +29,12 @@ public interface CasserProperty {
 	
 	String getColumnName();
 	
+	Optional<String> getIndexName();
+	
 	Class<?> getJavaType();
 	
-	DataType getDataType();
+	Either<DataType, String> getColumnType();
 	
-	UDTType getUDTType();
-	
-	String getUDTName();
-
 	boolean isPartitionKey();
 
 	boolean isClusteringColumn();

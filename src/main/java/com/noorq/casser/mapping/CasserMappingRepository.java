@@ -21,10 +21,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UserType;
-import com.datastax.driver.core.schemabuilder.UDTType;
 import com.noorq.casser.support.CasserException;
 import com.noorq.casser.support.CasserMappingException;
+import com.noorq.casser.support.Either;
 
 public class CasserMappingRepository {
 
@@ -87,9 +88,9 @@ public class CasserMappingRepository {
 		
 		for (CasserMappingProperty prop : props) {
 			
-			UDTType type = prop.getUDTType();
+			Either<DataType,String> type = prop.getColumnType();
 			
-			if (type != null) {
+			if (type.isRight()) {
 				
 				add(prop.getJavaType(), OPTIONAL_UDT);
 				

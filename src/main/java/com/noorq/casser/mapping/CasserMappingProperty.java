@@ -29,8 +29,6 @@ import java.util.function.Function;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.datastax.driver.core.schemabuilder.UDTType;
 import com.noorq.casser.mapping.convert.DateToTimeUUIDConverter;
 import com.noorq.casser.mapping.convert.EntityToUDTValueConverter;
 import com.noorq.casser.mapping.convert.EnumToStringConverter;
@@ -39,6 +37,7 @@ import com.noorq.casser.mapping.convert.TimeUUIDToDateConverter;
 import com.noorq.casser.mapping.convert.TypedConverter;
 import com.noorq.casser.mapping.convert.UDTValueToEntityConverter;
 import com.noorq.casser.support.CasserMappingException;
+import com.noorq.casser.support.Either;
 
 public class CasserMappingProperty implements CasserProperty {
 
@@ -48,6 +47,8 @@ public class CasserMappingProperty implements CasserProperty {
 	private Optional<String> propertyName = Optional.empty();
 	private Optional<String> columnName = Optional.empty();
 	
+	private Optional<String> indexName = null;
+	
 	private boolean keyInfo = false;
 	private boolean isPartitionKey = false;
 	private boolean isClusteringColumn = false;
@@ -55,11 +56,7 @@ public class CasserMappingProperty implements CasserProperty {
 	private OrderingDirection ordering = OrderingDirection.ASC;
 	
 	private Optional<Class<?>> javaType = Optional.empty();
-	
-	private boolean typeInfo = false;
-	private DataType dataType = null;
-	private UDTType udtType = null;
-	private String udtName = null;
+	private Optional<Either<DataType, String>> columnType = Optional.empty();
 	
 	private Optional<Boolean> isStatic = Optional.empty();
 	
@@ -85,23 +82,13 @@ public class CasserMappingProperty implements CasserProperty {
 	}
 	
 	@Override
-	public DataType getDataType() {
-		ensureTypeInfo();
-		return dataType;
+	public Either<DataType, String> getColumnType() {
+		if (!columnType.isPresent()) {
+			columnType = Optional.of(resolveColumnType());
+		}
+		return columnType.get();
 	}
 
-	@Override
-	public UDTType getUDTType() {
-		ensureTypeInfo();
-		return udtType;
-	}
-	
-	@Override
-	public String getUDTName() {
-		ensureTypeInfo();
-		return udtName;
-	}
-		
 	@Override
 	public boolean isPartitionKey() {
 		ensureKeyInfo();
@@ -153,6 +140,16 @@ public class CasserMappingProperty implements CasserProperty {
 		
 		return columnName.get();
 	}
+
+	@Override
+	public Optional<String> getIndexName() {
+		
+		if (indexName == null) {
+			indexName = Optional.ofNullable(MappingUtil.getIndexName(getter));
+		}
+		
+		return indexName;
+	}
 	
 	@Override
 	public String getPropertyName() {
@@ -180,7 +177,9 @@ public class CasserMappingProperty implements CasserProperty {
 
 	private Function<Object, Object> resolveReadConverter(CasserMappingRepository repository) {
 		
-		if (getUDTType() != null) {
+		Either<DataType, String> columnType = getColumnType();
+		
+		if (columnType.isRight()) {
 			
 			Class<Object> javaType = (Class<Object>) getJavaType();
 			
@@ -190,26 +189,28 @@ public class CasserMappingProperty implements CasserProperty {
 					new UDTValueToEntityConverter(javaType, repository));
 
 		}
+		else {
 		
-		Class<?> propertyType = getJavaType();
-
-		if (Enum.class.isAssignableFrom(propertyType)) {
-			return TypedConverter.create(
-					String.class, 
-					Enum.class, 
-					new StringToEnumConverter(propertyType));
+			Class<?> propertyType = getJavaType();
+	
+			if (Enum.class.isAssignableFrom(propertyType)) {
+				return TypedConverter.create(
+						String.class, 
+						Enum.class, 
+						new StringToEnumConverter(propertyType));
+			}
+	
+			DataType dataType = columnType.getLeft();
+	
+			if (dataType.getName() == DataType.Name.TIMEUUID && propertyType == Date.class) {
+				return TypedConverter.create(
+						UUID.class, 
+						Date.class, 
+						TimeUUIDToDateConverter.INSTANCE);			
+			}
+	
+			return null;
 		}
-
-		DataType dataType = getDataType();
-
-		if (dataType.getName() == DataType.Name.TIMEUUID && propertyType == Date.class) {
-			return TypedConverter.create(
-					UUID.class, 
-					Date.class, 
-					TimeUUIDToDateConverter.INSTANCE);			
-		}
-
-		return null;
 	}
 	
 	@Override
@@ -224,58 +225,57 @@ public class CasserMappingProperty implements CasserProperty {
 	
 	private Function<Object, Object> resolveWriteConverter(CasserMappingRepository repository) {
 	
-		if (getUDTType() != null) {
+		Either<DataType, String> columnType = getColumnType();
+		
+		if (columnType.isRight()) {
 			
 			Class<Object> javaType = (Class<Object>) getJavaType();
 			
 			return TypedConverter.create(
 					javaType, 
 					UDTValue.class, 
-					new EntityToUDTValueConverter(javaType, getUDTName(), repository));
+					new EntityToUDTValueConverter(javaType, columnType.getRight(), repository));
 
 		}
+		else {
 		
-		Class<?> propertyType = getJavaType();
-
-		if (Enum.class.isAssignableFrom(propertyType)) {
-			
-			return TypedConverter.create(
-					Enum.class, 
-					String.class, 
-					EnumToStringConverter.INSTANCE);
-			
-		}
-
-		DataType dataType = getDataType();
-
-		if (dataType.getName() == DataType.Name.TIMEUUID && propertyType == Date.class) {
-			
-			return TypedConverter.create(
-					Date.class, 
-					UUID.class, 
-					DateToTimeUUIDConverter.INSTANCE);			
-		}
-		return null;
-	}
+			Class<?> propertyType = getJavaType();
 	
-	private void ensureTypeInfo() {
-		if (!typeInfo) {
-			
-			dataType = resolveDataType();
-			
-			if (dataType == null) {
+			if (Enum.class.isAssignableFrom(propertyType)) {
 				
-				Class<?> propertyType = getJavaType();
-
-				 this.udtName = MappingUtil.getUserDefinedTypeName(propertyType, false);
-				
-				if (this.udtName != null) {
-					this.udtType = SchemaBuilder.frozen(udtName);
-				}
+				return TypedConverter.create(
+						Enum.class, 
+						String.class, 
+						EnumToStringConverter.INSTANCE);
 				
 			}
-			typeInfo = true;
-		}		
+	
+			DataType dataType = columnType.getLeft();
+	
+			if (dataType.getName() == DataType.Name.TIMEUUID && propertyType == Date.class) {
+				
+				return TypedConverter.create(
+						Date.class, 
+						UUID.class, 
+						DateToTimeUUIDConverter.INSTANCE);			
+			}
+			
+			return null;
+		}
+	}
+	
+	private Either<DataType, String> resolveColumnType() {
+		
+		DataType dataType = resolveDataType();
+		if (dataType != null) {
+			return Either.left(dataType);
+		}
+		else {
+			Class<?> propertyType = getJavaType();
+			String udtName = MappingUtil.getUserDefinedTypeName(propertyType, false);
+			return Either.right(udtName);
+		}
+		
 	}
 
 	private DataType resolveDataType() {

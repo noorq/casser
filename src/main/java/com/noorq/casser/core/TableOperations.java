@@ -16,6 +16,7 @@
 package com.noorq.casser.core;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.TableMetadata;
@@ -36,7 +37,16 @@ public final class TableOperations {
 	}
 	
 	public void createTable(CasserMappingEntity entity) {
+		
 		sessionOps.execute(SchemaUtil.createTable(entity));
+		
+		List<SchemaStatement> list = entity.getMappingProperties().stream()
+		.filter(p -> p.getIndexName().isPresent())
+		.map(p -> SchemaUtil.createIndex(p))
+		.collect(Collectors.toList());
+		
+		executeBatch(list);
+		
 	}
 	
 	public void validateTable(TableMetadata tmd, CasserMappingEntity entity) {
@@ -46,6 +56,8 @@ public final class TableOperations {
 		}
 		
 		List<SchemaStatement> list = SchemaUtil.alterTable(tmd, entity, dropRemovedColumns);
+		
+		addAlterIndexes(tmd, entity, list);
 		
 		if (!list.isEmpty()) {
 			throw new CasserException("schema changed for entity " + entity.getMappingInterface() + ", apply this command: " + list);
@@ -60,7 +72,18 @@ public final class TableOperations {
 		}
 		
 		List<SchemaStatement> list = SchemaUtil.alterTable(tmd, entity, dropRemovedColumns);
+		addAlterIndexes(tmd, entity, list);
+
+		executeBatch(list);
+	}
+
+	private void addAlterIndexes(TableMetadata tmd, CasserMappingEntity entity, List<SchemaStatement> list) {
 		
+
+		
+	}
+	
+	private void executeBatch(List<SchemaStatement> list) {
 		if (!list.isEmpty()) {
 			Batch b = QueryBuilder.batch(list.toArray(new RegularStatement[list.size()]));
 			sessionOps.execute(b);

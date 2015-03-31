@@ -21,12 +21,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import com.datastax.driver.core.DataType;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.mapping.CasserMappingEntity;
 import com.noorq.casser.mapping.CasserMappingProperty;
 import com.noorq.casser.support.CasserException;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.DslPropertyException;
+import com.noorq.casser.support.Either;
 
 public class DslInvocationHandler<E> implements InvocationHandler {
 
@@ -46,7 +48,9 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			
 			map.put(prop.getGetterMethod(), prop);
 			
-			if (prop.getUDTType() != null) {
+			Either<DataType,String> type = prop.getColumnType();
+			
+			if (type.isRight()) {
 				
 				Object childDsl = Casser.dsl(prop.getJavaType(), classLoader,
 						Optional.of(new CasserPropertyNode(prop, parent)));
@@ -69,7 +73,9 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 		
 		if (prop != null) {
 			
-			if (prop.getUDTType() != null) {
+			Either<DataType,String> type = prop.getColumnType();
+			
+			if (type.isRight()) {
 				
 				Object childDsl = udtMap.get(method);
 				

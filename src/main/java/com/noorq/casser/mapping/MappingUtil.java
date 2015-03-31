@@ -28,6 +28,26 @@ public final class MappingUtil {
 	private MappingUtil() {
 	}
 
+	public static String getIndexName(Method getterMethod) {
+
+		String indexName = null;
+
+		Index index = getterMethod.getDeclaredAnnotation(Index.class);
+		if (index != null) {
+			indexName = index.value();
+			if (index.forceQuote()) {
+				indexName = CqlUtil.forceQuote(indexName);
+			}
+
+			if (indexName == null || indexName.isEmpty()) {
+				indexName = getDefaultColumnName(getterMethod);
+			}
+
+		}
+
+		return indexName;
+	}
+	
 	public static String getColumnName(Method getterMethod) {
 
 		String columnName = null;

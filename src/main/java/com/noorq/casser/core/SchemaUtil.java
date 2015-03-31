@@ -26,18 +26,21 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.SimpleStatement;
 import com.datastax.driver.core.TableMetadata;
+import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.schemabuilder.Alter;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.Create.Options;
 import com.datastax.driver.core.schemabuilder.CreateType;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.datastax.driver.core.schemabuilder.SchemaStatement;
+import com.datastax.driver.core.schemabuilder.UDTType;
 import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.CasserMappingEntity;
 import com.noorq.casser.mapping.CasserMappingProperty;
 import com.noorq.casser.mapping.CqlUtil;
 import com.noorq.casser.mapping.OrderingDirection;
 import com.noorq.casser.support.CasserMappingException;
+import com.noorq.casser.support.Either;
 
 public final class SchemaUtil {
 
@@ -69,7 +72,18 @@ public final class SchemaUtil {
 				throw new CasserMappingException("primary key columns are not supported in UserDefinedType for column " + columnName + " in entity " + entity);
 			}
  			
-			create.addColumn(columnName, prop.getDataType());
+			Either<DataType,String> type = prop.getColumnType();
+			
+			if (type.isLeft()) {
+				create.addColumn(columnName, type.getLeft());
+			}
+			else if (type.isRight()) {
+				UDTType udtType = SchemaBuilder.frozen(type.getRight());
+				create.addUDTColumn(prop.getColumnName(), udtType);
+			}
+			else {
+				throwNoMapping(prop);
+			}			
 			
 		}
 		
@@ -110,16 +124,26 @@ public final class SchemaUtil {
 				OrdinalBasedPropertyComparator.INSTANCE);
 
 		for (CasserMappingProperty prop : partitionKeys) {
-			create.addPartitionKey(prop.getColumnName(), prop.getDataType());
+			
+			Either<DataType,String> type = prop.getColumnType();
+			
+			if (type.isRight()) {
+				throw new CasserMappingException("user defined type can not be a partition key for " + prop.getPropertyName() + " in " + prop.getEntity());
+			}
+			
+			create.addPartitionKey(prop.getColumnName(), type.getLeft());
 		}
 
 		for (CasserMappingProperty prop : clusteringColumns) {
 			
-			if (prop.getDataType() != null) {
-				create.addClusteringColumn(prop.getColumnName(), prop.getDataType());
+			Either<DataType,String> type = prop.getColumnType();
+			
+			if (type.isLeft()) {
+				create.addClusteringColumn(prop.getColumnName(), type.getLeft());
 			}
-			else if (prop.getUDTType() != null) {
-				create.addUDTClusteringColumn(prop.getColumnName(), prop.getUDTType());
+			else if (type.isRight()) {
+				UDTType udtType = SchemaBuilder.frozen(type.getRight());
+				create.addUDTClusteringColumn(prop.getColumnName(), udtType);
 			}
 			else {
 				throwNoMapping(prop);
@@ -129,13 +153,16 @@ public final class SchemaUtil {
 		
 		for (CasserMappingProperty prop : columns) {
 			
+			Either<DataType,String> type = prop.getColumnType();
+			
 			if (prop.isStatic()) {
 				
-				if (prop.getDataType() != null) {
-					create.addStaticColumn(prop.getColumnName(), prop.getDataType());
+				if (type.isLeft()) {
+					create.addStaticColumn(prop.getColumnName(), type.getLeft());
 				}
-				else if (prop.getUDTType() != null) {
-					create.addUDTStaticColumn(prop.getColumnName(), prop.getUDTType());
+				else if (type.isRight()) {
+					UDTType udtType = SchemaBuilder.frozen(type.getRight());
+					create.addUDTStaticColumn(prop.getColumnName(), udtType);
 				}
 				else {
 					throwNoMapping(prop);
@@ -143,11 +170,12 @@ public final class SchemaUtil {
 			}
 			else {
 				
-				if (prop.getDataType() != null) {
-					create.addColumn(prop.getColumnName(), prop.getDataType());
+				if (type.isLeft()) {
+					create.addColumn(prop.getColumnName(), type.getLeft());
 				}
-				else if (prop.getUDTType() != null) {
-					create.addUDTColumn(prop.getColumnName(), prop.getUDTType());
+				else if (type.isRight()) {
+					UDTType udtType = SchemaBuilder.frozen(type.getRight());
+					create.addUDTColumn(prop.getColumnName(), udtType);
 				}
 				else {
 					throwNoMapping(prop);
@@ -187,19 +215,10 @@ public final class SchemaUtil {
 		for (CasserMappingProperty prop : entity.getMappingProperties()) {
 
 			String columnName = prop.getColumnName();
-			DataType columnDataType = prop.getDataType();
-
 			String loweredColumnName = columnName.toLowerCase();
 
 			if (dropRemovedColumns) {
 				visitedColumns.add(loweredColumnName);
-			}
-
-			ColumnMetadata columnMetadata = tmd.getColumn(loweredColumnName);
-
-			if (columnMetadata != null
-					&& columnDataType.equals(columnMetadata.getType())) {
-				continue;
 			}
 
 			if (prop.isPartitionKey() || prop.isClusteringColumn()) {
@@ -208,16 +227,49 @@ public final class SchemaUtil {
 								+ columnName + "' for entity "
 								+ entity);
 			}
+			
+			Either<DataType,String> type = prop.getColumnType();
+			
+			ColumnMetadata columnMetadata = tmd.getColumn(loweredColumnName);
 
-			if (columnMetadata == null) {
-
-				result.add(alter.addColumn(columnName).type(columnDataType));
+			if (columnMetadata != null) {
 				
-			} else {
-
-				result.add(alter.alterColumn(columnName).type(columnDataType));
+				if  (type.isLeft()) {
+					
+					if (!type.getLeft().equals(columnMetadata.getType())) {
+						result.add(alter.alterColumn(columnName).type(type.getLeft()));
+					}
+					
+				}
+				else if (type.isRight()) {
+					
+					DataType metadataType = columnMetadata.getType();
+					if (metadataType.getName() == DataType.Name.UDT &&
+							metadataType instanceof UserType) {
+						
+						UserType metadataUserType = (UserType) metadataType;
+						
+						if (!type.getRight().equals(metadataUserType.getTypeName())) {
+							UDTType udtType = SchemaBuilder.frozen(type.getRight());
+							result.add(alter.alterColumn(columnName).udtType(udtType));
+						}
+						
+					}
+					else {
+						throw new CasserMappingException("expected UserType in metadata " + metadataType + " for " + prop.getPropertyName() + " in " + prop.getEntity());
+					}
+						
+				}
 				
 			}
+			else if (type.isLeft()) {
+				result.add(alter.addColumn(columnName).type(type.getLeft()));
+			}
+			else if (type.isRight()) {
+				UDTType udtType = SchemaBuilder.frozen(type.getRight());
+				result.add(alter.addColumn(columnName).udtType(udtType));
+			}
+			
 		}
 		
 		if (dropRemovedColumns) {
@@ -239,7 +291,16 @@ public final class SchemaUtil {
 			throw new CasserMappingException("expected table entity " + entity);
 		}
 
-		return SchemaBuilder.dropTable(entity.getName());
+		return SchemaBuilder.dropTable(entity.getName()).ifExists();
+		
+	}
+	
+	public static SchemaStatement createIndex(CasserMappingProperty prop) {
+		
+		return SchemaBuilder.createIndex(prop.getIndexName().get())
+				.ifNotExists()
+				.onTable(prop.getEntity().getName())
+				.andColumn(prop.getColumnName());
 		
 	}
 	
