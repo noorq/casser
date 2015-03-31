@@ -25,11 +25,9 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
-public @interface Column {
+public @interface Index {
 
 	String value() default "";
-
-	boolean isStatic() default false; 
 	
 	boolean forceQuote() default false;
 }

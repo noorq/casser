@@ -21,7 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(value = RetentionPolicy.RUNTIME)
-@Target(value = { ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 public @interface PartitionKey {
 
 	String value() default "";
