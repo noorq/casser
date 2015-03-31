@@ -27,9 +27,9 @@ public interface CasserProperty {
 
 	String getPropertyName(); 
 	
-	String getColumnName();
+	IdentityName getColumnName();
 	
-	Optional<String> getIndexName();
+	Optional<IdentityName> getIndexName();
 	
 	Class<?> getJavaType();
 	

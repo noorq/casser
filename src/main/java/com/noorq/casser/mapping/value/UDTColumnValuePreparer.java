@@ -45,7 +45,7 @@ public final class UDTColumnValuePreparer implements ColumnValuePreparer {
 				value = converter.get().apply(value);
 			}
 
-			DataType dataType = userType.getFieldType(prop.getColumnName());
+			DataType dataType = userType.getFieldType(prop.getColumnName().getName());
 			
 			return dataType.serialize(value, ProtocolVersion.NEWEST_SUPPORTED);
 		}

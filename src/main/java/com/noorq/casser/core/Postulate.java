@@ -52,7 +52,7 @@ public final class Postulate<V> {
 		switch(operator) {
 		
 		case EQ:
-			return QueryBuilder.eq(property.getColumnName(), 
+			return QueryBuilder.eq(property.getColumnName().toCql(), 
 					valuePreparer.prepareColumnValue(value, property));
 		
 		case IN:
@@ -60,19 +60,19 @@ public final class Postulate<V> {
 			for (int i = 0; i != values.length; ++i) {
 				preparedValues[i] = valuePreparer.prepareColumnValue(values[i], property);
 			}
-			return QueryBuilder.in(property.getColumnName(), preparedValues);
+			return QueryBuilder.in(property.getColumnName().toCql(), preparedValues);
 			
 		case LT:
-			return QueryBuilder.lt(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
+			return QueryBuilder.lt(property.getColumnName().toCql(), valuePreparer.prepareColumnValue(value, property));
 
 		case LTE:
-			return QueryBuilder.lte(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
+			return QueryBuilder.lte(property.getColumnName().toCql(), valuePreparer.prepareColumnValue(value, property));
 
 		case GT:
-			return QueryBuilder.gt(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
+			return QueryBuilder.gt(property.getColumnName().toCql(), valuePreparer.prepareColumnValue(value, property));
 
 		case GTE:
-			return QueryBuilder.gte(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
+			return QueryBuilder.gte(property.getColumnName().toCql(), valuePreparer.prepareColumnValue(value, property));
 
 		default:
 			throw new CasserMappingException("unknown filter operation " + operator);

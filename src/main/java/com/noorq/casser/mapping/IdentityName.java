@@ -33,14 +33,18 @@ public final class IdentityName {
 	public boolean isForceQuote() {
 		return forceQuote;
 	}
-	
-	public String toCql() {
-		if (forceQuote) {
+
+	public String toCql(boolean overrideForceQuote) {
+		if (overrideForceQuote) {
 			return CqlUtil.forceQuote(name);
 		}
 		else {
 			return name;
 		}
+	}
+	
+	public String toCql() {
+		return toCql(forceQuote);
 	}
 
 	@Override

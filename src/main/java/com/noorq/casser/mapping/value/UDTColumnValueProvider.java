@@ -41,7 +41,7 @@ public final class UDTColumnValueProvider implements ColumnValueProvider {
 		
 		UserType userType = source.getType();
 		
-		String name = property.getColumnName();
+		String name = property.getColumnName().getName();
 		
 		DataType fieldType = userType.getFieldType(name);
 		

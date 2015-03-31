@@ -16,6 +16,7 @@
 package com.noorq.casser.mapping;
 
 import java.lang.reflect.Method;
+import java.util.Optional;
 
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.Getter;
@@ -28,16 +29,16 @@ public final class MappingUtil {
 	private MappingUtil() {
 	}
 
-	public static String getIndexName(Method getterMethod) {
+	public static Optional<IdentityName> getIndexName(Method getterMethod) {
 
 		String indexName = null;
+		boolean forceQuote = false;
 
 		Index index = getterMethod.getDeclaredAnnotation(Index.class);
+		
 		if (index != null) {
 			indexName = index.value();
-			if (index.forceQuote()) {
-				indexName = CqlUtil.forceQuote(indexName);
-			}
+			forceQuote = index.forceQuote();
 
 			if (indexName == null || indexName.isEmpty()) {
 				indexName = getDefaultColumnName(getterMethod);
@@ -45,19 +46,18 @@ public final class MappingUtil {
 
 		}
 
-		return indexName;
+		return indexName != null ? Optional.of(new IdentityName(indexName, forceQuote)) : Optional.empty();
 	}
 	
-	public static String getColumnName(Method getterMethod) {
+	public static IdentityName getColumnName(Method getterMethod) {
 
 		String columnName = null;
+		boolean forceQuote = false;
 
 		Column column = getterMethod.getDeclaredAnnotation(Column.class);
 		if (column != null) {
 			columnName = column.value();
-			if (column.forceQuote()) {
-				columnName = CqlUtil.forceQuote(columnName);
-			}
+			forceQuote = column.forceQuote();
 		}
 
 		PartitionKey partitionKey = getterMethod
@@ -71,9 +71,7 @@ public final class MappingUtil {
 			}
 
 			columnName = partitionKey.value();
-			if (partitionKey.forceQuote()) {
-				columnName = CqlUtil.forceQuote(columnName);
-			}
+			forceQuote = partitionKey.forceQuote();
 		}
 
 		ClusteringColumn clusteringColumn = getterMethod
@@ -87,16 +85,14 @@ public final class MappingUtil {
 			}
 
 			columnName = clusteringColumn.value();
-			if (clusteringColumn.forceQuote()) {
-				columnName = CqlUtil.forceQuote(columnName);
-			}
+			forceQuote = clusteringColumn.forceQuote();
 		}
 
 		if (columnName == null || columnName.isEmpty()) {
 			columnName = getDefaultColumnName(getterMethod);
 		}
 
-		return columnName;
+		return new IdentityName(columnName, forceQuote);
 	}
 
 	public static String getPropertyName(Method getter) {

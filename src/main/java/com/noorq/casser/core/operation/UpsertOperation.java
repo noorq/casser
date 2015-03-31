@@ -40,7 +40,7 @@ public final class UpsertOperation extends AbstractEntityOperation<ResultSet, Up
 			value = sessionOps.getValuePreparer().prepareColumnValue(value, prop);
 			
 			if (value != null) {
-				insert.value(prop.getColumnName(), value);
+				insert.value(prop.getColumnName().toCql(), value);
 			}
 			
 		}

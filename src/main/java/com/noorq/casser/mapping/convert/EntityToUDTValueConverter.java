@@ -103,7 +103,7 @@ public final class EntityToUDTValueConverter implements Function<Object, UDTValu
 		
 		if (bytes != null) {
 		
-			udtValue.setBytesUnsafe(prop.getColumnName(), bytes);
+			udtValue.setBytesUnsafe(prop.getColumnName().getName(), bytes);
 			
 		}
 	}

@@ -46,9 +46,9 @@ public class CasserMappingProperty implements CasserProperty {
 	private final Method getter;
 	
 	private Optional<String> propertyName = Optional.empty();
-	private Optional<String> columnName = Optional.empty();
+	private Optional<IdentityName> columnName = Optional.empty();
 	
-	private Optional<String> indexName = null;
+	private Optional<IdentityName> indexName = null;
 	
 	private boolean keyInfo = false;
 	private boolean isPartitionKey = false;
@@ -133,7 +133,7 @@ public class CasserMappingProperty implements CasserProperty {
 	}
 
 	@Override
-	public String getColumnName() {
+	public IdentityName getColumnName() {
 		
 		if (!columnName.isPresent()) {
 			columnName = Optional.of(MappingUtil.getColumnName(getter));
@@ -143,10 +143,10 @@ public class CasserMappingProperty implements CasserProperty {
 	}
 
 	@Override
-	public Optional<String> getIndexName() {
+	public Optional<IdentityName> getIndexName() {
 		
 		if (indexName == null) {
-			indexName = Optional.ofNullable(MappingUtil.getIndexName(getter));
+			indexName = MappingUtil.getIndexName(getter);
 		}
 		
 		return indexName;

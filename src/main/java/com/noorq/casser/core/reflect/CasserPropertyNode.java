@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 
 import com.noorq.casser.mapping.CasserMappingEntity;
 import com.noorq.casser.mapping.CasserMappingProperty;
-import com.noorq.casser.mapping.CqlUtil;
 
 public final class CasserPropertyNode implements Iterable<CasserMappingProperty> {
 
@@ -40,13 +39,13 @@ public final class CasserPropertyNode implements Iterable<CasserMappingProperty>
 		if (next.isPresent()) {
 			List<String> columnNames = new ArrayList<String>();
 			for (CasserMappingProperty p : this) {
-				columnNames.add(CqlUtil.forceQuote(p.getColumnName()));
+				columnNames.add(p.getColumnName().toCql(true));
 			}
 			Collections.reverse(columnNames);
 			return columnNames.stream().collect(Collectors.joining("."));
 		}
 		else {
-			return prop.getColumnName();
+			return prop.getColumnName().toCql();
 		}
 	}
 	
