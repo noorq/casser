@@ -29,6 +29,7 @@ import java.util.function.Function;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
+import com.datastax.driver.core.UserType;
 import com.noorq.casser.mapping.convert.DateToTimeUUIDConverter;
 import com.noorq.casser.mapping.convert.EntityToUDTValueConverter;
 import com.noorq.casser.mapping.convert.EnumToStringConverter;
@@ -56,7 +57,7 @@ public class CasserMappingProperty implements CasserProperty {
 	private OrderingDirection ordering = OrderingDirection.ASC;
 	
 	private Optional<Class<?>> javaType = Optional.empty();
-	private Optional<Either<DataType, String>> columnType = Optional.empty();
+	private Optional<Either<DataType, IdentityName>> columnType = Optional.empty();
 	
 	private Optional<Boolean> isStatic = Optional.empty();
 	
@@ -82,7 +83,7 @@ public class CasserMappingProperty implements CasserProperty {
 	}
 	
 	@Override
-	public Either<DataType, String> getColumnType() {
+	public Either<DataType, IdentityName> getColumnType() {
 		if (!columnType.isPresent()) {
 			columnType = Optional.of(resolveColumnType());
 		}
@@ -177,7 +178,7 @@ public class CasserMappingProperty implements CasserProperty {
 
 	private Function<Object, Object> resolveReadConverter(CasserMappingRepository repository) {
 		
-		Either<DataType, String> columnType = getColumnType();
+		Either<DataType, IdentityName> columnType = getColumnType();
 		
 		if (columnType.isRight()) {
 			
@@ -225,16 +226,20 @@ public class CasserMappingProperty implements CasserProperty {
 	
 	private Function<Object, Object> resolveWriteConverter(CasserMappingRepository repository) {
 	
-		Either<DataType, String> columnType = getColumnType();
+		Either<DataType, IdentityName> columnType = getColumnType();
 		
 		if (columnType.isRight()) {
 			
 			Class<Object> javaType = (Class<Object>) getJavaType();
 			
+			UserType userType = repository.findUserType(columnType.getRight().getName());
+			if (userType == null) {
+				throw new CasserMappingException("UserType not found for " + columnType.getRight() + " with type " + javaType);
+			}
 			return TypedConverter.create(
 					javaType, 
 					UDTValue.class, 
-					new EntityToUDTValueConverter(javaType, columnType.getRight(), repository));
+					new EntityToUDTValueConverter(javaType, userType, repository));
 
 		}
 		else {
@@ -264,7 +269,7 @@ public class CasserMappingProperty implements CasserProperty {
 		}
 	}
 	
-	private Either<DataType, String> resolveColumnType() {
+	private Either<DataType, IdentityName> resolveColumnType() {
 		
 		DataType dataType = resolveDataType();
 		if (dataType != null) {
@@ -272,7 +277,7 @@ public class CasserMappingProperty implements CasserProperty {
 		}
 		else {
 			Class<?> propertyType = getJavaType();
-			String udtName = MappingUtil.getUserDefinedTypeName(propertyType, false);
+			IdentityName udtName = MappingUtil.getUserDefinedTypeName(propertyType, false);
 			return Either.right(udtName);
 		}
 		

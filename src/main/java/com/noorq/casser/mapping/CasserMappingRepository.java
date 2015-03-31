@@ -88,7 +88,7 @@ public class CasserMappingRepository {
 		
 		for (CasserMappingProperty prop : props) {
 			
-			Either<DataType,String> type = prop.getColumnType();
+			Either<DataType, IdentityName> type = prop.getColumnType();
 			
 			if (type.isRight()) {
 				

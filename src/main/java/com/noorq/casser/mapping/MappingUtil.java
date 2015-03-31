@@ -108,19 +108,17 @@ public final class MappingUtil {
 				.apply(getPropertyName(getter));
 	}
 
-	public static String getUserDefinedTypeName(Class<?> iface, boolean required) {
+	public static IdentityName getUserDefinedTypeName(Class<?> iface, boolean required) {
 
 		String userTypeName = null;
-
+		boolean forceQuote = false;
+		
 		UserDefinedType userDefinedType = iface
 				.getDeclaredAnnotation(UserDefinedType.class);
 
 		if (userDefinedType != null) {
 			userTypeName = userDefinedType.value();
-
-			if (userDefinedType.forceQuote()) {
-				userTypeName = CqlUtil.forceQuote(userTypeName);
-			}
+			forceQuote = userDefinedType.forceQuote();
 
 		} else if (required) {
 			throw new CasserMappingException(
@@ -131,21 +129,19 @@ public final class MappingUtil {
 			userTypeName = getDefaultName(iface);
 		}
 
-		return userTypeName;
+		return new IdentityName(userTypeName, forceQuote);
 	}
 
-	public static String getTableName(Class<?> iface, boolean required) {
+	public static IdentityName getTableName(Class<?> iface, boolean required) {
 
 		String tableName = null;
+		boolean forceQuote = false;
 
 		Table table = iface.getDeclaredAnnotation(Table.class);
 
 		if (table != null) {
 			tableName = table.value();
-
-			if (table.forceQuote()) {
-				tableName = CqlUtil.forceQuote(tableName);
-			}
+			forceQuote = table.forceQuote();
 
 		} else if (required) {
 			throw new CasserMappingException(
@@ -156,7 +152,7 @@ public final class MappingUtil {
 			tableName = getDefaultName(iface);
 		}
 
-		return tableName;
+		return new IdentityName(tableName, forceQuote);
 	}
 
 	public static String getDefaultName(Class<?> iface) {

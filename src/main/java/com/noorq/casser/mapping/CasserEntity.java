@@ -21,7 +21,7 @@ public interface CasserEntity {
 
 	CasserEntityType getType();
 	
-	String getName();
+	IdentityName getName();
 	
 	Collection<CasserProperty> getProperties();
 	

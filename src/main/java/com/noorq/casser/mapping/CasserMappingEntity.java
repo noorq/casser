@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.noorq.casser.config.CasserSettings;
 import com.noorq.casser.core.Casser;
@@ -30,7 +31,7 @@ public class CasserMappingEntity implements CasserEntity {
 
 	private final Class<?> iface;
 	private final CasserEntityType type;
-	private String name;
+	private Optional<IdentityName> name = Optional.empty();
 	private final Map<String, CasserMappingProperty> props = new HashMap<String, CasserMappingProperty>();
 	
 	public CasserMappingEntity(Class<?> iface) {
@@ -97,24 +98,26 @@ public class CasserMappingEntity implements CasserEntity {
 	}
 
 	@Override
-	public String getName() {
-		
-		if (name == null) {
-			
-			switch(type) {
-			
-			case TABLE:
-				name = MappingUtil.getTableName(iface, true);
-				break;
-				
-			case USER_DEFINED_TYPE:
-				name = MappingUtil.getUserDefinedTypeName(iface, true);
-				break;
-			}
-			
+	public IdentityName getName() {
+		if (!name.isPresent()) {
+			name = Optional.of(resolveName());
 		}
+		return name.get();
+	}
+	
+	private IdentityName resolveName() {
 		
-		return name;
+		switch(type) {
+		
+		case TABLE:
+			return MappingUtil.getTableName(iface, true);
+			
+		case USER_DEFINED_TYPE:
+			return MappingUtil.getUserDefinedTypeName(iface, true);
+		}
+
+		throw new CasserMappingException("invalid entity type " + type + " in " + type);
+
 	}
 	
 	private static CasserEntityType autoDetectType(Class<?> iface) {

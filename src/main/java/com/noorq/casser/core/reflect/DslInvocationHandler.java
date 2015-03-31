@@ -25,6 +25,7 @@ import com.datastax.driver.core.DataType;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.mapping.CasserMappingEntity;
 import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.support.CasserException;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.DslPropertyException;
@@ -48,7 +49,7 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			
 			map.put(prop.getGetterMethod(), prop);
 			
-			Either<DataType,String> type = prop.getColumnType();
+			Either<DataType, IdentityName> type = prop.getColumnType();
 			
 			if (type.isRight()) {
 				
@@ -73,7 +74,7 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 		
 		if (prop != null) {
 			
-			Either<DataType,String> type = prop.getColumnType();
+			Either<DataType, IdentityName> type = prop.getColumnType();
 			
 			if (type.isRight()) {
 				

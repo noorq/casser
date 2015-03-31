@@ -33,7 +33,7 @@ public interface CasserProperty {
 	
 	Class<?> getJavaType();
 	
-	Either<DataType, String> getColumnType();
+	Either<DataType, IdentityName> getColumnType();
 	
 	boolean isPartitionKey();
 

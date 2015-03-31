@@ -38,6 +38,7 @@ import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.CasserMappingEntity;
 import com.noorq.casser.mapping.CasserMappingProperty;
 import com.noorq.casser.mapping.CqlUtil;
+import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.mapping.OrderingDirection;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.Either;
@@ -62,7 +63,7 @@ public final class SchemaUtil {
 			throw new CasserMappingException("expected user defined type entity " + entity);
 		}
 
-		CreateType create = SchemaBuilder.createType(entity.getName());
+		CreateType create = SchemaBuilder.createType(entity.getName().toCql());
 
 		for (CasserMappingProperty prop : entity.getMappingProperties()) {
 			
@@ -72,13 +73,13 @@ public final class SchemaUtil {
 				throw new CasserMappingException("primary key columns are not supported in UserDefinedType for column " + columnName + " in entity " + entity);
 			}
  			
-			Either<DataType,String> type = prop.getColumnType();
+			Either<DataType,IdentityName> type = prop.getColumnType();
 			
 			if (type.isLeft()) {
 				create.addColumn(columnName, type.getLeft());
 			}
 			else if (type.isRight()) {
-				UDTType udtType = SchemaBuilder.frozen(type.getRight());
+				UDTType udtType = SchemaBuilder.frozen(type.getRight().toCql());
 				create.addUDTColumn(prop.getColumnName(), udtType);
 			}
 			else {
@@ -91,7 +92,7 @@ public final class SchemaUtil {
 	}
 	
 	public static SchemaStatement dropUserType(CasserMappingEntity entity) {
-		return SchemaBuilder.dropType(entity.getName());
+		return SchemaBuilder.dropType(entity.getName().toCql());
 	}
 	
 	public static SchemaStatement createTable(CasserMappingEntity entity) {
@@ -100,7 +101,7 @@ public final class SchemaUtil {
 			throw new CasserMappingException("expected table entity " + entity);
 		}
 		
-		Create create = SchemaBuilder.createTable(entity.getName());
+		Create create = SchemaBuilder.createTable(entity.getName().toCql());
 
 		List<CasserMappingProperty> partitionKeys = new ArrayList<CasserMappingProperty>();
 		List<CasserMappingProperty> clusteringColumns = new ArrayList<CasserMappingProperty>();
@@ -125,7 +126,7 @@ public final class SchemaUtil {
 
 		for (CasserMappingProperty prop : partitionKeys) {
 			
-			Either<DataType,String> type = prop.getColumnType();
+			Either<DataType,IdentityName> type = prop.getColumnType();
 			
 			if (type.isRight()) {
 				throw new CasserMappingException("user defined type can not be a partition key for " + prop.getPropertyName() + " in " + prop.getEntity());
@@ -136,13 +137,13 @@ public final class SchemaUtil {
 
 		for (CasserMappingProperty prop : clusteringColumns) {
 			
-			Either<DataType,String> type = prop.getColumnType();
+			Either<DataType,IdentityName> type = prop.getColumnType();
 			
 			if (type.isLeft()) {
 				create.addClusteringColumn(prop.getColumnName(), type.getLeft());
 			}
 			else if (type.isRight()) {
-				UDTType udtType = SchemaBuilder.frozen(type.getRight());
+				UDTType udtType = SchemaBuilder.frozen(type.getRight().toCql());
 				create.addUDTClusteringColumn(prop.getColumnName(), udtType);
 			}
 			else {
@@ -153,7 +154,7 @@ public final class SchemaUtil {
 		
 		for (CasserMappingProperty prop : columns) {
 			
-			Either<DataType,String> type = prop.getColumnType();
+			Either<DataType,IdentityName> type = prop.getColumnType();
 			
 			if (prop.isStatic()) {
 				
@@ -161,7 +162,7 @@ public final class SchemaUtil {
 					create.addStaticColumn(prop.getColumnName(), type.getLeft());
 				}
 				else if (type.isRight()) {
-					UDTType udtType = SchemaBuilder.frozen(type.getRight());
+					UDTType udtType = SchemaBuilder.frozen(type.getRight().toCql());
 					create.addUDTStaticColumn(prop.getColumnName(), udtType);
 				}
 				else {
@@ -174,7 +175,7 @@ public final class SchemaUtil {
 					create.addColumn(prop.getColumnName(), type.getLeft());
 				}
 				else if (type.isRight()) {
-					UDTType udtType = SchemaBuilder.frozen(type.getRight());
+					UDTType udtType = SchemaBuilder.frozen(type.getRight().toCql());
 					create.addUDTColumn(prop.getColumnName(), udtType);
 				}
 				else {
@@ -207,7 +208,7 @@ public final class SchemaUtil {
 
 		List<SchemaStatement> result = new ArrayList<SchemaStatement>();
 		
-		Alter alter = SchemaBuilder.alterTable(entity.getName());
+		Alter alter = SchemaBuilder.alterTable(entity.getName().toCql());
 
 		final Set<String> visitedColumns = dropRemovedColumns ? new HashSet<String>()
 				: Collections.<String> emptySet();
@@ -228,7 +229,7 @@ public final class SchemaUtil {
 								+ entity);
 			}
 			
-			Either<DataType,String> type = prop.getColumnType();
+			Either<DataType,IdentityName> type = prop.getColumnType();
 			
 			ColumnMetadata columnMetadata = tmd.getColumn(loweredColumnName);
 
@@ -250,7 +251,7 @@ public final class SchemaUtil {
 						UserType metadataUserType = (UserType) metadataType;
 						
 						if (!type.getRight().equals(metadataUserType.getTypeName())) {
-							UDTType udtType = SchemaBuilder.frozen(type.getRight());
+							UDTType udtType = SchemaBuilder.frozen(type.getRight().toCql());
 							result.add(alter.alterColumn(columnName).udtType(udtType));
 						}
 						
@@ -266,7 +267,7 @@ public final class SchemaUtil {
 				result.add(alter.addColumn(columnName).type(type.getLeft()));
 			}
 			else if (type.isRight()) {
-				UDTType udtType = SchemaBuilder.frozen(type.getRight());
+				UDTType udtType = SchemaBuilder.frozen(type.getRight().toCql());
 				result.add(alter.addColumn(columnName).udtType(udtType));
 			}
 			
@@ -291,7 +292,7 @@ public final class SchemaUtil {
 			throw new CasserMappingException("expected table entity " + entity);
 		}
 
-		return SchemaBuilder.dropTable(entity.getName()).ifExists();
+		return SchemaBuilder.dropTable(entity.getName().toCql()).ifExists();
 		
 	}
 	
@@ -299,7 +300,7 @@ public final class SchemaUtil {
 		
 		return SchemaBuilder.createIndex(prop.getIndexName().get())
 				.ifNotExists()
-				.onTable(prop.getEntity().getName())
+				.onTable(prop.getEntity().getName().toCql())
 				.andColumn(prop.getColumnName());
 		
 	}

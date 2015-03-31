@@ -36,15 +36,10 @@ public final class EntityToUDTValueConverter implements Function<Object, UDTValu
 	private final CasserMappingEntity entity;
 	private final UDTColumnValuePreparer valuePreparer;
 	
-	public EntityToUDTValueConverter(Class<?> iface, String udtName, CasserMappingRepository repository) {
+	public EntityToUDTValueConverter(Class<?> iface, UserType userType, CasserMappingRepository repository) {
 		
 		this.repository = repository;
-		
-		this.userType = repository.findUserType(udtName);
-		if (this.userType == null) {
-			throw new CasserMappingException("UserType not found for " + udtName + " with type " + iface);
-		}
-		
+		this.userType = userType;
 		this.entity = repository.getEntity(iface);
 		
 		if (this.entity == null) {
@@ -73,7 +68,7 @@ public final class EntityToUDTValueConverter implements Function<Object, UDTValu
 					continue;
 				}
 				
-				CasserMappingProperty prop = entity.getMappingProperty(entity.getName());
+				CasserMappingProperty prop = entity.getMappingProperty(entry.getKey());
 				
 				if (prop != null) {
 					

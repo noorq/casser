@@ -231,13 +231,11 @@ public class SessionInitializer extends AbstractSessionOperations {
 	}
 	
 	private TableMetadata getTableMetadata(CasserMappingEntity entity) {
-		String tableName = entity.getName();
-		return getKeyspaceMetadata().getTable(tableName.toLowerCase());
+		return getKeyspaceMetadata().getTable(entity.getName().getName());
 		
 	}
 
 	private UserType getUserType(CasserMappingEntity entity) {
-		String userTypeName = entity.getName();
-		return getKeyspaceMetadata().getUserType(userTypeName.toLowerCase());
+		return getKeyspaceMetadata().getUserType(entity.getName().getName());
 	}
 }
