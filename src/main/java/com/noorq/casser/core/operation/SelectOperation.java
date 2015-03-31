@@ -35,10 +35,9 @@ import com.datastax.driver.core.querybuilder.Select.Where;
 import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.core.Filter;
 import com.noorq.casser.core.Getter;
+import com.noorq.casser.core.Ordered;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.CasserMappingProperty;
-import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.OrderingDirection;
 import com.noorq.casser.support.CasserMappingException;
 
@@ -87,25 +86,13 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	}
 	
 	public SelectOperation<E> orderBy(Getter<?> getter, OrderingDirection direction) {
-		Objects.requireNonNull(getter, "property is null");
-		Objects.requireNonNull(direction, "direction is null");
-		
-		CasserPropertyNode propNode = MappingUtil.resolveMappingProperty(getter);
-		
-		if (!propNode.getProperty().isClusteringColumn()) {
-			throw new CasserMappingException("property must be a clustering column " + propNode.getProperty().getPropertyName());
-		}
-
-		switch(direction) {
-			case ASC:
-				getOrCreateOrdering().add(QueryBuilder.asc(propNode.getColumnName()));
-				return this;
-			case DESC:
-				getOrCreateOrdering().add(QueryBuilder.desc(propNode.getColumnName()));
-				return this;
-		}
-		
-		throw new CasserMappingException("unknown ordering direction " + direction);
+		getOrCreateOrdering().add(new Ordered(getter, direction).getOrdering());
+		return this;
+	}
+	
+	public SelectOperation<E> orderBy(Ordered ordered) {
+		getOrCreateOrdering().add(ordered.getOrdering());
+		return this;
 	}
 
 	public SelectOperation<E> limit(Integer limit) {

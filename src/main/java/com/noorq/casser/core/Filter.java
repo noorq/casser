@@ -18,7 +18,6 @@ package com.noorq.casser.core;
 import java.util.Objects;
 
 import com.datastax.driver.core.querybuilder.Clause;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.mapping.CasserMappingProperty;
 import com.noorq.casser.mapping.MappingUtil;
@@ -28,67 +27,29 @@ import com.noorq.casser.support.CasserMappingException;
 public final class Filter<V> {
 
 	private final CasserMappingProperty property;
-	private final Operator operation;
-	private final V value;
-	private final V[] values;
+	private final Postulate<V> postulate;
 	
 	private Filter(CasserMappingProperty prop, Operator op, V value) {
 		this.property = prop;
-		this.operation = op;
-		this.value = value;
-		this.values = null;
+		this.postulate = new Postulate<V>(op, value);
 	}
 
 	private Filter(CasserMappingProperty prop, Operator op, V[] values) {
 		this.property = prop;
-		this.operation = op;
-		this.value = null;
-		this.values = values;
+		this.postulate = new Postulate<V>(op, values);
+	}
+
+	private Filter(CasserMappingProperty prop, Postulate<V> postulate) {
+		this.property = prop;
+		this.postulate = postulate;
 	}
 	
 	public CasserMappingProperty getProperty() {
 		return property;
 	}
 
-	public Operator getOperation() {
-		return operation;
-	}
-
-	public V getValue() {
-		return value;
-	}
-
 	public Clause getClause(ColumnValuePreparer valuePreparer) {
-		
-		switch(operation) {
-		
-		case EQ:
-			return QueryBuilder.eq(property.getColumnName(), 
-					valuePreparer.prepareColumnValue(value, property));
-		
-		case IN:
-			Object[] preparedValues = new Object[values.length];
-			for (int i = 0; i != values.length; ++i) {
-				preparedValues[i] = valuePreparer.prepareColumnValue(values[i], property);
-			}
-			return QueryBuilder.in(property.getColumnName(), preparedValues);
-			
-		case LT:
-			return QueryBuilder.lt(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
-
-		case LTE:
-			return QueryBuilder.lte(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
-
-		case GT:
-			return QueryBuilder.gt(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
-
-		case GTE:
-			return QueryBuilder.gte(property.getColumnName(), valuePreparer.prepareColumnValue(value, property));
-
-		default:
-			throw new CasserMappingException("unknown filter operation " + operation);
-		}
-		
+		return postulate.getClause(property, valuePreparer);
 	}
 	
 	public static <V> Filter<V> equal(Getter<V> getter, V val) {
@@ -112,22 +73,31 @@ public final class Filter<V> {
 		return new Filter<V>(prop.getProperty(), Operator.IN, vals);
 	}
 	
-	public static <V> Filter<V> greater(Getter<V> getter, V val) {
+	public static <V> Filter<V> greaterThan(Getter<V> getter, V val) {
 		return create(getter, Operator.GT, val);
 	}
 	
-	public static <V> Filter<V> less(Getter<V> getter, V val) {
+	public static <V> Filter<V> lessThan(Getter<V> getter, V val) {
 		return create(getter, Operator.LT, val);
 	}
 
-	public static <V> Filter<V> greaterOrEqual(Getter<V> getter, V val) {
+	public static <V> Filter<V> greaterThanOrEqual(Getter<V> getter, V val) {
 		return create(getter, Operator.GTE, val);
 	}
 
-	public static <V> Filter<V> lessOrEqual(Getter<V> getter, V val) {
+	public static <V> Filter<V> lessThanOrEqual(Getter<V> getter, V val) {
 		return create(getter, Operator.LTE, val);
 	}
 
+	public static <V> Filter<V> create(Getter<V> getter, Postulate<V> postulate) {
+		Objects.requireNonNull(getter, "empty getter");
+		Objects.requireNonNull(postulate, "empty operator");
+
+		CasserPropertyNode prop = MappingUtil.resolveMappingProperty(getter);
+		
+		return new Filter<V>(prop.getProperty(), postulate);
+	}
+	
 	public static <V> Filter<V> create(Getter<V> getter, String operator, V val) {
 		Objects.requireNonNull(operator, "empty operator");
 		

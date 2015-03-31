@@ -22,6 +22,7 @@ import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.core.Filter;
 import com.noorq.casser.core.Getter;
 import com.noorq.casser.core.Operator;
+import com.noorq.casser.core.Postulate;
 
 public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterStreamOperation<E, O>> extends AbstractStreamOperation<E, O> {
 
@@ -29,6 +30,13 @@ public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterS
 	
 	public AbstractFilterStreamOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
+	}
+	
+	public <V> O where(Getter<V> getter, Postulate<V> postulate) {
+		
+		addFilter(Filter.create(getter, postulate));
+		
+		return (O) this;
 	}
 	
 	public <V> O where(Getter<V> getter, String operator, V val) {
@@ -52,6 +60,13 @@ public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterS
 		return (O) this;
 	}
 
+	public <V> O add(Getter<V> getter, Postulate<V> postulate) {
+		
+		addFilter(Filter.create(getter, postulate));
+		
+		return (O) this;
+	}
+	
 	public <V> O and(Getter<V> getter, String operator, V val) {
 		
 		addFilter(Filter.create(getter, operator, val));

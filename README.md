@@ -70,8 +70,8 @@ CasserSession session = Casser.init(getSession()).showCql().add(Timeline.class).
 Select information:
 ```
 session.select(timeline::userId, timeline::timestamp, timeline::text)
-  .where(timeline::userId, Operator.EQ, userId)
-  .orderBy(timeline::timestamp, "desc").limit(5).sync()
+  .where(timeline::userId, eq(userId))
+  .orderBy(desc(timeline::timestamp)).limit(5).sync()
   .forEach(System.out::println);
 ```
 

@@ -15,10 +15,11 @@
  */
 package com.noorq.casser;
 
+import static com.noorq.casser.core.Query.*;
+
 import com.datastax.driver.core.Cluster;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.CasserSession;
-import com.noorq.casser.core.Filter;
 import com.noorq.casser.core.Prepared;
 import com.noorq.casser.core.operation.SelectOperation;
 import com.noorq.casser.core.tuple.Tuple1;
@@ -86,23 +87,23 @@ public class Example {
 		newUser.age = 34;
 		session.upsert(newUser);
 		
-		String nameAndAge = session.select(user::name, user::age).where(user::id, "==", 100L).sync().findFirst().map(t -> {
+		String nameAndAge = session.select(user::name, user::age).where(user::id, eq(100L)).sync().findFirst().map(t -> {
 			return t._1 + ":" +  t._2;
 		}).get();
 
-		User userTmp = session.select(user::name, user::age).where(user::id, "==", 100L).map(Example::mapUser).sync().findFirst().get();
+		User userTmp = session.select(user::name, user::age).where(user::id, eq(100L)).map(Example::mapUser).sync().findFirst().get();
 
-		session.update(user::age, 10).where(user::id, "==", 100L).async();
+		session.update(user::age, 10).where(user::id, eq(100L)).async();
 		
-		session.delete(User.class).where(user::id, "==", 100L).async();
+		session.delete(User.class).where(user::id, eq(100L)).async();
 		
 		Prepared<SelectOperation<Tuple1<String>>> ps = session.select(user::name).where(user::id, "==", null).prepare();
 		
 		long cnt = ps.bind(100L).sync().count();
 		
-		cnt = session.select(user::name).where(user::id, "==", 100L).count().sync();
+		cnt = session.select(user::name).where(user::id, eq(100L)).count().sync();
 
-		cnt = session.select(user::name).where(Filter.equal(user::id, 100L)).count().sync();
+		cnt = session.select(user::name).where(user::id, eq(100L)).count().sync();
 
 	}
 	
