@@ -32,6 +32,10 @@ public final class Tuple2<A, B> {
 		this._2 = v2;
 	}
 
+	public static <A, B> Tuple2<A, B> of(A _1, B _2) {
+		return new Tuple2<A, B>(_1, _2);
+	}
+	
 	public final static class Mapper<A, B> implements Function<Row, Tuple2<A, B>> {
 
 		private final ColumnValueProvider provider;

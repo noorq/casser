@@ -42,6 +42,10 @@ public final class Tuple7<A, B, C, D, E, F, G> {
 		this._7 = v7;
 	}
 	
+	public static <A, B, C, D, E, F, G> Tuple7<A, B, C, D, E, F, G> of(A _1, B _2, C _3, D _4, E _5, F _6, G _7) {
+		return new Tuple7<A, B, C, D, E, F, G>(_1, _2, _3, _4, _5, _6, _7);
+	}
+
 	public final static class Mapper<A, B, C, D, E, F, G> implements 
 		Function<Row, 
 		Tuple7<A, B, C, D, E, F, G>> {

@@ -72,10 +72,11 @@ public final class TableOperations {
 	}
 	
 	private void executeBatch(List<SchemaStatement> list) {
-		if (!list.isEmpty()) {
-			Batch b = QueryBuilder.batch(list.toArray(new RegularStatement[list.size()]));
-			sessionOps.execute(b);
-		}
+		
+		list.forEach(s -> {
+			sessionOps.execute(s);
+		});
+		
 	}
 	
 }

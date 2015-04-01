@@ -40,6 +40,10 @@ public final class Tuple6<A, B, C, D, E, F> {
 		this._6 = v6;
 	}
 	
+	public static <A, B, C, D, E, F> Tuple6<A, B, C, D, E, F> of(A _1, B _2, C _3, D _4, E _5, F _6) {
+		return new Tuple6<A, B, C, D, E, F>(_1, _2, _3, _4, _5, _6);
+	}
+	
 	public final static class Mapper<A, B, C, D, E, F> implements 
 		Function<Row, 
 		Tuple6<A, B, C, D, E, F>> {

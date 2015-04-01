@@ -34,6 +34,10 @@ public final class Tuple3<A, B, C> {
 		this._3 = v3;
 	}
 	
+	public static <A, B, C> Tuple3<A, B, C> of(A _1, B _2, C _3) {
+		return new Tuple3<A, B, C>(_1, _2, _3);
+	}
+	
 	public final static class Mapper<A, B, C> implements Function<Row, Tuple3<A, B, C>> {
 
 		private final ColumnValueProvider provider;

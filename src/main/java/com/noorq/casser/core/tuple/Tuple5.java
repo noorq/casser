@@ -38,6 +38,10 @@ public final class Tuple5<A, B, C, D, E> {
 		this._5 = v5;
 	}
 	
+	public static <A, B, C, D, E> Tuple5<A, B, C, D, E> of(A _1, B _2, C _3, D _4, E _5) {
+		return new Tuple5<A, B, C, D, E>(_1, _2, _3, _4, _5);
+	}
+	
 	public final static class Mapper<A, B, C, D, E> implements Function<Row, Tuple5<A, B, C, D, E>> {
 
 		private final ColumnValueProvider provider;

@@ -25,7 +25,7 @@ import com.noorq.casser.core.operation.CountOperation;
 import com.noorq.casser.core.operation.DeleteOperation;
 import com.noorq.casser.core.operation.SelectOperation;
 import com.noorq.casser.core.operation.UpdateOperation;
-import com.noorq.casser.core.operation.UpsertOperation;
+import com.noorq.casser.core.operation.InsertOperation;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.core.tuple.Tuple1;
 import com.noorq.casser.core.tuple.Tuple2;
@@ -212,7 +212,8 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		CasserPropertyNode p6 = MappingUtil.resolveMappingProperty(getter6);
 		CasserPropertyNode p7 = MappingUtil.resolveMappingProperty(getter7);
 		return new SelectOperation<Tuple7<V1, V2, V3, V4, V5, V6, V7>>(this, 
-				new Tuple7.Mapper<V1, V2, V3, V4, V5, V6, V7>(getValueProvider(), 
+				new Tuple7.Mapper<V1, V2, V3, V4, V5, V6, V7>(
+				getValueProvider(), 
 				p1, p2, p3, p4, p5, p6, p7), 
 				p1, p2, p3, p4, p5, p6, p7);
 	}
@@ -236,14 +237,32 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		return new UpdateOperation(this, p, v);
 	}
 	
-	public UpsertOperation upsert(Object pojo) {
+	public InsertOperation insert() {
+		return new InsertOperation(this, true);
+	}
+	
+	public InsertOperation insert(Object pojo) {
 		Objects.requireNonNull(pojo, "pojo is empty");
 		
 		Class<?> iface = MappingUtil.getMappingInterface(pojo);
 		
 		CasserMappingEntity entity = mappingRepository.getEntity(iface);
 		
-		return new UpsertOperation(this, entity, pojo);
+		return new InsertOperation(this, entity, pojo, true);
+	}
+	
+	public InsertOperation upsert() {
+		return new InsertOperation(this, false);
+	}
+	
+	public InsertOperation upsert(Object pojo) {
+		Objects.requireNonNull(pojo, "pojo is empty");
+		
+		Class<?> iface = MappingUtil.getMappingInterface(pojo);
+		
+		CasserMappingEntity entity = mappingRepository.getEntity(iface);
+		
+		return new InsertOperation(this, entity, pojo, false);
 	}
 	
 	public DeleteOperation delete(Object dsl) {

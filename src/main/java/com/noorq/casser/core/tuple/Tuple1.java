@@ -30,6 +30,10 @@ public final class Tuple1<A> {
 		this._1 = v1;
 	}
 
+	public static <A> Tuple1<A> of(A _1) {
+		return new Tuple1<A>(_1);
+	}
+	
 	public final static class Mapper<A> implements Function<Row, Tuple1<A>> {
 
 		private final ColumnValueProvider provider;

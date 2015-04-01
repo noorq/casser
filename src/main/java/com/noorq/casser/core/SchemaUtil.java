@@ -103,6 +103,8 @@ public final class SchemaUtil {
 		
 		Create create = SchemaBuilder.createTable(entity.getName().toCql());
 
+		create.ifNotExists();
+		
 		List<CasserMappingProperty> partitionKeys = new ArrayList<CasserMappingProperty>();
 		List<CasserMappingProperty> clusteringColumns = new ArrayList<CasserMappingProperty>();
 		List<CasserMappingProperty> columns = new ArrayList<CasserMappingProperty>();
