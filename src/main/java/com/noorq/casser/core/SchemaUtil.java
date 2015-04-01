@@ -20,8 +20,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.datastax.driver.core.ColumnMetadata;
+import com.datastax.driver.core.ColumnMetadata.IndexMetadata;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.SimpleStatement;
@@ -198,7 +200,7 @@ public final class SchemaUtil {
 	}
 
 	public static List<SchemaStatement> alterTable(TableMetadata tmd,
-			CasserMappingEntity entity, boolean dropRemovedColumns) {
+			CasserMappingEntity entity, boolean dropUnusedColumns) {
 
 		if (entity.getType() != CasserEntityType.TABLE) {
 			throw new CasserMappingException("expected table entity " + entity);
@@ -208,14 +210,14 @@ public final class SchemaUtil {
 		
 		Alter alter = SchemaBuilder.alterTable(entity.getName().toCql());
 
-		final Set<String> visitedColumns = dropRemovedColumns ? new HashSet<String>()
+		final Set<String> visitedColumns = dropUnusedColumns ? new HashSet<String>()
 				: Collections.<String> emptySet();
 
 		for (CasserMappingProperty prop : entity.getMappingProperties()) {
 
 			String columnName = prop.getColumnName().getName();
 
-			if (dropRemovedColumns) {
+			if (dropUnusedColumns) {
 				visitedColumns.add(columnName);
 			}
 
@@ -270,7 +272,7 @@ public final class SchemaUtil {
 			
 		}
 		
-		if (dropRemovedColumns) {
+		if (dropUnusedColumns) {
 			for (ColumnMetadata cm : tmd.getColumns()) {
 				if (!visitedColumns.contains(cm.getName())) {
 			
@@ -300,6 +302,73 @@ public final class SchemaUtil {
 				.onTable(prop.getEntity().getName().toCql())
 				.andColumn(prop.getColumnName().toCql());
 		
+	}
+
+	public static List<SchemaStatement> createIndexes(CasserMappingEntity entity) {
+		
+		return entity.getMappingProperties().stream()
+		.filter(p -> p.getIndexName().isPresent())
+		.map(p -> SchemaUtil.createIndex(p))
+		.collect(Collectors.toList());
+		
+	}
+	
+	public static List<SchemaStatement> alterIndexes(TableMetadata tmd,
+			CasserMappingEntity entity, boolean dropUnusedIndexes) {
+
+		List<SchemaStatement> list = new ArrayList<SchemaStatement>();
+		
+		final Set<String> visitedColumns = dropUnusedIndexes ? new HashSet<String>()
+				: Collections.<String> emptySet();
+		
+		entity
+		.getMappingProperties()
+		.stream()
+		.filter(p -> p.getIndexName().isPresent())
+		.forEach(p -> {
+			
+			String columnName = p.getColumnName().getName();
+			
+			if (dropUnusedIndexes) {
+				visitedColumns.add(columnName);
+			}
+			
+			ColumnMetadata cm = tmd.getColumn(columnName);
+			
+			if (cm != null) {
+				IndexMetadata im = cm.getIndex();
+				if (im == null) {
+					list.add(createIndex(p));
+				}
+			}
+			else {
+				list.add(createIndex(p));
+			}
+			
+			
+		});
+		
+		if (dropUnusedIndexes) {
+			
+			tmd
+			.getColumns()
+			.stream()
+			.filter(c -> c.getIndex() != null && !visitedColumns.contains(c.getName()))
+			.forEach(c -> {
+				
+				list.add(SchemaBuilder.dropIndex(c.getIndex().getName()).ifExists());
+				
+			});
+			
+			
+		}
+		
+		return list;
+		
+	}
+	
+	public static SchemaStatement dropIndex(CasserMappingProperty prop) {
+		return SchemaBuilder.dropIndex(prop.getIndexName().get().toCql()).ifExists();
 	}
 	
 	private static SchemaBuilder.Direction mapDirection(OrderingDirection o) {

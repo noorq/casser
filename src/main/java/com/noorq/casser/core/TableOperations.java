@@ -16,7 +16,6 @@
 package com.noorq.casser.core;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.TableMetadata;
@@ -29,23 +28,20 @@ import com.noorq.casser.support.CasserException;
 public final class TableOperations {
 
 	private final AbstractSessionOperations sessionOps;
-	private final boolean dropRemovedColumns;
+	private final boolean dropUnusedColumns;
+	private final boolean dropUnusedIndexes;
 	
-	public TableOperations(AbstractSessionOperations sessionOps, boolean dropRemovedColumns) {
+	public TableOperations(AbstractSessionOperations sessionOps, boolean dropUnusedColumns, boolean dropUnusedIndexes) {
 		this.sessionOps = sessionOps;
-		this.dropRemovedColumns = dropRemovedColumns;
+		this.dropUnusedColumns = dropUnusedColumns;
+		this.dropUnusedIndexes = dropUnusedIndexes;
 	}
 	
 	public void createTable(CasserMappingEntity entity) {
 		
 		sessionOps.execute(SchemaUtil.createTable(entity));
 		
-		List<SchemaStatement> list = entity.getMappingProperties().stream()
-		.filter(p -> p.getIndexName().isPresent())
-		.map(p -> SchemaUtil.createIndex(p))
-		.collect(Collectors.toList());
-		
-		executeBatch(list);
+		executeBatch(SchemaUtil.createIndexes(entity));
 		
 	}
 	
@@ -55,9 +51,9 @@ public final class TableOperations {
 			throw new CasserException("table not exists " + entity.getName() + "for entity " + entity.getMappingInterface());
 		}
 		
-		List<SchemaStatement> list = SchemaUtil.alterTable(tmd, entity, dropRemovedColumns);
+		List<SchemaStatement> list = SchemaUtil.alterTable(tmd, entity, dropUnusedColumns);
 		
-		addAlterIndexes(tmd, entity, list);
+		list.addAll(SchemaUtil.alterIndexes(tmd, entity, dropUnusedIndexes));
 		
 		if (!list.isEmpty()) {
 			throw new CasserException("schema changed for entity " + entity.getMappingInterface() + ", apply this command: " + list);
@@ -71,16 +67,8 @@ public final class TableOperations {
 			return;
 		}
 		
-		List<SchemaStatement> list = SchemaUtil.alterTable(tmd, entity, dropRemovedColumns);
-		addAlterIndexes(tmd, entity, list);
-
-		executeBatch(list);
-	}
-
-	private void addAlterIndexes(TableMetadata tmd, CasserMappingEntity entity, List<SchemaStatement> list) {
-		
-
-		
+		executeBatch(SchemaUtil.alterTable(tmd, entity, dropUnusedColumns));
+		executeBatch(SchemaUtil.alterIndexes(tmd, entity, dropUnusedIndexes));
 	}
 	
 	private void executeBatch(List<SchemaStatement> list) {

@@ -44,8 +44,8 @@ public class SessionInitializer extends AbstractSessionOperations {
 	
 	private CasserMappingRepository mappingRepository = new CasserMappingRepository();
 	
-	private boolean dropRemovedColumns = false;
-	private boolean dropRemovedIndexes = false;
+	private boolean dropUnusedColumns = false;
+	private boolean dropUnusedIndexes = false;
 	
 	private KeyspaceMetadata keyspaceMetadata;
 	
@@ -103,13 +103,13 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return this;
 	}
 
-	public SessionInitializer dropRemovedColumns(boolean enabled) {
-		this.dropRemovedColumns = enabled;
+	public SessionInitializer dropUnusedColumns(boolean enabled) {
+		this.dropUnusedColumns = enabled;
 		return this;
 	}
 
-	public SessionInitializer dropRemovedIndexes(boolean enabled) {
-		this.dropRemovedIndexes = enabled;
+	public SessionInitializer dropUnusedIndexes(boolean enabled) {
+		this.dropUnusedIndexes = enabled;
 		return this;
 	}
 
@@ -181,7 +181,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 
 		initList.forEach(dsl -> mappingRepository.add(dsl));
 
-		TableOperations tableOps = new TableOperations(this, dropRemovedColumns);
+		TableOperations tableOps = new TableOperations(this, dropUnusedColumns, dropUnusedIndexes);
 		UserTypeOperations userTypeOps = new UserTypeOperations(this);
 		
 		switch(autoDsl) {
