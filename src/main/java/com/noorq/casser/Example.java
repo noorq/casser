@@ -15,13 +15,12 @@
  */
 package com.noorq.casser;
 
-import static com.noorq.casser.core.Query.*;
+import static com.noorq.casser.core.Query.eq;
 
 import com.datastax.driver.core.Cluster;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.CasserSession;
-import com.noorq.casser.core.Prepared;
-import com.noorq.casser.core.operation.SelectOperation;
+import com.noorq.casser.core.operation.PreparedStreamOperation;
 import com.noorq.casser.core.tuple.Tuple1;
 import com.noorq.casser.core.tuple.Tuple2;
 
@@ -97,7 +96,7 @@ public class Example {
 		
 		session.delete(User.class).where(user::id, eq(100L)).async();
 		
-		Prepared<SelectOperation<Tuple1<String>>> ps = session.select(user::name).where(user::id, "==", null).prepare();
+		PreparedStreamOperation<Tuple1<String>> ps = session.select(user::name).where(user::id, "==", null).prepare();
 		
 		long cnt = ps.bind(100L).sync().count();
 		

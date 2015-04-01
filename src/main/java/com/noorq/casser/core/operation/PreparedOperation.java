@@ -15,26 +15,24 @@
  */
 package com.noorq.casser.core.operation;
 
-import com.datastax.driver.core.querybuilder.BuiltStatement;
-import com.noorq.casser.core.AbstractSessionOperations;
-import com.noorq.casser.core.Prepared;
+import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.PreparedStatement;
 
-public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> {
+public final class PreparedOperation<E> {
 
-	protected final AbstractSessionOperations sessionOps;
+	private final PreparedStatement preparedStatement;
+	private final AbstractEntityOperation<E, ?> operation;
 	
-	public abstract BuiltStatement buildStatement();
-	
-	public AbstractOperation(AbstractSessionOperations sessionOperations) {
-		this.sessionOps = sessionOperations;
+	public PreparedOperation(PreparedStatement statement, AbstractEntityOperation<E, ?> operation) {
+		this.preparedStatement = statement;
+		this.operation = operation;
 	}
 	
-	public String cql() {
-		return buildStatement().setForceNoValues(true).getQueryString();
-	}
-	
-	public Prepared<O> prepare() {
-		return null;
+	public BoundOperation<E> bind(Object... params) {
+		
+		BoundStatement boundStatement = preparedStatement.bind(params);
+		
+		return new BoundOperation<E>(boundStatement, operation);
 	}
 	
 }

@@ -17,6 +17,7 @@ package com.noorq.casser.core.operation;
 
 import java.util.stream.Stream;
 
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.google.common.base.Function;
@@ -24,13 +25,32 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.noorq.casser.core.AbstractSessionOperations;
 
-public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>> extends AbstractOperation<E, O> {
+public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>> extends AbstractStatementOperation<E, O> {
 
 	public AbstractStreamOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
 	}
 	
 	public abstract Stream<E> transform(ResultSet resultSet);
+	
+	public PreparedStreamOperation<E> prepare() {
+		return new PreparedStreamOperation<E>(prepareStatement(), this);
+	}
+	
+	public ListenableFuture<PreparedStreamOperation<E>> prepareAsync() {
+
+		final O _this = (O) this;
+		
+		return Futures.transform(prepareStatementAsync(), new Function<PreparedStatement, PreparedStreamOperation<E>>() {
+
+			@Override
+			public PreparedStreamOperation<E> apply(PreparedStatement preparedStatement) {
+				return new PreparedStreamOperation<E>(preparedStatement, _this);
+			}
+			
+		});
+			
+	}
 	
 	public Stream<E> sync() {
 		

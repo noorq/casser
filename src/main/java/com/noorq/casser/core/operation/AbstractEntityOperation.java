@@ -15,6 +15,7 @@
  */
 package com.noorq.casser.core.operation;
 
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
@@ -23,7 +24,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.noorq.casser.core.AbstractSessionOperations;
 
-public abstract class AbstractEntityOperation<E, O extends AbstractEntityOperation<E, O>> extends AbstractOperation<E, O> {
+public abstract class AbstractEntityOperation<E, O extends AbstractEntityOperation<E, O>> extends AbstractStatementOperation<E, O> {
 
 	public abstract BuiltStatement buildStatement();
 	
@@ -31,6 +32,25 @@ public abstract class AbstractEntityOperation<E, O extends AbstractEntityOperati
 	
 	public AbstractEntityOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
+	}
+	
+	public PreparedOperation<E> prepare() {
+		return new PreparedOperation<E>(prepareStatement(), this);
+	}
+	
+	public ListenableFuture<PreparedOperation<E>> prepareAsync() {
+
+		final O _this = (O) this;
+		
+		return Futures.transform(prepareStatementAsync(), new Function<PreparedStatement, PreparedOperation<E>>() {
+
+			@Override
+			public PreparedOperation<E> apply(PreparedStatement preparedStatement) {
+				return new PreparedOperation<E>(preparedStatement, _this);
+			}
+			
+		});
+			
 	}
 	
 	public E sync() {
