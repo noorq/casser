@@ -24,7 +24,7 @@ import com.noorq.casser.core.Getter;
 import com.noorq.casser.core.Operator;
 import com.noorq.casser.core.Postulate;
 
-public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperation<E, O>> extends AbstractEntityOperation<E, O> {
+public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperation<E, O>> extends AbstractOperation<E, O> {
 
 	protected List<Filter<?>> filters = null;
 	
@@ -61,7 +61,7 @@ public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperati
 		return (O) this;
 	}
 
-	public <V> O add(Getter<V> getter, Postulate<V> postulate) {
+	public <V> O and(Getter<V> getter, Postulate<V> postulate) {
 		
 		addFilter(Filter.create(getter, postulate));
 		

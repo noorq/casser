@@ -21,18 +21,27 @@ import com.datastax.driver.core.PreparedStatement;
 public final class PreparedOperation<E> {
 
 	private final PreparedStatement preparedStatement;
-	private final AbstractEntityOperation<E, ?> operation;
+	private final AbstractOperation<E, ?> operation;
 	
-	public PreparedOperation(PreparedStatement statement, AbstractEntityOperation<E, ?> operation) {
+	public PreparedOperation(PreparedStatement statement, AbstractOperation<E, ?> operation) {
 		this.preparedStatement = statement;
 		this.operation = operation;
 	}
-	
+
+	public PreparedStatement getPreparedStatement() {
+		return preparedStatement;
+	}
+
 	public BoundOperation<E> bind(Object... params) {
 		
 		BoundStatement boundStatement = preparedStatement.bind(params);
 		
 		return new BoundOperation<E>(boundStatement, operation);
+	}
+
+	@Override
+	public String toString() {
+		return preparedStatement.getQueryString();
 	}
 	
 }

@@ -34,7 +34,7 @@ import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.value.BeanColumnValueProvider;
 import com.noorq.casser.support.CasserMappingException;
 
-public final class InsertOperation extends AbstractEntityOperation<ResultSet, InsertOperation> {
+public final class InsertOperation extends AbstractOperation<ResultSet, InsertOperation> {
 
 	private final List<Tuple2<CasserPropertyNode, Object>> values = new ArrayList<Tuple2<CasserPropertyNode, Object>>();
 	private final boolean ifNotExists;

@@ -18,19 +18,16 @@ package com.noorq.casser.core.operation;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.noorq.casser.core.AbstractSessionOperations;
 
-public abstract class AbstractEntityOperation<E, O extends AbstractEntityOperation<E, O>> extends AbstractStatementOperation<E, O> {
+public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> extends AbstractStatementOperation<E, O> {
 
-	public abstract BuiltStatement buildStatement();
-	
 	public abstract E transform(ResultSet resultSet);
 	
-	public AbstractEntityOperation(AbstractSessionOperations sessionOperations) {
+	public AbstractOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
 	}
 	

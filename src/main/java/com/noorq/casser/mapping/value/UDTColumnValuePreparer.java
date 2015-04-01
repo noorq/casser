@@ -21,6 +21,7 @@ import java.util.function.Function;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.UserType;
+import com.datastax.driver.core.querybuilder.BindMarker;
 import com.noorq.casser.mapping.CasserMappingProperty;
 import com.noorq.casser.mapping.CasserMappingRepository;
 
@@ -38,6 +39,10 @@ public final class UDTColumnValuePreparer implements ColumnValuePreparer {
 	public Object prepareColumnValue(Object value, CasserMappingProperty prop) {
 
 		if (value != null) {
+
+			if (value instanceof BindMarker) {
+				return value;
+			}
 
 			Optional<Function<Object, Object>> converter = prop.getWriteConverter(repository);
 

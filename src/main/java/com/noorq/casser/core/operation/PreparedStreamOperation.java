@@ -28,11 +28,21 @@ public final class PreparedStreamOperation<E> {
 		this.operation = operation;
 	}
 	
+	public PreparedStatement getPreparedStatement() {
+		return preparedStatement;
+	}
+	
 	public BoundStreamOperation<E> bind(Object... params) {
 		
 		BoundStatement boundStatement = preparedStatement.bind(params);
 		
 		return new BoundStreamOperation<E>(boundStatement, operation);
 	}
+	
+	@Override
+	public String toString() {
+		return preparedStatement.getQueryString();
+	}
+
 	
 }

@@ -23,9 +23,9 @@ import com.datastax.driver.core.CloseFuture;
 import com.datastax.driver.core.Session;
 import com.noorq.casser.core.operation.CountOperation;
 import com.noorq.casser.core.operation.DeleteOperation;
+import com.noorq.casser.core.operation.InsertOperation;
 import com.noorq.casser.core.operation.SelectOperation;
 import com.noorq.casser.core.operation.UpdateOperation;
-import com.noorq.casser.core.operation.InsertOperation;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.core.tuple.Tuple1;
 import com.noorq.casser.core.tuple.Tuple2;
@@ -35,7 +35,6 @@ import com.noorq.casser.core.tuple.Tuple5;
 import com.noorq.casser.core.tuple.Tuple6;
 import com.noorq.casser.core.tuple.Tuple7;
 import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.CasserMappingProperty;
 import com.noorq.casser.mapping.CasserMappingRepository;
 import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
@@ -226,6 +225,10 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		CasserMappingEntity entity = mappingRepository.getEntity(iface);
 		
 		return new CountOperation(this, entity);
+	}
+	
+	public <V> UpdateOperation update() {
+		return new UpdateOperation(this);
 	}
 	
 	public <V> UpdateOperation update(Getter<V> getter, V v) {

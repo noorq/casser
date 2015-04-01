@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.querybuilder.BuiltStatement;
+import com.datastax.driver.core.Statement;
 
 public final class BoundStreamOperation<E> extends AbstractStreamOperation<E, BoundStreamOperation<E>> {
 
@@ -38,8 +38,8 @@ public final class BoundStreamOperation<E> extends AbstractStreamOperation<E, Bo
 	}
 
 	@Override
-	public BuiltStatement buildStatement() {
-		return null;
+	public Statement buildStatement() {
+		return boundStatement;
 	}
 	
 }

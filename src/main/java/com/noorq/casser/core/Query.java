@@ -18,6 +18,8 @@ package com.noorq.casser.core;
 import java.util.List;
 import java.util.Map;
 
+import com.datastax.driver.core.querybuilder.BindMarker;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.noorq.casser.mapping.OrderingDirection;
 
 /**
@@ -28,6 +30,14 @@ import com.noorq.casser.mapping.OrderingDirection;
 public final class Query {
 
 	private Query() {
+	}
+
+	public static BindMarker marker() {
+		return QueryBuilder.bindMarker(); 
+	}
+
+	public static BindMarker marker(String name) {
+		return QueryBuilder.bindMarker(name); 
 	}
 
 	public static Ordered asc(Getter<?> getter) {

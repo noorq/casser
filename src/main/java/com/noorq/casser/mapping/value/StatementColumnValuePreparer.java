@@ -18,6 +18,7 @@ package com.noorq.casser.mapping.value;
 import java.util.Optional;
 import java.util.function.Function;
 
+import com.datastax.driver.core.querybuilder.BindMarker;
 import com.noorq.casser.mapping.CasserMappingProperty;
 import com.noorq.casser.mapping.CasserMappingRepository;
 
@@ -35,6 +36,10 @@ public final class StatementColumnValuePreparer implements ColumnValuePreparer {
 
 		if (value != null) {
 
+			if (value instanceof BindMarker) {
+				return value;
+			}
+			
 			Optional<Function<Object, Object>> converter = prop.getWriteConverter(repository);
 
 			if (converter.isPresent()) {

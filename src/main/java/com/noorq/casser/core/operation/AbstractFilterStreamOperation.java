@@ -60,7 +60,7 @@ public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterS
 		return (O) this;
 	}
 
-	public <V> O add(Getter<V> getter, Postulate<V> postulate) {
+	public <V> O and(Getter<V> getter, Postulate<V> postulate) {
 		
 		addFilter(Filter.create(getter, postulate));
 		

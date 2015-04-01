@@ -17,14 +17,14 @@ package com.noorq.casser.core.operation;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.querybuilder.BuiltStatement;
+import com.datastax.driver.core.Statement;
 
-public final class BoundOperation<E> extends AbstractEntityOperation<E, BoundOperation<E>> {
+public final class BoundOperation<E> extends AbstractOperation<E, BoundOperation<E>> {
 
 	private final BoundStatement boundStatement;
-	private final AbstractEntityOperation<E, ?> delegate;
+	private final AbstractOperation<E, ?> delegate;
 	
-	public BoundOperation(BoundStatement boundStatement, AbstractEntityOperation<E, ?> operation) {
+	public BoundOperation(BoundStatement boundStatement, AbstractOperation<E, ?> operation) {
 		super(operation.sessionOps);
 		this.boundStatement = boundStatement;
 		this.delegate = operation;
@@ -36,8 +36,8 @@ public final class BoundOperation<E> extends AbstractEntityOperation<E, BoundOpe
 	}
 	
 	@Override
-	public BuiltStatement buildStatement() {
-		return null;
+	public Statement buildStatement() {
+		return boundStatement;
 	}
 	
 }

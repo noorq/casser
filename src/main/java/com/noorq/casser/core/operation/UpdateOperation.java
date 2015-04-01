@@ -35,6 +35,13 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 	
 	private final CasserPropertyNode[] props;
 	private final Object[] vals;
+
+	public UpdateOperation(AbstractSessionOperations sessionOperations) {
+		super(sessionOperations);
+		
+		this.props = new CasserPropertyNode[0];
+		this.vals = new Object[0];
+	}
 	
 	public UpdateOperation(AbstractSessionOperations sessionOperations, CasserPropertyNode p, Object v) {
 		super(sessionOperations);

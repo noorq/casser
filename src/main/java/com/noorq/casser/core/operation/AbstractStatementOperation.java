@@ -17,6 +17,7 @@ package com.noorq.casser.core.operation;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.RegularStatement;
+import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.noorq.casser.core.AbstractSessionOperations;
@@ -26,25 +27,34 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 
 	protected final AbstractSessionOperations sessionOps;
 	
-	public abstract BuiltStatement buildStatement();
+	public abstract Statement buildStatement();
 	
 	public AbstractStatementOperation(AbstractSessionOperations sessionOperations) {
 		this.sessionOps = sessionOperations;
 	}
 	
 	public String cql() {
-		return buildStatement().setForceNoValues(true).getQueryString();
+		Statement statement = buildStatement(); 
+		if (statement instanceof BuiltStatement) {
+			BuiltStatement buildStatement = (BuiltStatement) statement;
+			return buildStatement.setForceNoValues(true).getQueryString();
+		}
+		else {
+			return statement.toString();
+		}
 	}
 	
 	public PreparedStatement prepareStatement() {
 		
-		BuiltStatement builtStatement = buildStatement();
+		Statement statement = buildStatement();
 		
-		if (builtStatement instanceof RegularStatement) {
+		if (statement instanceof RegularStatement) {
 			
-			RegularStatement statement = (RegularStatement) builtStatement;
+			RegularStatement regularStatement = (RegularStatement) statement;
 			
-			return sessionOps.prepare(statement);
+			
+			
+			return sessionOps.prepare(regularStatement);
 		}
 		
 		throw new CasserException("only RegularStatements can be prepared");
@@ -52,24 +62,13 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 
 	public ListenableFuture<PreparedStatement> prepareStatementAsync() {
 		
-		BuiltStatement builtStatement = buildStatement();
+		Statement statement = buildStatement();
 		
-		if (builtStatement instanceof RegularStatement) {
+		if (statement instanceof RegularStatement) {
 			
-			RegularStatement statement = (RegularStatement) builtStatement;
+			RegularStatement regularStatement = (RegularStatement) statement;
 			
-			return sessionOps.prepareAsync(statement);
-			
-			/*
-			return Futures.transform(preparedStatementFuture, new Function<PreparedStatement, Prepared<O>>() {
-
-				@Override
-				public Prepared<O> apply(PreparedStatement preparedStatement) {
-					return new Prepared<O>(preparedStatement, _this);
-				}
-				
-			});
-			*/
+			return sessionOps.prepareAsync(regularStatement);
 			
 		}
 		
