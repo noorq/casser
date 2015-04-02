@@ -21,17 +21,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import com.noorq.casser.config.CasserSettings;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.support.CasserMappingException;
 
-public class CasserMappingEntity implements CasserEntity {
+public final class CasserMappingEntity implements CasserEntity {
 
 	private final Class<?> iface;
 	private final CasserEntityType type;
-	private Optional<IdentityName> name = Optional.empty();
+	private final IdentityName name;
 	private final Map<String, CasserMappingProperty> props = new HashMap<String, CasserMappingProperty>();
 	
 	public CasserMappingEntity(Class<?> iface) {
@@ -46,6 +45,7 @@ public class CasserMappingEntity implements CasserEntity {
 		
 		this.iface = iface;
 		this.type = Objects.requireNonNull(type, "type is empty");
+		this.name = resolveName(iface, type);
 		
 		CasserSettings settings = Casser.settings();
 		
@@ -99,13 +99,10 @@ public class CasserMappingEntity implements CasserEntity {
 
 	@Override
 	public IdentityName getName() {
-		if (!name.isPresent()) {
-			name = Optional.of(resolveName());
-		}
-		return name.get();
+		return name;
 	}
 	
-	private IdentityName resolveName() {
+	private static IdentityName resolveName(Class<?> iface, CasserEntityType type) {
 		
 		switch(type) {
 		

@@ -40,33 +40,37 @@ import com.noorq.casser.mapping.convert.UDTValueToEntityConverter;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.Either;
 
-public class CasserMappingProperty implements CasserProperty {
+public final class CasserMappingProperty implements CasserProperty {
 
 	private final CasserMappingEntity entity; 
 	private final Method getter;
 	
-	private Optional<String> propertyName = Optional.empty();
-	private Optional<IdentityName> columnName = Optional.empty();
+	private final String propertyName;
+	private final IdentityName columnName;
+	private final Optional<IdentityName> indexName;
+
+	private final boolean isStatic;
+	private final KeyInformation keyInfo;
 	
-	private Optional<IdentityName> indexName = null;
-	
-	private boolean keyInfo = false;
-	private boolean isPartitionKey = false;
-	private boolean isClusteringColumn = false;
-	private int ordinal = 0;
-	private OrderingDirection ordering = OrderingDirection.ASC;
-	
-	private Optional<Class<?>> javaType = Optional.empty();
-	private Optional<Either<DataType, IdentityName>> columnType = Optional.empty();
-	
-	private Optional<Boolean> isStatic = Optional.empty();
-	
-	private Optional<Function<Object, Object>> readConverter = null;
-	private Optional<Function<Object, Object>> writeConverter = null;
+	private final Class<?> javaType;
+	private final Either<DataType, IdentityName> columnDataType;
+		
+	private volatile Optional<Function<Object, Object>> readConverter = null;
+	private volatile Optional<Function<Object, Object>> writeConverter = null;
 	
 	public CasserMappingProperty(CasserMappingEntity entity, Method getter) {
 		this.entity = entity;
 		this.getter = getter;
+		
+		this.propertyName = MappingUtil.getPropertyName(getter);
+		this.columnName = MappingUtil.getColumnName(getter);
+		this.indexName = MappingUtil.getIndexName(getter);
+		this.isStatic = MappingUtil.isStaticColumn(getter);
+		this.keyInfo = new KeyInformation(getter);
+
+		this.javaType = getter.getReturnType();
+		this.columnDataType = resolveColumnType(getter, this.javaType);
+
 	}
 	
 	@Override
@@ -76,90 +80,52 @@ public class CasserMappingProperty implements CasserProperty {
 
     @Override
 	public Class<?> getJavaType() {
-		if (!javaType.isPresent()) {
-			javaType = Optional.of(getter.getReturnType());
-		}
-		return javaType.get();
+		return javaType;
 	}
 	
 	@Override
 	public Either<DataType, IdentityName> getColumnType() {
-		if (!columnType.isPresent()) {
-			columnType = Optional.of(resolveColumnType());
-		}
-		return columnType.get();
+		return columnDataType;
 	}
 
 	@Override
 	public boolean isPartitionKey() {
-		ensureKeyInfo();
-		return isPartitionKey;
+		return keyInfo.isPartitionKey();
 	}
 
 	@Override
 	public boolean isClusteringColumn() {
-		ensureKeyInfo();
-		return isClusteringColumn;
+		return keyInfo.isClusteringColumn();
 	}
 
 	@Override
 	public int getOrdinal() {
-		ensureKeyInfo();
-		return ordinal;
+		return keyInfo.getOrdinal();
 	}
 
 	@Override
 	public OrderingDirection getOrdering() {
-		ensureKeyInfo();
-		return ordering;
+		return keyInfo.getOrdering();
 	}
 	
 	@Override
 	public boolean isStatic() {
-		
-		if (!isStatic.isPresent()) {
-			
-			Column column = getter.getDeclaredAnnotation(Column.class);
-			if (column != null) {
-				isStatic = Optional.of(column.isStatic());
-			}
-			else {
-				isStatic = Optional.of(false);
-			}
-
-		}
-
-		return isStatic.get().booleanValue();
+		return isStatic;
 	}
 
 	@Override
 	public IdentityName getColumnName() {
-		
-		if (!columnName.isPresent()) {
-			columnName = Optional.of(MappingUtil.getColumnName(getter));
-		}
-		
-		return columnName.get();
+		return columnName;
 	}
 
 	@Override
 	public Optional<IdentityName> getIndexName() {
-		
-		if (indexName == null) {
-			indexName = MappingUtil.getIndexName(getter);
-		}
-		
 		return indexName;
 	}
 	
 	@Override
 	public String getPropertyName() {
-		
-		if (!propertyName.isPresent()) {
-			propertyName = Optional.of(MappingUtil.getPropertyName(getter));
-		}
-		
-		return propertyName.get();
+		return propertyName;
 	}
 
 	public Method getGetterMethod() {
@@ -269,149 +235,116 @@ public class CasserMappingProperty implements CasserProperty {
 		}
 	}
 	
-	private Either<DataType, IdentityName> resolveColumnType() {
+	private static Either<DataType, IdentityName> resolveColumnType(Method getter, Class<?> javaType) {
 		
-		DataType dataType = resolveDataType();
+		DataType dataType = resolveDataType(getter, javaType);
 		if (dataType != null) {
 			return Either.left(dataType);
 		}
 		else {
-			Class<?> propertyType = getJavaType();
-			IdentityName udtName = MappingUtil.getUserDefinedTypeName(propertyType, false);
+			IdentityName udtName = MappingUtil.getUserDefinedTypeName(javaType, false);
 			return Either.right(udtName);
 		}
 		
 	}
 
-	private DataType resolveDataType() {
+	private static DataType resolveDataType(Method getter, Class<?> javaType) {
 		
-		Class<?> propertyType = getJavaType();
-
 		DataTypeName annotation = getter.getDeclaredAnnotation(DataTypeName.class);
 		if (annotation != null && annotation.value() != null) {
-			return qualifyAnnotatedType(annotation);
+			return qualifyAnnotatedType(getter, annotation);
 		}
 
-		if (Enum.class.isAssignableFrom(propertyType)) {
+		if (Enum.class.isAssignableFrom(javaType)) {
 			return DataType.text();
 		}
 
-		if (isMap()) {
-			Type[] args = getTypeParameters();
-			ensureTypeArguments(args.length, 2);
+		if (isMap(javaType)) {
+			Type[] args = getTypeParameters(javaType);
+			ensureTypeArguments(getter, args.length, 2);
 
-			return DataType.map(autodetectPrimitiveType(args[0]),
-					autodetectPrimitiveType(args[1]));
+			return DataType.map(autodetectPrimitiveType(getter, args[0]),
+					autodetectPrimitiveType(getter, args[1]));
 		}
 
-		if (isCollectionLike()) {
-			Type[] args = getTypeParameters();
-			ensureTypeArguments(args.length, 1);
+		if (isCollectionLike(javaType)) {
+			Type[] args = getTypeParameters(javaType);
+			ensureTypeArguments(getter, args.length, 1);
 
-			if (Set.class.isAssignableFrom(propertyType)) {
+			if (Set.class.isAssignableFrom(javaType)) {
 
-				return DataType.set(autodetectPrimitiveType(args[0]));
+				return DataType.set(autodetectPrimitiveType(getter, args[0]));
 
-			} else if (List.class.isAssignableFrom(propertyType)) {
+			} else if (List.class.isAssignableFrom(javaType)) {
 
-				return DataType.list(autodetectPrimitiveType(args[0]));
+				return DataType.list(autodetectPrimitiveType(getter, args[0]));
 
 			}
 		}
 
-		return SimpleDataTypes.getDataTypeByJavaClass(propertyType);
+		return SimpleDataTypes.getDataTypeByJavaClass(javaType);
 	}
 	
-	private void ensureKeyInfo() {
-		if (!keyInfo) {
-			PartitionKey partitionKey = getter.getDeclaredAnnotation(PartitionKey.class);
-			
-			if (partitionKey != null) {
-				isPartitionKey = true;
-				ordinal = partitionKey.ordinal();
-			}
-			
-			ClusteringColumn clusteringColumnn = getter.getDeclaredAnnotation(ClusteringColumn.class);
-			
-			if (clusteringColumnn != null) {
-				
-				if (isPartitionKey) {
-					throw new CasserMappingException("property can be annotated only by single column type " + getPropertyName() + " in " + this.entity.getMappingInterface());
-				}
-				
-				isClusteringColumn = true;
-				ordinal = clusteringColumnn.ordinal();
-				ordering = clusteringColumnn.ordering();
-			}
-			
-			keyInfo = true;
-		}
-	}
-	
-	private DataType qualifyAnnotatedType(DataTypeName annotation) {
+	private static DataType qualifyAnnotatedType(Method getter, DataTypeName annotation) {
 		DataType.Name type = annotation.value();
 		if (type.isCollection()) {
 			switch (type) {
 			case MAP:
-				ensureTypeArguments(annotation.typeParameters().length, 2);
-				return DataType.map(resolvePrimitiveType(annotation.typeParameters()[0]),
-						resolvePrimitiveType(annotation.typeParameters()[1]));
+				ensureTypeArguments(getter, annotation.typeParameters().length, 2);
+				return DataType.map(resolvePrimitiveType(getter, annotation.typeParameters()[0]),
+						resolvePrimitiveType(getter, annotation.typeParameters()[1]));
 			case LIST:
-				ensureTypeArguments(annotation.typeParameters().length, 1);
-				return DataType.list(resolvePrimitiveType(annotation.typeParameters()[0]));
+				ensureTypeArguments(getter, annotation.typeParameters().length, 1);
+				return DataType.list(resolvePrimitiveType(getter, annotation.typeParameters()[0]));
 			case SET:
-				ensureTypeArguments(annotation.typeParameters().length, 1);
-				return DataType.set(resolvePrimitiveType(annotation.typeParameters()[0]));
+				ensureTypeArguments(getter, annotation.typeParameters().length, 1);
+				return DataType.set(resolvePrimitiveType(getter, annotation.typeParameters()[0]));
 			default:
-				throw new CasserMappingException("unknown collection DataType for property '" + this.getPropertyName()
-						+ "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());
+				throw new CasserMappingException("unknown collection DataType for property " + getter);
 			}
 		} else {
 			DataType dataType = SimpleDataTypes.getDataTypeByName(type);
 			
 			if (dataType == null) {
-				throw new CasserMappingException("unknown DataType for property '" + this.getPropertyName()
-						+ "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());
+				throw new CasserMappingException("unknown DataType for property " + getter);
 			}
 			
 			return dataType;
 		}
 	}
 	
-	DataType resolvePrimitiveType(DataType.Name typeName) {
+	static DataType resolvePrimitiveType(Method getter, DataType.Name typeName) {
 		DataType dataType = SimpleDataTypes.getDataTypeByName(typeName);
 		if (dataType == null) {
 			throw new CasserMappingException(
-					"only primitive types are allowed inside collections for the property  '" + this.getPropertyName() + "' type is '"
-							+ this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());
+					"only primitive types are allowed inside collections for the property " + getter);
 		}
 		return dataType;
 	}
 
-	DataType autodetectPrimitiveType(Type javaType) {
+	static DataType autodetectPrimitiveType(Method getter, Type javaType) {
 		DataType dataType = SimpleDataTypes.getDataTypeByJavaClass(javaType);
 		if (dataType == null) {
 			throw new CasserMappingException(
-					"only primitive types are allowed inside collections for the property  '" + this.getPropertyName() + "' type is '"
-							+ this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());
+					"only primitive types are allowed inside collections for the property " + getter);
 		}
 		return dataType;
 	}
 	
-	void ensureTypeArguments(int args, int expected) {
+	static void ensureTypeArguments(Method getter, int args, int expected) {
 		if (args != expected) {
-			throw new CasserMappingException("expected " + expected + " of typed arguments for the property  '"
-					+ this.getPropertyName() + "' type is '" + this.getJavaType() + "' in the entity " + this.entity.getMappingInterface());
+			throw new CasserMappingException("expected " + expected + " of typed arguments for the property "
+					+ getter);
 		}
 	}
 	
-	boolean isMap() {
-		return Map.class.isAssignableFrom(getJavaType());
+	static boolean isMap(Class<?> javaType) {
+		return Map.class.isAssignableFrom(javaType);
 	}
 	
-	boolean isCollectionLike() {
+	static boolean isCollectionLike(Class<?> javaType) {
 
-		Class<?> rawType = getJavaType();
+		Class<?> rawType = javaType;
 
 		if (rawType.isArray() || Iterable.class.equals(rawType)) {
 			return true;
@@ -420,9 +353,9 @@ public class CasserMappingProperty implements CasserProperty {
 		return Collection.class.isAssignableFrom(rawType);
 	}
 	
-	Type[] getTypeParameters() {
+	static Type[] getTypeParameters(Class<?> javaTypeAsClass) {
 		
-		Type javaType = (Type) getJavaType();
+		Type javaType = (Type) javaTypeAsClass;
 		
 		if (javaType instanceof ParameterizedType) {
 		
