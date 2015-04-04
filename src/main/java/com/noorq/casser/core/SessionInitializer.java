@@ -164,7 +164,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return this;
 	}
 	
-	public CasserSession get() {
+	public synchronized CasserSession get() {
 		initialize();
 		return new CasserSession(session, 
 				usingKeyspace,
