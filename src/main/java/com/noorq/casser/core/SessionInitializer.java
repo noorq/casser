@@ -28,11 +28,10 @@ import com.datastax.driver.core.UserType;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.CasserMappingRepository;
+import com.noorq.casser.mapping.MappingRepositoryBuilder;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
-import com.noorq.casser.mapping.value.RowColumnValueProvider;
-import com.noorq.casser.mapping.value.StatementColumnValuePreparer;
+import com.noorq.casser.support.CasserException;
 
 
 public class SessionInitializer extends AbstractSessionOperations {
@@ -42,7 +41,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 	private boolean showCql = false;
 	private Executor executor = MoreExecutors.sameThreadExecutor();
 	
-	private CasserMappingRepository mappingRepository = new CasserMappingRepository();
+	private MappingRepositoryBuilder mappingRepository = new MappingRepositoryBuilder();
 	
 	private boolean dropUnusedColumns = false;
 	private boolean dropUnusedIndexes = false;
@@ -74,12 +73,12 @@ public class SessionInitializer extends AbstractSessionOperations {
 	
 	@Override
 	public ColumnValueProvider getValueProvider() {
-		return new RowColumnValueProvider(mappingRepository);
+		throw new CasserException("not expected call");
 	}
 	
 	@Override
 	public ColumnValuePreparer getValuePreparer() {
-		return new StatementColumnValuePreparer(mappingRepository);
+		throw new CasserException("not expected call");
 	}
 
 	public SessionInitializer showCql() {

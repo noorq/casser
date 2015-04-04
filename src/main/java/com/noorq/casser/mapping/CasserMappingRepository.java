@@ -16,92 +16,35 @@
 package com.noorq.casser.mapping;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
-import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UserType;
-import com.noorq.casser.support.CasserException;
+import com.google.common.collect.ImmutableMap;
 import com.noorq.casser.support.CasserMappingException;
-import com.noorq.casser.support.Either;
 
 public class CasserMappingRepository {
+	
+	private final ImmutableMap<String, UserType> userTypeMap;
 
-	private static final Optional<CasserEntityType> OPTIONAL_UDT = Optional.of(CasserEntityType.USER_DEFINED_TYPE);
-	
-	private final Map<Class<?>, CasserMappingEntity> entityMap = new HashMap<Class<?>, CasserMappingEntity>();
+	private final ImmutableMap<Class<?>, CasserMappingEntity> entityMap;
 
-	private final Map<String, UserType> userTypeMap = new HashMap<String, UserType>();
-	
-	private boolean readOnly = false;
-	
-	public CasserMappingRepository setReadOnly() {
-		this.readOnly = true;
-		return this;
-	}
-	
-	public void addUserType(String name, UserType userType) {
+	public CasserMappingRepository(MappingRepositoryBuilder builder) {
 		
-		if (readOnly) {
-			throw new CasserException("read-only mode");
-		}
-		
-		userTypeMap.putIfAbsent(name.toLowerCase(), userType);
-		
+		userTypeMap = ImmutableMap.<String, UserType>builder()
+				.putAll(builder.getUserTypeMap())
+				.build();
+
+		entityMap = ImmutableMap.<Class<?>, CasserMappingEntity>builder()
+				.putAll(builder.getEntityMap())
+				.build();
+
 	}
 	
 	public UserType findUserType(String name) {
 		return userTypeMap.get(name.toLowerCase());
 	}
-
-	public void add(Object dsl) {
-		add(dsl, Optional.empty());
-	}
 	
-	public void add(Object dsl, Optional<CasserEntityType> type) {
-
-		if (readOnly) {
-			throw new CasserException("read-only mode");
-		}
-
-		Class<?> iface = MappingUtil.getMappingInterface(dsl);
-		
-		if (!entityMap.containsKey(iface)) {
-
-			CasserMappingEntity entity = type.isPresent() ? 
-					new CasserMappingEntity(iface, type.get()) :
-						new CasserMappingEntity(iface);
-
-			if (null == entityMap.putIfAbsent(iface, entity)) {
-				
-				addUserDefinedTypes(entity.getMappingProperties());
-				
-			}
-
-		}
-		
-	}
-	
-	private void addUserDefinedTypes(Collection<CasserMappingProperty> props) {
-		
-		for (CasserMappingProperty prop : props) {
-			
-			Either<DataType, IdentityName> type = prop.getColumnType();
-			
-			if (type.isRight()) {
-				
-				add(prop.getJavaType(), OPTIONAL_UDT);
-				
-			}
-			
-		}
-		
-	}
-
 	public Collection<CasserMappingEntity> entities() {
-		return Collections.unmodifiableCollection(entityMap.values());
+		return entityMap.values();
 	}
 	
 	public CasserMappingEntity getEntity(Class<?> iface) {
@@ -114,5 +57,4 @@ public class CasserMappingRepository {
 		
 		return entity;
 	}
-	
 }

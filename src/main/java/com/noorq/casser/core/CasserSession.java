@@ -36,6 +36,7 @@ import com.noorq.casser.core.tuple.Tuple6;
 import com.noorq.casser.core.tuple.Tuple7;
 import com.noorq.casser.mapping.CasserMappingEntity;
 import com.noorq.casser.mapping.CasserMappingRepository;
+import com.noorq.casser.mapping.MappingRepositoryBuilder;
 import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
@@ -57,13 +58,13 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	CasserSession(Session session,
 			String usingKeyspace,
 			boolean showCql, 
-			CasserMappingRepository mappingRepository, 
+			MappingRepositoryBuilder mappingRepositoryBuilder, 
 			Executor executor,
 			boolean dropSchemaOnClose) {
 		this.session = session;
 		this.usingKeyspace = Objects.requireNonNull(usingKeyspace, "keyspace needs to be selected before creating session");
 		this.showCql = showCql;
-		this.mappingRepository = mappingRepository.setReadOnly();
+		this.mappingRepository = mappingRepositoryBuilder.build();
 		this.executor = executor;
 		this.dropSchemaOnClose = dropSchemaOnClose;
 		
