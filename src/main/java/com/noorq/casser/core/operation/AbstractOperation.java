@@ -52,14 +52,14 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> ex
 	
 	public E sync() {
 		
-		ResultSet resultSet = sessionOps.executeAsync(buildStatement()).getUninterruptibly();
+		ResultSet resultSet = sessionOps.executeAsync(options(buildStatement())).getUninterruptibly();
 
 		return transform(resultSet);
 	}
 	
 	public ListenableFuture<E> async() {
 
-		ResultSetFuture resultSetFuture = sessionOps.executeAsync(buildStatement());
+		ResultSetFuture resultSetFuture = sessionOps.executeAsync(options(buildStatement()));
 
 		ListenableFuture<E> future = Futures.transform(resultSetFuture, new Function<ResultSet, E>() {
 

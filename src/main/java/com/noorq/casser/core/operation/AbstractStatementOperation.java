@@ -15,9 +15,14 @@
  */
 package com.noorq.casser.core.operation;
 
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.policies.DefaultRetryPolicy;
+import com.datastax.driver.core.policies.DowngradingConsistencyRetryPolicy;
+import com.datastax.driver.core.policies.FallthroughRetryPolicy;
+import com.datastax.driver.core.policies.RetryPolicy;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.noorq.casser.core.AbstractSessionOperations;
@@ -29,10 +34,94 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 	
 	public abstract Statement buildStatement();
 	
+	private ConsistencyLevel consistencyLevel;
+	private RetryPolicy retryPolicy;
+	private boolean enableTracing = false;
+	
 	public AbstractStatementOperation(AbstractSessionOperations sessionOperations) {
 		this.sessionOps = sessionOperations;
 	}
 	
+	public O retryPolicy(RetryPolicy retryPolicy) {
+		this.retryPolicy = retryPolicy;
+		return (O) this;
+	}
+
+	public O defaultRetryPolicy() {
+		this.retryPolicy = DefaultRetryPolicy.INSTANCE;
+		return (O) this;
+	}
+
+	public O downgradingConsistencyRetryPolicy() {
+		this.retryPolicy = DowngradingConsistencyRetryPolicy.INSTANCE;
+		return (O) this;
+	}
+
+	public O fallthroughRetryPolicy() {
+		this.retryPolicy = FallthroughRetryPolicy.INSTANCE;
+		return (O) this;
+	}
+
+	public O consistency(ConsistencyLevel level) {
+		this.consistencyLevel = level;
+		return (O) this;
+	}
+
+	public O consistencyAny() {
+		this.consistencyLevel = ConsistencyLevel.ANY;
+		return (O) this;
+	}
+
+	public O consistencyOne() {
+		this.consistencyLevel = ConsistencyLevel.ONE;
+		return (O) this;
+	}
+
+	public O consistencyQuorum() {
+		this.consistencyLevel = ConsistencyLevel.QUORUM;
+		return (O) this;
+	}
+
+	public O consistencyAll() {
+		this.consistencyLevel = ConsistencyLevel.ALL;
+		return (O) this;
+	}
+
+	public O disableTracing() {
+		this.enableTracing = false;
+		return (O) this;
+	}
+
+	public O enableTracing() {
+		this.enableTracing = true;
+		return (O) this;
+	}
+
+	public O tracing(boolean enable) {
+		this.enableTracing = enable;
+		return (O) this;
+	}
+
+	protected Statement options(Statement statement) {
+		
+		if (consistencyLevel != null) {
+			statement.setConsistencyLevel(consistencyLevel);
+		}
+		
+		if (retryPolicy != null) {
+			statement.setRetryPolicy(retryPolicy);
+		}
+		
+		if (enableTracing) {
+			statement.enableTracing();
+		}
+		else {
+			statement.disableTracing();
+		}
+		
+		return statement;
+	}
+
 	public String cql() {
 		Statement statement = buildStatement(); 
 		if (statement instanceof BuiltStatement) {
