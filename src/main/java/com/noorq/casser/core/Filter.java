@@ -19,37 +19,36 @@ import java.util.Objects;
 
 import com.datastax.driver.core.querybuilder.Clause;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
-import com.noorq.casser.mapping.CasserMappingProperty;
 import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
 import com.noorq.casser.support.CasserMappingException;
 
 public final class Filter<V> {
 
-	private final CasserMappingProperty property;
+	private final CasserPropertyNode node;
 	private final Postulate<V> postulate;
 	
-	private Filter(CasserMappingProperty prop, Operator op, V value) {
-		this.property = prop;
+	private Filter(CasserPropertyNode node, Operator op, V value) {
+		this.node = node;
 		this.postulate = new Postulate<V>(op, value);
 	}
 
-	private Filter(CasserMappingProperty prop, Operator op, V[] values) {
-		this.property = prop;
+	private Filter(CasserPropertyNode node, Operator op, V[] values) {
+		this.node = node;
 		this.postulate = new Postulate<V>(op, values);
 	}
 
-	private Filter(CasserMappingProperty prop, Postulate<V> postulate) {
-		this.property = prop;
+	private Filter(CasserPropertyNode node, Postulate<V> postulate) {
+		this.node = node;
 		this.postulate = postulate;
 	}
 	
-	public CasserMappingProperty getProperty() {
-		return property;
+	public CasserPropertyNode getNode() {
+		return node;
 	}
 
 	public Clause getClause(ColumnValuePreparer valuePreparer) {
-		return postulate.getClause(property, valuePreparer);
+		return postulate.getClause(node, valuePreparer);
 	}
 	
 	public static <V> Filter<V> equal(Getter<V> getter, V val) {
@@ -68,9 +67,9 @@ public final class Filter<V> {
 			Objects.requireNonNull(vals[i], "value[" + i + "] is empty");
 		}
 		
-		CasserPropertyNode prop = MappingUtil.resolveMappingProperty(getter);
+		CasserPropertyNode node = MappingUtil.resolveMappingProperty(getter);
 		
-		return new Filter<V>(prop.getProperty(), Operator.IN, vals);
+		return new Filter<V>(node, Operator.IN, vals);
 	}
 	
 	public static <V> Filter<V> greaterThan(Getter<V> getter, V val) {
@@ -93,9 +92,9 @@ public final class Filter<V> {
 		Objects.requireNonNull(getter, "empty getter");
 		Objects.requireNonNull(postulate, "empty operator");
 
-		CasserPropertyNode prop = MappingUtil.resolveMappingProperty(getter);
+		CasserPropertyNode node = MappingUtil.resolveMappingProperty(getter);
 		
-		return new Filter<V>(prop.getProperty(), postulate);
+		return new Filter<V>(node, postulate);
 	}
 	
 	public static <V> Filter<V> create(Getter<V> getter, String operator, V val) {
@@ -119,9 +118,16 @@ public final class Filter<V> {
 			throw new IllegalArgumentException("invalid usage of the 'in' operator, use Filter.in() static method");
 		}
 		
-		CasserPropertyNode prop = MappingUtil.resolveMappingProperty(getter);
+		CasserPropertyNode node = MappingUtil.resolveMappingProperty(getter);
 		
-		return new Filter<V>(prop.getProperty(), op, val);
+		return new Filter<V>(node, op, val);
 	}
+
+	@Override
+	public String toString() {
+		return node.getColumnName() + postulate.toString();
+	}
+	
+	
 	
 }

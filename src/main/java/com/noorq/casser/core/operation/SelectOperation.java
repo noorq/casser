@@ -140,6 +140,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 			}
 		}
 		
+		if (ifFilters != null && !ifFilters.isEmpty()) {
+			logger.warn("onlyIf conditions " + ifFilters + " will be ignored in the statement " + select);
+		}
+		
 		return select;
 	}
 

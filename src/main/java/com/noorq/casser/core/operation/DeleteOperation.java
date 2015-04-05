@@ -57,6 +57,13 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 				where.and(filter.getClause(sessionOps.getValuePreparer()));
 			}
 			
+			if (ifFilters != null && !ifFilters.isEmpty()) {
+				
+				for (Filter<?> filter : ifFilters) {
+					delete.onlyIf(filter.getClause(sessionOps.getValuePreparer()));
+				}
+			}
+			
 			if (this.ttl != null) {
 				delete.using(QueryBuilder.ttl(this.ttl[0]));
 			}

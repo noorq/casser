@@ -15,6 +15,9 @@
  */
 package com.noorq.casser.core.operation;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.RegularStatement;
@@ -29,6 +32,8 @@ import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.support.CasserException;
 
 public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>> {
+
+	final Logger logger = LoggerFactory.getLogger(getClass());
 
 	protected final AbstractSessionOperations sessionOps;
 	

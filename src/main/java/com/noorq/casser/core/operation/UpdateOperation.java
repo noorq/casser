@@ -113,6 +113,13 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 			}
 		}
 		
+		if (ifFilters != null && !ifFilters.isEmpty()) {
+			
+			for (Filter<?> filter : ifFilters) {
+				update.onlyIf(filter.getClause(sessionOps.getValuePreparer()));
+			}
+		}
+		
 		if (this.ttl != null) {
 			update.using(QueryBuilder.ttl(this.ttl[0]));
 		}

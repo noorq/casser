@@ -18,6 +18,7 @@ public final class SelectTransformingOperation<R, E> extends AbstractFilterStrea
 		this.src = src;
 		this.fn = fn;
 		this.filters = src.filters;
+		this.ifFilters = src.ifFilters;
 	}
 	
 	@Override

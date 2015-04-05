@@ -17,7 +17,7 @@ package com.noorq.casser.core;
 
 import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
 import com.noorq.casser.support.CasserMappingException;
 
@@ -47,37 +47,53 @@ public final class Postulate<V> {
 		}
     }
 	
-	public Clause getClause(CasserMappingProperty property, ColumnValuePreparer valuePreparer) {
+	public Clause getClause(CasserPropertyNode node, ColumnValuePreparer valuePreparer) {
 		
 		switch(operator) {
 		
 		case EQ:
-			return QueryBuilder.eq(property.getColumnName().toCql(), 
-					valuePreparer.prepareColumnValue(value, property));
+			return QueryBuilder.eq(node.getColumnName(), 
+					valuePreparer.prepareColumnValue(value, node.getProperty()));
 		
 		case IN:
 			Object[] preparedValues = new Object[values.length];
 			for (int i = 0; i != values.length; ++i) {
-				preparedValues[i] = valuePreparer.prepareColumnValue(values[i], property);
+				preparedValues[i] = valuePreparer.prepareColumnValue(values[i], node.getProperty());
 			}
-			return QueryBuilder.in(property.getColumnName().toCql(), preparedValues);
+			return QueryBuilder.in(node.getColumnName(), preparedValues);
 			
 		case LT:
-			return QueryBuilder.lt(property.getColumnName().toCql(), valuePreparer.prepareColumnValue(value, property));
+			return QueryBuilder.lt(node.getColumnName(), 
+					valuePreparer.prepareColumnValue(value, node.getProperty()));
 
 		case LTE:
-			return QueryBuilder.lte(property.getColumnName().toCql(), valuePreparer.prepareColumnValue(value, property));
+			return QueryBuilder.lte(node.getColumnName(), 
+					valuePreparer.prepareColumnValue(value, node.getProperty()));
 
 		case GT:
-			return QueryBuilder.gt(property.getColumnName().toCql(), valuePreparer.prepareColumnValue(value, property));
+			return QueryBuilder.gt(node.getColumnName(), 
+					valuePreparer.prepareColumnValue(value, node.getProperty()));
 
 		case GTE:
-			return QueryBuilder.gte(property.getColumnName().toCql(), valuePreparer.prepareColumnValue(value, property));
+			return QueryBuilder.gte(node.getColumnName(), 
+					valuePreparer.prepareColumnValue(value, node.getProperty()));
 
 		default:
 			throw new CasserMappingException("unknown filter operation " + operator);
 		}
 		
 	}
+
+	@Override
+	public String toString() {
+		
+		if (operator == Operator.IN) {
+			return "in(" + values + ")";
+		}
+		
+		return operator.getName() + value;
+		
+	}		
+	
 	
 }

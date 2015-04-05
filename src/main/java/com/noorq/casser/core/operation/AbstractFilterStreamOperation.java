@@ -27,6 +27,7 @@ import com.noorq.casser.core.Postulate;
 public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterStreamOperation<E, O>> extends AbstractStreamOperation<E, O> {
 
 	protected List<Filter<?>> filters = null;
+	protected List<Filter<?>> ifFilters = null;
 	
 	public AbstractFilterStreamOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
@@ -88,6 +89,35 @@ public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterS
 		return (O) this;
 	}
 	
+	public <V> O onlyIf(Getter<V> getter, Postulate<V> postulate) {
+		
+		addIfFilter(Filter.create(getter, postulate));
+		
+		return (O) this;
+	}
+
+	
+	public <V> O onlyIf(Getter<V> getter, String operator, V val) {
+		
+		addIfFilter(Filter.create(getter, operator, val));
+		
+		return (O) this;
+	}
+
+	public <V> O onlyIf(Getter<V> getter, Operator operator, V val) {
+		
+		addIfFilter(Filter.create(getter, operator, val));
+		
+		return (O) this;
+	}
+	
+	public <V> O onlyIf(Filter<V> filter) {
+
+		addIfFilter(filter);
+
+		return (O) this;
+	}
+	
 	private void addFilter(Filter<?> filter) {
 		if (filters == null) {
 			filters = new LinkedList<Filter<?>>();
@@ -95,5 +125,11 @@ public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterS
 		filters.add(filter);
 	}
 
+	private void addIfFilter(Filter<?> filter) {
+		if (ifFilters == null) {
+			ifFilters = new LinkedList<Filter<?>>();
+		}
+		ifFilters.add(filter);
+	}
 
 }
