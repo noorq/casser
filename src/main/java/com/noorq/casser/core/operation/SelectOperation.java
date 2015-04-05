@@ -130,7 +130,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		if (limit != null) {
 			select.limit(limit.intValue());
 		}
-		
+
 		if (filters != null && !filters.isEmpty()) {
 		
 			Where where = select.where();

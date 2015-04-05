@@ -29,6 +29,11 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 
 	private final CasserMappingEntity entity;
 	
+	private boolean ifExists = false;
+	
+	private int[] ttl;
+	private long[] timestamp;
+	
 	public DeleteOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity entity) {
 		super(sessionOperations);
 		
@@ -42,12 +47,23 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 
 			Delete delete = QueryBuilder.delete().from(entity.getName().toCql());
 			
+			if (this.ifExists) {
+				delete.ifExists();
+			}
+			
 			Where where = delete.where();
 			
 			for (Filter<?> filter : filters) {
 				where.and(filter.getClause(sessionOps.getValuePreparer()));
 			}
 			
+			if (this.ttl != null) {
+				delete.using(QueryBuilder.ttl(this.ttl[0]));
+			}
+			if (this.timestamp != null) {
+				delete.using(QueryBuilder.timestamp(this.timestamp[0]));
+			}
+
 			return delete;
 
 		}
@@ -61,4 +77,20 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 		return resultSet;
 	}
 	
+	public DeleteOperation ifExists() {
+		this.ifExists = true;
+		return this;
+	}
+	
+	public DeleteOperation usingTtl(int ttl) {
+		this.ttl = new int[1];
+		this.ttl[0] = ttl;
+		return this;
+	}
+
+	public DeleteOperation usingTimestamp(long timestamp) {
+		this.timestamp = new long[1];
+		this.timestamp[0] = timestamp;
+		return this;
+	}
 }

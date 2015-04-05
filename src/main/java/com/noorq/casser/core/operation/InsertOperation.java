@@ -39,6 +39,9 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
 	private final List<Tuple2<CasserPropertyNode, Object>> values = new ArrayList<Tuple2<CasserPropertyNode, Object>>();
 	private final boolean ifNotExists;
 
+	private int[] ttl;
+	private long[] timestamp;
+	
 	public InsertOperation(AbstractSessionOperations sessionOperations, boolean ifNotExists) {
 		super(sessionOperations);
 		
@@ -112,6 +115,13 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
 			insert.value(t._1.getColumnName(), t._2);
 		});
 		
+		if (this.ttl != null) {
+			insert.using(QueryBuilder.ttl(this.ttl[0]));
+		}
+		if (this.timestamp != null) {
+			insert.using(QueryBuilder.timestamp(this.timestamp[0]));
+		}
+		
 		return insert;
 	}
 
@@ -119,7 +129,17 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
 	public ResultSet transform(ResultSet resultSet) {
 		return resultSet;
 	}
-	
-	
+
+	public InsertOperation usingTtl(int ttl) {
+		this.ttl = new int[1];
+		this.ttl[0] = ttl;
+		return this;
+	}
+
+	public InsertOperation usingTimestamp(long timestamp) {
+		this.timestamp = new long[1];
+		this.timestamp[0] = timestamp;
+		return this;
+	}
 	
 }

@@ -36,6 +36,9 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 	private final CasserPropertyNode[] props;
 	private final Object[] vals;
 
+	private int[] ttl;
+	private long[] timestamp;
+	
 	public UpdateOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
 		
@@ -93,6 +96,8 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		
 		Update update = QueryBuilder.update(entity.getName().toCql());
 		
+		
+		
 		for (int i = 0; i != props.length; ++i) {
 			
 			Object value = sessionOps.getValuePreparer().prepareColumnValue(vals[i], props[i].getProperty());
@@ -108,12 +113,31 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 			}
 		}
 		
+		if (this.ttl != null) {
+			update.using(QueryBuilder.ttl(this.ttl[0]));
+		}
+		if (this.timestamp != null) {
+			update.using(QueryBuilder.timestamp(this.timestamp[0]));
+		}
+		
 		return update;
 	}
 
 	@Override
 	public ResultSet transform(ResultSet resultSet) {
 		return resultSet;
+	}
+	
+	public UpdateOperation usingTtl(int ttl) {
+		this.ttl = new int[1];
+		this.ttl[0] = ttl;
+		return this;
+	}
+
+	public UpdateOperation usingTimestamp(long timestamp) {
+		this.timestamp = new long[1];
+		this.timestamp[0] = timestamp;
+		return this;
 	}
 	
 

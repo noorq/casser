@@ -35,11 +35,20 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 	public abstract Statement buildStatement();
 	
 	private ConsistencyLevel consistencyLevel;
+	private ConsistencyLevel serialConsistencyLevel;
 	private RetryPolicy retryPolicy;
 	private boolean enableTracing = false;
+	private long[] defaultTimestamp = null;
+	private int[] fetchSize = null;
 	
 	public AbstractStatementOperation(AbstractSessionOperations sessionOperations) {
 		this.sessionOps = sessionOperations;
+	}
+	
+	public O defaultTimestamp(long timestamp) {
+		this.defaultTimestamp = new long[1];
+		this.defaultTimestamp[0] = timestamp;
+		return (O) this;
 	}
 	
 	public O retryPolicy(RetryPolicy retryPolicy) {
@@ -87,6 +96,31 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		return (O) this;
 	}
 
+	public O serialConsistency(ConsistencyLevel level) {
+		this.serialConsistencyLevel = level;
+		return (O) this;
+	}
+
+	public O serialConsistencyAny() {
+		this.serialConsistencyLevel = ConsistencyLevel.ANY;
+		return (O) this;
+	}
+
+	public O serialConsistencyOne() {
+		this.serialConsistencyLevel = ConsistencyLevel.ONE;
+		return (O) this;
+	}
+
+	public O serialConsistencyQuorum() {
+		this.serialConsistencyLevel = ConsistencyLevel.QUORUM;
+		return (O) this;
+	}
+
+	public O serialConsistencyAll() {
+		this.serialConsistencyLevel = ConsistencyLevel.ALL;
+		return (O) this;
+	}	
+	
 	public O disableTracing() {
 		this.enableTracing = false;
 		return (O) this;
@@ -102,10 +136,24 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		return (O) this;
 	}
 
+	public O fetchSize(int fetchSize) {
+		this.fetchSize = new int[1];
+		this.fetchSize[0] = fetchSize;
+		return (O) this;
+	}
+	
 	protected Statement options(Statement statement) {
+		
+		if (defaultTimestamp != null) {
+			statement.setDefaultTimestamp(defaultTimestamp[0]);
+		}
 		
 		if (consistencyLevel != null) {
 			statement.setConsistencyLevel(consistencyLevel);
+		}
+		
+		if (serialConsistencyLevel != null) {
+			statement.setSerialConsistencyLevel(serialConsistencyLevel);
 		}
 		
 		if (retryPolicy != null) {
@@ -117,6 +165,10 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		}
 		else {
 			statement.disableTracing();
+		}
+		
+		if (fetchSize != null) {
+			statement.setFetchSize(fetchSize[0]);
 		}
 		
 		return statement;
