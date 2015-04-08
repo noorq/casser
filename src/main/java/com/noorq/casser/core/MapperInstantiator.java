@@ -17,8 +17,8 @@ package com.noorq.casser.core;
 
 import java.util.Map;
 
-public interface WrapperInstantiator {
+public interface MapperInstantiator {
 
-	 <E> E instantiate(Map<String, Object> map, Class<E> iface, ClassLoader classLoader);
+	 <E> E instantiate(Class<E> iface, Map<String, Object> src, ClassLoader classLoader);
 	 
 }

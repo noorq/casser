@@ -95,12 +95,12 @@ public final class Casser {
 		return (E) instance;
 	}
 	
-	public static <E> E wrap(Map<String, Object> map, Class<E> iface) {
-		return wrap(map, iface, iface.getClassLoader());
+	public static <E> E map(Class<E> iface, Map<String, Object> src) {
+		return map(iface, src, iface.getClassLoader());
 	}
 
-	public static <E> E wrap(Map<String, Object> map, Class<E> iface, ClassLoader classLoader) {
-		return settings.getWrapperInstantiator().instantiate(map, iface, classLoader);
+	public static <E> E map(Class<E> iface, Map<String, Object> src, ClassLoader classLoader) {
+		return settings.getMapperInstantiator().instantiate(iface, src, classLoader);
 	}
 
 }

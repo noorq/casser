@@ -35,7 +35,7 @@ public class WrapperTest {
 		map.put("active", Boolean.TRUE);
 		map.put("unknownField", "he-he");
 		
-		Account account = Casser.wrap(map, Account.class);
+		Account account = Casser.map(Account.class, map);
 		
 		Assert.assertEquals(Long.valueOf(123L), account.id());
 		Assert.assertTrue(account.active());
@@ -49,7 +49,7 @@ public class WrapperTest {
 		
 		map.put("id", 123L);
 		
-		Account account = Casser.wrap(map, Account.class);
+		Account account = Casser.map(Account.class, map);
 		
 		Assert.assertFalse(account.active());
 				
@@ -58,7 +58,7 @@ public class WrapperTest {
 	@Test(expected=CasserException.class)
 	public void testWrongMethods() throws Exception {
 		
-		WrongAccount wrongAccount = Casser.wrap(new HashMap<String, Object>(), WrongAccount.class);
+		WrongAccount wrongAccount = Casser.map(WrongAccount.class, new HashMap<String, Object>());
 		
 		wrongAccount.id();
 

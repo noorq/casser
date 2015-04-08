@@ -28,6 +28,9 @@ public interface User {
 	@Column("override_name")
 	String name();
 	
+	@Column
 	Integer age();
+	
+	String notAColumn();
 	
 }

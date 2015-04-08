@@ -18,19 +18,19 @@ package com.noorq.casser.core.reflect;
 import java.lang.reflect.Proxy;
 import java.util.Map;
 
-import com.noorq.casser.core.WrapperInstantiator;
+import com.noorq.casser.core.MapperInstantiator;
 import com.noorq.casser.mapping.MapExportable;
 
-public enum ReflectionWrapperInstantiator implements WrapperInstantiator {
+public enum ReflectionMapperInstantiator implements MapperInstantiator {
 
 	INSTANCE;
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <E> E instantiate(Map<String, Object> map, Class<E> iface,
+	public <E> E instantiate(Class<E> iface, Map<String, Object> src, 
 			ClassLoader classLoader) {
 
-		WrapperInvocationHandler<E> handler = new WrapperInvocationHandler<E>(map, iface);
+		MapperInvocationHandler<E> handler = new MapperInvocationHandler<E>(iface, src);
 		E proxy = (E) Proxy.newProxyInstance(
 		                            classLoader,
 		                            new Class[] { iface, MapExportable.class },

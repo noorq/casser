@@ -19,9 +19,9 @@ import java.lang.reflect.Method;
 import java.util.function.Function;
 
 import com.noorq.casser.core.DslInstantiator;
-import com.noorq.casser.core.WrapperInstantiator;
+import com.noorq.casser.core.MapperInstantiator;
 import com.noorq.casser.core.reflect.ReflectionDslInstantiator;
-import com.noorq.casser.core.reflect.ReflectionWrapperInstantiator;
+import com.noorq.casser.core.reflect.ReflectionMapperInstantiator;
 import com.noorq.casser.mapping.convert.CamelCaseToUnderscoreConverter;
 
 public class DefaultCasserSettings implements CasserSettings {
@@ -42,8 +42,8 @@ public class DefaultCasserSettings implements CasserSettings {
 	}
 
 	@Override
-	public WrapperInstantiator getWrapperInstantiator() {
-		return ReflectionWrapperInstantiator.INSTANCE;
+	public MapperInstantiator getMapperInstantiator() {
+		return ReflectionMapperInstantiator.INSTANCE;
 	}
 
 }

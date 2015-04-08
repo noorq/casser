@@ -23,13 +23,13 @@ import java.util.Map;
 import com.noorq.casser.mapping.MapExportable;
 import com.noorq.casser.support.CasserException;
 
-public class WrapperInvocationHandler<E> implements InvocationHandler {
+public class MapperInvocationHandler<E> implements InvocationHandler {
 
-	private final Map<String, Object> map;
+	private final Map<String, Object> src;
 	private final Class<E> iface;
 	
-	public WrapperInvocationHandler(Map<String, Object> map, Class<E> iface) {
-		this.map = map;
+	public MapperInvocationHandler(Class<E> iface, Map<String, Object> src) {
+		this.src = src;
 		this.iface = iface;
 	}
 	
@@ -44,14 +44,14 @@ public class WrapperInvocationHandler<E> implements InvocationHandler {
 		String methodName = method.getName();
 		
 		if ("toString".equals(methodName)) {
-			return "Wrapper:" + iface + ":" + map.toString();
+			return "Wrapper:" + iface + ":" + src.toString();
 		}
 
 		if (MapExportable.TO_MAP_METHOD.equals(methodName)) {
-			return Collections.unmodifiableMap(map);
+			return Collections.unmodifiableMap(src);
 		}
 
-		Object value = map.get(methodName);
+		Object value = src.get(methodName);
 		
 		if (value == null) {
 			

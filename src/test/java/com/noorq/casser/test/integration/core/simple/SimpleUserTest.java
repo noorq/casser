@@ -20,9 +20,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
 import com.noorq.casser.core.Casser;
+
+import static com.noorq.casser.core.Query.*;
+
 import com.noorq.casser.core.CasserSession;
 import com.noorq.casser.core.Operator;
 import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
@@ -59,7 +60,12 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 		public Integer age() {
 			return age;
 		}
-		
+
+		@Override
+		public String notAColumn() {
+			return "not a column";
+		}
+
 	}
 	
 	@Test
@@ -87,6 +93,12 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 				.get();
 		
 		Assert.assertEquals("_albert", name);
+		
+		User u = session.select(User.class).where(user::id, eq(123L)).sync().findFirst().get();
+		
+		Assert.assertEquals(Long.valueOf(123L), u.id());
+		Assert.assertEquals("albert", u.name());
+		Assert.assertEquals(Integer.valueOf(35), u.age());
 		
 		session.delete(user).where(user::id, "==", 123L).sync();
 		

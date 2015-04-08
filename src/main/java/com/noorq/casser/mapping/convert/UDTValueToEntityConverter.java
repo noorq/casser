@@ -22,7 +22,7 @@ import com.datastax.driver.core.UDTValue;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.mapping.CasserMappingEntity;
 import com.noorq.casser.mapping.CasserMappingRepository;
-import com.noorq.casser.mapping.UDTValueMap;
+import com.noorq.casser.mapping.map.UDTValueProviderMap;
 import com.noorq.casser.mapping.value.UDTColumnValueProvider;
 import com.noorq.casser.support.CasserMappingException;
 
@@ -45,11 +45,11 @@ public final class UDTValueToEntityConverter implements Function<UDTValue, Objec
 	@Override
 	public Object apply(UDTValue source) {
 		
-		Map<String, Object> map = new UDTValueMap(source, 
+		Map<String, Object> map = new UDTValueProviderMap(source, 
 				new UDTColumnValueProvider(repository),
 				entity);
 		
-		return Casser.wrap(map, iface);
+		return Casser.map(iface, map);
 		
 	}
 

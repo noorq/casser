@@ -40,31 +40,13 @@ public final class RowColumnValueProvider implements ColumnValueProvider {
 
 		Row source = (Row) sourceObj;
 		
-		if (source.isNull(columnIndex)) {
-			return null;
+		Object value = null;
+		if (columnIndex != -1) {
+			value = readValueByIndex(source, columnIndex);
 		}
-		
-		ColumnDefinitions columnDefinitions = source.getColumnDefinitions();
-		
-		DataType columnType = columnDefinitions.getType(columnIndex);
-
-		if (columnType.isCollection()) {
-
-			List<DataType> typeArguments = columnType.getTypeArguments();
-
-			switch (columnType.getName()) {
-			case SET:
-				return (V) source.getSet(columnIndex, typeArguments.get(0).asJavaClass());
-			case MAP:
-				return (V) source.getMap(columnIndex, typeArguments.get(0).asJavaClass(), typeArguments.get(1).asJavaClass());
-			case LIST:
-				return (V) source.getList(columnIndex, typeArguments.get(0).asJavaClass());
-			}
-
+		else {
+			value = readValueByName(source, property.getColumnName().getName());
 		}
-
-		ByteBuffer bytes = source.getBytesUnsafe(columnIndex);
-		Object value = columnType.deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);
 
 		if (value != null) {
 
@@ -79,4 +61,66 @@ public final class RowColumnValueProvider implements ColumnValueProvider {
 		return (V) value;
 	}
 
+	private Object readValueByIndex(Row source, int columnIndex) {
+		
+		if (source.isNull(columnIndex)) {
+			return null;
+		}
+		
+		ColumnDefinitions columnDefinitions = source.getColumnDefinitions();
+		
+		DataType columnType = columnDefinitions.getType(columnIndex);
+
+		if (columnType.isCollection()) {
+
+			List<DataType> typeArguments = columnType.getTypeArguments();
+
+			switch (columnType.getName()) {
+			case SET:
+				return source.getSet(columnIndex, typeArguments.get(0).asJavaClass());
+			case MAP:
+				return source.getMap(columnIndex, typeArguments.get(0).asJavaClass(), typeArguments.get(1).asJavaClass());
+			case LIST:
+				return source.getList(columnIndex, typeArguments.get(0).asJavaClass());
+			}
+
+		}
+
+		ByteBuffer bytes = source.getBytesUnsafe(columnIndex);
+		Object value = columnType.deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);
+
+		return value;
+	}
+	
+	private Object readValueByName(Row source, String columnName) {
+		
+		if (source.isNull(columnName)) {
+			return null;
+		}
+		
+		ColumnDefinitions columnDefinitions = source.getColumnDefinitions();
+		
+		DataType columnType = columnDefinitions.getType(columnName);
+
+		if (columnType.isCollection()) {
+
+			List<DataType> typeArguments = columnType.getTypeArguments();
+
+			switch (columnType.getName()) {
+			case SET:
+				return source.getSet(columnName, typeArguments.get(0).asJavaClass());
+			case MAP:
+				return source.getMap(columnName, typeArguments.get(0).asJavaClass(), typeArguments.get(1).asJavaClass());
+			case LIST:
+				return source.getList(columnName, typeArguments.get(0).asJavaClass());
+			}
+
+		}
+
+		ByteBuffer bytes = source.getBytesUnsafe(columnName);
+		Object value = columnType.deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);
+
+		return value;
+	}
+	
 }

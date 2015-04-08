@@ -16,8 +16,12 @@
 package com.noorq.casser.core;
 
 import java.io.Closeable;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 import com.datastax.driver.core.CloseFuture;
 import com.datastax.driver.core.Session;
@@ -38,6 +42,7 @@ import com.noorq.casser.mapping.CasserMappingEntity;
 import com.noorq.casser.mapping.CasserMappingRepository;
 import com.noorq.casser.mapping.MappingRepositoryBuilder;
 import com.noorq.casser.mapping.MappingUtil;
+import com.noorq.casser.mapping.map.RowProviderMap;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
 import com.noorq.casser.mapping.value.RowColumnValueProvider;
@@ -112,6 +117,26 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		return valuePreparer;
 	}
 
+	public <E> SelectOperation<E> select(Class<E> entityClass) {
+		Objects.requireNonNull(entityClass, "entityClass is empty");
+		
+		Class<?> iface = MappingUtil.getMappingInterface(entityClass);
+		CasserMappingEntity entity = mappingRepository.getEntity(iface);
+		
+		List<CasserPropertyNode> props = entity.getMappingProperties()
+		.stream()
+		.map(p -> new CasserPropertyNode(p, Optional.empty()))
+		.collect(Collectors.toList());
+		
+		ColumnValueProvider valueProvider = getValueProvider();
+		
+		return new SelectOperation<E>(this, (r) -> {
+			Map<String, Object> map = new RowProviderMap(r, valueProvider, entity);
+			return (E) Casser.map(iface, map);
+			
+		}, props.toArray(new CasserPropertyNode[props.size()]));
+	}
+	
 	public <V1> SelectOperation<Tuple1<V1>> select(Getter<V1> getter1) {
 		Objects.requireNonNull(getter1, "field 1 is empty");
 		

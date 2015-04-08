@@ -19,7 +19,7 @@ import java.lang.reflect.Method;
 import java.util.function.Function;
 
 import com.noorq.casser.core.DslInstantiator;
-import com.noorq.casser.core.WrapperInstantiator;
+import com.noorq.casser.core.MapperInstantiator;
 
 public interface CasserSettings {
 
@@ -29,6 +29,6 @@ public interface CasserSettings {
 
 	DslInstantiator getDslInstantiator();
 	
-	WrapperInstantiator getWrapperInstantiator();
+	MapperInstantiator getMapperInstantiator();
 
 }
