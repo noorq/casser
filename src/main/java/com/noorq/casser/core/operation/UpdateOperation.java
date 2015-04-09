@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.Assignment;
@@ -70,6 +71,241 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		return this;
 	}
 	
+	
+	/*
+	 * 
+	 * 
+	 * COUNTER
+	 * 
+	 * 
+	 */
+	
+	public <V> UpdateOperation increment(Getter<V> counterGetter) {
+		return increment(counterGetter, 1L);
+	}
+
+	public <V> UpdateOperation increment(Getter<V> counterGetter, long delta) {
+		
+		Objects.requireNonNull(counterGetter, "counterGetter is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(counterGetter);
+		
+		assignments.add(QueryBuilder.incr(p.getColumnName(), delta));
+		
+		addPropertyNode(p);
+		
+		return this;
+		
+	}
+
+	public <V> UpdateOperation decrement(Getter<V> counterGetter) {
+		return decrement(counterGetter, 1L);
+	}
+
+	public <V> UpdateOperation decrement(Getter<V> counterGetter, long delta) {
+		
+		Objects.requireNonNull(counterGetter, "counterGetter is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(counterGetter);
+		
+		assignments.add(QueryBuilder.decr(p.getColumnName(), delta));
+		
+		addPropertyNode(p);
+		
+		return this;
+		
+	}
+	
+	/*
+	 * 
+	 * 
+	 * LIST
+	 * 
+	 */
+	
+
+	public <V> UpdateOperation prepend(Getter<List<V>> listGetter, V value) {
+		
+		Objects.requireNonNull(listGetter, "listGetter is empty");
+		Objects.requireNonNull(value, "value is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
+		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		
+		assignments.add(QueryBuilder.prepend(p.getColumnName(), value));
+		
+		addPropertyNode(p);
+		
+		return this;
+	}
+
+	public <V> UpdateOperation prependAll(Getter<List<V>> listGetter, List<V> value) {
+		
+		Objects.requireNonNull(listGetter, "listGetter is empty");
+		Objects.requireNonNull(value, "value is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
+		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		
+		assignments.add(QueryBuilder.prependAll(p.getColumnName(), value));
+		
+		addPropertyNode(p);
+		
+		return this;
+	}
+	
+	public <V> UpdateOperation setIdx(Getter<List<V>> listGetter, int idx, V value) {
+		
+		Objects.requireNonNull(listGetter, "listGetter is empty");
+		Objects.requireNonNull(value, "value is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
+		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		
+		assignments.add(QueryBuilder.setIdx(p.getColumnName(), idx, value));
+		
+		addPropertyNode(p);
+		
+		return this;
+	}
+	
+	public <V> UpdateOperation append(Getter<List<V>> listGetter, V value) {
+		
+		Objects.requireNonNull(listGetter, "listGetter is empty");
+		Objects.requireNonNull(value, "value is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
+		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		
+		assignments.add(QueryBuilder.append(p.getColumnName(), value));
+		
+		addPropertyNode(p);
+		
+		return this;
+	}
+	
+	public <V> UpdateOperation appendAll(Getter<List<V>> listGetter, List<V> value) {
+		
+		Objects.requireNonNull(listGetter, "listGetter is empty");
+		Objects.requireNonNull(value, "value is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
+		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		
+		assignments.add(QueryBuilder.appendAll(p.getColumnName(), value));
+		
+		addPropertyNode(p);
+		
+		return this;
+	}
+	
+	
+	public <V> UpdateOperation discard(Getter<List<V>> listGetter, V value) {
+		
+		Objects.requireNonNull(listGetter, "listGetter is empty");
+		Objects.requireNonNull(value, "value is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
+		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		
+		assignments.add(QueryBuilder.discard(p.getColumnName(), value));
+		
+		addPropertyNode(p);
+		
+		return this;
+	}
+	
+	public <V> UpdateOperation discardAll(Getter<List<V>> listGetter, List<V> value) {
+		
+		Objects.requireNonNull(listGetter, "listGetter is empty");
+		Objects.requireNonNull(value, "value is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
+		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		
+		assignments.add(QueryBuilder.discardAll(p.getColumnName(), value));
+		
+		addPropertyNode(p);
+		
+		return this;
+	}
+	
+	/*
+	 * 
+	 * 
+	 * SET
+	 * 
+	 * 
+	 */
+	
+	public <V> UpdateOperation add(Getter<Set<V>> setGetter, V value) {
+		
+		Objects.requireNonNull(setGetter, "setGetter is empty");
+		Objects.requireNonNull(value, "value is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
+		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		
+		assignments.add(QueryBuilder.add(p.getColumnName(), value));
+		
+		addPropertyNode(p);
+		
+		return this;
+	}
+	
+	public <V> UpdateOperation addAll(Getter<Set<V>> setGetter, Set<V> value) {
+		
+		Objects.requireNonNull(setGetter, "setGetter is empty");
+		Objects.requireNonNull(value, "value is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
+		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		
+		assignments.add(QueryBuilder.addAll(p.getColumnName(), value));
+		
+		addPropertyNode(p);
+		
+		return this;
+	}
+	
+	public <V> UpdateOperation remove(Getter<Set<V>> setGetter, V value) {
+		
+		Objects.requireNonNull(setGetter, "setGetter is empty");
+		Objects.requireNonNull(value, "value is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
+		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		
+		assignments.add(QueryBuilder.remove(p.getColumnName(), value));
+		
+		addPropertyNode(p);
+		
+		return this;
+	}
+	
+	public <V> UpdateOperation removeAll(Getter<Set<V>> setGetter, Set<V> value) {
+		
+		Objects.requireNonNull(setGetter, "setGetter is empty");
+		Objects.requireNonNull(value, "value is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
+		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		
+		assignments.add(QueryBuilder.removeAll(p.getColumnName(), value));
+		
+		addPropertyNode(p);
+		
+		return this;
+	}
+	
+	/*
+	 * 
+	 * 
+	 * MAP
+	 * 
+	 * 
+	 */
+	
 	public <K,V> UpdateOperation put(Getter<Map<K, V>> mapGetter, K key, V value) {
 		
 		Objects.requireNonNull(mapGetter, "mapGetter is empty");
@@ -80,6 +316,21 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
 		
 		assignments.add(QueryBuilder.put(p.getColumnName(), key, value));
+		
+		addPropertyNode(p);
+		
+		return this;
+    }
+	
+	public <K,V> UpdateOperation putAll(Getter<Map<K, V>> mapGetter, Map<K, V> map) {
+		
+		Objects.requireNonNull(mapGetter, "mapGetter is empty");
+		Objects.requireNonNull(map, "map is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(mapGetter);
+		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		
+		assignments.add(QueryBuilder.putAll(p.getColumnName(), map));
 		
 		addPropertyNode(p);
 		
