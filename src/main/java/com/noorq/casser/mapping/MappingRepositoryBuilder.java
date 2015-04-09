@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.noorq.casser.support.Either;
 
@@ -82,7 +83,7 @@ public final class MappingRepositoryBuilder {
 			
 			Either<DataType, IdentityName> type = prop.getColumnType();
 			
-			if (type.isRight()) {
+			if (type.isRight() && !UDTValue.class.isAssignableFrom(prop.getJavaType())) {
 				
 				add(prop.getJavaType(), OPTIONAL_UDT);
 				

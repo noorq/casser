@@ -22,12 +22,12 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.UDTValue;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.mapping.CasserMappingEntity;
 import com.noorq.casser.mapping.CasserMappingProperty;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.support.CasserException;
-import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.DslPropertyException;
 import com.noorq.casser.support.Either;
 
@@ -51,7 +51,7 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			
 			Either<DataType, IdentityName> type = prop.getColumnType();
 			
-			if (type.isRight()) {
+			if (type.isRight() && !UDTValue.class.isAssignableFrom(prop.getJavaType())) {
 				
 				Object childDsl = Casser.dsl(prop.getJavaType(), classLoader,
 						Optional.of(new CasserPropertyNode(prop, parent)));
@@ -82,9 +82,6 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 				
 				if (childDsl != null) {
 					return childDsl;
-				}
-				else {
-					throw new CasserMappingException("childDsl not found for " + method);
 				}
 				
 			}

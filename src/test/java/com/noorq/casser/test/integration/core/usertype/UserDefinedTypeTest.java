@@ -60,6 +60,11 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		public Address address() {
 			return address;
 		}
+
+		@Override
+		public UDTValue address2() {
+			return null;
+		}
 		
 	}
 	
@@ -152,6 +157,11 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		
 		
 		
+	}
+	
+	@Test
+	public void testPrint() {
+		System.out.println(account);
 	}
 	
 	@Test

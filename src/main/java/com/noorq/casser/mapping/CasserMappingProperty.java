@@ -242,7 +242,20 @@ public final class CasserMappingProperty implements CasserProperty {
 			return Either.left(dataType);
 		}
 		else {
-			IdentityName udtName = MappingUtil.getUserDefinedTypeName(javaType, false);
+			
+			IdentityName udtName = null;
+			
+			if (UDTValue.class.isAssignableFrom(javaType)) {
+				UserTypeName userTypeName = getter.getDeclaredAnnotation(UserTypeName.class);
+				if (userTypeName == null) {
+					throw new CasserMappingException("absent UserTypeName annotation for " + getter);
+				}
+				udtName = new IdentityName(userTypeName.value(), userTypeName.forceQuote());
+			}
+			else {
+			    udtName = MappingUtil.getUserDefinedTypeName(javaType, false);
+			}
+			
 			return Either.right(udtName);
 		}
 		
@@ -254,7 +267,7 @@ public final class CasserMappingProperty implements CasserProperty {
 		if (annotation != null && annotation.value() != null) {
 			return qualifyAnnotatedType(getter, annotation);
 		}
-
+		
 		if (Enum.class.isAssignableFrom(javaType)) {
 			return DataType.text();
 		}
