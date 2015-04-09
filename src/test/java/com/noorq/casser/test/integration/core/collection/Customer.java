@@ -3,6 +3,7 @@ package com.noorq.casser.test.integration.core.collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import com.datastax.driver.core.DataType.Name;
 import com.noorq.casser.mapping.DataTypeName;
@@ -13,7 +14,7 @@ import com.noorq.casser.mapping.Table;
 public interface Customer {
 
 	@PartitionKey
-	int id();
+	UUID id();
 	
 	@DataTypeName(value = Name.SET, typeParameters={Name.TEXT})
 	Set<String> aliases();

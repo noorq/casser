@@ -37,7 +37,7 @@ import com.noorq.casser.support.CasserMappingException;
 public final class InsertOperation extends AbstractOperation<ResultSet, InsertOperation> {
 
 	private final List<Tuple2<CasserPropertyNode, Object>> values = new ArrayList<Tuple2<CasserPropertyNode, Object>>();
-	private final boolean ifNotExists;
+	private boolean ifNotExists;
 
 	private int[] ttl;
 	private long[] timestamp;
@@ -69,6 +69,16 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
 		
 	}
 
+	public InsertOperation ifNotExists() {
+		this.ifNotExists = true;
+		return this;
+	}
+	
+	public InsertOperation ifNotExists(boolean enable) {
+		this.ifNotExists = enable;
+		return this;
+	}
+	
 	public <V> InsertOperation value(Getter<V> getter, V val) {
 		
 		Objects.requireNonNull(getter, "getter is empty");

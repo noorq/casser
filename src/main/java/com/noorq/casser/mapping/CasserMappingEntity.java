@@ -17,11 +17,10 @@ package com.noorq.casser.mapping;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
+import com.google.common.collect.ImmutableMap;
 import com.noorq.casser.config.CasserSettings;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.support.CasserMappingException;
@@ -31,7 +30,7 @@ public final class CasserMappingEntity implements CasserEntity {
 	private final Class<?> iface;
 	private final CasserEntityType type;
 	private final IdentityName name;
-	private final Map<String, CasserMappingProperty> props = new HashMap<String, CasserMappingProperty>();
+	private final ImmutableMap<String, CasserMappingProperty> props;
 	
 	public CasserMappingEntity(Class<?> iface) {
 		this(iface, autoDetectType(iface));
@@ -51,18 +50,21 @@ public final class CasserMappingEntity implements CasserEntity {
 		
 		Method[] all = iface.getDeclaredMethods();
 		
+		ImmutableMap.Builder<String, CasserMappingProperty> propsBuilder = ImmutableMap.<String, CasserMappingProperty>builder();
+		
 		for (Method m : all) {
 			
 			if (settings.getGetterMethodDetector().apply(m)) {
 				
 				CasserMappingProperty prop = new CasserMappingProperty(this, m);
 				
-				props.put(prop.getPropertyName(), prop);
+				propsBuilder.put(prop.getPropertyName(), prop);
 				
 			}
 			
 		}
 
+		this.props = propsBuilder.build();
 	}
 
 	@Override
@@ -75,13 +77,8 @@ public final class CasserMappingEntity implements CasserEntity {
 	}	
 	
 	@Override
-	public String toString() {
-		return iface.toString();
-	}
-
-	@Override
-	public Collection<CasserProperty> getProperties() {
-		return Collections.unmodifiableCollection(props.values());
+	public Collection<? extends CasserProperty> getProperties() {
+		return props.values();
 	}
 	
 	@Override
@@ -90,7 +87,7 @@ public final class CasserMappingEntity implements CasserEntity {
 	}
 
 	public Collection<CasserMappingProperty> getMappingProperties() {
-		return Collections.unmodifiableCollection(props.values());
+		return props.values();
 	}
 	
 	public CasserMappingProperty getMappingProperty(String name) {
@@ -130,6 +127,52 @@ public final class CasserMappingEntity implements CasserEntity {
 		}
 
 		throw new CasserMappingException("entity must be annotated by @Table or @UserDefinedType " + iface);
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder str = new StringBuilder();
+		str.append(iface.getSimpleName()).append(":\n");
+		for (CasserMappingProperty prop : props.values()) {
+			String columnName = prop.getColumnName().getName();
+			str.append("  ");
+			str.append(prop.getColumnType());
+			str.append(" ");
+			str.append(prop.getPropertyName());
+			str.append("(");
+			if (!columnName.equals(prop.getPropertyName())) {
+				str.append(columnName);
+			}
+			str.append(") ");
+			
+			if (prop.isPartitionKey()) {
+				str.append("partition_key[");
+				str.append(prop.getOrdinal());
+				str.append("] ");
+			}
+
+			if (prop.isClusteringColumn()) {
+				str.append("clustering_column[");
+				str.append(prop.getOrdinal());
+				str.append("] ");
+				OrderingDirection od = prop.getOrdering();
+				if (od != null) {
+					str.append(od.name().toLowerCase()).append(" ");
+				}
+			}
+			
+			if (prop.isStatic()) {
+				str.append("static ");
+			}
+			
+			Optional<IdentityName> idx = prop.getIndexName();
+			if (idx.isPresent()) {
+				str.append("index(").append(idx.get().getName()).append(") "); 
+			}
+			
+			str.append("\n");
+		}
+		return str.toString();
 	}
 	
 }

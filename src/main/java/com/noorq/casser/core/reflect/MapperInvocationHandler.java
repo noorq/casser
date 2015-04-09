@@ -44,7 +44,7 @@ public class MapperInvocationHandler<E> implements InvocationHandler {
 		String methodName = method.getName();
 		
 		if ("toString".equals(methodName)) {
-			return "Wrapper:" + iface + ":" + src.toString();
+			return iface.getSimpleName() + ": " + src.toString();
 		}
 
 		if (MapExportable.TO_MAP_METHOD.equals(methodName)) {

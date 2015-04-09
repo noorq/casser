@@ -70,5 +70,15 @@ public final class Either<L, R> {
 		}
 		throw new IllegalStateException("unexpected state");
 	}
+
+	@Override
+	public String toString() {
+		if (left != null) {
+			return "[" + left + ",]";
+		}
+		return "[," + right + "]";
+	}
+	
+	
 	
 }

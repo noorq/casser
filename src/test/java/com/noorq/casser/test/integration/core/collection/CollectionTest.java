@@ -18,6 +18,7 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.CasserSession;
 import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
+import com.noorq.casser.test.integration.core.compound.Timeline;
 
 public class CollectionTest extends AbstractEmbeddedCassandraTest {
 
@@ -28,9 +29,13 @@ public class CollectionTest extends AbstractEmbeddedCassandraTest {
 	@Before
 	public void beforeTest() {
 		
+		
+		csession = Casser.init(getSession()).showCql().add(customer).autoCreateDrop().get();
+		
+		/*
 		Session session = getSession();
 		
-		Create create = SchemaBuilder.createTable("customers");
+		Create create = SchemaBuilder.createTable("customer");
 		
 		create.addPartitionKey("id", DataType.uuid());
 		create.addColumn("aliases", DataType.set(DataType.text()));
@@ -42,29 +47,39 @@ public class CollectionTest extends AbstractEmbeddedCassandraTest {
 		System.out.println(cql);
 		
 		session.execute(create);
+		*/
 		
 	}
 	
 	@Test
 	public void test() {
 
-		UUID id = UUID.randomUUID();
+		System.out.println(customer);
 		
-		Session session = getSession();
-
+		UUID id = UUID.randomUUID();
 		Map<String, String> props = new HashMap<String, String>();
 		props.put("key1", "value1");
 		props.put("key2", "value2");
 		
-		Insert insert = QueryBuilder.insertInto("customers")
+		csession.upsert()
+		.value(customer::id, id)
+		.value(customer::properties, props)
+		.sync();
+
+		csession.select(Customer.class).sync().forEach(System.out::println);
+
+		Session session = getSession();
+		/*
+		Insert insert = QueryBuilder.insertInto("customer")
 				.value("id", id)
 				.value("properties", props);
 		
 		System.out.println(insert);
 		
 		session.execute(insert);
+		*/
 
-		String cql = "SELECT properties FROM customers";
+		String cql = "SELECT properties FROM customer";
 
 		ResultSet resultSet = session.execute(cql);
 		

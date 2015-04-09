@@ -15,14 +15,26 @@
  */
 package com.noorq.casser.test.unit.core.dsl;
 
-import com.noorq.casser.mapping.MapExportable;
+import java.util.Date;
+
+import com.noorq.casser.mapping.ClusteringColumn;
+import com.noorq.casser.mapping.Column;
+import com.noorq.casser.mapping.Index;
+import com.noorq.casser.mapping.PartitionKey;
 import com.noorq.casser.mapping.Table;
 
 @Table
-public interface Account extends MapExportable {
+public interface Account {
 
+	@PartitionKey
 	Long id();
 	
+	@ClusteringColumn
+	Date time();
+	
+	@Index
+	@Column("is_active")
 	boolean active();
+	
 	
 }

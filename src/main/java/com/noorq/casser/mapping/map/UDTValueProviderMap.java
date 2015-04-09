@@ -116,5 +116,10 @@ public final class UDTValueProviderMap implements Map<String, Object> {
 	private void throwShouldNeverCall() {
 		throw new CasserMappingException("should never be called");
 	}
+
+	@Override
+	public String toString() {
+		return source.toString();
+	}
 	
 }

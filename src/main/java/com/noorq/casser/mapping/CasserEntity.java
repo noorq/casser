@@ -23,7 +23,7 @@ public interface CasserEntity {
 	
 	IdentityName getName();
 	
-	Collection<CasserProperty> getProperties();
+	Collection<? extends CasserProperty> getProperties();
 	
 	CasserProperty getProperty(String name);
 	

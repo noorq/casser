@@ -15,6 +15,7 @@
  */
 package com.noorq.casser.test.unit.core.dsl;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.noorq.casser.core.Casser;
@@ -22,20 +23,21 @@ import com.noorq.casser.support.DslPropertyException;
 
 public class DslTest {
 
+	static Account account;
+	
+	@BeforeClass
+	public static void beforeTests() {
+		account = Casser.dsl(Account.class);
+	}
+	
 	@Test
+	public void testToString() throws Exception {
+		System.out.println(account);
+	}
+	
+	@Test(expected=DslPropertyException.class)
 	public void test() throws Exception {
-		
-		Account account = Casser.dsl(Account.class);
-		
-		System.out.println("account = " + account);
-		
-		try {
-			account.id();
-		}
-		catch(DslPropertyException e) {
-			System.out.println(e.getPropertyNode().getProperty());
-		}
-		
+		account.id();
 	}
 	
 }
