@@ -15,10 +15,12 @@
  */
 package com.noorq.casser.test.integration.core.usertype;
 
+import static com.noorq.casser.core.Query.eq;
+
 import java.util.UUID;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.datastax.driver.core.DataType;
@@ -36,16 +38,15 @@ import com.datastax.driver.core.schemabuilder.CreateType;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.CasserSession;
-import com.noorq.casser.core.Query;
 import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
 public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 
-	Account account;
+	static Account account;
 	
-	CasserSession csession;
+	static CasserSession csession;
 	
-	UserType fullname;
+	static UserType fullname;
 	
 	public static class AccountImpl implements Account {
 
@@ -100,8 +101,8 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 	}
 	
 	
-	@Before
-	public void beforeTest() {
+	@BeforeClass
+	public static void beforeTest() {
 		
 		account = Casser.dsl(Account.class);
 		
@@ -167,6 +168,24 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 	}
 	
 	@Test
+	public void testMapping() {
+		
+		AddressImpl addr = new AddressImpl();
+		addr.street = "1 st";
+		addr.city = "San Jose";
+		
+		AccountImpl acc = new AccountImpl();
+		acc.id = 123L;
+		acc.address = addr;
+
+		csession.upsert(acc).sync();
+		
+		String streetName = csession.select(account.address()::street).where(account::id, eq(123L)).sync().findFirst().get()._1;
+		
+		Assert.assertEquals("1 st", streetName);
+	}
+	
+	@Test
 	public void testNoMapping() {
 		
 		String ks = getSession().getLoggedKeyspace();
@@ -182,7 +201,7 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 
 		csession.upsert(acc).sync();
 		
-		UDTValue found = csession.select(account::addressNoMapping).where(account::id, Query.eq(777L)).sync().findFirst().get()._1;
+		UDTValue found = csession.select(account::addressNoMapping).where(account::id, eq(777L)).sync().findFirst().get()._1;
 		
 		Assert.assertEquals(addressNoMapping.getType(), found.getType());
 		Assert.assertEquals(addressNoMapping.getString("line_1"), found.getString("line_1"));
