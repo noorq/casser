@@ -179,6 +179,10 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		return statement;
 	}
 
+	public Statement statement() {
+		return buildStatement();
+	}
+	
 	public String cql() {
 		Statement statement = buildStatement(); 
 		if (statement instanceof BuiltStatement) {

@@ -21,9 +21,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.datastax.driver.core.CloseFuture;
+import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.noorq.casser.core.operation.CountOperation;
 import com.noorq.casser.core.operation.DeleteOperation;
@@ -121,20 +123,23 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		Objects.requireNonNull(entityClass, "entityClass is empty");
 		
 		Class<?> iface = MappingUtil.getMappingInterface(entityClass);
-		CasserMappingEntity entity = mappingRepository.getEntity(iface);
-		
-		List<CasserPropertyNode> props = entity.getMappingProperties()
-		.stream()
-		.map(p -> new CasserPropertyNode(p, Optional.empty()))
-		.collect(Collectors.toList());
-		
+		CasserMappingEntity entity = mappingRepository.getEntity(iface);		
 		ColumnValueProvider valueProvider = getValueProvider();
 		
-		return new SelectOperation<E>(this, (r) -> {
+		return new SelectOperation<E>(this, entity, (r) -> {
 			Map<String, Object> map = new RowProviderMap(r, valueProvider, entity);
 			return (E) Casser.map(iface, map);
 			
-		}, props.toArray(new CasserPropertyNode[props.size()]));
+		});
+	}
+	
+	public <E> SelectOperation<E> select(Class<E> entityClass, Function<Row, E> rowMapper) {
+		Objects.requireNonNull(entityClass, "entityClass is empty");
+		
+		Class<?> iface = MappingUtil.getMappingInterface(entityClass);
+		CasserMappingEntity entity = mappingRepository.getEntity(iface);
+		
+		return new SelectOperation<E>(this, entity, rowMapper);
 	}
 	
 	public <V1> SelectOperation<Tuple1<V1>> select(Getter<V1> getter1) {

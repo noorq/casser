@@ -18,9 +18,11 @@ package com.noorq.casser.core.operation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -50,12 +52,23 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	protected List<Ordering> ordering = null;
 	protected Integer limit = null;
 	
+	public SelectOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity entity, Function<Row, E> rowMapper) {
+		super(sessionOperations);
+		this.rowMapper = rowMapper;
+		
+		List<CasserPropertyNode> props = entity.getMappingProperties()
+		.stream()
+		.map(p -> new CasserPropertyNode(p, Optional.empty()))
+		.collect(Collectors.toList());
+		
+		this.props = props.toArray(new CasserPropertyNode[props.size()]);	
+	}
+
 	public SelectOperation(AbstractSessionOperations sessionOperations, Function<Row, E> rowMapper, CasserPropertyNode... props) {
 		super(sessionOperations);
 		this.rowMapper = rowMapper;
 		this.props = props;	
 	}
-	
 	public CountOperation count() {
 		
 		CasserMappingEntity entity = null;

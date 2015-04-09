@@ -7,18 +7,15 @@ import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.schemabuilder.Create;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.driver.core.querybuilder.Update;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.CasserSession;
+import com.noorq.casser.core.Query;
 import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
-import com.noorq.casser.test.integration.core.compound.Timeline;
 
 public class CollectionTest extends AbstractEmbeddedCassandraTest {
 
@@ -66,8 +63,27 @@ public class CollectionTest extends AbstractEmbeddedCassandraTest {
 		.value(customer::properties, props)
 		.sync();
 
+		Update update = QueryBuilder.update("customer");
+		update.with(QueryBuilder.put("properties", "key3", "value3"));
+		update.where(QueryBuilder.eq("id", id));
+		String cql = update.setForceNoValues(true).getQueryString();
+		
+		System.out.println(cql);
+		
+		getSession().execute(update);
+		
+		
+		cql = csession.update().put(customer::properties, "key3", "value3")
+				.where(customer::id, Query.eq(id))
+				.cql();
+		
+		System.out.println("cql = " + cql);
+		
 		csession.select(Customer.class).sync().forEach(System.out::println);
 
+		
+		
+		
 		Session session = getSession();
 		/*
 		Insert insert = QueryBuilder.insertInto("customer")
@@ -79,7 +95,7 @@ public class CollectionTest extends AbstractEmbeddedCassandraTest {
 		session.execute(insert);
 		*/
 
-		String cql = "SELECT properties FROM customer";
+		cql = "SELECT properties FROM customer";
 
 		ResultSet resultSet = session.execute(cql);
 		

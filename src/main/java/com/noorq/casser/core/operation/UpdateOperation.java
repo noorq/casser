@@ -15,10 +15,13 @@
  */
 package com.noorq.casser.core.operation;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.querybuilder.Assignment;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
@@ -33,79 +36,69 @@ import com.noorq.casser.support.CasserMappingException;
 
 public final class UpdateOperation extends AbstractFilterOperation<ResultSet, UpdateOperation> {
 	
-	private final CasserPropertyNode[] props;
-	private final Object[] vals;
+	private CasserMappingEntity entity = null;
+	
+	private final List<Assignment> assignments = new ArrayList<Assignment>();
 
 	private int[] ttl;
 	private long[] timestamp;
 	
 	public UpdateOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
-		
-		this.props = new CasserPropertyNode[0];
-		this.vals = new Object[0];
 	}
 	
 	public UpdateOperation(AbstractSessionOperations sessionOperations, CasserPropertyNode p, Object v) {
 		super(sessionOperations);
 		
-		this.props = new CasserPropertyNode[1];
-		this.vals = new Object[1];
+		Object value = sessionOps.getValuePreparer().prepareColumnValue(v, p.getProperty());
+		assignments.add(QueryBuilder.set(p.getColumnName(), value));
 		
-		this.props[0] = p;
-		this.vals[0] = v;
-	}
-
-	public UpdateOperation(UpdateOperation other, CasserPropertyNode p, Object v) {
-		super(other.sessionOps);
-		
-		this.props = Arrays.copyOf(other.props, other.props.length + 1);
-		this.vals = Arrays.copyOf(other.vals, other.vals.length + 1);
-		
-		this.props[other.props.length] = p;
-		this.vals[other.vals.length] = v;
+		addPropertyNode(p);
 	}
 	
 	public <V> UpdateOperation set(Getter<V> getter, V v) {
-		Objects.requireNonNull(getter, "field is empty");
+		Objects.requireNonNull(getter, "getter is empty");
 		Objects.requireNonNull(v, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(getter);
 		
-		return new UpdateOperation(this, p, v);
+		Object value = sessionOps.getValuePreparer().prepareColumnValue(v, p.getProperty());
+		assignments.add(QueryBuilder.set(p.getColumnName(), value));
+		
+		addPropertyNode(p);
+		
+		return this;
 	}
+	
+	public <K,V> UpdateOperation put(Getter<Map<K, V>> mapGetter, K key, V value) {
+		
+		Objects.requireNonNull(mapGetter, "mapGetter is empty");
+		Objects.requireNonNull(key, "key is empty");
+		Objects.requireNonNull(value, "value is empty");
+
+		CasserPropertyNode p = MappingUtil.resolveMappingProperty(mapGetter);
+		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		
+		assignments.add(QueryBuilder.put(p.getColumnName(), key, value));
+		
+		addPropertyNode(p);
+		
+		return this;
+    }
 	
 	@Override
 	public BuiltStatement buildStatement() {
-		
-		CasserMappingEntity entity = null;
-		
-		for (CasserPropertyNode prop : props) {
-			if (entity == null) {
-				entity = prop.getEntity();
-			}
-			else if (entity != prop.getEntity()) {
-				throw new CasserMappingException("you can update columns only for a single entity " + entity.getMappingInterface() + " or " + prop.getEntity().getMappingInterface());
-			}
-		}
 		
 		if (entity == null) {
 			throw new CasserMappingException("no entity or table to update data");
 		}
 		
-		
 		Update update = QueryBuilder.update(entity.getName().toCql());
-		
-		
-		
-		for (int i = 0; i != props.length; ++i) {
-			
-			Object value = sessionOps.getValuePreparer().prepareColumnValue(vals[i], props[i].getProperty());
-			
-			update.with(QueryBuilder.set(props[i].getColumnName(), value));
-		
+
+		for (Assignment assignment : assignments) {
+			update.with(assignment);
 		}
-		
+
 		if (filters != null && !filters.isEmpty()) {
 			
 			for (Filter<?> filter : filters) {
@@ -147,5 +140,12 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		return this;
 	}
 	
-
+	private void addPropertyNode(CasserPropertyNode p) {
+		if (entity == null) {
+			entity = p.getEntity();
+		}
+		else if (entity != p.getEntity()) {
+			throw new CasserMappingException("you can update columns only for a single entity " + entity.getMappingInterface() + " or " + p.getEntity().getMappingInterface());
+		}
+	}
 }
