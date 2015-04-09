@@ -24,28 +24,16 @@ import com.noorq.casser.support.CasserMappingException;
 public final class Postulate<V> {
 
 	private final Operator operator;
-	private final V value;
 	private final V[] values;
 	
-	protected Postulate(Operator op, V value) {
-		this.operator = op;
-		this.value = value;
-		this.values = null;
-		
-		if (op == Operator.IN) {
-			throw new IllegalArgumentException("invalid usage of the 'in' operator");
-		}
-	}
-
 	protected Postulate(Operator op, V[] values) {
 		this.operator = op;
-		this.value = null;
 		this.values = values;
-
-		if (op != Operator.IN) {
-			throw new IllegalArgumentException("invalid usage of the non 'in' operator");
-		}
     }
+	
+	public static <V> Postulate<V> of(Operator op, V... values) {
+		return new Postulate<V>(op, values);
+	}
 	
 	public Clause getClause(CasserPropertyNode node, ColumnValuePreparer valuePreparer) {
 		
@@ -53,7 +41,7 @@ public final class Postulate<V> {
 		
 		case EQ:
 			return QueryBuilder.eq(node.getColumnName(), 
-					valuePreparer.prepareColumnValue(value, node.getProperty()));
+					valuePreparer.prepareColumnValue(values[0], node.getProperty()));
 		
 		case IN:
 			Object[] preparedValues = new Object[values.length];
@@ -64,19 +52,19 @@ public final class Postulate<V> {
 			
 		case LT:
 			return QueryBuilder.lt(node.getColumnName(), 
-					valuePreparer.prepareColumnValue(value, node.getProperty()));
+					valuePreparer.prepareColumnValue(values[0], node.getProperty()));
 
 		case LTE:
 			return QueryBuilder.lte(node.getColumnName(), 
-					valuePreparer.prepareColumnValue(value, node.getProperty()));
+					valuePreparer.prepareColumnValue(values[0], node.getProperty()));
 
 		case GT:
 			return QueryBuilder.gt(node.getColumnName(), 
-					valuePreparer.prepareColumnValue(value, node.getProperty()));
+					valuePreparer.prepareColumnValue(values[0], node.getProperty()));
 
 		case GTE:
 			return QueryBuilder.gte(node.getColumnName(), 
-					valuePreparer.prepareColumnValue(value, node.getProperty()));
+					valuePreparer.prepareColumnValue(values[0], node.getProperty()));
 
 		default:
 			throw new CasserMappingException("unknown filter operation " + operator);
@@ -91,7 +79,7 @@ public final class Postulate<V> {
 			return "in(" + values + ")";
 		}
 		
-		return operator.getName() + value;
+		return operator.getName() + values[0];
 		
 	}		
 	

@@ -17,7 +17,6 @@ package com.noorq.casser.core.operation;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -91,11 +90,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	
 	public <R> SelectTransformingOperation<R, E> map(Function<E, R> fn) {
 		return new SelectTransformingOperation<R, E>(this, fn);
-	}
-	
-	public SelectOperation<E> orderBy(Getter<?> getter, String direction) {
-		Objects.requireNonNull(direction, "direction is null");
-		return orderBy(getter, OrderingDirection.parseString(direction));
 	}
 	
 	public SelectOperation<E> orderBy(Getter<?> getter, OrderingDirection direction) {

@@ -17,6 +17,7 @@ package com.noorq.casser.test.integration.core.usertype;
 
 import java.util.UUID;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,6 +36,7 @@ import com.datastax.driver.core.schemabuilder.CreateType;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.CasserSession;
+import com.noorq.casser.core.Query;
 import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
 public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
@@ -43,13 +45,13 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 	
 	CasserSession csession;
 	
-	
 	UserType fullname;
 	
 	public static class AccountImpl implements Account {
 
 		long id;
 		Address address;
+		UDTValue addressNoMapping;
 		
 		@Override
 		public long id() {
@@ -62,8 +64,8 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		}
 
 		@Override
-		public UDTValue address2() {
-			return null;
+		public UDTValue addressNoMapping() {
+			return addressNoMapping;
 		}
 		
 	}
@@ -165,6 +167,30 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 	}
 	
 	@Test
+	public void testNoMapping() {
+		
+		String ks = getSession().getLoggedKeyspace();
+		UserType addressType = getSession().getCluster().getMetadata().getKeyspace(ks).getUserType("address0");
+		
+		UDTValue addressNoMapping = addressType.newValue();
+		addressNoMapping.setString("line_1", "Lundy Ave");
+		addressNoMapping.setString("city", "San Jose");
+		
+		AccountImpl acc = new AccountImpl();
+		acc.id = 777L;
+		acc.addressNoMapping = addressNoMapping;
+
+		csession.upsert(acc).sync();
+		
+		UDTValue found = csession.select(account::addressNoMapping).where(account::id, Query.eq(777L)).sync().findFirst().get()._1;
+		
+		Assert.assertEquals(addressNoMapping.getType(), found.getType());
+		Assert.assertEquals(addressNoMapping.getString("line_1"), found.getString("line_1"));
+		Assert.assertEquals(addressNoMapping.getString("city"), found.getString("city"));
+		
+	}
+	
+	//@Test
 	public void testUDT() {
 		
 		

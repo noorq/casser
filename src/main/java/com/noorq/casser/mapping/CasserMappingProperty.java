@@ -150,6 +150,10 @@ public final class CasserMappingProperty implements CasserProperty {
 			
 			Class<Object> javaType = (Class<Object>) getJavaType();
 			
+			if (UDTValue.class.isAssignableFrom(javaType)) {
+				return null;
+			}
+			
 			return TypedConverter.create(
 					UDTValue.class,
 					javaType,
@@ -195,6 +199,10 @@ public final class CasserMappingProperty implements CasserProperty {
 		Either<DataType, IdentityName> columnType = getColumnType();
 		
 		if (columnType.isRight()) {
+			
+			if (UDTValue.class.isAssignableFrom(javaType)) {
+				return null;
+			}
 			
 			Class<Object> javaType = (Class<Object>) getJavaType();
 			

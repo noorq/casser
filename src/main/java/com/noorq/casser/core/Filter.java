@@ -21,23 +21,12 @@ import com.datastax.driver.core.querybuilder.Clause;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
-import com.noorq.casser.support.CasserMappingException;
 
 public final class Filter<V> {
 
 	private final CasserPropertyNode node;
 	private final Postulate<V> postulate;
 	
-	private Filter(CasserPropertyNode node, Operator op, V value) {
-		this.node = node;
-		this.postulate = new Postulate<V>(op, value);
-	}
-
-	private Filter(CasserPropertyNode node, Operator op, V[] values) {
-		this.node = node;
-		this.postulate = new Postulate<V>(op, values);
-	}
-
 	private Filter(CasserPropertyNode node, Postulate<V> postulate) {
 		this.node = node;
 		this.postulate = postulate;
@@ -55,7 +44,7 @@ public final class Filter<V> {
 		return create(getter, Operator.EQ, val);
 	}
 
-	public static <V> Filter<V> in(Getter<V> getter, V[] vals) {
+	public static <V> Filter<V> in(Getter<V> getter, V... vals) {
 		Objects.requireNonNull(getter, "empty getter");
 		Objects.requireNonNull(vals, "empty values");
 		
@@ -69,7 +58,9 @@ public final class Filter<V> {
 		
 		CasserPropertyNode node = MappingUtil.resolveMappingProperty(getter);
 		
-		return new Filter<V>(node, Operator.IN, vals);
+		Postulate<V> postulate = Postulate.of(Operator.IN, vals);
+		
+		return new Filter<V>(node, postulate);
 	}
 	
 	public static <V> Filter<V> greaterThan(Getter<V> getter, V val) {
@@ -97,18 +88,6 @@ public final class Filter<V> {
 		return new Filter<V>(node, postulate);
 	}
 	
-	public static <V> Filter<V> create(Getter<V> getter, String operator, V val) {
-		Objects.requireNonNull(operator, "empty operator");
-		
-		Operator fo = Operator.findByOperator(operator);
-		
-		if (fo == null) {
-			throw new CasserMappingException("invalid operator " + operator);
-		}
-		
-		return create(getter, fo, val);
-	}
-	
 	public static <V> Filter<V> create(Getter<V> getter, Operator op, V val) {
 		Objects.requireNonNull(getter, "empty getter");
 		Objects.requireNonNull(op, "empty op");
@@ -120,7 +99,9 @@ public final class Filter<V> {
 		
 		CasserPropertyNode node = MappingUtil.resolveMappingProperty(getter);
 		
-		return new Filter<V>(node, op, val);
+		Postulate<V> postulate = Postulate.of(op, val);
+		
+		return new Filter<V>(node, postulate);
 	}
 
 	@Override

@@ -80,13 +80,13 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 		
 		session.update(user::name, "albert")
 					.set(user::age, 35)
-					.where(user::id, "==", 123L).sync();
+					.where(user::id, Operator.EQ, 123L).sync();
 		
 		long cnt = session.count(user).where(user::id, Operator.EQ, 123L).sync();
 		Assert.assertEquals(1L, cnt);
 
 		String name = session.select(user::name)
-				.where(user::id, "==", 123L)
+				.where(user::id, Operator.EQ, 123L)
 				.map(t -> "_" + t._1)
 				.sync()
 				.findFirst()
@@ -100,7 +100,7 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 		Assert.assertEquals("albert", u.name());
 		Assert.assertEquals(Integer.valueOf(35), u.age());
 		
-		session.delete(user).where(user::id, "==", 123L).sync();
+		session.delete(user).where(user::id, Operator.EQ, 123L).sync();
 		
 	}
 	

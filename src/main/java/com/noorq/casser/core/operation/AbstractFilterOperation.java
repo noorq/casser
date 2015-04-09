@@ -40,14 +40,6 @@ public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperati
 		return (O) this;
 	}
 
-	
-	public <V> O where(Getter<V> getter, String operator, V val) {
-		
-		addFilter(Filter.create(getter, operator, val));
-		
-		return (O) this;
-	}
-
 	public <V> O where(Getter<V> getter, Operator operator, V val) {
 		
 		addFilter(Filter.create(getter, operator, val));
@@ -69,13 +61,6 @@ public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperati
 		return (O) this;
 	}
 	
-	public <V> O and(Getter<V> getter, String operator, V val) {
-		
-		addFilter(Filter.create(getter, operator, val));
-		
-		return (O) this;
-	}
-
 	public <V> O and(Getter<V> getter, Operator operator, V val) {
 		
 		addFilter(Filter.create(getter, operator, val));
@@ -93,14 +78,6 @@ public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperati
 	public <V> O onlyIf(Getter<V> getter, Postulate<V> postulate) {
 		
 		addIfFilter(Filter.create(getter, postulate));
-		
-		return (O) this;
-	}
-
-	
-	public <V> O onlyIf(Getter<V> getter, String operator, V val) {
-		
-		addIfFilter(Filter.create(getter, operator, val));
 		
 		return (O) this;
 	}

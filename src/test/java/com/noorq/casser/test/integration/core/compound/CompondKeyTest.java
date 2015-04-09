@@ -24,7 +24,10 @@ import org.junit.Test;
 
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.CasserSession;
+import com.noorq.casser.core.Operator;
+
 import static com.noorq.casser.core.Query.*;
+
 import com.noorq.casser.support.Mutable;
 import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
@@ -89,7 +92,7 @@ public class CompondKeyTest extends AbstractEmbeddedCassandraTest {
 		final Mutable<Integer> c = new Mutable<Integer>(0);
 		
 		session.select(timeline::userId, timeline::timestamp, timeline::text)
-		.where(timeline::userId, "==", userId)
+		.where(timeline::userId, Operator.EQ, userId)
 		.orderBy(desc(timeline::timestamp)).limit(5).sync()
 		.forEach(t -> {
 			

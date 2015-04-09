@@ -29,6 +29,6 @@ public interface Account {
 	Address address();
 	
 	@UserTypeName("address0")
-	UDTValue address2();
+	UDTValue addressNoMapping();
 	
 }

@@ -49,23 +49,23 @@ public final class Query {
 	}
 
 	public static <V> Postulate<V> eq(V val) {
-		return new Postulate<V>(Operator.EQ, val);
+		return Postulate.of(Operator.EQ, val);
 	}
 	
 	public static <V> Postulate<V> lt(V val) {
-		return new Postulate<V>(Operator.LT, val);
+		return Postulate.of(Operator.LT, val);
 	}
 	
 	public static <V> Postulate<V> lte(V val) {
-		return new Postulate<V>(Operator.LTE, val);
+		return Postulate.of(Operator.LTE, val);
 	}
 	
 	public static <V> Postulate<V> gt(V val) {
-		return new Postulate<V>(Operator.GT, val);
+		return Postulate.of(Operator.GT, val);
 	}
 	
 	public static <V> Postulate<V> gte(V val) {
-		return new Postulate<V>(Operator.GTE, val);
+		return Postulate.of(Operator.GTE, val);
 	}
 
 	public static <V> Postulate<V> in(Getter<V> getter, V[] vals) {
