@@ -49,6 +49,10 @@ public abstract class AbstractEmbeddedCassandraTest {
 		return keyspace;
 	}
 	
+	public static void setKeep(boolean enable) {
+		keep = enable;
+	}
+	
 	@BeforeClass
 	public static void before() throws Exception {
 		EmbeddedCassandraServerHelper.startEmbeddedCassandra(BuildProperties.getCassandraConfig());

@@ -13,31 +13,19 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.test.integration.core.collection;
+package com.noorq.casser.test.integration.core.udtcollection;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
-import com.datastax.driver.core.DataType.Name;
-import com.noorq.casser.mapping.DataTypeName;
 import com.noorq.casser.mapping.PartitionKey;
 import com.noorq.casser.mapping.Table;
 
 @Table
-public interface Customer {
+public interface Book {
 
 	@PartitionKey
-	UUID id();
+	int id();
 	
-	@DataTypeName(value = Name.SET, types={Name.TEXT})
-	Set<String> aliases();
+	List<Author> authors();
 	
-	@DataTypeName(value = Name.LIST, types={Name.TEXT})
-	List<String> name();
-	
-	@DataTypeName(value = Name.MAP, types={Name.TEXT, Name.TEXT})
-	Map<String, String> properties();
-
 }

@@ -81,11 +81,8 @@ public class SimpleDataTypes {
 		return nameToDataTypeMap.get(name);
 	}
 
-	public static DataType getDataTypeByJavaClass(Type type) {
-		
-		Class<?> javaClass = (Class<?>) type;
-		
-		return javaClassToDataTypeMap.get(javaClass);
+	public static DataType getDataTypeByJavaClass(Class<?> javaType) {
+		return javaClassToDataTypeMap.get(javaType);
 	}
 
 	public static DataType.Name[] getDataTypeNamesForArguments(Type[] arguments) {

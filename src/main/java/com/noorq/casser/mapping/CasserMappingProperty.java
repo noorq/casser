@@ -28,6 +28,7 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.TupleValue;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.SessionRepository;
@@ -53,6 +54,7 @@ public final class CasserMappingProperty implements CasserProperty {
 	private final boolean isStatic;
 	private final KeyInformation keyInfo;
 	
+	private final Type genericJavaType;
 	private final Class<?> javaType;
 	private final Either<DataType, IdentityName> columnDataType;
 		
@@ -69,8 +71,9 @@ public final class CasserMappingProperty implements CasserProperty {
 		this.isStatic = MappingUtil.isStaticColumn(getter);
 		this.keyInfo = new KeyInformation(getter);
 
+		this.genericJavaType = getter.getGenericReturnType();
 		this.javaType = getter.getReturnType();
-		this.columnDataType = resolveColumnDataType(getter, this.javaType);
+		this.columnDataType = resolveColumnDataType(getter, this.genericJavaType, this.javaType);
 
 	}
 	
@@ -81,7 +84,7 @@ public final class CasserMappingProperty implements CasserProperty {
 
 	@Override
 	public Class<?> getJavaType() {
-		return javaType;
+		return (Class<?>) javaType;
 	}
 	
 	@Override
@@ -202,7 +205,7 @@ public final class CasserMappingProperty implements CasserProperty {
 		
 		if (columnType.isRight()) {
 			
-			if (UDTValue.class.isAssignableFrom(javaType)) {
+			if (isUDTValue(javaType)) {
 				return null;
 			}
 			
@@ -220,9 +223,9 @@ public final class CasserMappingProperty implements CasserProperty {
 		}
 		else {
 		
-			Class<?> propertyType = getJavaType();
+			Class<?> javaType = getJavaType();
 	
-			if (Enum.class.isAssignableFrom(propertyType)) {
+			if (Enum.class.isAssignableFrom(javaType)) {
 				
 				return TypedConverter.create(
 						Enum.class, 
@@ -233,7 +236,7 @@ public final class CasserMappingProperty implements CasserProperty {
 	
 			DataType dataType = columnType.getLeft();
 	
-			if (dataType.getName() == DataType.Name.TIMEUUID && propertyType == Date.class) {
+			if (dataType.getName() == DataType.Name.TIMEUUID && javaType == Date.class) {
 				
 				return TypedConverter.create(
 						Date.class, 
@@ -245,9 +248,9 @@ public final class CasserMappingProperty implements CasserProperty {
 		}
 	}
 	
-	private static Either<DataType, IdentityName> resolveColumnDataType(Method getter, Class<?> javaType) {
+	private static Either<DataType, IdentityName> resolveColumnDataType(Method getter, Type genericJavaType, Class<?> javaType) {
 		
-		DataType dataType = resolveDataType(getter, javaType);
+		DataType dataType = resolveDataType(getter, genericJavaType, javaType);
 		if (dataType != null) {
 			return Either.left(dataType);
 		}
@@ -255,7 +258,7 @@ public final class CasserMappingProperty implements CasserProperty {
 			
 			IdentityName udtName = null;
 			
-			if (UDTValue.class.isAssignableFrom(javaType)) {
+			if (isUDTValue(javaType)) {
 				UserTypeName userTypeName = getter.getDeclaredAnnotation(UserTypeName.class);
 				if (userTypeName == null) {
 					throw new CasserMappingException("absent UserTypeName annotation for " + getter);
@@ -271,19 +274,19 @@ public final class CasserMappingProperty implements CasserProperty {
 		
 	}
 
-	private static DataType resolveDataType(Method getter, Class<?> javaType) {
+	private static DataType resolveDataType(Method getter, Type genericJavaType, Class<?> javaType) {
 		
 		DataTypeName annotation = getter.getDeclaredAnnotation(DataTypeName.class);
 		if (annotation != null && annotation.value() != null) {
 			return qualifyAnnotatedType(getter, annotation);
 		}
 		
-		if (Enum.class.isAssignableFrom(javaType)) {
+		if (isEnum(javaType)) {
 			return DataType.text();
 		}
 
 		if (isMap(javaType)) {
-			Type[] args = getTypeParameters(javaType);
+			Type[] args = getTypeParameters(genericJavaType);
 			ensureTypeArguments(getter, args.length, 2);
 
 			return DataType.map(autodetectPrimitiveType(getter, args[0]),
@@ -291,14 +294,14 @@ public final class CasserMappingProperty implements CasserProperty {
 		}
 
 		if (isCollectionLike(javaType)) {
-			Type[] args = getTypeParameters(javaType);
+			Type[] args = getTypeParameters(genericJavaType);
 			ensureTypeArguments(getter, args.length, 1);
 
-			if (Set.class.isAssignableFrom(javaType)) {
+			if (isSet(javaType)) {
 
 				return DataType.set(autodetectPrimitiveType(getter, args[0]));
 
-			} else if (List.class.isAssignableFrom(javaType)) {
+			} else if (isList(javaType)) {
 
 				return DataType.list(autodetectPrimitiveType(getter, args[0]));
 
@@ -345,12 +348,20 @@ public final class CasserMappingProperty implements CasserProperty {
 		return dataType;
 	}
 
-	static DataType autodetectPrimitiveType(Method getter, Type javaType) {
-		DataType dataType = SimpleDataTypes.getDataTypeByJavaClass(javaType);
+	static DataType autodetectPrimitiveType(Method getter, Type type) {
+		
+		DataType dataType = null;
+		
+		if (type instanceof Class<?>) {
+			Class<?> javaType = (Class<?>) type;
+			dataType = SimpleDataTypes.getDataTypeByJavaClass(javaType);
+		}
+		
 		if (dataType == null) {
 			throw new CasserMappingException(
 					"only primitive types are allowed inside collections for the property " + getter);
 		}
+		
 		return dataType;
 	}
 	
@@ -364,25 +375,41 @@ public final class CasserMappingProperty implements CasserProperty {
 	static boolean isMap(Class<?> javaType) {
 		return Map.class.isAssignableFrom(javaType);
 	}
+
+	static boolean isSet(Class<?> javaType) {
+		return Set.class.isAssignableFrom(javaType);
+	}
+	
+	static boolean isList(Class<?> javaType) {
+		return List.class.isAssignableFrom(javaType);
+	}
+
+	static boolean isEnum(Class<?> javaType) {
+		return Enum.class.isAssignableFrom(javaType);
+	}
 	
 	static boolean isCollectionLike(Class<?> javaType) {
 
-		Class<?> rawType = javaType;
-
-		if (rawType.isArray() || Iterable.class.equals(rawType)) {
+		if (javaType.isArray() || Iterable.class.equals(javaType)) {
 			return true;
 		}
 
-		return Collection.class.isAssignableFrom(rawType);
+		return Collection.class.isAssignableFrom(javaType);
 	}
 	
-	static Type[] getTypeParameters(Class<?> javaTypeAsClass) {
+	static boolean isUDTValue(Class<?> javaType) {
+		return UDTValue.class.isAssignableFrom(javaType);
+	}
+
+	static boolean isTupleValue(Class<?> javaType) {
+		return TupleValue.class.isAssignableFrom(javaType);
+	}
+	
+	static Type[] getTypeParameters(Type genericJavaType) {
 		
-		Type javaType = (Type) javaTypeAsClass;
+		if (genericJavaType instanceof ParameterizedType) {
 		
-		if (javaType instanceof ParameterizedType) {
-		
-			ParameterizedType type = (ParameterizedType) javaType;
+			ParameterizedType type = (ParameterizedType) genericJavaType;
 		
 			return type.getActualTypeArguments();
 		}
