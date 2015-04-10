@@ -23,8 +23,8 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
+import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.CasserMappingProperty;
-import com.noorq.casser.mapping.SessionRepository;
 
 public final class UDTColumnValueProvider implements ColumnValueProvider {
 

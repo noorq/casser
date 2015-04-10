@@ -20,8 +20,8 @@ import java.util.function.Function;
 
 import com.datastax.driver.core.UDTValue;
 import com.noorq.casser.core.Casser;
+import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.SessionRepository;
 import com.noorq.casser.mapping.map.UDTValueProviderMap;
 import com.noorq.casser.mapping.value.UDTColumnValueProvider;
 import com.noorq.casser.support.CasserMappingException;

@@ -25,7 +25,7 @@ import com.noorq.casser.config.CasserSettings;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.support.CasserMappingException;
 
-public final class CasserMappingEntity implements CasserEntity {
+public final class CasserMappingEntity {
 
 	private final Class<?> iface;
 	private final CasserEntityType type;
@@ -67,23 +67,12 @@ public final class CasserMappingEntity implements CasserEntity {
 		this.props = propsBuilder.build();
 	}
 
-	@Override
 	public CasserEntityType getType() {
 		return type;
 	}
 
 	public Class<?> getMappingInterface() {
 		return iface;
-	}	
-	
-	@Override
-	public Collection<? extends CasserProperty> getProperties() {
-		return props.values();
-	}
-	
-	@Override
-	public CasserProperty getProperty(String name) {
-		return props.get(name);
 	}
 
 	public Collection<CasserMappingProperty> getMappingProperties() {
@@ -94,7 +83,6 @@ public final class CasserMappingEntity implements CasserEntity {
 		return props.get(name);
 	}
 
-	@Override
 	public IdentityName getName() {
 		return name;
 	}

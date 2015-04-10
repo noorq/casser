@@ -31,7 +31,6 @@ import com.datastax.driver.core.UserType;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.SessionRepositoryBuilder;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
 import com.noorq.casser.support.CasserException;

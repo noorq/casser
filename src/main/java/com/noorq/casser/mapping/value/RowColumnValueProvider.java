@@ -24,8 +24,8 @@ import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.Row;
+import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.CasserMappingProperty;
-import com.noorq.casser.mapping.SessionRepository;
 
 public final class RowColumnValueProvider implements ColumnValueProvider {
 

@@ -38,8 +38,6 @@ import com.noorq.casser.core.tuple.Tuple5;
 import com.noorq.casser.core.tuple.Tuple6;
 import com.noorq.casser.core.tuple.Tuple7;
 import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.SessionRepository;
-import com.noorq.casser.mapping.SessionRepositoryBuilder;
 import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.map.RowProviderMap;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;

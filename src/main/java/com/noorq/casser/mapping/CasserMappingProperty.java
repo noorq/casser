@@ -30,6 +30,7 @@ import java.util.function.Function;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
+import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.convert.DateToTimeUUIDConverter;
 import com.noorq.casser.mapping.convert.EntityToUDTValueConverter;
 import com.noorq.casser.mapping.convert.EnumToStringConverter;
@@ -40,7 +41,7 @@ import com.noorq.casser.mapping.convert.UDTValueToEntityConverter;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.Either;
 
-public final class CasserMappingProperty implements CasserProperty {
+public final class CasserMappingProperty {
 
 	private final CasserMappingEntity entity; 
 	private final Method getter;
@@ -73,57 +74,46 @@ public final class CasserMappingProperty implements CasserProperty {
 
 	}
 	
-	@Override
 	public CasserMappingEntity getEntity() {
 		return entity;
 	}
 
-    @Override
 	public Class<?> getJavaType() {
 		return javaType;
 	}
 	
-	@Override
 	public Either<DataType, IdentityName> getColumnType() {
 		return columnDataType;
 	}
 
-	@Override
 	public boolean isPartitionKey() {
 		return keyInfo.isPartitionKey();
 	}
 
-	@Override
 	public boolean isClusteringColumn() {
 		return keyInfo.isClusteringColumn();
 	}
 
-	@Override
 	public int getOrdinal() {
 		return keyInfo.getOrdinal();
 	}
 
-	@Override
 	public OrderingDirection getOrdering() {
 		return keyInfo.getOrdering();
 	}
 	
-	@Override
 	public boolean isStatic() {
 		return isStatic;
 	}
 
-	@Override
 	public IdentityName getColumnName() {
 		return columnName;
 	}
 
-	@Override
 	public Optional<IdentityName> getIndexName() {
 		return indexName;
 	}
 	
-	@Override
 	public String getPropertyName() {
 		return propertyName;
 	}
@@ -132,7 +122,6 @@ public final class CasserMappingProperty implements CasserProperty {
 		return getter;
 	}
 	
-	@Override
 	public Optional<Function<Object, Object>> getReadConverter(SessionRepository repository) {
 
 		if (readConverter == null) {
@@ -184,7 +173,6 @@ public final class CasserMappingProperty implements CasserProperty {
 		}
 	}
 	
-	@Override
 	public Optional<Function<Object, Object>> getWriteConverter(SessionRepository repository) {
 		
 		if (writeConverter == null) {

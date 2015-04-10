@@ -13,7 +13,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping;
+package com.noorq.casser.core;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,7 +25,10 @@ import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.noorq.casser.core.Casser;
+import com.noorq.casser.mapping.CasserEntityType;
+import com.noorq.casser.mapping.CasserMappingEntity;
+import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.Either;
 
