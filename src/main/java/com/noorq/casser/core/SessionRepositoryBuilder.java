@@ -20,17 +20,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.CasserEntity;
+import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.CasserProperty;
-import com.noorq.casser.mapping.IdentityName;
+import com.noorq.casser.mapping.type.AbstractDataType;
+import com.noorq.casser.mapping.type.UDTDataType;
 import com.noorq.casser.support.CasserMappingException;
-import com.noorq.casser.support.Either;
 
 public final class SessionRepositoryBuilder {
 
@@ -116,9 +115,9 @@ public final class SessionRepositoryBuilder {
 		
 		for (CasserProperty prop : props) {
 			
-			Either<DataType, IdentityName> type = prop.getDataType();
+			AbstractDataType type = prop.getDataType();
 			
-			if (type.isRight() && !UDTValue.class.isAssignableFrom(prop.getJavaType())) {
+			if (type instanceof UDTDataType && !UDTValue.class.isAssignableFrom(prop.getJavaType())) {
 				
 				CasserEntity addedUserType = add(prop.getJavaType(), OPTIONAL_UDT);
 				

@@ -24,26 +24,21 @@ import java.util.stream.Collectors;
 
 import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.ColumnMetadata.IndexMetadata;
-import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.SimpleStatement;
 import com.datastax.driver.core.TableMetadata;
-import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.schemabuilder.Alter;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.Create.Options;
 import com.datastax.driver.core.schemabuilder.CreateType;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.datastax.driver.core.schemabuilder.SchemaStatement;
-import com.datastax.driver.core.schemabuilder.UDTType;
-import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.CasserEntity;
+import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.CasserProperty;
-import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.mapping.OrderingDirection;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.CqlUtil;
-import com.noorq.casser.support.Either;
 
 public final class SchemaUtil {
 
@@ -73,19 +68,7 @@ public final class SchemaUtil {
 				throw new CasserMappingException("primary key columns are not supported in UserDefinedType for " + prop.getPropertyName() + " in entity " + entity);
 			}
  			
-			Either<DataType,IdentityName> type = prop.getDataType();
-			
-			if (type.isLeft()) {
-				create.addColumn(prop.getColumnName().toCql(), type.getLeft());
-			}
-			else if (type.isRight()) {
-				UDTType udtType = SchemaBuilder.frozen(type.getRight().toCql());
-				create.addUDTColumn(prop.getColumnName().toCql(), udtType);
-			}
-			else {
-				throwNoMapping(prop);
-			}			
-			
+			prop.getDataType().addColumn(create, prop.getColumnName());
 		}
 		
 		return create;
@@ -126,75 +109,13 @@ public final class SchemaUtil {
 		Collections.sort(clusteringColumns,
 				OrdinalBasedPropertyComparator.INSTANCE);
 
-		for (CasserProperty prop : partitionKeys) {
-			
-			Either<DataType,IdentityName> type = prop.getDataType();
-			
-			if (type.isRight()) {
-				throw new CasserMappingException("user defined type can not be a partition key for " + prop.getPropertyName() + " in " + prop.getEntity());
-			}
-			
-			create.addPartitionKey(prop.getColumnName().toCql(), type.getLeft());
-		}
-
-		for (CasserProperty prop : clusteringColumns) {
-			
-			Either<DataType,IdentityName> type = prop.getDataType();
-			
-			if (type.isLeft()) {
-				create.addClusteringColumn(prop.getColumnName().toCql(), type.getLeft());
-			}
-			else if (type.isRight()) {
-				UDTType udtType = SchemaBuilder.frozen(type.getRight().toCql());
-				create.addUDTClusteringColumn(prop.getColumnName().toCql(), udtType);
-			}
-			else {
-				throwNoMapping(prop);
-			}
-			
-		}
-		
-		for (CasserProperty prop : columns) {
-			
-			Either<DataType,IdentityName> type = prop.getDataType();
-			
-			if (prop.isStatic()) {
-				
-				if (type.isLeft()) {
-					create.addStaticColumn(prop.getColumnName().toCql(), type.getLeft());
-				}
-				else if (type.isRight()) {
-					UDTType udtType = SchemaBuilder.frozen(type.getRight().toCql());
-					create.addUDTStaticColumn(prop.getColumnName().toCql(), udtType);
-				}
-				else {
-					throwNoMapping(prop);
-				}
-			}
-			else {
-				
-				if (type.isLeft()) {
-					create.addColumn(prop.getColumnName().toCql(), type.getLeft());
-				}
-				else if (type.isRight()) {
-					UDTType udtType = SchemaBuilder.frozen(type.getRight().toCql());
-					create.addUDTColumn(prop.getColumnName().toCql(), udtType);
-				}
-				else {
-					throwNoMapping(prop);
-				}
-				
-			}
-		}
+		partitionKeys.forEach(p -> p.getDataType().addColumn(create, p.getColumnName()));
+		clusteringColumns.forEach(p -> p.getDataType().addColumn(create, p.getColumnName()));
+		columns.forEach(p -> p.getDataType().addColumn(create, p.getColumnName()));
 
 		if (!clusteringColumns.isEmpty()) {
-			
 			Options options = create.withOptions();
-			
-			for (CasserProperty prop : clusteringColumns) {
-				options.clusteringOrder(prop.getColumnName().toCql(), mapDirection(prop.getOrdering()));
-			}
-			
+			clusteringColumns.forEach(p -> options.clusteringOrder(p.getColumnName().toCql(), mapDirection(p.getOrdering())));
 		}
 		
 		return create;
@@ -230,48 +151,13 @@ public final class SchemaUtil {
 								+ entity);
 			}
 			
-			Either<DataType,IdentityName> type = prop.getDataType();
-			
 			ColumnMetadata columnMetadata = tmd.getColumn(columnName);
-
-			if (columnMetadata != null) {
-				
-				if  (type.isLeft()) {
-					
-					if (!type.getLeft().equals(columnMetadata.getType())) {
-						result.add(alter.alterColumn(prop.getColumnName().toCql()).type(type.getLeft()));
-					}
-					
-				}
-				else if (type.isRight()) {
-					
-					DataType metadataType = columnMetadata.getType();
-					if (metadataType.getName() == DataType.Name.UDT &&
-							metadataType instanceof UserType) {
-						
-						UserType metadataUserType = (UserType) metadataType;
-						
-						if (!type.getRight().equals(metadataUserType.getTypeName())) {
-							UDTType udtType = SchemaBuilder.frozen(type.getRight().toCql());
-							result.add(alter.alterColumn(prop.getColumnName().toCql()).udtType(udtType));
-						}
-						
-					}
-					else {
-						throw new CasserMappingException("expected UserType in metadata " + metadataType + " for " + prop.getPropertyName() + " in " + prop.getEntity());
-					}
-						
-				}
-				
-			}
-			else if (type.isLeft()) {
-				result.add(alter.addColumn(prop.getColumnName().toCql()).type(type.getLeft()));
-			}
-			else if (type.isRight()) {
-				UDTType udtType = SchemaBuilder.frozen(type.getRight().toCql());
-				result.add(alter.addColumn(prop.getColumnName().toCql()).udtType(udtType));
-			}
+			SchemaStatement stmt = prop.getDataType().alterColumn(alter, prop.getColumnName(), columnMetadata);
 			
+			if (stmt != null) {
+				result.add(stmt);
+			}
+	
 		}
 		
 		if (dropUnusedColumns) {

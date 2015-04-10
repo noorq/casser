@@ -19,9 +19,8 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.Function;
 
-import com.datastax.driver.core.DataType;
 import com.noorq.casser.core.SessionRepository;
-import com.noorq.casser.support.Either;
+import com.noorq.casser.mapping.type.AbstractDataType;
 
 public interface CasserProperty {
 
@@ -37,7 +36,7 @@ public interface CasserProperty {
 	
 	Class<?> getJavaType();
 	
-	Either<DataType, IdentityName> getDataType();
+	AbstractDataType getDataType();
 	
 	boolean isPartitionKey();
 
