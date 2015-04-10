@@ -15,7 +15,11 @@
  */
 package com.noorq.casser.test.integration.core.usertype;
 
+import java.util.Set;
+
+import com.datastax.driver.core.DataType;
 import com.noorq.casser.mapping.Column;
+import com.noorq.casser.mapping.DataTypeName;
 import com.noorq.casser.mapping.UserDefinedType;
 
 @UserDefinedType("address0")
@@ -29,5 +33,8 @@ public interface Address {
 	int zip();
 
 	String country();
+	
+	@DataTypeName(value = DataType.Name.SET, typeParameters={DataType.Name.TEXT})
+	Set<String> phones();
 
 }

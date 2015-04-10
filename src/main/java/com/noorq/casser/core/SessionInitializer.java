@@ -16,8 +16,11 @@
 package com.noorq.casser.core;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -188,9 +191,8 @@ public class SessionInitializer extends AbstractSessionOperations {
 		case CREATE:
 		case CREATE_DROP:
 			
-			mappingRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.USER_DEFINED_TYPE)
-				.forEach(e -> userTypeOps.createUserType(e));
-			
+			createUserTypesInOrder(userTypeOps);
+
 			mappingRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
 				.forEach(e -> tableOps.createTable(e));
 			
@@ -218,6 +220,43 @@ public class SessionInitializer extends AbstractSessionOperations {
 		
 		for (UserType userType : km.getUserTypes()) {
 			mappingRepository.addUserType(userType.getTypeName(), userType);
+		}
+		
+	}
+	
+	private void createUserTypesInOrder(UserTypeOperations userTypeOps) {
+		
+		Set<CasserMappingEntity> createdSet = new HashSet<CasserMappingEntity>();
+		Set<CasserMappingEntity> stack = new HashSet<CasserMappingEntity>();
+		
+		mappingRepository.entities().stream()
+		.filter(e -> e.getType() == CasserEntityType.USER_DEFINED_TYPE)
+		.forEach(e -> {
+		
+			stack.clear();
+			createUserTypeInRecursion(e, createdSet, stack, userTypeOps);
+			
+		});
+		
+
+	}
+	
+	private void createUserTypeInRecursion(CasserMappingEntity e, Set<CasserMappingEntity> createdSet, Set<CasserMappingEntity> stack, UserTypeOperations userTypeOps) {
+		
+		stack.add(e);
+		
+		Collection<CasserMappingEntity> createBefore = mappingRepository.getUserTypeUses(e);
+		
+		for (CasserMappingEntity be : createBefore) {
+			if (!createdSet.contains(be) && !stack.contains(be)) {
+				createUserTypeInRecursion(be, createdSet, stack, userTypeOps);
+				createdSet.add(be);
+			}
+		}
+		
+		if (!createdSet.contains(e)) {
+			userTypeOps.createUserType(e);
+			createdSet.add(e);
 		}
 		
 	}

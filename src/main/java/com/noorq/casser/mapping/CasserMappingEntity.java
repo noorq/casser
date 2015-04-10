@@ -132,7 +132,10 @@ public final class CasserMappingEntity implements CasserEntity {
 	@Override
 	public String toString() {
 		StringBuilder str = new StringBuilder();
-		str.append(iface.getSimpleName()).append(":\n");
+		str.append(iface.getSimpleName())
+		.append("(").append(name.getName()).append(") ")
+		.append(type.name().toLowerCase())
+		.append(":\n");
 		for (CasserMappingProperty prop : props.values()) {
 			String columnName = prop.getColumnName().getName();
 			str.append("  ");

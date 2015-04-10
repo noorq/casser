@@ -80,15 +80,23 @@ public final class Casser {
 	
 	public static <E> E dsl(Class<E> iface, ClassLoader classLoader, Optional<CasserPropertyNode> parent) {
 		
-		Object instance = dslCache.get(iface);
+		Object instance = null;
+		
+		if (!parent.isPresent()) {
+			 instance = dslCache.get(iface);
+		}
 		
 		if (instance == null) {
 		
 			instance = settings.getDslInstantiator().instantiate(iface, classLoader, parent);
 			
-			Object c = dslCache.putIfAbsent(iface, instance);
-			if (c != null) {
-				instance = c;
+			if (!parent.isPresent()) {
+				
+				Object c = dslCache.putIfAbsent(iface, instance);
+				if (c != null) {
+					instance = c;
+				}
+				
 			}
 		}
 		

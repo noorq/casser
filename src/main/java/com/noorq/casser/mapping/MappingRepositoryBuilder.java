@@ -23,6 +23,8 @@ import java.util.Optional;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.noorq.casser.support.Either;
 
 public final class MappingRepositoryBuilder {
@@ -33,10 +35,16 @@ public final class MappingRepositoryBuilder {
 
 	private final Map<String, UserType> userTypeMap = new HashMap<String, UserType>();
 
+    private final Multimap<CasserMappingEntity, CasserMappingEntity> userTypeUsesMap = HashMultimap.create(); 
+	
 	public CasserMappingRepository build() {
 		return new CasserMappingRepository(this);
 	}
-	
+
+	public Collection<CasserMappingEntity> getUserTypeUses(CasserMappingEntity udtName) {
+		return userTypeUsesMap.get(udtName);
+	}
+
 	public Collection<CasserMappingEntity> entities() {
 		return entityMap.values();
 	}
@@ -53,28 +61,34 @@ public final class MappingRepositoryBuilder {
 		userTypeMap.putIfAbsent(name.toLowerCase(), userType);
 	}
 
-	public void add(Object dsl) {
-		add(dsl, Optional.empty());
+	public CasserMappingEntity add(Object dsl) {
+		return add(dsl, Optional.empty());
 	}
 	
-	public void add(Object dsl, Optional<CasserEntityType> type) {
+	public CasserMappingEntity add(Object dsl, Optional<CasserEntityType> type) {
 
 		Class<?> iface = MappingUtil.getMappingInterface(dsl);
 		
-		if (!entityMap.containsKey(iface)) {
+		CasserMappingEntity entity = entityMap.get(iface);
+		
+		if (entity == null) {
 
-			CasserMappingEntity entity = type.isPresent() ? 
+			entity = type.isPresent() ? 
 					new CasserMappingEntity(iface, type.get()) :
 						new CasserMappingEntity(iface);
 
-			if (null == entityMap.putIfAbsent(iface, entity)) {
-				
+			CasserMappingEntity concurrentEntity = entityMap.putIfAbsent(iface, entity);
+					
+			if (concurrentEntity == null) {
 				addUserDefinedTypes(entity.getMappingProperties());
-				
+			}
+			else {
+				entity = concurrentEntity;
 			}
 
 		}
 		
+		return entity;
 	}
 	
 	private void addUserDefinedTypes(Collection<CasserMappingProperty> props) {
@@ -85,8 +99,11 @@ public final class MappingRepositoryBuilder {
 			
 			if (type.isRight() && !UDTValue.class.isAssignableFrom(prop.getJavaType())) {
 				
-				add(prop.getJavaType(), OPTIONAL_UDT);
+				CasserMappingEntity addedUserType = add(prop.getJavaType(), OPTIONAL_UDT);
 				
+				if (CasserEntityType.USER_DEFINED_TYPE == prop.getEntity().getType()) {
+					userTypeUsesMap.put(prop.getEntity(), addedUserType);
+				}
 			}
 			
 		}

@@ -17,6 +17,7 @@ package com.noorq.casser.test.integration.core.usertype;
 
 import static com.noorq.casser.core.Query.eq;
 
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Assert;
@@ -42,7 +43,7 @@ import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
 public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 
-	static Account account;
+	static Account account = Casser.dsl(Account.class);
 	
 	static CasserSession csession;
 	
@@ -77,6 +78,7 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		String city;
 		int zip;
 		String country;
+		Set<String> phones;
 		
 		@Override
 		public String street() {
@@ -97,15 +99,17 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		public String country() {
 			return country;
 		}
+
+		@Override
+		public Set<String> phones() {
+			return phones;
+		}
 		
 	}
 	
 	
 	@BeforeClass
 	public static void beforeTest() {
-		
-		account = Casser.dsl(Account.class);
-		
 		csession = Casser.init(getSession()).showCql().add(Account.class).autoCreateDrop().get();
 		
 		Session session = getSession();

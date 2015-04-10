@@ -17,7 +17,6 @@ package com.noorq.casser.core;
 
 import com.datastax.driver.core.UserType;
 import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.CasserMappingRepository;
 
 public final class UserTypeOperations {
 	
