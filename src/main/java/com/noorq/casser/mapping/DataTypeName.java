@@ -27,6 +27,6 @@ public @interface DataTypeName {
 
 	DataType.Name value();
 
-	DataType.Name[] typeParameters() default {};
+	DataType.Name[] types() default {};
 
 }

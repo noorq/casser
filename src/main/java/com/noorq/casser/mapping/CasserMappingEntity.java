@@ -132,7 +132,7 @@ public final class CasserMappingEntity implements CasserEntity {
 		for (CasserProperty prop : props.values()) {
 			String columnName = prop.getColumnName().getName();
 			str.append("  ");
-			str.append(prop.getColumnType());
+			str.append(prop.getDataType());
 			str.append(" ");
 			str.append(prop.getPropertyName());
 			str.append("(");

@@ -70,7 +70,7 @@ public final class CasserMappingProperty implements CasserProperty {
 		this.keyInfo = new KeyInformation(getter);
 
 		this.javaType = getter.getReturnType();
-		this.columnDataType = resolveColumnType(getter, this.javaType);
+		this.columnDataType = resolveColumnDataType(getter, this.javaType);
 
 	}
 	
@@ -85,7 +85,7 @@ public final class CasserMappingProperty implements CasserProperty {
 	}
 	
 	@Override
-	public Either<DataType, IdentityName> getColumnType() {
+	public Either<DataType, IdentityName> getDataType() {
 		return columnDataType;
 	}
 
@@ -146,7 +146,7 @@ public final class CasserMappingProperty implements CasserProperty {
 
 	private Function<Object, Object> resolveReadConverter(SessionRepository repository) {
 		
-		Either<DataType, IdentityName> columnType = getColumnType();
+		Either<DataType, IdentityName> columnType = getDataType();
 		
 		if (columnType.isRight()) {
 			
@@ -198,7 +198,7 @@ public final class CasserMappingProperty implements CasserProperty {
 	
 	private Function<Object, Object> resolveWriteConverter(SessionRepository repository) {
 	
-		Either<DataType, IdentityName> columnType = getColumnType();
+		Either<DataType, IdentityName> columnType = getDataType();
 		
 		if (columnType.isRight()) {
 			
@@ -245,7 +245,7 @@ public final class CasserMappingProperty implements CasserProperty {
 		}
 	}
 	
-	private static Either<DataType, IdentityName> resolveColumnType(Method getter, Class<?> javaType) {
+	private static Either<DataType, IdentityName> resolveColumnDataType(Method getter, Class<?> javaType) {
 		
 		DataType dataType = resolveDataType(getter, javaType);
 		if (dataType != null) {
@@ -313,15 +313,15 @@ public final class CasserMappingProperty implements CasserProperty {
 		if (type.isCollection()) {
 			switch (type) {
 			case MAP:
-				ensureTypeArguments(getter, annotation.typeParameters().length, 2);
-				return DataType.map(resolvePrimitiveType(getter, annotation.typeParameters()[0]),
-						resolvePrimitiveType(getter, annotation.typeParameters()[1]));
+				ensureTypeArguments(getter, annotation.types().length, 2);
+				return DataType.map(resolvePrimitiveType(getter, annotation.types()[0]),
+						resolvePrimitiveType(getter, annotation.types()[1]));
 			case LIST:
-				ensureTypeArguments(getter, annotation.typeParameters().length, 1);
-				return DataType.list(resolvePrimitiveType(getter, annotation.typeParameters()[0]));
+				ensureTypeArguments(getter, annotation.types().length, 1);
+				return DataType.list(resolvePrimitiveType(getter, annotation.types()[0]));
 			case SET:
-				ensureTypeArguments(getter, annotation.typeParameters().length, 1);
-				return DataType.set(resolvePrimitiveType(getter, annotation.typeParameters()[0]));
+				ensureTypeArguments(getter, annotation.types().length, 1);
+				return DataType.set(resolvePrimitiveType(getter, annotation.types()[0]));
 			default:
 				throw new CasserMappingException("unknown collection DataType for property " + getter);
 			}

@@ -73,7 +73,7 @@ public final class SchemaUtil {
 				throw new CasserMappingException("primary key columns are not supported in UserDefinedType for " + prop.getPropertyName() + " in entity " + entity);
 			}
  			
-			Either<DataType,IdentityName> type = prop.getColumnType();
+			Either<DataType,IdentityName> type = prop.getDataType();
 			
 			if (type.isLeft()) {
 				create.addColumn(prop.getColumnName().toCql(), type.getLeft());
@@ -128,7 +128,7 @@ public final class SchemaUtil {
 
 		for (CasserProperty prop : partitionKeys) {
 			
-			Either<DataType,IdentityName> type = prop.getColumnType();
+			Either<DataType,IdentityName> type = prop.getDataType();
 			
 			if (type.isRight()) {
 				throw new CasserMappingException("user defined type can not be a partition key for " + prop.getPropertyName() + " in " + prop.getEntity());
@@ -139,7 +139,7 @@ public final class SchemaUtil {
 
 		for (CasserProperty prop : clusteringColumns) {
 			
-			Either<DataType,IdentityName> type = prop.getColumnType();
+			Either<DataType,IdentityName> type = prop.getDataType();
 			
 			if (type.isLeft()) {
 				create.addClusteringColumn(prop.getColumnName().toCql(), type.getLeft());
@@ -156,7 +156,7 @@ public final class SchemaUtil {
 		
 		for (CasserProperty prop : columns) {
 			
-			Either<DataType,IdentityName> type = prop.getColumnType();
+			Either<DataType,IdentityName> type = prop.getDataType();
 			
 			if (prop.isStatic()) {
 				
@@ -230,7 +230,7 @@ public final class SchemaUtil {
 								+ entity);
 			}
 			
-			Either<DataType,IdentityName> type = prop.getColumnType();
+			Either<DataType,IdentityName> type = prop.getDataType();
 			
 			ColumnMetadata columnMetadata = tmd.getColumn(columnName);
 

@@ -116,7 +116,7 @@ public final class SessionRepositoryBuilder {
 		
 		for (CasserProperty prop : props) {
 			
-			Either<DataType, IdentityName> type = prop.getColumnType();
+			Either<DataType, IdentityName> type = prop.getDataType();
 			
 			if (type.isRight() && !UDTValue.class.isAssignableFrom(prop.getJavaType())) {
 				

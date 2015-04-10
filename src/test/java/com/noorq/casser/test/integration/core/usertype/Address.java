@@ -34,7 +34,7 @@ public interface Address {
 
 	String country();
 	
-	@DataTypeName(value = DataType.Name.SET, typeParameters={DataType.Name.TEXT})
+	@DataTypeName(value = DataType.Name.SET, types={DataType.Name.TEXT})
 	Set<String> phones();
 
 }
