@@ -28,15 +28,15 @@ import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.core.Getter;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.core.tuple.Tuple2;
-import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserEntity;
+import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.value.BeanColumnValueProvider;
 import com.noorq.casser.support.CasserMappingException;
 
 public final class InsertOperation extends AbstractOperation<ResultSet, InsertOperation> {
 
-	private CasserMappingEntity entity;
+	private CasserEntity entity;
 	
 	private final List<Tuple2<CasserPropertyNode, Object>> values = new ArrayList<Tuple2<CasserPropertyNode, Object>>();
 	private boolean ifNotExists;
@@ -50,12 +50,12 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
 		this.ifNotExists = ifNotExists;
 	}
 	
-	public InsertOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity entity, Object pojo, boolean ifNotExists) {
+	public InsertOperation(AbstractSessionOperations sessionOperations, CasserEntity entity, Object pojo, boolean ifNotExists) {
 		super(sessionOperations);
 		
 		this.ifNotExists = ifNotExists;
 		
-		for (CasserMappingProperty prop : entity.getMappingProperties()) {
+		for (CasserProperty prop : entity.getProperties()) {
 			
 			Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
 			

@@ -30,7 +30,7 @@ import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.UserType;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.noorq.casser.mapping.CasserEntityType;
-import com.noorq.casser.mapping.CasserMappingEntity;
+import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
 import com.noorq.casser.support.CasserException;
@@ -225,8 +225,8 @@ public class SessionInitializer extends AbstractSessionOperations {
 	
 	private void createUserTypesInOrder(UserTypeOperations userTypeOps) {
 		
-		Set<CasserMappingEntity> createdSet = new HashSet<CasserMappingEntity>();
-		Set<CasserMappingEntity> stack = new HashSet<CasserMappingEntity>();
+		Set<CasserEntity> createdSet = new HashSet<CasserEntity>();
+		Set<CasserEntity> stack = new HashSet<CasserEntity>();
 		
 		sessionRepository.entities().stream()
 		.filter(e -> e.getType() == CasserEntityType.USER_DEFINED_TYPE)
@@ -240,13 +240,13 @@ public class SessionInitializer extends AbstractSessionOperations {
 
 	}
 	
-	private void createUserTypeInRecursion(CasserMappingEntity e, Set<CasserMappingEntity> createdSet, Set<CasserMappingEntity> stack, UserTypeOperations userTypeOps) {
+	private void createUserTypeInRecursion(CasserEntity e, Set<CasserEntity> createdSet, Set<CasserEntity> stack, UserTypeOperations userTypeOps) {
 		
 		stack.add(e);
 		
-		Collection<CasserMappingEntity> createBefore = sessionRepository.getUserTypeUses(e);
+		Collection<CasserEntity> createBefore = sessionRepository.getUserTypeUses(e);
 		
-		for (CasserMappingEntity be : createBefore) {
+		for (CasserEntity be : createBefore) {
 			if (!createdSet.contains(be) && !stack.contains(be)) {
 				createUserTypeInRecursion(be, createdSet, stack, userTypeOps);
 				createdSet.add(be);
@@ -267,12 +267,12 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return keyspaceMetadata;
 	}
 	
-	private TableMetadata getTableMetadata(CasserMappingEntity entity) {
+	private TableMetadata getTableMetadata(CasserEntity entity) {
 		return getKeyspaceMetadata().getTable(entity.getName().getName());
 		
 	}
 
-	private UserType getUserType(CasserMappingEntity entity) {
+	private UserType getUserType(CasserEntity entity) {
 		return getKeyspaceMetadata().getUserType(entity.getName().getName());
 	}
 }

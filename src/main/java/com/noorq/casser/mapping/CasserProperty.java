@@ -41,9 +41,9 @@ import com.noorq.casser.mapping.convert.UDTValueToEntityConverter;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.Either;
 
-public final class CasserMappingProperty {
+public final class CasserProperty {
 
-	private final CasserMappingEntity entity; 
+	private final CasserEntity entity; 
 	private final Method getter;
 	
 	private final String propertyName;
@@ -59,7 +59,7 @@ public final class CasserMappingProperty {
 	private volatile Optional<Function<Object, Object>> readConverter = null;
 	private volatile Optional<Function<Object, Object>> writeConverter = null;
 	
-	public CasserMappingProperty(CasserMappingEntity entity, Method getter) {
+	public CasserProperty(CasserEntity entity, Method getter) {
 		this.entity = entity;
 		this.getter = getter;
 		
@@ -74,7 +74,7 @@ public final class CasserMappingProperty {
 
 	}
 	
-	public CasserMappingEntity getEntity() {
+	public CasserEntity getEntity() {
 		return entity;
 	}
 

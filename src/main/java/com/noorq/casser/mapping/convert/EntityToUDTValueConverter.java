@@ -24,8 +24,8 @@ import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.core.reflect.MapExportable;
-import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserEntity;
+import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.value.BeanColumnValueProvider;
 import com.noorq.casser.mapping.value.UDTColumnValuePreparer;
 import com.noorq.casser.support.CasserMappingException;
@@ -34,7 +34,7 @@ public final class EntityToUDTValueConverter implements Function<Object, UDTValu
 
 	private final SessionRepository repository;
 	private final UserType userType;
-	private final CasserMappingEntity entity;
+	private final CasserEntity entity;
 	private final UDTColumnValuePreparer valuePreparer;
 	
 	public EntityToUDTValueConverter(Class<?> iface, UserType userType, SessionRepository repository) {
@@ -69,7 +69,7 @@ public final class EntityToUDTValueConverter implements Function<Object, UDTValu
 					continue;
 				}
 				
-				CasserMappingProperty prop = entity.getMappingProperty(entry.getKey());
+				CasserProperty prop = entity.getProperty(entry.getKey());
 				
 				if (prop != null) {
 					
@@ -82,7 +82,7 @@ public final class EntityToUDTValueConverter implements Function<Object, UDTValu
 		}
 		else {
 
-			for (CasserMappingProperty prop : entity.getMappingProperties()) {
+			for (CasserProperty prop : entity.getProperties()) {
 				
 				Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(source, -1, prop);
 				
@@ -98,7 +98,7 @@ public final class EntityToUDTValueConverter implements Function<Object, UDTValu
 	}
 
 	private void write(UDTValue udtValue, Object value,
-			CasserMappingProperty prop) {
+			CasserProperty prop) {
 		
 		ByteBuffer bytes = (ByteBuffer) valuePreparer.prepareColumnValue(value, prop);
 		

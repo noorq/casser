@@ -22,7 +22,7 @@ import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.querybuilder.Batch;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.schemabuilder.SchemaStatement;
-import com.noorq.casser.mapping.CasserMappingEntity;
+import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.support.CasserException;
 
 public final class TableOperations {
@@ -37,7 +37,7 @@ public final class TableOperations {
 		this.dropUnusedIndexes = dropUnusedIndexes;
 	}
 	
-	public void createTable(CasserMappingEntity entity) {
+	public void createTable(CasserEntity entity) {
 		
 		sessionOps.execute(SchemaUtil.createTable(entity));
 		
@@ -45,7 +45,7 @@ public final class TableOperations {
 		
 	}
 	
-	public void validateTable(TableMetadata tmd, CasserMappingEntity entity) {
+	public void validateTable(TableMetadata tmd, CasserEntity entity) {
 		
 		if (tmd == null) {
 			throw new CasserException("table not exists " + entity.getName() + "for entity " + entity.getMappingInterface());
@@ -60,7 +60,7 @@ public final class TableOperations {
 		}
 	}
 	
-	public void updateTable(TableMetadata tmd, CasserMappingEntity entity) {
+	public void updateTable(TableMetadata tmd, CasserEntity entity) {
 		
 		if (tmd == null) {
 			createTable(entity);

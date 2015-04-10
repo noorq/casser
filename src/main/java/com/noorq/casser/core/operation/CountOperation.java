@@ -23,18 +23,18 @@ import com.datastax.driver.core.querybuilder.Select.Where;
 import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.core.Filter;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
-import com.noorq.casser.mapping.CasserMappingEntity;
+import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.support.CasserMappingException;
 
 public final class CountOperation extends AbstractFilterOperation<Long, CountOperation> {
 
-	private CasserMappingEntity entity;
+	private CasserEntity entity;
 	
 	public CountOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
 	}
 	
-	public CountOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity entity) {
+	public CountOperation(AbstractSessionOperations sessionOperations, CasserEntity entity) {
 		super(sessionOperations);
 		
 		this.entity = entity;

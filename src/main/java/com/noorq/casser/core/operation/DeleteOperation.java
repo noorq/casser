@@ -23,13 +23,13 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.core.Filter;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
-import com.noorq.casser.mapping.CasserMappingEntity;
+import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.support.CasserMappingException;
 
 
 public final class DeleteOperation extends AbstractFilterOperation<ResultSet, DeleteOperation> {
 
-	private CasserMappingEntity entity;
+	private CasserEntity entity;
 	
 	private boolean ifExists = false;
 	
@@ -40,7 +40,7 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 		super(sessionOperations);
 	}
 	
-	public DeleteOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity entity) {
+	public DeleteOperation(AbstractSessionOperations sessionOperations, CasserEntity entity) {
 		super(sessionOperations);
 		
 		this.entity = entity;

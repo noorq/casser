@@ -15,7 +15,7 @@
  */
 package com.noorq.casser.core.reflect;
 
-import com.noorq.casser.mapping.CasserMappingEntity;
+import com.noorq.casser.mapping.CasserEntity;
 
 
 public interface DslExportable {
@@ -23,7 +23,7 @@ public interface DslExportable {
 	public static final String GET_ENTITY_METHOD = "getCasserMappingEntity";
 	public static final String GET_PARENT_METHOD = "getParentDslCasserPropertyNode";
 	
-	CasserMappingEntity getCasserMappingEntity();
+	CasserEntity getCasserMappingEntity();
 	
 	CasserPropertyNode getParentDslCasserPropertyNode();
 	

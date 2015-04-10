@@ -26,8 +26,8 @@ import com.datastax.driver.core.UserType;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.noorq.casser.mapping.CasserEntityType;
-import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserEntity;
+import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.Either;
@@ -36,25 +36,25 @@ public final class SessionRepositoryBuilder {
 
 	private static final Optional<CasserEntityType> OPTIONAL_UDT = Optional.of(CasserEntityType.USER_DEFINED_TYPE);
 	
-	private final Map<Class<?>, CasserMappingEntity> entityMap = new HashMap<Class<?>, CasserMappingEntity>();
+	private final Map<Class<?>, CasserEntity> entityMap = new HashMap<Class<?>, CasserEntity>();
 
 	private final Map<String, UserType> userTypeMap = new HashMap<String, UserType>();
 
-    private final Multimap<CasserMappingEntity, CasserMappingEntity> userTypeUsesMap = HashMultimap.create(); 
+    private final Multimap<CasserEntity, CasserEntity> userTypeUsesMap = HashMultimap.create(); 
 	
 	public SessionRepository build() {
 		return new SessionRepository(this);
 	}
 
-	public Collection<CasserMappingEntity> getUserTypeUses(CasserMappingEntity udtName) {
+	public Collection<CasserEntity> getUserTypeUses(CasserEntity udtName) {
 		return userTypeUsesMap.get(udtName);
 	}
 
-	public Collection<CasserMappingEntity> entities() {
+	public Collection<CasserEntity> entities() {
 		return entityMap.values();
 	}
 	
-	protected Map<Class<?>, CasserMappingEntity> getEntityMap() {
+	protected Map<Class<?>, CasserEntity> getEntityMap() {
 		return entityMap;
 	}
 
@@ -66,27 +66,27 @@ public final class SessionRepositoryBuilder {
 		userTypeMap.putIfAbsent(name.toLowerCase(), userType);
 	}
 
-	public CasserMappingEntity add(Object dsl) {
+	public CasserEntity add(Object dsl) {
 		return add(dsl, Optional.empty());
 	}
 	
-	public void addEntity(CasserMappingEntity entity) {
+	public void addEntity(CasserEntity entity) {
 
-		CasserMappingEntity concurrentEntity = entityMap.putIfAbsent(entity.getMappingInterface(), entity);
+		CasserEntity concurrentEntity = entityMap.putIfAbsent(entity.getMappingInterface(), entity);
 		
 		if (concurrentEntity == null) {
-			addUserDefinedTypes(entity.getMappingProperties());
+			addUserDefinedTypes(entity.getProperties());
 		}
 			
 	}
 	
-	public CasserMappingEntity add(Object dsl, Optional<CasserEntityType> type) {
+	public CasserEntity add(Object dsl, Optional<CasserEntityType> type) {
 
-		CasserMappingEntity casserEntity = Casser.resolve(dsl);
+		CasserEntity casserEntity = Casser.resolve(dsl);
 		
 		Class<?> iface = casserEntity.getMappingInterface();
 		
-		CasserMappingEntity entity = entityMap.get(iface);
+		CasserEntity entity = entityMap.get(iface);
 		
 		if (entity == null) {
 
@@ -96,10 +96,10 @@ public final class SessionRepositoryBuilder {
 				throw new CasserMappingException("unexpected entity type " + entity.getType() + " for " + entity);
 			}
 			
-			CasserMappingEntity concurrentEntity = entityMap.putIfAbsent(iface, entity);
+			CasserEntity concurrentEntity = entityMap.putIfAbsent(iface, entity);
 					
 			if (concurrentEntity == null) {
-				addUserDefinedTypes(entity.getMappingProperties());
+				addUserDefinedTypes(entity.getProperties());
 			}
 			else {
 				entity = concurrentEntity;
@@ -112,15 +112,15 @@ public final class SessionRepositoryBuilder {
 	
 	
 	
-	private void addUserDefinedTypes(Collection<CasserMappingProperty> props) {
+	private void addUserDefinedTypes(Collection<CasserProperty> props) {
 		
-		for (CasserMappingProperty prop : props) {
+		for (CasserProperty prop : props) {
 			
 			Either<DataType, IdentityName> type = prop.getColumnType();
 			
 			if (type.isRight() && !UDTValue.class.isAssignableFrom(prop.getJavaType())) {
 				
-				CasserMappingEntity addedUserType = add(prop.getJavaType(), OPTIONAL_UDT);
+				CasserEntity addedUserType = add(prop.getJavaType(), OPTIONAL_UDT);
 				
 				if (CasserEntityType.USER_DEFINED_TYPE == prop.getEntity().getType()) {
 					userTypeUsesMap.put(prop.getEntity(), addedUserType);

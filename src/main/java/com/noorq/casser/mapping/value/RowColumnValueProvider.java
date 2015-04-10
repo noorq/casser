@@ -25,7 +25,7 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.Row;
 import com.noorq.casser.core.SessionRepository;
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserProperty;
 
 public final class RowColumnValueProvider implements ColumnValueProvider {
 
@@ -36,7 +36,7 @@ public final class RowColumnValueProvider implements ColumnValueProvider {
 	}
 	
 	@Override
-	public <V> V getColumnValue(Object sourceObj, int columnIndex, CasserMappingProperty property) {
+	public <V> V getColumnValue(Object sourceObj, int columnIndex, CasserProperty property) {
 
 		Row source = (Row) sourceObj;
 		

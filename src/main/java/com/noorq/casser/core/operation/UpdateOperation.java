@@ -30,14 +30,14 @@ import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.core.Filter;
 import com.noorq.casser.core.Getter;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
-import com.noorq.casser.mapping.CasserMappingEntity;
+import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.support.CasserMappingException;
 
 
 public final class UpdateOperation extends AbstractFilterOperation<ResultSet, UpdateOperation> {
 	
-	private CasserMappingEntity entity = null;
+	private CasserEntity entity = null;
 	
 	private final List<Assignment> assignments = new ArrayList<Assignment>();
 

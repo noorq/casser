@@ -15,10 +15,10 @@
  */
 package com.noorq.casser.mapping.value;
 
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserProperty;
 
 public interface ColumnValuePreparer {
 
-	Object prepareColumnValue(Object source, CasserMappingProperty prop);
+	Object prepareColumnValue(Object source, CasserProperty prop);
 	
 }

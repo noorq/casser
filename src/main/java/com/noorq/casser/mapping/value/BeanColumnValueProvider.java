@@ -17,7 +17,7 @@ package com.noorq.casser.mapping.value;
 
 import java.lang.reflect.Method;
 
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.support.CasserMappingException;
 
 public enum BeanColumnValueProvider implements ColumnValueProvider {
@@ -26,7 +26,7 @@ public enum BeanColumnValueProvider implements ColumnValueProvider {
 	
 	@Override
 	public <V> V getColumnValue(Object bean, int columnIndexUnused,
-			CasserMappingProperty property) {
+			CasserProperty property) {
 
 		Method getter = property.getGetterMethod();
 		

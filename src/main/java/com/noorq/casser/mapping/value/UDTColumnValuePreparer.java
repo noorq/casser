@@ -23,7 +23,7 @@ import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.querybuilder.BindMarker;
 import com.noorq.casser.core.SessionRepository;
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserProperty;
 
 public final class UDTColumnValuePreparer implements ColumnValuePreparer {
 
@@ -36,7 +36,7 @@ public final class UDTColumnValuePreparer implements ColumnValuePreparer {
 	}
 	
 	@Override
-	public Object prepareColumnValue(Object value, CasserMappingProperty prop) {
+	public Object prepareColumnValue(Object value, CasserProperty prop) {
 
 		if (value != null) {
 

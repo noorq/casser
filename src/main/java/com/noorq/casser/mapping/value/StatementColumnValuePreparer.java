@@ -20,7 +20,7 @@ import java.util.function.Function;
 
 import com.datastax.driver.core.querybuilder.BindMarker;
 import com.noorq.casser.core.SessionRepository;
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserProperty;
 
 
 public final class StatementColumnValuePreparer implements ColumnValuePreparer {
@@ -32,7 +32,7 @@ public final class StatementColumnValuePreparer implements ColumnValuePreparer {
 	}
 	
 	@Override
-	public Object prepareColumnValue(Object value, CasserMappingProperty prop) {
+	public Object prepareColumnValue(Object value, CasserProperty prop) {
 
 		if (value != null) {
 

@@ -15,11 +15,11 @@
  */
 package com.noorq.casser.mapping.value;
 
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserProperty;
 
 
 public interface ColumnValueProvider {
 
-	<V> V getColumnValue(Object source, int columnIndex, CasserMappingProperty property);
+	<V> V getColumnValue(Object source, int columnIndex, CasserProperty property);
 	
 }

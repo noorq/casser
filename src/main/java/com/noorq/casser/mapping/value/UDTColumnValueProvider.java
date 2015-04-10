@@ -24,7 +24,7 @@ import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.SessionRepository;
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserProperty;
 
 public final class UDTColumnValueProvider implements ColumnValueProvider {
 
@@ -35,7 +35,7 @@ public final class UDTColumnValueProvider implements ColumnValueProvider {
 	}
 	
 	@Override
-	public <V> V getColumnValue(Object sourceObj, int columnIndexUnused, CasserMappingProperty property) {
+	public <V> V getColumnValue(Object sourceObj, int columnIndexUnused, CasserProperty property) {
 
 		UDTValue source = (UDTValue) sourceObj;
 		

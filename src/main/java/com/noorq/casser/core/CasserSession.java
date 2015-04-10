@@ -37,7 +37,7 @@ import com.noorq.casser.core.tuple.Tuple4;
 import com.noorq.casser.core.tuple.Tuple5;
 import com.noorq.casser.core.tuple.Tuple6;
 import com.noorq.casser.core.tuple.Tuple7;
-import com.noorq.casser.mapping.CasserMappingEntity;
+import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.map.RowProviderMap;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
@@ -117,7 +117,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	public <E> SelectOperation<E> select(Class<E> entityClass) {
 		Objects.requireNonNull(entityClass, "entityClass is empty");		
 		ColumnValueProvider valueProvider = getValueProvider();
-		CasserMappingEntity entity = Casser.entity(entityClass);
+		CasserEntity entity = Casser.entity(entityClass);
 		return new SelectOperation<E>(this, entity, (r) -> {
 			Map<String, Object> map = new RowProviderMap(r, valueProvider, entity);
 			return (E) Casser.map(entityClass, map);
@@ -266,7 +266,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		Objects.requireNonNull(pojo, "pojo is empty");
 		
 		Class<?> iface = MappingUtil.getMappingInterface(pojo);
-		CasserMappingEntity entity = Casser.entity(iface);
+		CasserEntity entity = Casser.entity(iface);
 		
 		return new InsertOperation(this, entity, pojo, true);
 	}
@@ -279,7 +279,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		Objects.requireNonNull(pojo, "pojo is empty");
 		
 		Class<?> iface = MappingUtil.getMappingInterface(pojo);
-		CasserMappingEntity entity = Casser.entity(iface);
+		CasserEntity entity = Casser.entity(iface);
 		
 		return new InsertOperation(this, entity, pojo, false);
 	}
@@ -325,7 +325,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		
 	}
 	
-	private void dropEntity(CasserMappingEntity entity) {
+	private void dropEntity(CasserEntity entity) {
 				
 		switch(entity.getType()) {
 		

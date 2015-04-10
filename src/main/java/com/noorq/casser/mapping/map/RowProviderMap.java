@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.datastax.driver.core.Row;
-import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserEntity;
+import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
 import com.noorq.casser.support.CasserMappingException;
 
@@ -29,9 +29,9 @@ public final class RowProviderMap implements Map<String, Object> {
 
 	private final Row row;
 	private final ColumnValueProvider valueProvider;
-	private final CasserMappingEntity entity;
+	private final CasserEntity entity;
 	
-	public RowProviderMap(Row row, ColumnValueProvider valueProvider, CasserMappingEntity entity) {
+	public RowProviderMap(Row row, ColumnValueProvider valueProvider, CasserEntity entity) {
 		this.row = row;
 		this.valueProvider = valueProvider;
 		this.entity = entity;
@@ -51,7 +51,7 @@ public final class RowProviderMap implements Map<String, Object> {
 	public boolean containsKey(Object key) {
 		if (key instanceof String) {
 			String name = (String) key;
-			CasserMappingProperty prop = entity.getMappingProperty(name);
+			CasserProperty prop = entity.getProperty(name);
 			if (prop != null) {
 				return row.getColumnDefinitions().contains(prop.getColumnName().getName());
 			}
@@ -63,7 +63,7 @@ public final class RowProviderMap implements Map<String, Object> {
 	public Object get(Object key) {
 		if (key instanceof String) {
 			String name = (String) key;
-			CasserMappingProperty prop = entity.getMappingProperty(name);
+			CasserProperty prop = entity.getProperty(name);
 			if (prop != null) {
 				return valueProvider.getColumnValue(row, -1, prop);
 			}

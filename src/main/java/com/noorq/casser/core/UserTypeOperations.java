@@ -16,7 +16,7 @@
 package com.noorq.casser.core;
 
 import com.datastax.driver.core.UserType;
-import com.noorq.casser.mapping.CasserMappingEntity;
+import com.noorq.casser.mapping.CasserEntity;
 
 public final class UserTypeOperations {
 	
@@ -26,16 +26,16 @@ public final class UserTypeOperations {
 		this.sessionOps = sessionOps;
 	}
 	
-	public void createUserType(CasserMappingEntity entity) {
+	public void createUserType(CasserEntity entity) {
 		sessionOps.execute(SchemaUtil.createUserType(entity));
 	}
 
-	public void validateUserType(UserType userType, CasserMappingEntity entity) {
+	public void validateUserType(UserType userType, CasserEntity entity) {
 		
 	}
 
 	
-	public void updateUserType(UserType userType, CasserMappingEntity entity) {
+	public void updateUserType(UserType userType, CasserEntity entity) {
 		
 	}
 

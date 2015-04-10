@@ -38,7 +38,7 @@ import com.noorq.casser.core.Filter;
 import com.noorq.casser.core.Getter;
 import com.noorq.casser.core.Ordered;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
-import com.noorq.casser.mapping.CasserMappingEntity;
+import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.OrderingDirection;
 import com.noorq.casser.support.CasserMappingException;
 
@@ -51,11 +51,11 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	protected List<Ordering> ordering = null;
 	protected Integer limit = null;
 	
-	public SelectOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity entity, Function<Row, E> rowMapper) {
+	public SelectOperation(AbstractSessionOperations sessionOperations, CasserEntity entity, Function<Row, E> rowMapper) {
 		super(sessionOperations);
 		this.rowMapper = rowMapper;
 		
-		List<CasserPropertyNode> props = entity.getMappingProperties()
+		List<CasserPropertyNode> props = entity.getProperties()
 		.stream()
 		.map(p -> new CasserPropertyNode(p, Optional.empty()))
 		.collect(Collectors.toList());
@@ -70,7 +70,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	}
 	public CountOperation count() {
 		
-		CasserMappingEntity entity = null;
+		CasserEntity entity = null;
 		for (CasserPropertyNode prop : props) {
 			
 			if (entity == null) {
@@ -110,7 +110,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	@Override
 	public BuiltStatement buildStatement() {
 		
-		CasserMappingEntity entity = null;
+		CasserEntity entity = null;
 		Selection selection = QueryBuilder.select();
 		
 		for (CasserPropertyNode prop : props) {

@@ -22,15 +22,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserEntity;
+import com.noorq.casser.mapping.CasserProperty;
 
-public final class CasserPropertyNode implements Iterable<CasserMappingProperty> {
+public final class CasserPropertyNode implements Iterable<CasserProperty> {
 
-	private final CasserMappingProperty prop;
+	private final CasserProperty prop;
 	private final Optional<CasserPropertyNode> next;
 	
-	public CasserPropertyNode(CasserMappingProperty prop, Optional<CasserPropertyNode> next) {
+	public CasserPropertyNode(CasserProperty prop, Optional<CasserPropertyNode> next) {
 		this.prop = prop;
 		this.next = next;
 	}
@@ -38,7 +38,7 @@ public final class CasserPropertyNode implements Iterable<CasserMappingProperty>
 	public String getColumnName() {
 		if (next.isPresent()) {
 			List<String> columnNames = new ArrayList<String>();
-			for (CasserMappingProperty p : this) {
+			for (CasserProperty p : this) {
 				columnNames.add(p.getColumnName().toCql(true));
 			}
 			Collections.reverse(columnNames);
@@ -49,10 +49,10 @@ public final class CasserPropertyNode implements Iterable<CasserMappingProperty>
 		}
 	}
 	
-	public CasserMappingEntity getEntity() {
+	public CasserEntity getEntity() {
 		if (next.isPresent()) {
-			CasserMappingProperty last = prop;
-			for (CasserMappingProperty p : this) {
+			CasserProperty last = prop;
+			for (CasserProperty p : this) {
 				last = p;
 			}
 			return last.getEntity();
@@ -62,7 +62,7 @@ public final class CasserPropertyNode implements Iterable<CasserMappingProperty>
 		}
 	}
 	
-	public CasserMappingProperty getProperty() {
+	public CasserProperty getProperty() {
 		return prop;
 	}
 
@@ -70,11 +70,11 @@ public final class CasserPropertyNode implements Iterable<CasserMappingProperty>
 		return next;
 	}
 	
-	public Iterator<CasserMappingProperty> iterator() {
+	public Iterator<CasserProperty> iterator() {
 		return new PropertyNodeIterator(Optional.of(this));
 	}
 
-	private static class PropertyNodeIterator implements Iterator<CasserMappingProperty> {
+	private static class PropertyNodeIterator implements Iterator<CasserProperty> {
 
 		private Optional<CasserPropertyNode> next;
 		
@@ -88,7 +88,7 @@ public final class CasserPropertyNode implements Iterable<CasserMappingProperty>
 		}
 
 		@Override
-		public CasserMappingProperty next() {
+		public CasserProperty next() {
 			CasserPropertyNode node = next.get();
 			next = node.next;
 			return node.prop;

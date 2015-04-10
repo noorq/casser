@@ -19,7 +19,7 @@ import java.util.function.Function;
 
 import com.datastax.driver.core.Row;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
 
 public final class Tuple4<A, B, C, D> {
@@ -43,10 +43,10 @@ public final class Tuple4<A, B, C, D> {
 	public final static class Mapper<A, B, C, D> implements Function<Row, Tuple4<A, B, C, D>> {
 
 		private final ColumnValueProvider provider;
-		private final CasserMappingProperty p1;
-		private final CasserMappingProperty p2;
-		private final CasserMappingProperty p3;
-		private final CasserMappingProperty p4;
+		private final CasserProperty p1;
+		private final CasserProperty p2;
+		private final CasserProperty p3;
+		private final CasserProperty p4;
 		
 		public Mapper(ColumnValueProvider provider, 
 				CasserPropertyNode p1, 

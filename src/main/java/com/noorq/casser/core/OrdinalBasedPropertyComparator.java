@@ -17,13 +17,13 @@ package com.noorq.casser.core;
 
 import java.util.Comparator;
 
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserProperty;
 
-public enum OrdinalBasedPropertyComparator implements Comparator<CasserMappingProperty> {
+public enum OrdinalBasedPropertyComparator implements Comparator<CasserProperty> {
 
 	INSTANCE;
 
-	public int compare(CasserMappingProperty o1, CasserMappingProperty o2) {
+	public int compare(CasserProperty o1, CasserProperty o2) {
 
 		Integer ordinal1 = o1.getOrdinal();
 		Integer ordinal2 = o2.getOrdinal();

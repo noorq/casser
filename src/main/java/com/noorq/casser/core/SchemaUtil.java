@@ -37,8 +37,8 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.datastax.driver.core.schemabuilder.SchemaStatement;
 import com.datastax.driver.core.schemabuilder.UDTType;
 import com.noorq.casser.mapping.CasserEntityType;
-import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserEntity;
+import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.CqlUtil;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.mapping.OrderingDirection;
@@ -59,7 +59,7 @@ public final class SchemaUtil {
 		}
 	}
 
-	public static SchemaStatement createUserType(CasserMappingEntity entity) {
+	public static SchemaStatement createUserType(CasserEntity entity) {
 	
 		if (entity.getType() != CasserEntityType.USER_DEFINED_TYPE) {
 			throw new CasserMappingException("expected user defined type entity " + entity);
@@ -67,7 +67,7 @@ public final class SchemaUtil {
 
 		CreateType create = SchemaBuilder.createType(entity.getName().toCql());
 
-		for (CasserMappingProperty prop : entity.getMappingProperties()) {
+		for (CasserProperty prop : entity.getProperties()) {
 			
 			if (prop.isPartitionKey() || prop.isClusteringColumn()) {
 				throw new CasserMappingException("primary key columns are not supported in UserDefinedType for " + prop.getPropertyName() + " in entity " + entity);
@@ -91,11 +91,11 @@ public final class SchemaUtil {
 		return create;
 	}
 	
-	public static SchemaStatement dropUserType(CasserMappingEntity entity) {
+	public static SchemaStatement dropUserType(CasserEntity entity) {
 		return SchemaBuilder.dropType(entity.getName().toCql());
 	}
 	
-	public static SchemaStatement createTable(CasserMappingEntity entity) {
+	public static SchemaStatement createTable(CasserEntity entity) {
 		
 		if (entity.getType() != CasserEntityType.TABLE) {
 			throw new CasserMappingException("expected table entity " + entity);
@@ -105,11 +105,11 @@ public final class SchemaUtil {
 
 		create.ifNotExists();
 		
-		List<CasserMappingProperty> partitionKeys = new ArrayList<CasserMappingProperty>();
-		List<CasserMappingProperty> clusteringColumns = new ArrayList<CasserMappingProperty>();
-		List<CasserMappingProperty> columns = new ArrayList<CasserMappingProperty>();
+		List<CasserProperty> partitionKeys = new ArrayList<CasserProperty>();
+		List<CasserProperty> clusteringColumns = new ArrayList<CasserProperty>();
+		List<CasserProperty> columns = new ArrayList<CasserProperty>();
 
-		for (CasserMappingProperty prop : entity.getMappingProperties()) {
+		for (CasserProperty prop : entity.getProperties()) {
 
 			if (prop.isPartitionKey()) {
 				partitionKeys.add(prop);
@@ -126,7 +126,7 @@ public final class SchemaUtil {
 		Collections.sort(clusteringColumns,
 				OrdinalBasedPropertyComparator.INSTANCE);
 
-		for (CasserMappingProperty prop : partitionKeys) {
+		for (CasserProperty prop : partitionKeys) {
 			
 			Either<DataType,IdentityName> type = prop.getColumnType();
 			
@@ -137,7 +137,7 @@ public final class SchemaUtil {
 			create.addPartitionKey(prop.getColumnName().toCql(), type.getLeft());
 		}
 
-		for (CasserMappingProperty prop : clusteringColumns) {
+		for (CasserProperty prop : clusteringColumns) {
 			
 			Either<DataType,IdentityName> type = prop.getColumnType();
 			
@@ -154,7 +154,7 @@ public final class SchemaUtil {
 			
 		}
 		
-		for (CasserMappingProperty prop : columns) {
+		for (CasserProperty prop : columns) {
 			
 			Either<DataType,IdentityName> type = prop.getColumnType();
 			
@@ -191,7 +191,7 @@ public final class SchemaUtil {
 			
 			Options options = create.withOptions();
 			
-			for (CasserMappingProperty prop : clusteringColumns) {
+			for (CasserProperty prop : clusteringColumns) {
 				options.clusteringOrder(prop.getColumnName().toCql(), mapDirection(prop.getOrdering()));
 			}
 			
@@ -202,7 +202,7 @@ public final class SchemaUtil {
 	}
 
 	public static List<SchemaStatement> alterTable(TableMetadata tmd,
-			CasserMappingEntity entity, boolean dropUnusedColumns) {
+			CasserEntity entity, boolean dropUnusedColumns) {
 
 		if (entity.getType() != CasserEntityType.TABLE) {
 			throw new CasserMappingException("expected table entity " + entity);
@@ -215,7 +215,7 @@ public final class SchemaUtil {
 		final Set<String> visitedColumns = dropUnusedColumns ? new HashSet<String>()
 				: Collections.<String> emptySet();
 
-		for (CasserMappingProperty prop : entity.getMappingProperties()) {
+		for (CasserProperty prop : entity.getProperties()) {
 
 			String columnName = prop.getColumnName().getName();
 
@@ -287,7 +287,7 @@ public final class SchemaUtil {
 		return result;
 	}
 
-	public static SchemaStatement dropTable(CasserMappingEntity entity) {
+	public static SchemaStatement dropTable(CasserEntity entity) {
 		
 		if (entity.getType() != CasserEntityType.TABLE) {
 			throw new CasserMappingException("expected table entity " + entity);
@@ -297,7 +297,7 @@ public final class SchemaUtil {
 		
 	}
 	
-	public static SchemaStatement createIndex(CasserMappingProperty prop) {
+	public static SchemaStatement createIndex(CasserProperty prop) {
 		
 		return SchemaBuilder.createIndex(prop.getIndexName().get().toCql())
 				.ifNotExists()
@@ -306,9 +306,9 @@ public final class SchemaUtil {
 		
 	}
 
-	public static List<SchemaStatement> createIndexes(CasserMappingEntity entity) {
+	public static List<SchemaStatement> createIndexes(CasserEntity entity) {
 		
-		return entity.getMappingProperties().stream()
+		return entity.getProperties().stream()
 		.filter(p -> p.getIndexName().isPresent())
 		.map(p -> SchemaUtil.createIndex(p))
 		.collect(Collectors.toList());
@@ -316,7 +316,7 @@ public final class SchemaUtil {
 	}
 	
 	public static List<SchemaStatement> alterIndexes(TableMetadata tmd,
-			CasserMappingEntity entity, boolean dropUnusedIndexes) {
+			CasserEntity entity, boolean dropUnusedIndexes) {
 
 		List<SchemaStatement> list = new ArrayList<SchemaStatement>();
 		
@@ -324,7 +324,7 @@ public final class SchemaUtil {
 				: Collections.<String> emptySet();
 		
 		entity
-		.getMappingProperties()
+		.getProperties()
 		.stream()
 		.filter(p -> p.getIndexName().isPresent())
 		.forEach(p -> {
@@ -369,7 +369,7 @@ public final class SchemaUtil {
 		
 	}
 	
-	public static SchemaStatement dropIndex(CasserMappingProperty prop) {
+	public static SchemaStatement dropIndex(CasserProperty prop) {
 		return SchemaBuilder.dropIndex(prop.getIndexName().get().toCql()).ifExists();
 	}
 	
@@ -383,7 +383,7 @@ public final class SchemaUtil {
 		throw new CasserMappingException("unknown ordering " + o);
 	}
 	
-	public static void throwNoMapping(CasserMappingProperty prop) {
+	public static void throwNoMapping(CasserProperty prop) {
 		
 		throw new CasserMappingException(
 				"only primitive types and Set,List,Map collections and UserDefinedTypes are allowed, unknown type for property '" + prop.getPropertyName()

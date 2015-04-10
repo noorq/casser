@@ -19,13 +19,13 @@ import java.util.Collection;
 
 import com.datastax.driver.core.UserType;
 import com.google.common.collect.ImmutableMap;
-import com.noorq.casser.mapping.CasserMappingEntity;
+import com.noorq.casser.mapping.CasserEntity;
 
 public final class SessionRepository {
 	
 	private final ImmutableMap<String, UserType> userTypeMap;
 
-	private final ImmutableMap<Class<?>, CasserMappingEntity> entityMap;
+	private final ImmutableMap<Class<?>, CasserEntity> entityMap;
 
 	public SessionRepository(SessionRepositoryBuilder builder) {
 		
@@ -33,7 +33,7 @@ public final class SessionRepository {
 				.putAll(builder.getUserTypeMap())
 				.build();
 
-		entityMap = ImmutableMap.<Class<?>, CasserMappingEntity>builder()
+		entityMap = ImmutableMap.<Class<?>, CasserEntity>builder()
 				.putAll(builder.getEntityMap())
 				.build();
 	}
@@ -42,7 +42,7 @@ public final class SessionRepository {
 		return userTypeMap.get(name.toLowerCase());
 	}
 	
-	public Collection<CasserMappingEntity> entities() {
+	public Collection<CasserEntity> entities() {
 		return entityMap.values();
 	}
 	

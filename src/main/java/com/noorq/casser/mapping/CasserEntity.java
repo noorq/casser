@@ -25,18 +25,18 @@ import com.noorq.casser.config.CasserSettings;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.support.CasserMappingException;
 
-public final class CasserMappingEntity {
+public final class CasserEntity {
 
 	private final Class<?> iface;
 	private final CasserEntityType type;
 	private final IdentityName name;
-	private final ImmutableMap<String, CasserMappingProperty> props;
+	private final ImmutableMap<String, CasserProperty> props;
 	
-	public CasserMappingEntity(Class<?> iface) {
+	public CasserEntity(Class<?> iface) {
 		this(iface, autoDetectType(iface));
 	}
 	
-	public CasserMappingEntity(Class<?> iface, CasserEntityType type) {
+	public CasserEntity(Class<?> iface, CasserEntityType type) {
 		
 		if (iface == null || !iface.isInterface()) {
 			throw new IllegalArgumentException("invalid parameter " + iface);
@@ -50,13 +50,13 @@ public final class CasserMappingEntity {
 		
 		Method[] all = iface.getDeclaredMethods();
 		
-		ImmutableMap.Builder<String, CasserMappingProperty> propsBuilder = ImmutableMap.<String, CasserMappingProperty>builder();
+		ImmutableMap.Builder<String, CasserProperty> propsBuilder = ImmutableMap.<String, CasserProperty>builder();
 		
 		for (Method m : all) {
 			
 			if (settings.getGetterMethodDetector().apply(m)) {
 				
-				CasserMappingProperty prop = new CasserMappingProperty(this, m);
+				CasserProperty prop = new CasserProperty(this, m);
 				
 				propsBuilder.put(prop.getPropertyName(), prop);
 				
@@ -75,11 +75,11 @@ public final class CasserMappingEntity {
 		return iface;
 	}
 
-	public Collection<CasserMappingProperty> getMappingProperties() {
+	public Collection<CasserProperty> getProperties() {
 		return props.values();
 	}
 	
-	public CasserMappingProperty getMappingProperty(String name) {
+	public CasserProperty getProperty(String name) {
 		return props.get(name);
 	}
 
@@ -124,7 +124,7 @@ public final class CasserMappingEntity {
 		.append("(").append(name.getName()).append(") ")
 		.append(type.name().toLowerCase())
 		.append(":\n");
-		for (CasserMappingProperty prop : props.values()) {
+		for (CasserProperty prop : props.values()) {
 			String columnName = prop.getColumnName().getName();
 			str.append("  ");
 			str.append(prop.getColumnType());

@@ -24,8 +24,8 @@ import java.util.Optional;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
 import com.noorq.casser.core.Casser;
-import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserEntity;
+import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.support.CasserException;
 import com.noorq.casser.support.DslPropertyException;
@@ -33,19 +33,19 @@ import com.noorq.casser.support.Either;
 
 public class DslInvocationHandler<E> implements InvocationHandler {
 
-	private final CasserMappingEntity entity;
+	private final CasserEntity entity;
 	private final Optional<CasserPropertyNode> parent;
 	
-	private final Map<Method, CasserMappingProperty> map = new HashMap<Method, CasserMappingProperty>();
+	private final Map<Method, CasserProperty> map = new HashMap<Method, CasserProperty>();
 	
 	private final Map<Method, Object> udtMap = new HashMap<Method, Object>();
 
 	public DslInvocationHandler(Class<E> iface, ClassLoader classLoader, Optional<CasserPropertyNode> parent) {
 		
-		this.entity = new CasserMappingEntity(iface);
+		this.entity = new CasserEntity(iface);
 		this.parent = parent;
 		
-		for (CasserMappingProperty prop : entity.getMappingProperties()) {
+		for (CasserProperty prop : entity.getProperties()) {
 			
 			map.put(prop.getGetterMethod(), prop);
 			
@@ -78,7 +78,7 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			return parent.get();
 		}
 		
-		CasserMappingProperty prop = map.get(method);
+		CasserProperty prop = map.get(method);
 		
 		if (prop != null) {
 			

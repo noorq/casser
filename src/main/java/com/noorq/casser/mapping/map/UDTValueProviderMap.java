@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.datastax.driver.core.UDTValue;
-import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.CasserMappingProperty;
+import com.noorq.casser.mapping.CasserEntity;
+import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.value.UDTColumnValueProvider;
 import com.noorq.casser.support.CasserMappingException;
 
@@ -29,9 +29,9 @@ public final class UDTValueProviderMap implements Map<String, Object> {
 
 	private final UDTValue source;
 	private final UDTColumnValueProvider valueProvider;
-	private final CasserMappingEntity entity;
+	private final CasserEntity entity;
 	
-	public UDTValueProviderMap(UDTValue source, UDTColumnValueProvider valueProvider, CasserMappingEntity entity) {
+	public UDTValueProviderMap(UDTValue source, UDTColumnValueProvider valueProvider, CasserEntity entity) {
 		this.source = source;
 		this.valueProvider = valueProvider;
 		this.entity = entity;
@@ -41,7 +41,7 @@ public final class UDTValueProviderMap implements Map<String, Object> {
 	public Object get(Object key) {
 		if (key instanceof String) {
 			String name = (String) key;
-			CasserMappingProperty prop = entity.getMappingProperty(name);
+			CasserProperty prop = entity.getProperty(name);
 			if (prop != null) {
 				return valueProvider.getColumnValue(source, -1, prop);
 			}
