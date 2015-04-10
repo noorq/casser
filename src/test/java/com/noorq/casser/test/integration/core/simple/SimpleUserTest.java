@@ -81,7 +81,7 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 		session.update(user::name, "albert")
 					.set(user::age, 35)
 					.where(user::id, Operator.EQ, 123L).sync();
-		
+
 		long cnt = session.count(user).where(user::id, Operator.EQ, 123L).sync();
 		Assert.assertEquals(1L, cnt);
 

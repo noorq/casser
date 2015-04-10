@@ -75,6 +75,8 @@ public final class CountOperation extends AbstractFilterOperation<Long, CountOpe
 			entity = p.getEntity();
 		}
 		else if (entity != p.getEntity()) {
+			System.out.println("entity1=" + entity.hashCode());
+			System.out.println("entity2=" + p.getEntity().hashCode());
 			throw new CasserMappingException("you can count columns only in single entity " + entity.getMappingInterface() + " or " + p.getEntity().getMappingInterface());
 		}
 	}

@@ -65,6 +65,16 @@ public final class MappingRepositoryBuilder {
 		return add(dsl, Optional.empty());
 	}
 	
+	public void addEntity(CasserMappingEntity entity) {
+
+		CasserMappingEntity concurrentEntity = entityMap.putIfAbsent(entity.getMappingInterface(), entity);
+		
+		if (concurrentEntity == null) {
+			addUserDefinedTypes(entity.getMappingProperties());
+		}
+			
+	}
+	
 	public CasserMappingEntity add(Object dsl, Optional<CasserEntityType> type) {
 
 		Class<?> iface = MappingUtil.getMappingInterface(dsl);
@@ -90,6 +100,8 @@ public final class MappingRepositoryBuilder {
 		
 		return entity;
 	}
+	
+	
 	
 	private void addUserDefinedTypes(Collection<CasserMappingProperty> props) {
 		

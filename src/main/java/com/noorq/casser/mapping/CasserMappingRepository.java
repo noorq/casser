@@ -37,6 +37,9 @@ public class CasserMappingRepository {
 				.putAll(builder.getEntityMap())
 				.build();
 
+		for (CasserMappingEntity e : entityMap.values()) {
+			System.out.println("e = " + e.getMappingInterface() + ", h = " + e.hashCode());
+		}
 	}
 	
 	public UserType findUserType(String name) {

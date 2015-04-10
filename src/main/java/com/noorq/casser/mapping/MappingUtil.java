@@ -21,7 +21,7 @@ import java.util.Optional;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.Getter;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
-import com.noorq.casser.core.reflect.DslParentExportable;
+import com.noorq.casser.core.reflect.DslExportable;
 import com.noorq.casser.core.reflect.MapExportable;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.DslPropertyException;
@@ -217,8 +217,8 @@ public final class MappingUtil {
 		try {
 			Object childDsl = getter.get();
 			
-			if (childDsl instanceof DslParentExportable) {
-				DslParentExportable e = (DslParentExportable) childDsl;
+			if (childDsl instanceof DslExportable) {
+				DslExportable e = (DslExportable) childDsl;
 				return e.getParentDslCasserPropertyNode();
 			}
 			

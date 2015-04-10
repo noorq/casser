@@ -70,7 +70,11 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			return entity.toString();
 		}
 		
-		if (DslParentExportable.GET_PARENT_METHOD.equals(method.getName())) {
+		if (DslExportable.GET_ENTITY_METHOD.equals(method.getName())) {
+			return entity;
+		}
+		
+		if (DslExportable.GET_PARENT_METHOD.equals(method.getName())) {
 			return parent.get();
 		}
 		

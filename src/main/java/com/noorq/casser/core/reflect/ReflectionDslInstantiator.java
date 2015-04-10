@@ -30,7 +30,7 @@ public enum ReflectionDslInstantiator implements DslInstantiator {
 		DslInvocationHandler<E> handler = new DslInvocationHandler<E>(iface, classLoader, parent);
 		E proxy = (E) Proxy.newProxyInstance(
 		                            classLoader,
-		                            new Class[] { iface, DslParentExportable.class },
+		                            new Class[] { iface, DslExportable.class },
 		                            handler);
 		return proxy;
 	}

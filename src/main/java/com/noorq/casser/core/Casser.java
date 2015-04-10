@@ -25,6 +25,8 @@ import com.datastax.driver.core.Session;
 import com.noorq.casser.config.CasserSettings;
 import com.noorq.casser.config.DefaultCasserSettings;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
+import com.noorq.casser.core.reflect.DslExportable;
+import com.noorq.casser.mapping.MappingRepositoryBuilder;
 
 
 
@@ -109,6 +111,22 @@ public final class Casser {
 
 	public static <E> E map(Class<E> iface, Map<String, Object> src, ClassLoader classLoader) {
 		return settings.getMapperInstantiator().instantiate(iface, src, classLoader);
+	}
+	
+	protected  static MappingRepositoryBuilder createMappingRepository() {
+		MappingRepositoryBuilder builder = new MappingRepositoryBuilder();
+		
+		for (Object dslProxy : dslCache.values()) {
+			
+			if (dslProxy instanceof DslExportable) {
+				DslExportable e = (DslExportable) dslProxy;
+				
+				builder.addEntity(e.getCasserMappingEntity());
+			}
+			
+		}
+		
+		return builder;
 	}
 
 }
