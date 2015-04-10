@@ -17,7 +17,7 @@ package com.noorq.casser.support;
 
 import com.noorq.casser.core.reflect.CasserPropertyNode;
 
-public class DslPropertyException extends CasserException {
+public final class DslPropertyException extends CasserException {
 
 	private static final long serialVersionUID = -2745598205929757758L;
 

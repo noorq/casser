@@ -25,6 +25,7 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.mapping.CasserEntity;
+import com.noorq.casser.mapping.CasserMappingEntity;
 import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.support.CasserException;
@@ -42,7 +43,7 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 
 	public DslInvocationHandler(Class<E> iface, ClassLoader classLoader, Optional<CasserPropertyNode> parent) {
 		
-		this.entity = new CasserEntity(iface);
+		this.entity = new CasserMappingEntity(iface);
 		this.parent = parent;
 		
 		for (CasserProperty prop : entity.getProperties()) {

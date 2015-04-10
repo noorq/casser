@@ -15,6 +15,8 @@
  */
 package com.noorq.casser.mapping;
 
+import com.noorq.casser.support.CqlUtil;
+
 public final class IdentityName {
 
 	private final String name;

@@ -20,6 +20,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
 import com.noorq.casser.support.CasserMappingException;
+import com.noorq.casser.support.Requires;
 
 public final class Postulate<V> {
 
@@ -27,6 +28,7 @@ public final class Postulate<V> {
 	private final V[] values;
 	
 	protected Postulate(Operator op, V[] values) {
+		Requires.nonNullArray(values);
 		this.operator = op;
 		this.values = values;
     }

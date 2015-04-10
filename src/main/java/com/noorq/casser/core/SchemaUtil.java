@@ -39,10 +39,10 @@ import com.datastax.driver.core.schemabuilder.UDTType;
 import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.CasserProperty;
-import com.noorq.casser.mapping.CqlUtil;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.mapping.OrderingDirection;
 import com.noorq.casser.support.CasserMappingException;
+import com.noorq.casser.support.CqlUtil;
 import com.noorq.casser.support.Either;
 
 public final class SchemaUtil {
