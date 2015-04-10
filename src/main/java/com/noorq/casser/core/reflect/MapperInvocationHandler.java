@@ -20,7 +20,6 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
 
-import com.noorq.casser.mapping.MapExportable;
 import com.noorq.casser.support.CasserException;
 
 public class MapperInvocationHandler<E> implements InvocationHandler {

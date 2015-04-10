@@ -15,29 +15,12 @@
  */
 package com.noorq.casser.core.reflect;
 
-import java.lang.reflect.Proxy;
 import java.util.Map;
 
-import com.noorq.casser.core.MapperInstantiator;
+public interface MapExportable {
 
-public enum ReflectionMapperInstantiator implements MapperInstantiator {
-
-	INSTANCE;
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <E> E instantiate(Class<E> iface, Map<String, Object> src, 
-			ClassLoader classLoader) {
-
-		MapperInvocationHandler<E> handler = new MapperInvocationHandler<E>(iface, src);
-		E proxy = (E) Proxy.newProxyInstance(
-		                            classLoader,
-		                            new Class[] { iface, MapExportable.class },
-		                            handler);
-		return proxy;
-
-	}
+	public static final String TO_MAP_METHOD = "toMap";
 	
-	
+	Map<String, Object> toMap();
 	
 }

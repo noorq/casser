@@ -16,13 +16,10 @@
 package com.noorq.casser.core;
 
 import java.io.Closeable;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import com.datastax.driver.core.CloseFuture;
 import com.datastax.driver.core.Row;
@@ -248,6 +245,10 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 				p1, p2, p3, p4, p5, p6, p7);
 	}
 	
+	public CountOperation count() {
+		return new CountOperation(this);
+	}
+	
 	public CountOperation count(Object dsl) {
 		Objects.requireNonNull(dsl, "dsl is empty");
 		
@@ -297,6 +298,10 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		CasserMappingEntity entity = mappingRepository.getEntity(iface);
 		
 		return new InsertOperation(this, entity, pojo, false);
+	}
+	
+	public DeleteOperation delete() {
+		return new DeleteOperation(this);
 	}
 	
 	public DeleteOperation delete(Object dsl) {

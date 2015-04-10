@@ -22,17 +22,23 @@ import com.datastax.driver.core.querybuilder.Delete.Where;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.core.Filter;
+import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.mapping.CasserMappingEntity;
+import com.noorq.casser.support.CasserMappingException;
 
 
 public final class DeleteOperation extends AbstractFilterOperation<ResultSet, DeleteOperation> {
 
-	private final CasserMappingEntity entity;
+	private CasserMappingEntity entity;
 	
 	private boolean ifExists = false;
 	
 	private int[] ttl;
 	private long[] timestamp;
+	
+	public DeleteOperation(AbstractSessionOperations sessionOperations) {
+		super(sessionOperations);
+	}
 	
 	public DeleteOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity entity) {
 		super(sessionOperations);
@@ -42,6 +48,14 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 	
 	@Override
 	public BuiltStatement buildStatement() {
+
+		if (filters != null && !filters.isEmpty()) {
+			filters.forEach(f -> addPropertyNode(f.getNode()));
+		}
+		
+		if (entity == null) {
+			throw new CasserMappingException("unknown entity");
+		}
 		
 		if (filters != null && !filters.isEmpty()) {
 
@@ -99,5 +113,14 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 		this.timestamp = new long[1];
 		this.timestamp[0] = timestamp;
 		return this;
+	}
+	
+	private void addPropertyNode(CasserPropertyNode p) {
+		if (entity == null) {
+			entity = p.getEntity();
+		}
+		else if (entity != p.getEntity()) {
+			throw new CasserMappingException("you can delete rows only in single entity " + entity.getMappingInterface() + " or " + p.getEntity().getMappingInterface());
+		}
 	}
 }

@@ -13,14 +13,13 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping;
+package com.noorq.casser.core.reflect;
 
-import java.util.Map;
 
-public interface MapExportable {
-
-	public static final String TO_MAP_METHOD = "toMap";
+public interface DslParentExportable {
 	
-	Map<String, Object> toMap();
+	public static final String GET_PARENT_METHOD = "getParentDslCasserPropertyNode";
+	
+	CasserPropertyNode getParentDslCasserPropertyNode();
 	
 }

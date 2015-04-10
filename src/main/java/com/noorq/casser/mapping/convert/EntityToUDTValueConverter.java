@@ -21,10 +21,10 @@ import java.util.function.Function;
 
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
+import com.noorq.casser.core.reflect.MapExportable;
 import com.noorq.casser.mapping.CasserMappingEntity;
 import com.noorq.casser.mapping.CasserMappingProperty;
 import com.noorq.casser.mapping.CasserMappingRepository;
-import com.noorq.casser.mapping.MapExportable;
 import com.noorq.casser.mapping.value.BeanColumnValueProvider;
 import com.noorq.casser.mapping.value.UDTColumnValuePreparer;
 import com.noorq.casser.support.CasserMappingException;

@@ -22,11 +22,17 @@ import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Where;
 import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.core.Filter;
+import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.mapping.CasserMappingEntity;
+import com.noorq.casser.support.CasserMappingException;
 
 public final class CountOperation extends AbstractFilterOperation<Long, CountOperation> {
 
-	private final CasserMappingEntity entity;
+	private CasserMappingEntity entity;
+	
+	public CountOperation(AbstractSessionOperations sessionOperations) {
+		super(sessionOperations);
+	}
 	
 	public CountOperation(AbstractSessionOperations sessionOperations, CasserMappingEntity entity) {
 		super(sessionOperations);
@@ -36,6 +42,14 @@ public final class CountOperation extends AbstractFilterOperation<Long, CountOpe
 
 	@Override
 	public BuiltStatement buildStatement() {
+		
+		if (filters != null && !filters.isEmpty()) {
+			filters.forEach(f -> addPropertyNode(f.getNode()));
+		}
+		
+		if (entity == null) {
+			throw new CasserMappingException("unknown entity");
+		}
 		
 		Select select = QueryBuilder.select().countAll().from(entity.getName().toCql());
 		
@@ -54,6 +68,15 @@ public final class CountOperation extends AbstractFilterOperation<Long, CountOpe
 	@Override
 	public Long transform(ResultSet resultSet) {
 		return resultSet.one().getLong(0);
+	}
+	
+	private void addPropertyNode(CasserPropertyNode p) {
+		if (entity == null) {
+			entity = p.getEntity();
+		}
+		else if (entity != p.getEntity()) {
+			throw new CasserMappingException("you can count columns only in single entity " + entity.getMappingInterface() + " or " + p.getEntity().getMappingInterface());
+		}
 	}
 
 }

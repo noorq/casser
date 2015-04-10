@@ -15,9 +15,16 @@
  */
 package com.noorq.casser.test.integration.core.usertype;
 
+import static com.noorq.casser.core.Query.eq;
+
+import java.util.Set;
+import java.util.UUID;
+
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Sets;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.CasserSession;
 import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
@@ -41,5 +48,80 @@ public class InnerUserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		System.out.println(customer);
 	}
 	
+	@Test
+	public void testCrud() {
+		
+		UUID id = UUID.randomUUID();
+		
+		Address a = new Address() {
+
+			@Override
+			public String street() {
+				return "1 st";
+			}
+
+			@Override
+			public String city() {
+				return "San Jose";
+			}
+
+			@Override
+			public int zip() {
+				return 95131;
+			}
+
+			@Override
+			public String country() {
+				return "USA";
+			}
+
+			@Override
+			public Set<String> phones() {
+				return Sets.newHashSet("14080000000");
+			}
+			
+		};
+		
+		
+		AddressInformation ai = new AddressInformation() {
+
+			@Override
+			public Address address() {
+				return a;
+			}
+			
+		};
+		
+		csession.insert()
+			.value(customer::id, id)
+			.value(customer::addressInformation, ai)
+			.sync();
+		
+		String cql = csession.update()
+			.set(customer.addressInformation().address()::street, "3 st")
+			.where(customer::id, eq(id)).cql();
+
+		System.out.println("At the time when this test was written Cassandra did not support querties like this: " + cql);
+
+		csession.update()
+			.set(customer::addressInformation, ai)
+			.where(customer::id, eq(id))
+			.sync();
+
+		String street = csession.select(customer.addressInformation().address()::street)
+			.where(customer::id, eq(id))
+			.sync()
+			.findFirst()
+			.get()._1;
+		
+		Assert.assertEquals("1 st", street);
+		
+		csession.delete().where(customer::id, eq(id)).sync();
+	
+		Long cnt = csession.count().where(customer::id, eq(id)).sync();
+		
+		Assert.assertEquals(Long.valueOf(0), cnt);
+		
+	}
 	
 }

@@ -70,6 +70,10 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			return entity.toString();
 		}
 		
+		if (DslParentExportable.GET_PARENT_METHOD.equals(method.getName())) {
+			return parent.get();
+		}
+		
 		CasserMappingProperty prop = map.get(method);
 		
 		if (prop != null) {

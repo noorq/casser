@@ -341,7 +341,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 	public BuiltStatement buildStatement() {
 		
 		if (entity == null) {
-			throw new CasserMappingException("no entity or table to update data");
+			throw new CasserMappingException("unknown entity");
 		}
 		
 		Update update = QueryBuilder.update(entity.getName().toCql());
@@ -396,7 +396,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 			entity = p.getEntity();
 		}
 		else if (entity != p.getEntity()) {
-			throw new CasserMappingException("you can update columns only for a single entity " + entity.getMappingInterface() + " or " + p.getEntity().getMappingInterface());
+			throw new CasserMappingException("you can update columns only in single entity " + entity.getMappingInterface() + " or " + p.getEntity().getMappingInterface());
 		}
 	}
 }

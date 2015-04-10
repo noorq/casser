@@ -36,6 +36,8 @@ import com.noorq.casser.support.CasserMappingException;
 
 public final class InsertOperation extends AbstractOperation<ResultSet, InsertOperation> {
 
+	private CasserMappingEntity entity;
+	
 	private final List<Tuple2<CasserPropertyNode, Object>> values = new ArrayList<Tuple2<CasserPropertyNode, Object>>();
 	private boolean ifNotExists;
 
@@ -99,20 +101,10 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
 	@Override
 	public BuiltStatement buildStatement() {
 		
-		CasserMappingEntity entity = null;
-		
-		for (Tuple2<CasserPropertyNode, Object> tuple : values) {
-			
-			if (entity == null) {
-				entity = tuple._1.getEntity();
-			}
-			else if (entity != tuple._1.getEntity()) {
-				throw new CasserMappingException("you can select columns only from a single entity " + entity + " or " + tuple._1.getEntity());
-			}
-		}
+		values.forEach(t -> addPropertyNode(t._1));
 		
 		if (entity == null) {
-			throw new CasserMappingException("no entity or table to select data");
+			throw new CasserMappingException("unknown entity");
 		}
 		
 		Insert insert = QueryBuilder.insertInto(entity.getName().toCql());
@@ -152,4 +144,12 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
 		return this;
 	}
 	
+	private void addPropertyNode(CasserPropertyNode p) {
+		if (entity == null) {
+			entity = p.getEntity();
+		}
+		else if (entity != p.getEntity()) {
+			throw new CasserMappingException("you can insert only single entity " + entity.getMappingInterface() + " or " + p.getEntity().getMappingInterface());
+		}
+	}
 }
