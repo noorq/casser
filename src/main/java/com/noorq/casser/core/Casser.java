@@ -26,7 +26,8 @@ import com.noorq.casser.config.CasserSettings;
 import com.noorq.casser.config.DefaultCasserSettings;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.core.reflect.DslExportable;
-import com.noorq.casser.mapping.MappingRepositoryBuilder;
+import com.noorq.casser.mapping.CasserMappingEntity;
+import com.noorq.casser.support.CasserMappingException;
 
 
 
@@ -113,4 +114,41 @@ public final class Casser {
 		return settings.getMapperInstantiator().instantiate(iface, src, classLoader);
 	}
 
+	public static CasserMappingEntity entity(Class<?> iface) {
+		
+		Object dsl = dsl(iface);
+		
+		DslExportable e = (DslExportable) dsl;
+		
+		return e.getCasserMappingEntity();
+	}
+	
+	public static CasserMappingEntity resolve(Object ifaceOrDsl) {
+		
+		if (ifaceOrDsl == null) {
+			throw new CasserMappingException("ifaceOrDsl is null");
+		}
+		
+		if (ifaceOrDsl instanceof DslExportable) {
+			
+			DslExportable e = (DslExportable) ifaceOrDsl;
+			
+			return e.getCasserMappingEntity();
+		}
+		
+		if (ifaceOrDsl instanceof Class) {
+			
+			Class<?> iface = (Class<?>) ifaceOrDsl;
+
+			if (!iface.isInterface()) {
+				throw new CasserMappingException("class is not an interface " + iface);
+			}
+			
+			return entity(iface);
+
+		}
+		
+		throw new CasserMappingException("unknown dsl object or mapping interface " + ifaceOrDsl);
+	}
+	
 }

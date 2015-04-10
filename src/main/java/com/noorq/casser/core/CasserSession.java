@@ -117,26 +117,19 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	}
 
 	public <E> SelectOperation<E> select(Class<E> entityClass) {
-		Objects.requireNonNull(entityClass, "entityClass is empty");
-		
-		Class<?> iface = MappingUtil.getMappingInterface(entityClass);
-		CasserMappingEntity entity = mappingRepository.getEntity(iface);		
+		Objects.requireNonNull(entityClass, "entityClass is empty");		
 		ColumnValueProvider valueProvider = getValueProvider();
-		
+		CasserMappingEntity entity = Casser.entity(entityClass);
 		return new SelectOperation<E>(this, entity, (r) -> {
 			Map<String, Object> map = new RowProviderMap(r, valueProvider, entity);
-			return (E) Casser.map(iface, map);
+			return (E) Casser.map(entityClass, map);
 			
 		});
 	}
 	
 	public <E> SelectOperation<E> select(Class<E> entityClass, Function<Row, E> rowMapper) {
 		Objects.requireNonNull(entityClass, "entityClass is empty");
-		
-		Class<?> iface = MappingUtil.getMappingInterface(entityClass);
-		CasserMappingEntity entity = mappingRepository.getEntity(iface);
-		
-		return new SelectOperation<E>(this, entity, rowMapper);
+		return new SelectOperation<E>(this, Casser.entity(entityClass), rowMapper);
 	}
 	
 	public <V1> SelectOperation<Tuple1<V1>> select(Getter<V1> getter1) {
@@ -251,12 +244,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	
 	public CountOperation count(Object dsl) {
 		Objects.requireNonNull(dsl, "dsl is empty");
-		
-		Class<?> iface = MappingUtil.getMappingInterface(dsl);
-		
-		CasserMappingEntity entity = mappingRepository.getEntity(iface);
-		
-		return new CountOperation(this, entity);
+		return new CountOperation(this, Casser.resolve(dsl));
 	}
 	
 	public <V> UpdateOperation update() {
@@ -280,8 +268,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		Objects.requireNonNull(pojo, "pojo is empty");
 		
 		Class<?> iface = MappingUtil.getMappingInterface(pojo);
-		
-		CasserMappingEntity entity = mappingRepository.getEntity(iface);
+		CasserMappingEntity entity = Casser.entity(iface);
 		
 		return new InsertOperation(this, entity, pojo, true);
 	}
@@ -294,8 +281,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		Objects.requireNonNull(pojo, "pojo is empty");
 		
 		Class<?> iface = MappingUtil.getMappingInterface(pojo);
-		
-		CasserMappingEntity entity = mappingRepository.getEntity(iface);
+		CasserMappingEntity entity = Casser.entity(iface);
 		
 		return new InsertOperation(this, entity, pojo, false);
 	}
@@ -306,12 +292,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	
 	public DeleteOperation delete(Object dsl) {
 		Objects.requireNonNull(dsl, "dsl is empty");
-		
-		Class<?> iface = MappingUtil.getMappingInterface(dsl);
-		
-		CasserMappingEntity entity = mappingRepository.getEntity(iface);
-		
-		return new DeleteOperation(this, entity);
+		return new DeleteOperation(this, Casser.resolve(dsl));
 	}
 	
 	public Session getSession() {

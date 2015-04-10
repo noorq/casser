@@ -80,18 +80,15 @@ public final class MappingRepositoryBuilder {
 	
 	public CasserMappingEntity add(Object dsl, Optional<CasserEntityType> type) {
 
-		Class<?> iface = MappingUtil.getMappingInterface(dsl);
+		CasserMappingEntity casserEntity = Casser.resolve(dsl);
+		
+		Class<?> iface = casserEntity.getMappingInterface();
+		
 		CasserMappingEntity entity = entityMap.get(iface);
 		
 		if (entity == null) {
 
-			if (!(dsl instanceof DslExportable)) {
-				dsl = Casser.dsl(iface);
-			}
-			
-			DslExportable e = (DslExportable) dsl;
-				
-			entity = e.getCasserMappingEntity();
+			entity = casserEntity;
 			
 			if (type.isPresent() && entity.getType() != type.get()) {
 				throw new CasserMappingException("unexpected entity type " + entity.getType() + " for " + entity);

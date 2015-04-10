@@ -168,19 +168,19 @@ public final class MappingUtil {
 				.apply(iface.getSimpleName());
 	}
 
-	public static Class<?> getMappingInterface(Object entity) {
+	public static Class<?> getMappingInterface(Object pojo) {
 
 		Class<?> iface = null;
 
-		if (entity instanceof Class) {
-			iface = (Class<?>) entity;
+		if (pojo instanceof Class) {
+			iface = (Class<?>) pojo;
 
 			if (!iface.isInterface()) {
 				throw new CasserMappingException("expected interface " + iface);
 			}
 
 		} else {
-			Class<?>[] ifaces = entity.getClass().getInterfaces();
+			Class<?>[] ifaces = pojo.getClass().getInterfaces();
 			
 			int len = ifaces.length;
 			for (int i = 0; i != len; ++i) {
@@ -192,7 +192,8 @@ public final class MappingUtil {
 				}
 				
 				if (iface.getDeclaredAnnotation(Table.class) != null ||
-						iface.getDeclaredAnnotation(UserDefinedType.class) != null) {
+						iface.getDeclaredAnnotation(UserDefinedType.class) != null ||
+						iface.getDeclaredAnnotation(Tuple.class) != null) {
 					
 					break;
 					
@@ -204,7 +205,7 @@ public final class MappingUtil {
 		}
 
 		if (iface == null) {
-			throw new CasserMappingException("dsl interface not found for " + entity);
+			throw new CasserMappingException("dsl interface not found for " + pojo);
 		}
 		
 		return iface;
