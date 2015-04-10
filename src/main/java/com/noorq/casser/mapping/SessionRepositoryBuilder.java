@@ -26,11 +26,10 @@ import com.datastax.driver.core.UserType;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.noorq.casser.core.Casser;
-import com.noorq.casser.core.reflect.DslExportable;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.Either;
 
-public final class MappingRepositoryBuilder {
+public final class SessionRepositoryBuilder {
 
 	private static final Optional<CasserEntityType> OPTIONAL_UDT = Optional.of(CasserEntityType.USER_DEFINED_TYPE);
 	
@@ -40,8 +39,8 @@ public final class MappingRepositoryBuilder {
 
     private final Multimap<CasserMappingEntity, CasserMappingEntity> userTypeUsesMap = HashMultimap.create(); 
 	
-	public CasserMappingRepository build() {
-		return new CasserMappingRepository(this);
+	public SessionRepository build() {
+		return new SessionRepository(this);
 	}
 
 	public Collection<CasserMappingEntity> getUserTypeUses(CasserMappingEntity udtName) {

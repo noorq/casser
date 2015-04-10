@@ -31,7 +31,7 @@ import com.datastax.driver.core.UserType;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.MappingRepositoryBuilder;
+import com.noorq.casser.mapping.SessionRepositoryBuilder;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
 import com.noorq.casser.support.CasserException;
@@ -44,7 +44,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 	private boolean showCql = false;
 	private Executor executor = MoreExecutors.sameThreadExecutor();
 	
-	private MappingRepositoryBuilder mappingRepository = new MappingRepositoryBuilder();
+	private SessionRepositoryBuilder sessionRepository = new SessionRepositoryBuilder();
 	
 	private boolean dropUnusedColumns = false;
 	private boolean dropUnusedIndexes = false;
@@ -172,7 +172,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		return new CasserSession(session, 
 				usingKeyspace,
 				showCql, 
-				mappingRepository,
+				sessionRepository,
 				executor,
 				autoDsl == AutoDsl.CREATE_DROP);
 	}
@@ -181,7 +181,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		
 		Objects.requireNonNull(usingKeyspace, "please define keyspace by 'use' operator");
 
-		initList.forEach(dsl -> mappingRepository.add(dsl));
+		initList.forEach(dsl -> sessionRepository.add(dsl));
 
 		TableOperations tableOps = new TableOperations(this, dropUnusedColumns, dropUnusedIndexes);
 		UserTypeOperations userTypeOps = new UserTypeOperations(this);
@@ -193,24 +193,24 @@ public class SessionInitializer extends AbstractSessionOperations {
 			
 			createUserTypesInOrder(userTypeOps);
 
-			mappingRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
+			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
 				.forEach(e -> tableOps.createTable(e));
 			
 			break;
 			
 		case VALIDATE:
-			mappingRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.USER_DEFINED_TYPE)
+			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.USER_DEFINED_TYPE)
 				.forEach(e -> userTypeOps.validateUserType(getUserType(e), e));
 			
-			mappingRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
+			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
 				.forEach(e -> tableOps.validateTable(getTableMetadata(e), e));
 			break;
 			
 		case UPDATE:
-			mappingRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.USER_DEFINED_TYPE)
+			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.USER_DEFINED_TYPE)
 				.forEach(e -> userTypeOps.updateUserType(getUserType(e), e));
 
-			mappingRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
+			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
 				.forEach(e -> tableOps.updateTable(getTableMetadata(e), e));
 			break;
 		
@@ -219,7 +219,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		KeyspaceMetadata km = getKeyspaceMetadata();
 		
 		for (UserType userType : km.getUserTypes()) {
-			mappingRepository.addUserType(userType.getTypeName(), userType);
+			sessionRepository.addUserType(userType.getTypeName(), userType);
 		}
 		
 	}
@@ -229,7 +229,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		Set<CasserMappingEntity> createdSet = new HashSet<CasserMappingEntity>();
 		Set<CasserMappingEntity> stack = new HashSet<CasserMappingEntity>();
 		
-		mappingRepository.entities().stream()
+		sessionRepository.entities().stream()
 		.filter(e -> e.getType() == CasserEntityType.USER_DEFINED_TYPE)
 		.forEach(e -> {
 		
@@ -245,7 +245,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		
 		stack.add(e);
 		
-		Collection<CasserMappingEntity> createBefore = mappingRepository.getUserTypeUses(e);
+		Collection<CasserMappingEntity> createBefore = sessionRepository.getUserTypeUses(e);
 		
 		for (CasserMappingEntity be : createBefore) {
 			if (!createdSet.contains(be) && !stack.contains(be)) {

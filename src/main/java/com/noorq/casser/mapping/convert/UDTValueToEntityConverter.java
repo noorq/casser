@@ -21,7 +21,7 @@ import java.util.function.Function;
 import com.datastax.driver.core.UDTValue;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.CasserMappingRepository;
+import com.noorq.casser.mapping.SessionRepository;
 import com.noorq.casser.mapping.map.UDTValueProviderMap;
 import com.noorq.casser.mapping.value.UDTColumnValueProvider;
 import com.noorq.casser.support.CasserMappingException;
@@ -29,13 +29,13 @@ import com.noorq.casser.support.CasserMappingException;
 public final class UDTValueToEntityConverter implements Function<UDTValue, Object> {
 
 	private final Class<?> iface;
-	private final CasserMappingRepository repository;
+	private final SessionRepository repository;
 	private final CasserMappingEntity entity;
 	
-	public UDTValueToEntityConverter(Class<?> iface, CasserMappingRepository repository) {
+	public UDTValueToEntityConverter(Class<?> iface, SessionRepository repository) {
 		this.iface = iface;
 		this.repository = repository;
-		this.entity = repository.getEntity(iface);
+		this.entity = Casser.entity(iface);
 		
 		if (this.entity == null) {
 			throw new CasserMappingException("entity not found for " + iface);

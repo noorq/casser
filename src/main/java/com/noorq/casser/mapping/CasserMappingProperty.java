@@ -133,7 +133,7 @@ public final class CasserMappingProperty implements CasserProperty {
 	}
 	
 	@Override
-	public Optional<Function<Object, Object>> getReadConverter(CasserMappingRepository repository) {
+	public Optional<Function<Object, Object>> getReadConverter(SessionRepository repository) {
 
 		if (readConverter == null) {
 			readConverter = Optional.ofNullable(resolveReadConverter(repository));
@@ -142,7 +142,7 @@ public final class CasserMappingProperty implements CasserProperty {
 		return readConverter;
 	}
 
-	private Function<Object, Object> resolveReadConverter(CasserMappingRepository repository) {
+	private Function<Object, Object> resolveReadConverter(SessionRepository repository) {
 		
 		Either<DataType, IdentityName> columnType = getColumnType();
 		
@@ -185,7 +185,7 @@ public final class CasserMappingProperty implements CasserProperty {
 	}
 	
 	@Override
-	public Optional<Function<Object, Object>> getWriteConverter(CasserMappingRepository repository) {
+	public Optional<Function<Object, Object>> getWriteConverter(SessionRepository repository) {
 		
 		if (writeConverter == null) {
 			writeConverter = Optional.ofNullable(resolveWriteConverter(repository));
@@ -194,7 +194,7 @@ public final class CasserMappingProperty implements CasserProperty {
 		return writeConverter;
 	}
 	
-	private Function<Object, Object> resolveWriteConverter(CasserMappingRepository repository) {
+	private Function<Object, Object> resolveWriteConverter(SessionRepository repository) {
 	
 		Either<DataType, IdentityName> columnType = getColumnType();
 		

@@ -25,13 +25,13 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.Row;
 import com.noorq.casser.mapping.CasserMappingProperty;
-import com.noorq.casser.mapping.CasserMappingRepository;
+import com.noorq.casser.mapping.SessionRepository;
 
 public final class RowColumnValueProvider implements ColumnValueProvider {
 
-	private final CasserMappingRepository repository;
+	private final SessionRepository repository;
 	
-	public RowColumnValueProvider(CasserMappingRepository repository) {
+	public RowColumnValueProvider(SessionRepository repository) {
 		this.repository = repository;
 	}
 	

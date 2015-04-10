@@ -23,14 +23,14 @@ import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.querybuilder.BindMarker;
 import com.noorq.casser.mapping.CasserMappingProperty;
-import com.noorq.casser.mapping.CasserMappingRepository;
+import com.noorq.casser.mapping.SessionRepository;
 
 public final class UDTColumnValuePreparer implements ColumnValuePreparer {
 
 	private final UserType userType;
-	private final CasserMappingRepository repository;
+	private final SessionRepository repository;
 
-	public UDTColumnValuePreparer(UserType userType, CasserMappingRepository repository) {
+	public UDTColumnValuePreparer(UserType userType, SessionRepository repository) {
 		this.userType = userType;
 		this.repository = repository;
 	}

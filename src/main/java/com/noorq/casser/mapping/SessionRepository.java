@@ -19,15 +19,14 @@ import java.util.Collection;
 
 import com.datastax.driver.core.UserType;
 import com.google.common.collect.ImmutableMap;
-import com.noorq.casser.support.CasserMappingException;
 
-public class CasserMappingRepository {
+public final class SessionRepository {
 	
 	private final ImmutableMap<String, UserType> userTypeMap;
 
 	private final ImmutableMap<Class<?>, CasserMappingEntity> entityMap;
 
-	public CasserMappingRepository(MappingRepositoryBuilder builder) {
+	public SessionRepository(SessionRepositoryBuilder builder) {
 		
 		userTypeMap = ImmutableMap.<String, UserType>builder()
 				.putAll(builder.getUserTypeMap())
@@ -36,10 +35,6 @@ public class CasserMappingRepository {
 		entityMap = ImmutableMap.<Class<?>, CasserMappingEntity>builder()
 				.putAll(builder.getEntityMap())
 				.build();
-
-		for (CasserMappingEntity e : entityMap.values()) {
-			System.out.println("e = " + e.getMappingInterface() + ", h = " + e.hashCode());
-		}
 	}
 	
 	public UserType findUserType(String name) {
@@ -50,14 +45,4 @@ public class CasserMappingRepository {
 		return entityMap.values();
 	}
 	
-	public CasserMappingEntity getEntity(Class<?> iface) {
-		
-		CasserMappingEntity entity = entityMap.get(iface);
-		
-		if (entity == null) {
-			throw new CasserMappingException("please add all entities in SessionInitializer, unknown entity " + iface);
-		}
-		
-		return entity;
-	}
 }

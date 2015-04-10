@@ -38,8 +38,8 @@ import com.noorq.casser.core.tuple.Tuple5;
 import com.noorq.casser.core.tuple.Tuple6;
 import com.noorq.casser.core.tuple.Tuple7;
 import com.noorq.casser.mapping.CasserMappingEntity;
-import com.noorq.casser.mapping.CasserMappingRepository;
-import com.noorq.casser.mapping.MappingRepositoryBuilder;
+import com.noorq.casser.mapping.SessionRepository;
+import com.noorq.casser.mapping.SessionRepositoryBuilder;
 import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.map.RowProviderMap;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
@@ -52,7 +52,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	private final Session session;
 	private volatile String usingKeyspace;
 	private volatile boolean showCql;
-	private final CasserMappingRepository mappingRepository;
+	private final SessionRepository sessionRepository;
 	private final Executor executor;
 	private final boolean dropSchemaOnClose;
 	
@@ -62,18 +62,18 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	CasserSession(Session session,
 			String usingKeyspace,
 			boolean showCql, 
-			MappingRepositoryBuilder mappingRepositoryBuilder, 
+			SessionRepositoryBuilder sessionRepositoryBuilder, 
 			Executor executor,
 			boolean dropSchemaOnClose) {
 		this.session = session;
 		this.usingKeyspace = Objects.requireNonNull(usingKeyspace, "keyspace needs to be selected before creating session");
 		this.showCql = showCql;
-		this.mappingRepository = mappingRepositoryBuilder.build();
+		this.sessionRepository = sessionRepositoryBuilder.build();
 		this.executor = executor;
 		this.dropSchemaOnClose = dropSchemaOnClose;
 		
-		this.valueProvider = new RowColumnValueProvider(this.mappingRepository);
-		this.valuePreparer = new StatementColumnValuePreparer(this.mappingRepository);
+		this.valueProvider = new RowColumnValueProvider(this.sessionRepository);
+		this.valuePreparer = new StatementColumnValuePreparer(this.sessionRepository);
 	}
 	
 	@Override
@@ -323,7 +323,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 	
 	private void dropSchema() {
 		
-		mappingRepository.entities().forEach(e -> dropEntity(e));
+		sessionRepository.entities().forEach(e -> dropEntity(e));
 		
 	}
 	

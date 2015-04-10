@@ -20,14 +20,14 @@ import java.util.function.Function;
 
 import com.datastax.driver.core.querybuilder.BindMarker;
 import com.noorq.casser.mapping.CasserMappingProperty;
-import com.noorq.casser.mapping.CasserMappingRepository;
+import com.noorq.casser.mapping.SessionRepository;
 
 
 public final class StatementColumnValuePreparer implements ColumnValuePreparer {
 
-	private final CasserMappingRepository repository;
+	private final SessionRepository repository;
 
-	public StatementColumnValuePreparer(CasserMappingRepository repository) {
+	public StatementColumnValuePreparer(SessionRepository repository) {
 		this.repository = repository;
 	}
 	
