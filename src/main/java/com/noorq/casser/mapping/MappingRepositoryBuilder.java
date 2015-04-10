@@ -25,6 +25,9 @@ import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.noorq.casser.core.Casser;
+import com.noorq.casser.core.reflect.DslExportable;
+import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.Either;
 
 public final class MappingRepositoryBuilder {
@@ -78,15 +81,22 @@ public final class MappingRepositoryBuilder {
 	public CasserMappingEntity add(Object dsl, Optional<CasserEntityType> type) {
 
 		Class<?> iface = MappingUtil.getMappingInterface(dsl);
-		
 		CasserMappingEntity entity = entityMap.get(iface);
 		
 		if (entity == null) {
 
-			entity = type.isPresent() ? 
-					new CasserMappingEntity(iface, type.get()) :
-						new CasserMappingEntity(iface);
-
+			if (!(dsl instanceof DslExportable)) {
+				dsl = Casser.dsl(iface);
+			}
+			
+			DslExportable e = (DslExportable) dsl;
+				
+			entity = e.getCasserMappingEntity();
+			
+			if (type.isPresent() && entity.getType() != type.get()) {
+				throw new CasserMappingException("unexpected entity type " + entity.getType() + " for " + entity);
+			}
+			
 			CasserMappingEntity concurrentEntity = entityMap.putIfAbsent(iface, entity);
 					
 			if (concurrentEntity == null) {

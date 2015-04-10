@@ -112,21 +112,5 @@ public final class Casser {
 	public static <E> E map(Class<E> iface, Map<String, Object> src, ClassLoader classLoader) {
 		return settings.getMapperInstantiator().instantiate(iface, src, classLoader);
 	}
-	
-	protected  static MappingRepositoryBuilder createMappingRepository() {
-		MappingRepositoryBuilder builder = new MappingRepositoryBuilder();
-		
-		for (Object dslProxy : dslCache.values()) {
-			
-			if (dslProxy instanceof DslExportable) {
-				DslExportable e = (DslExportable) dslProxy;
-				
-				builder.addEntity(e.getCasserMappingEntity());
-			}
-			
-		}
-		
-		return builder;
-	}
 
 }

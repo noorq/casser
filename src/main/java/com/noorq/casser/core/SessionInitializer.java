@@ -44,7 +44,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 	private boolean showCql = false;
 	private Executor executor = MoreExecutors.sameThreadExecutor();
 	
-	private MappingRepositoryBuilder mappingRepository;
+	private MappingRepositoryBuilder mappingRepository = new MappingRepositoryBuilder();
 	
 	private boolean dropUnusedColumns = false;
 	private boolean dropUnusedIndexes = false;
@@ -181,7 +181,6 @@ public class SessionInitializer extends AbstractSessionOperations {
 		
 		Objects.requireNonNull(usingKeyspace, "please define keyspace by 'use' operator");
 
-		mappingRepository = Casser.createMappingRepository();
 		initList.forEach(dsl -> mappingRepository.add(dsl));
 
 		TableOperations tableOps = new TableOperations(this, dropUnusedColumns, dropUnusedIndexes);
