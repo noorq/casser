@@ -18,6 +18,7 @@ package com.noorq.casser.test.integration.core.udtcollection;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.schemabuilder.Create;

@@ -76,9 +76,10 @@ public final class CasserMappingProperty implements CasserProperty {
 		this.keyInfo = new KeyInformation(getter);
 
 		this.columnType = resolveColumnType(keyInfo, isStatic);
-		
+
 		this.genericJavaType = getter.getGenericReturnType();
 		this.javaType = getter.getReturnType();
+
 		this.dataType = resolveAbstractDataType(getter, this.genericJavaType, this.javaType, this.columnType);
 
 	}
@@ -212,7 +213,7 @@ public final class CasserMappingProperty implements CasserProperty {
 		AbstractDataType abstractDataType = getDataType();
 		
 		if (abstractDataType instanceof UDTDataType) {
-			
+
 			UDTDataType udtDataType = (UDTDataType) abstractDataType;
 			
 			if (isUDTValue(javaType)) {
@@ -387,6 +388,7 @@ public final class CasserMappingProperty implements CasserProperty {
 		if (type instanceof Class<?>) {
 			Class<?> javaType = (Class<?>) type;
 			dataType = SimpleDataTypes.getDataTypeByJavaClass(javaType);
+
 			
 			if (dataType == null) {
 				IdentityName udtName = MappingUtil.getUserDefinedTypeName(javaType, false);
@@ -396,6 +398,7 @@ public final class CasserMappingProperty implements CasserProperty {
 				}
 			}
 			
+
 		}
 		
 		if (dataType == null) {
