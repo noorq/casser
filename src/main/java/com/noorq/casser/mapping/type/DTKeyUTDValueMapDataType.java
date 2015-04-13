@@ -31,13 +31,20 @@ public final class DTKeyUTDValueMapDataType extends AbstractDataType {
 
 	private final DataType keyType;
 	private final IdentityName valueType;
+	private final Class<?> udtValueClass;
 	
-	public DTKeyUTDValueMapDataType(ColumnType columnType, DataType keyType, IdentityName valueType) {
+	public DTKeyUTDValueMapDataType(ColumnType columnType, DataType keyType, IdentityName valueType, Class<?> udtValueClass) {
 		super(columnType);
 		this.keyType = keyType;
 		this.valueType = valueType;
+		this.udtValueClass = udtValueClass;
 	}
 
+	@Override
+	public Class<?>[] getUdtClasses() {
+		return new Class<?>[] { udtValueClass };
+	}
+	
 	@Override
 	public void addColumn(Create create, IdentityName columnName) {
 		ensureSimpleColumn(columnName);

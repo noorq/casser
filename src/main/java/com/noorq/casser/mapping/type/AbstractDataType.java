@@ -32,6 +32,8 @@ public abstract class AbstractDataType {
 
 	public abstract SchemaStatement alterColumn(Alter alter, IdentityName columnName, ColumnMetadata columnMetadata);
 	
+	public abstract Class<?>[] getUdtClasses();
+	
 	final ColumnType columnType;
 	
 	public AbstractDataType(ColumnType columnType) {

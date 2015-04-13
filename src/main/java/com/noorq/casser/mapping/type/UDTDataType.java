@@ -30,12 +30,19 @@ import com.noorq.casser.mapping.IdentityName;
 public final class UDTDataType extends AbstractDataType {
 
 	private final IdentityName udtName;
+	private final Class<?> udtClass;
 	
-	public UDTDataType(ColumnType columnType, IdentityName udtName) {
+	public UDTDataType(ColumnType columnType, IdentityName udtName, Class<?> udtClass) {
 		super(columnType);
 		this.udtName = udtName;
+		this.udtClass = udtClass;
 	}
 
+	@Override
+	public Class<?>[] getUdtClasses() {
+		return new Class<?>[] { udtClass };
+	}
+	
 	public IdentityName getUdtName() {
 		return udtName;
 	}

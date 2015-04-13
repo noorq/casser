@@ -117,13 +117,18 @@ public final class SessionRepositoryBuilder {
 			
 			AbstractDataType type = prop.getDataType();
 			
-			if (type instanceof UDTDataType && !UDTValue.class.isAssignableFrom(prop.getJavaType())) {
+			if (!UDTValue.class.isAssignableFrom(prop.getJavaType())) {
 				
-				CasserEntity addedUserType = add(prop.getJavaType(), OPTIONAL_UDT);
-				
-				if (CasserEntityType.USER_DEFINED_TYPE == prop.getEntity().getType()) {
-					userTypeUsesMap.put(prop.getEntity(), addedUserType);
+				for (Class<?> udtClass : type.getUdtClasses()) {
+					
+					CasserEntity addedUserType = add(udtClass, OPTIONAL_UDT);
+					
+					if (CasserEntityType.USER_DEFINED_TYPE == prop.getEntity().getType()) {
+						userTypeUsesMap.put(prop.getEntity(), addedUserType);
+					}
+					
 				}
+				
 			}
 			
 		}

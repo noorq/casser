@@ -30,13 +30,13 @@ import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
 public class UDTCollectionTest extends AbstractEmbeddedCassandraTest {
 
-	//static Book book = Casser.dsl(Book.class);
+	static Book book = Casser.dsl(Book.class);
 	
 	static CasserSession csession;
 
 	@BeforeClass
 	public static void beforeTest() {
-		//csession = Casser.init(getSession()).showCql().add(book).autoCreateDrop().get();
+		csession = Casser.init(getSession()).showCql().add(book).autoCreateDrop().get();
 		
 		/*
 		Session session = getSession();

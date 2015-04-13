@@ -41,8 +41,14 @@ import com.noorq.casser.mapping.convert.TypedConverter;
 import com.noorq.casser.mapping.convert.UDTValueToEntityConverter;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
+import com.noorq.casser.mapping.type.DTKeyUTDValueMapDataType;
 import com.noorq.casser.mapping.type.UDTDataType;
+import com.noorq.casser.mapping.type.UDTKeyDTValueMapDataType;
+import com.noorq.casser.mapping.type.UDTKeyUDTValueMapDataType;
+import com.noorq.casser.mapping.type.UDTListDataType;
+import com.noorq.casser.mapping.type.UDTSetDataType;
 import com.noorq.casser.support.CasserMappingException;
+import com.noorq.casser.support.Either;
 
 public final class CasserMappingProperty implements CasserProperty {
 
@@ -80,7 +86,7 @@ public final class CasserMappingProperty implements CasserProperty {
 		this.genericJavaType = getter.getGenericReturnType();
 		this.javaType = getter.getReturnType();
 
-		this.dataType = resolveAbstractDataType(getter, this.genericJavaType, this.javaType, this.columnType);
+		this.dataType = resolveDataType(getter, this.genericJavaType, this.javaType, this.columnType);
 
 	}
 	
@@ -276,103 +282,161 @@ public final class CasserMappingProperty implements CasserProperty {
 		}
 	}
 	
-	private static AbstractDataType resolveAbstractDataType(Method getter, Type genericJavaType, Class<?> javaType, ColumnType columnType) {
-		
-		DataType dataType = resolveDataType(getter, genericJavaType, javaType);
-		if (dataType != null) {
-			return new DTDataType(columnType, dataType);
-		}
-		else {
-			
-			IdentityName udtName = null;
-			
-			if (isUDTValue(javaType)) {
-				UserTypeName userTypeName = getter.getDeclaredAnnotation(UserTypeName.class);
-				if (userTypeName == null) {
-					throw new CasserMappingException("absent UserTypeName annotation for " + getter);
-				}
-				udtName = new IdentityName(userTypeName.value(), userTypeName.forceQuote());
-			}
-			else {
-			    udtName = MappingUtil.getUserDefinedTypeName(javaType, false);
-			    
-			    if (udtName == null) {
-			    	throw new CasserMappingException("unknown property type for " + getter);
-			    }
-			    
-			}
-			
-			return new UDTDataType(columnType, udtName);
-		}
-		
-	}
-
-	private static DataType resolveDataType(Method getter, Type genericJavaType, Class<?> javaType) {
+	private static AbstractDataType resolveDataType(Method getter, Type genericJavaType, Class<?> javaType, ColumnType columnType) {
 		
 		DataTypeName annotation = getter.getDeclaredAnnotation(DataTypeName.class);
 		if (annotation != null && annotation.value() != null) {
-			return qualifyAnnotatedType(getter, annotation);
+			return resolveDataTypeByAnnotation(getter, annotation, columnType);
 		}
 		
 		if (isEnum(javaType)) {
-			return DataType.text();
+			return new DTDataType(columnType, DataType.text());
 		}
 
 		if (isMap(javaType)) {
+			
 			Type[] args = getTypeParameters(genericJavaType);
 			ensureTypeArguments(getter, args.length, 2);
 
-			return DataType.map(autodetectPrimitiveType(getter, args[0]),
-					autodetectPrimitiveType(getter, args[1]));
+			Either<DataType, IdentityName> key = autodetectParameterType(getter, args[0]);
+			Either<DataType, IdentityName> value = autodetectParameterType(getter, args[1]);
+			
+			if (key.isLeft()) {
+				
+				if (value.isLeft()) {
+					return new DTDataType(columnType, DataType.map(key.getLeft(), value.getLeft()));
+				}
+				else {
+					return new DTKeyUTDValueMapDataType(columnType, 
+							key.getLeft(), 
+							value.getRight(),
+							(Class<?>) args[1]);
+				}
+			}
+			else {
+				
+				if (value.isLeft()) {
+					return new UDTKeyDTValueMapDataType(columnType, 
+							key.getRight(), 
+							(Class<?>) args[0],
+							value.getLeft());
+				}
+				else {
+					return new UDTKeyUDTValueMapDataType(columnType, 
+							key.getRight(), 
+							(Class<?>) args[0],
+							value.getRight(),
+							(Class<?>) args[1]);
+				}
+				
+			}
+
 		}
 
 		if (isCollectionLike(javaType)) {
+			
 			Type[] args = getTypeParameters(genericJavaType);
 			ensureTypeArguments(getter, args.length, 1);
 
 			if (isSet(javaType)) {
+				
+				Either<DataType, IdentityName> parameterType = autodetectParameterType(getter, args[0]);
 
-				return DataType.set(autodetectPrimitiveType(getter, args[0]));
-
+				if (parameterType.isLeft()) {
+					return new DTDataType(columnType, DataType.set(parameterType.getLeft()));
+				}
+				else {
+					return new UDTSetDataType(columnType, 
+							parameterType.getRight(),
+							(Class<?>) args[0]);
+				}
+	
 			} else if (isList(javaType)) {
 
-				return DataType.list(autodetectPrimitiveType(getter, args[0]));
+				Either<DataType, IdentityName> parameterType = autodetectParameterType(getter, args[0]);
+
+				if (parameterType.isLeft()) {
+					return new DTDataType(columnType, DataType.list(parameterType.getLeft()));
+				}
+				else {
+					return new UDTListDataType(columnType, 
+							parameterType.getRight(),
+							(Class<?>) args[0]);
+				}
 
 			}
 		}
 
-		return SimpleDataTypes.getDataTypeByJavaClass(javaType);
+		DataType dataType = SimpleDataTypes.getDataTypeByJavaClass(javaType);
+		if (dataType != null) {
+			return new DTDataType(columnType, dataType);
+		}
+		
+		IdentityName udtName = null;
+		
+		if (isUDTValue(javaType)) {
+			UserTypeName userTypeName = getter.getDeclaredAnnotation(UserTypeName.class);
+			if (userTypeName == null) {
+				throw new CasserMappingException("absent UserTypeName annotation for " + getter);
+			}
+			udtName = new IdentityName(userTypeName.value(), userTypeName.forceQuote());
+		}
+		else {
+		    udtName = MappingUtil.getUserDefinedTypeName(javaType, false);
+		    
+		    if (udtName == null) {
+		    	throw new CasserMappingException("unknown property type for " + getter);
+		    }
+		    
+		}
+		
+		return new UDTDataType(columnType, udtName, javaType);
+		
 	}
 	
-	private static DataType qualifyAnnotatedType(Method getter, DataTypeName annotation) {
+	private static AbstractDataType resolveDataTypeByAnnotation(Method getter, DataTypeName annotation, ColumnType columnType) {
+		
 		DataType.Name type = annotation.value();
+		
 		if (type.isCollection()) {
+			
 			switch (type) {
 			case MAP:
 				ensureTypeArguments(getter, annotation.types().length, 2);
-				return DataType.map(resolvePrimitiveType(getter, annotation.types()[0]),
-						resolvePrimitiveType(getter, annotation.types()[1]));
+				
+				return new DTDataType(columnType, 
+						DataType.map(resolveSimpleType(getter, annotation.types()[0]),
+						resolveSimpleType(getter, annotation.types()[1])));
+				
 			case LIST:
 				ensureTypeArguments(getter, annotation.types().length, 1);
-				return DataType.list(resolvePrimitiveType(getter, annotation.types()[0]));
+				
+				return new DTDataType(columnType, 
+						DataType.list(resolveSimpleType(getter, annotation.types()[0])));
+				
 			case SET:
 				ensureTypeArguments(getter, annotation.types().length, 1);
-				return DataType.set(resolvePrimitiveType(getter, annotation.types()[0]));
+				
+				return new DTDataType(columnType, 
+						DataType.set(resolveSimpleType(getter, annotation.types()[0])));
+				
 			default:
 				throw new CasserMappingException("unknown collection DataType for property " + getter);
 			}
-		} else {
-			DataType dataType = SimpleDataTypes.getDataTypeByName(type);
 			
-			if (dataType == null) {
-				throw new CasserMappingException("unknown DataType for property " + getter);
-			}
+		} 
+		
+		DataType dataType = SimpleDataTypes.getDataTypeByName(type);
 			
-			return dataType;
+		if (dataType != null) {
+			return new DTDataType(columnType, dataType);
 		}
+
+		throw new CasserMappingException("unknown DataType for property " + getter);
+		
 	}
 	
-	static DataType resolvePrimitiveType(Method getter, DataType.Name typeName) {
+	static DataType resolveSimpleType(Method getter, DataType.Name typeName) {
 		DataType dataType = SimpleDataTypes.getDataTypeByName(typeName);
 		if (dataType == null) {
 			throw new CasserMappingException(
@@ -381,32 +445,29 @@ public final class CasserMappingProperty implements CasserProperty {
 		return dataType;
 	}
 
-	static DataType autodetectPrimitiveType(Method getter, Type type) {
+	static Either<DataType, IdentityName> autodetectParameterType(Method getter, Type type) {
 		
 		DataType dataType = null;
 		
 		if (type instanceof Class<?>) {
+			
 			Class<?> javaType = (Class<?>) type;
 			dataType = SimpleDataTypes.getDataTypeByJavaClass(javaType);
 
-			
-			if (dataType == null) {
-				IdentityName udtName = MappingUtil.getUserDefinedTypeName(javaType, false);
-				
-				if (udtName != null) {
-					//return SchemaBuilder.frozen(udtName.getName());
-				}
+			if (dataType != null) {
+				return Either.left(dataType);
 			}
 			
+			IdentityName udtName = MappingUtil.getUserDefinedTypeName(javaType, false);
+				
+			if (udtName != null) {
+				return Either.right(udtName);
+			}
 
 		}
-		
-		if (dataType == null) {
-			throw new CasserMappingException(
-					"unknown type inside collections for the property " + getter);
-		}
-		
-		return dataType;
+
+		throw new CasserMappingException(
+				"unknown parameter type " + type + " in the collection for the property " + getter);
 	}
 	
 	static void ensureTypeArguments(Method getter, int args, int expected) {

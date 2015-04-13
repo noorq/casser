@@ -30,12 +30,19 @@ import com.noorq.casser.support.CasserMappingException;
 public final class UDTKeyDTValueMapDataType extends AbstractDataType {
 
 	private final IdentityName keyType;
+	private final Class<?> udtKeyClass;
 	private final DataType valueType;
 	
-	public UDTKeyDTValueMapDataType(ColumnType columnType, IdentityName keyType, DataType valueType) {
+	public UDTKeyDTValueMapDataType(ColumnType columnType, IdentityName keyType, Class<?> udtKeyClass, DataType valueType) {
 		super(columnType);
 		this.keyType = keyType;
+		this.udtKeyClass = udtKeyClass;
 		this.valueType = valueType;
+	}
+	
+	@Override
+	public Class<?>[] getUdtClasses() {
+		return new Class<?>[] { udtKeyClass };
 	}
 	
 	@Override

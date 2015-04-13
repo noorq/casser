@@ -29,10 +29,17 @@ import com.noorq.casser.support.CasserMappingException;
 public final class UDTListDataType extends AbstractDataType {
 
 	private final IdentityName udtName;
+	private final Class<?> udtClass;
 	
-	public UDTListDataType(ColumnType columnType, IdentityName udtName) {
+	public UDTListDataType(ColumnType columnType, IdentityName udtName, Class<?> udtClass) {
 		super(columnType);
 		this.udtName = udtName;
+		this.udtClass = udtClass;
+	}
+	
+	@Override
+	public Class<?>[] getUdtClasses() {
+		return new Class<?>[] { udtClass };
 	}
 
 	@Override

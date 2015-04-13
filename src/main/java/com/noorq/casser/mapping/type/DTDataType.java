@@ -27,6 +27,8 @@ import com.noorq.casser.support.CasserMappingException;
 
 public final class DTDataType extends AbstractDataType {
 
+	private static final Class<?>[] EMPTY_CLASSES = new Class<?>[] {};
+	
 	private final DataType dataType;
 	
 	public DTDataType(ColumnType columnType, DataType dataType) {
@@ -38,6 +40,11 @@ public final class DTDataType extends AbstractDataType {
 		return dataType;
 	}
 
+	@Override
+	public Class<?>[] getUdtClasses() {
+		return EMPTY_CLASSES;
+	}
+	
 	@Override
 	public void addColumn(Create create, IdentityName columnName) {
 		
