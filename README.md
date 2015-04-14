@@ -8,7 +8,7 @@ Current status: Active development
 * Leverages Java 8 language capabilities to build CQL queries
 * Simple function-style stream API
 * Reactive asynchronous and synchronous API
-* Provides Java mapping for Tables and User Defined Types
+* Provides Java mapping for Tables, Tuples, User Defined Types, Collections and UDT Collections
 
 ### Requirements
 
