@@ -54,6 +54,7 @@ public final class ColumnInformation {
 			orderingLocal = clusteringColumn.ordering();
 		}
 		
+		
 		Column column = getter.getDeclaredAnnotation(Column.class);
 		if (column != null) {
 			ensureSingleColumnType(columnTypeLocal, getter);
