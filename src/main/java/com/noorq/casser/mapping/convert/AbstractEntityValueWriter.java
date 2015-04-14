@@ -63,7 +63,7 @@ public abstract class AbstractEntityValueWriter<V> {
 		}
 		else {
 
-			for (CasserProperty prop : entity.getProperties()) {
+			for (CasserProperty prop : entity.getOrderedProperties()) {
 				
 				Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(source, -1, prop);
 				

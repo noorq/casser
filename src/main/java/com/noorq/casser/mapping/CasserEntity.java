@@ -25,7 +25,7 @@ public interface CasserEntity {
 	
 	IdentityName getName();
 	
-	Collection<CasserProperty> getProperties();
+	Collection<CasserProperty> getOrderedProperties();
 	
 	CasserProperty getProperty(String name);
 	

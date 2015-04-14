@@ -365,16 +365,16 @@ public final class CasserMappingProperty implements CasserProperty {
 	    	
 	    	CasserEntity tupleEntity = Casser.entity(javaType);
 	    	
-	    	List<DataType> tupleTypes = tupleEntity.getProperties().stream()
+	    	List<DataType> tupleTypes = tupleEntity.getOrderedProperties().stream()
 		    	.map(p -> p.getDataType())
 		    	.filter(d -> d instanceof DTDataType)
 		    	.map(d -> (DTDataType) d)
 		    	.map(d -> d.getDataType())
 		    	.collect(Collectors.toList());
 	    	
-	    	if (tupleTypes.size() < tupleEntity.getProperties().size()) {
+	    	if (tupleTypes.size() < tupleEntity.getOrderedProperties().size()) {
 	    		
-	    		List<IdentityName> wrongColumns = tupleEntity.getProperties().stream()
+	    		List<IdentityName> wrongColumns = tupleEntity.getOrderedProperties().stream()
 	    				.filter(p -> !(p.getDataType() instanceof DTDataType))
 	    				.map(p -> p.getColumnName())
 	    				.collect(Collectors.toList());

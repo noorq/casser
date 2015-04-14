@@ -50,17 +50,17 @@ public final class ValueProviderMap implements Map<String, Object> {
 	
 	@Override
 	public Set<String> keySet() {
-		return entity.getProperties().stream().map(p -> p.getPropertyName()).collect(Collectors.toSet());
+		return entity.getOrderedProperties().stream().map(p -> p.getPropertyName()).collect(Collectors.toSet());
 	}
 	
 	@Override
 	public int size() {
-		return entity.getProperties().size();
+		return entity.getOrderedProperties().size();
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return entity.getProperties().size() > 0;
+		return entity.getOrderedProperties().size() > 0;
 	}
 
 	@Override

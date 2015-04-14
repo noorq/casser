@@ -48,7 +48,7 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 		this.entity = new CasserMappingEntity(iface);
 		this.parent = parent;
 		
-		for (CasserProperty prop : entity.getProperties()) {
+		for (CasserProperty prop : entity.getOrderedProperties()) {
 			
 			map.put(prop.getGetterMethod(), prop);
 			

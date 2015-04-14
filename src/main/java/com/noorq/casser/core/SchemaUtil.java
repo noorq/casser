@@ -63,7 +63,7 @@ public final class SchemaUtil {
 
 		CreateType create = SchemaBuilder.createType(entity.getName().toCql());
 
-		for (CasserProperty prop : entity.getProperties()) {
+		for (CasserProperty prop : entity.getOrderedProperties()) {
 			
 			ColumnType columnType = prop.getColumnType();
 
@@ -93,7 +93,7 @@ public final class SchemaUtil {
 				
 		List<CasserProperty> clusteringColumns = new ArrayList<CasserProperty>();
 
-		for (CasserProperty prop : entity.getProperties()) {
+		for (CasserProperty prop : entity.getOrderedProperties()) {
 
 			ColumnType columnType = prop.getColumnType();
 
@@ -128,7 +128,7 @@ public final class SchemaUtil {
 		final Set<String> visitedColumns = dropUnusedColumns ? new HashSet<String>()
 				: Collections.<String> emptySet();
 
-		for (CasserProperty prop : entity.getProperties()) {
+		for (CasserProperty prop : entity.getOrderedProperties()) {
 
 			String columnName = prop.getColumnName().getName();
 
@@ -188,7 +188,7 @@ public final class SchemaUtil {
 
 	public static List<SchemaStatement> createIndexes(CasserEntity entity) {
 		
-		return entity.getProperties().stream()
+		return entity.getOrderedProperties().stream()
 		.filter(p -> p.getIndexName().isPresent())
 		.map(p -> SchemaUtil.createIndex(p))
 		.collect(Collectors.toList());
@@ -204,7 +204,7 @@ public final class SchemaUtil {
 				: Collections.<String> emptySet();
 		
 		entity
-		.getProperties()
+		.getOrderedProperties()
 		.stream()
 		.filter(p -> p.getIndexName().isPresent())
 		.forEach(p -> {

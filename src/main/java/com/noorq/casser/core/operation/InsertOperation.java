@@ -55,7 +55,7 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
 		
 		this.ifNotExists = ifNotExists;
 		
-		for (CasserProperty prop : entity.getProperties()) {
+		for (CasserProperty prop : entity.getOrderedProperties()) {
 			
 			Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
 			

@@ -74,7 +74,7 @@ public final class SessionRepositoryBuilder {
 		CasserEntity concurrentEntity = entityMap.putIfAbsent(entity.getMappingInterface(), entity);
 		
 		if (concurrentEntity == null) {
-			addUserDefinedTypes(entity.getProperties());
+			addUserDefinedTypes(entity.getOrderedProperties());
 		}
 			
 	}
@@ -98,7 +98,7 @@ public final class SessionRepositoryBuilder {
 			CasserEntity concurrentEntity = entityMap.putIfAbsent(iface, entity);
 					
 			if (concurrentEntity == null) {
-				addUserDefinedTypes(entity.getProperties());
+				addUserDefinedTypes(entity.getOrderedProperties());
 			}
 			else {
 				entity = concurrentEntity;

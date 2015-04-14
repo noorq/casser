@@ -55,7 +55,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		super(sessionOperations);
 		this.rowMapper = rowMapper;
 		
-		List<CasserPropertyNode> props = entity.getProperties()
+		List<CasserPropertyNode> props = entity.getOrderedProperties()
 		.stream()
 		.map(p -> new CasserPropertyNode(p, Optional.empty()))
 		.collect(Collectors.toList());

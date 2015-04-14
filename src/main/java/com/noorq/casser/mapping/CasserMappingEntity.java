@@ -95,7 +95,7 @@ public final class CasserMappingEntity implements CasserEntity {
 	}
 
 	@Override
-	public Collection<CasserProperty> getProperties() {
+	public Collection<CasserProperty> getOrderedProperties() {
 		return orderedProps;
 	}
 	
@@ -149,7 +149,7 @@ public final class CasserMappingEntity implements CasserEntity {
 	private void validateOrdinalsForTuple() {
 		boolean[] ordinals = new boolean[props.size()];
 		
-		getProperties().forEach(p -> {
+		getOrderedProperties().forEach(p -> {
 			
 			int ordinal = p.getOrdinal();
 			
