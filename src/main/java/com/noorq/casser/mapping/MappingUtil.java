@@ -30,16 +30,6 @@ public final class MappingUtil {
 
 	private MappingUtil() {
 	}
-
-	public static boolean isStaticColumn(Method getter) {
-		
-		Column column = getter.getDeclaredAnnotation(Column.class);
-		if (column != null) {
-			return column.isStatic();
-		}
-
-		return false;
-	}
 	
 	public static Optional<IdentityName> getIndexName(Method getterMethod) {
 

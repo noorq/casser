@@ -5,6 +5,7 @@ import java.util.Objects;
 import com.datastax.driver.core.querybuilder.Ordering;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
+import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.OrderingDirection;
 import com.noorq.casser.support.CasserMappingException;
@@ -26,7 +27,7 @@ public final class Ordered {
 		
 		CasserPropertyNode propNode = MappingUtil.resolveMappingProperty(getter);
 		
-		if (!propNode.getProperty().isClusteringColumn()) {
+		if (propNode.getProperty().getColumnType() != ColumnType.CLUSTERING_COLUMN) {
 			throw new CasserMappingException("property must be a clustering column " + propNode.getProperty().getPropertyName());
 		}
 		

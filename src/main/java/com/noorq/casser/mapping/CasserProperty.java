@@ -38,15 +38,11 @@ public interface CasserProperty {
 	
 	AbstractDataType getDataType();
 	
-	boolean isPartitionKey();
-
-	boolean isClusteringColumn();
+	ColumnType getColumnType();
 	
 	int getOrdinal();
 	
 	OrderingDirection getOrdering();
-	
-	boolean isStatic();
 	
 	Optional<Function<Object, Object>> getReadConverter(SessionRepository repository);
 	

@@ -59,10 +59,7 @@ public final class CasserMappingProperty implements CasserProperty {
 	private final IdentityName columnName;
 	private final Optional<IdentityName> indexName;
 
-	private final boolean isStatic;
-	private final KeyInformation keyInfo;
-
-	private final ColumnType columnType;
+	private final ColumnInformation columnInfo;
 	
 	private final Type genericJavaType;
 	private final Class<?> javaType;
@@ -78,15 +75,13 @@ public final class CasserMappingProperty implements CasserProperty {
 		this.propertyName = MappingUtil.getPropertyName(getter);
 		this.columnName = MappingUtil.getColumnName(getter);
 		this.indexName = MappingUtil.getIndexName(getter);
-		this.isStatic = MappingUtil.isStaticColumn(getter);
-		this.keyInfo = new KeyInformation(getter);
-
-		this.columnType = resolveColumnType(keyInfo, isStatic);
-
+		
+		this.columnInfo = new ColumnInformation(getter);
+	
 		this.genericJavaType = getter.getGenericReturnType();
 		this.javaType = getter.getReturnType();
 
-		this.dataType = resolveDataType(getter, this.genericJavaType, this.javaType, this.columnType);
+		this.dataType = resolveDataType(getter, this.genericJavaType, this.javaType, this.columnInfo.getColumnType());
 
 	}
 	
@@ -106,28 +101,18 @@ public final class CasserMappingProperty implements CasserProperty {
 	}
 
 	@Override
-	public boolean isPartitionKey() {
-		return keyInfo.isPartitionKey();
+	public ColumnType getColumnType() {
+		return columnInfo.getColumnType();
 	}
-
-	@Override
-	public boolean isClusteringColumn() {
-		return keyInfo.isClusteringColumn();
-	}
-
+	
 	@Override
 	public int getOrdinal() {
-		return keyInfo.getOrdinal();
+		return columnInfo.getOrdinal();
 	}
 
 	@Override
 	public OrderingDirection getOrdering() {
-		return keyInfo.getOrdering();
-	}
-	
-	@Override
-	public boolean isStatic() {
-		return isStatic;
+		return columnInfo.getOrdering();
 	}
 
 	@Override
@@ -265,21 +250,6 @@ public final class CasserMappingProperty implements CasserProperty {
 		}
 		
 		return null;
-	}
-	
-	private static ColumnType resolveColumnType(KeyInformation keyInfo, boolean isStatic) {
-		if (isStatic) {
-			return ColumnType.STATIC_COLUMN;
-		}
-		else if (keyInfo.isPartitionKey()) {
-			return ColumnType.PARTITION_KEY;
-		}
-		else if (keyInfo.isClusteringColumn()) {
-			return ColumnType.CLUSTERING_COLUMN;
-		}
-		else {
-			return ColumnType.COLUMN;
-		}
 	}
 	
 	private static AbstractDataType resolveDataType(Method getter, Type genericJavaType, Class<?> javaType, ColumnType columnType) {

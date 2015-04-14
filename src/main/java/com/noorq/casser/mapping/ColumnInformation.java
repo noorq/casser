@@ -19,52 +19,47 @@ import java.lang.reflect.Method;
 
 import com.noorq.casser.support.CasserMappingException;
 
-public final class KeyInformation {
+public final class ColumnInformation {
 
-	private final boolean isPartitionKey;
-	private final boolean isClusteringColumn;
+	private final ColumnType columnType;
 	private final int ordinal;
 	private final OrderingDirection ordering;
 	
-	public KeyInformation(Method getter) {
+	public ColumnInformation(Method getter) {
 
-		boolean isPartitionKeyLocal = false;
-		boolean isClusteringColumnLocal = false;
+		ColumnType columnTypeLocal = ColumnType.COLUMN;
 		int ordinalLocal = 0;
 		OrderingDirection orderingLocal = OrderingDirection.ASC;
 		
 		PartitionKey partitionKey = getter.getDeclaredAnnotation(PartitionKey.class);
 		
 		if (partitionKey != null) {
-			isPartitionKeyLocal = true;
+			columnTypeLocal = ColumnType.PARTITION_KEY;
 			ordinalLocal = partitionKey.ordinal();
 		}
 		
 		ClusteringColumn clusteringColumnn = getter.getDeclaredAnnotation(ClusteringColumn.class);
 		
 		if (clusteringColumnn != null) {
-			
-			if (isPartitionKeyLocal) {
-				throw new CasserMappingException("property can be annotated only by single column type " + getter);
-			}
-			
-			isClusteringColumnLocal = true;
+			ensureSingleColumnType(columnTypeLocal, getter);
+			columnTypeLocal = ColumnType.CLUSTERING_COLUMN;
 			ordinalLocal = clusteringColumnn.ordinal();
 			orderingLocal = clusteringColumnn.ordering();
 		}
 		
-		this.isPartitionKey = isPartitionKeyLocal;
-		this.isClusteringColumn = isClusteringColumnLocal;
+		Column column = getter.getDeclaredAnnotation(Column.class);
+		if (column != null) {
+			ensureSingleColumnType(columnTypeLocal, getter);
+			columnTypeLocal = column.isStatic() ? ColumnType.STATIC_COLUMN : ColumnType.COLUMN;
+		}
+		
+		this.columnType = columnTypeLocal;
 		this.ordinal = ordinalLocal;
 		this.ordering = orderingLocal;
 	}
 
-	public boolean isPartitionKey() {
-		return isPartitionKey;
-	}
-
-	public boolean isClusteringColumn() {
-		return isClusteringColumn;
+	public ColumnType getColumnType() {
+		return columnType;
 	}
 
 	public int getOrdinal() {
@@ -75,6 +70,12 @@ public final class KeyInformation {
 		return ordering;
 	}
 	
-	
+	private void ensureSingleColumnType(ColumnType columnTypeLocal, Method getter) {
+		
+		if (columnTypeLocal != ColumnType.COLUMN) {
+			throw new CasserMappingException("property can be annotated only by a single column type " + getter);
+		}
+		
+	}
 	
 }
