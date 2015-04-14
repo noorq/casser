@@ -15,8 +15,8 @@
  */
 package com.noorq.casser.test.integration.core.tuple;
 
-import com.noorq.casser.mapping.Column;
-import com.noorq.casser.mapping.Tuple;
+import com.noorq.casser.mapping.annotation.column.Column;
+import com.noorq.casser.mapping.annotation.entity.Tuple;
 
 @Tuple
 public interface AlbumInformation {

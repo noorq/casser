@@ -16,9 +16,9 @@
 package com.noorq.casser.test.integration.core.usertype;
 
 import com.datastax.driver.core.UDTValue;
-import com.noorq.casser.mapping.PartitionKey;
-import com.noorq.casser.mapping.Table;
-import com.noorq.casser.mapping.UserTypeName;
+import com.noorq.casser.mapping.annotation.UserTypeName;
+import com.noorq.casser.mapping.annotation.column.PartitionKey;
+import com.noorq.casser.mapping.annotation.entity.Table;
 
 @Table
 public interface Account {

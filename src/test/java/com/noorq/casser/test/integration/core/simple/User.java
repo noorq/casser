@@ -15,9 +15,9 @@
  */
 package com.noorq.casser.test.integration.core.simple;
 
-import com.noorq.casser.mapping.Column;
-import com.noorq.casser.mapping.PartitionKey;
-import com.noorq.casser.mapping.Table;
+import com.noorq.casser.mapping.annotation.column.Column;
+import com.noorq.casser.mapping.annotation.column.PartitionKey;
+import com.noorq.casser.mapping.annotation.entity.Table;
 
 @Table("simple_users")
 public interface User {

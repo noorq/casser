@@ -20,11 +20,11 @@ import java.util.Date;
 import java.util.UUID;
 
 import com.datastax.driver.core.DataType.Name;
-import com.noorq.casser.mapping.ClusteringColumn;
-import com.noorq.casser.mapping.Column;
-import com.noorq.casser.mapping.DataTypeName;
-import com.noorq.casser.mapping.PartitionKey;
-import com.noorq.casser.mapping.Table;
+import com.noorq.casser.mapping.annotation.DataTypeName;
+import com.noorq.casser.mapping.annotation.column.ClusteringColumn;
+import com.noorq.casser.mapping.annotation.column.Column;
+import com.noorq.casser.mapping.annotation.column.PartitionKey;
+import com.noorq.casser.mapping.annotation.entity.Table;
 
 @Table
 public interface Timeline {

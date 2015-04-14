@@ -13,23 +13,22 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping;
+package com.noorq.casser.mapping.annotation;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Retention(value = RetentionPolicy.RUNTIME)
+
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
 @Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
-public @interface ClusteringColumn {
+public @interface UserTypeName {
 
 	String value() default "";
 
-	int ordinal() default 0;
-	
-	OrderingDirection ordering() default OrderingDirection.ASC;
-	
 	boolean forceQuote() default false;
-
+	
 }

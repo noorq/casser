@@ -23,6 +23,9 @@ import java.util.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.noorq.casser.config.CasserSettings;
 import com.noorq.casser.core.Casser;
+import com.noorq.casser.mapping.annotation.entity.Table;
+import com.noorq.casser.mapping.annotation.entity.Tuple;
+import com.noorq.casser.mapping.annotation.entity.UserDefinedType;
 import com.noorq.casser.support.CasserMappingException;
 
 public final class CasserMappingEntity implements CasserEntity {

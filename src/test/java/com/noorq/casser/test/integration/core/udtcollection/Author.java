@@ -15,7 +15,7 @@
  */
 package com.noorq.casser.test.integration.core.udtcollection;
 
-import com.noorq.casser.mapping.UserDefinedType;
+import com.noorq.casser.mapping.annotation.entity.UserDefinedType;
 
 @UserDefinedType
 public interface Author {

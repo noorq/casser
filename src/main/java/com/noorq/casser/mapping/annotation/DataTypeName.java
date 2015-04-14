@@ -13,21 +13,20 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping;
+package com.noorq.casser.mapping.annotation;
 
-import java.lang.annotation.ElementType;
+import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 
-@Retention(value = RetentionPolicy.RUNTIME)
-@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
-public @interface StaticColumn {
+import com.datastax.driver.core.DataType;
 
-	String value() default "";
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+public @interface DataTypeName {
 
-	int ordinal() default 0;
-	
-	boolean forceQuote() default false;
+	DataType.Name value();
+
+	DataType.Name[] types() default {};
 
 }

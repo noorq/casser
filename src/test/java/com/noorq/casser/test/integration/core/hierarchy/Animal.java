@@ -15,8 +15,8 @@
  */
 package com.noorq.casser.test.integration.core.hierarchy;
 
-import com.noorq.casser.mapping.Column;
-import com.noorq.casser.mapping.PartitionKey;
+import com.noorq.casser.mapping.annotation.column.Column;
+import com.noorq.casser.mapping.annotation.column.PartitionKey;
 
 public interface Animal {
 

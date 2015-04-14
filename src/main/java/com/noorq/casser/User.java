@@ -15,7 +15,7 @@
  */
 package com.noorq.casser;
 
-import com.noorq.casser.mapping.Table;
+import com.noorq.casser.mapping.annotation.entity.Table;
 
 @Table("user")
 public interface User {

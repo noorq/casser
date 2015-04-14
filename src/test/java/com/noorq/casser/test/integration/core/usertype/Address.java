@@ -18,9 +18,9 @@ package com.noorq.casser.test.integration.core.usertype;
 import java.util.Set;
 
 import com.datastax.driver.core.DataType;
-import com.noorq.casser.mapping.Column;
-import com.noorq.casser.mapping.DataTypeName;
-import com.noorq.casser.mapping.UserDefinedType;
+import com.noorq.casser.mapping.annotation.DataTypeName;
+import com.noorq.casser.mapping.annotation.column.Column;
+import com.noorq.casser.mapping.annotation.entity.UserDefinedType;
 
 @UserDefinedType("address0")
 public interface Address {

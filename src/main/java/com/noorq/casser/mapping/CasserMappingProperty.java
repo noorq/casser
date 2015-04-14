@@ -35,6 +35,8 @@ import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.SessionRepository;
+import com.noorq.casser.mapping.annotation.DataTypeName;
+import com.noorq.casser.mapping.annotation.UserTypeName;
 import com.noorq.casser.mapping.convert.DateToTimeUUIDConverter;
 import com.noorq.casser.mapping.convert.EntityToTupleValueConverter;
 import com.noorq.casser.mapping.convert.EntityToUDTValueConverter;

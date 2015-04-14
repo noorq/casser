@@ -15,8 +15,8 @@
  */
 package com.noorq.casser.test.integration.core.tuple;
 
-import com.noorq.casser.mapping.PartitionKey;
-import com.noorq.casser.mapping.Table;
+import com.noorq.casser.mapping.annotation.column.PartitionKey;
+import com.noorq.casser.mapping.annotation.entity.Table;
 
 @Table
 public interface Album {

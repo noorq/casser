@@ -13,21 +13,21 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping;
+package com.noorq.casser.mapping.annotation;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Inherited
+
+@Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE })
-public @interface UserDefinedType {
+@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+public @interface Index {
 
 	String value() default "";
-
-	boolean forceQuote() default false;
 	
+	boolean forceQuote() default false;
 }

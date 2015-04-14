@@ -17,6 +17,10 @@ package com.noorq.casser.mapping;
 
 import java.lang.reflect.Method;
 
+import com.noorq.casser.mapping.annotation.column.ClusteringColumn;
+import com.noorq.casser.mapping.annotation.column.Column;
+import com.noorq.casser.mapping.annotation.column.PartitionKey;
+import com.noorq.casser.mapping.annotation.column.StaticColumn;
 import com.noorq.casser.support.CasserMappingException;
 
 public final class ColumnInformation {

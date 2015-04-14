@@ -13,17 +13,21 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping;
+package com.noorq.casser.mapping.annotation.column;
 
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Inherited
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE })
-public @interface Tuple {
+@Retention(value = RetentionPolicy.RUNTIME)
+@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+public @interface StaticColumn {
+
+	String value() default "";
+
+	int ordinal() default 0;
 	
+	boolean forceQuote() default false;
+
 }
