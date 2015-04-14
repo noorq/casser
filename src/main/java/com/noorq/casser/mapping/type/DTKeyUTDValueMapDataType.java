@@ -67,4 +67,9 @@ public final class DTKeyUTDValueMapDataType extends AbstractDataType {
 		throw new CasserMappingException("alter of UDTMap column is not possible now for " + columnName);
 	}
 	
+	@Override
+	public String toString() {
+		return "UDTMap<" + keyType + "," + valueType  + ">";
+	}
+	
 }

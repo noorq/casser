@@ -64,4 +64,9 @@ public final class UDTSetDataType extends AbstractDataType {
 		throw new CasserMappingException("alter of UDTSet column is not possible now for " + columnName);
 	}
 	
+	@Override
+	public String toString() {
+		return "UDTSet<" + udtName + ">";
+	}
+	
 }

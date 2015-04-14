@@ -124,7 +124,10 @@ public final class UDTDataType extends AbstractDataType {
 
 		return null;
 	}
-	
-	
-	
+
+	@Override
+	public String toString() {
+		return "<" + udtName + ">";
+	}
+
 }

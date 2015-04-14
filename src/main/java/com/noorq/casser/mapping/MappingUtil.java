@@ -69,19 +69,34 @@ public final class MappingUtil {
 				.getDeclaredAnnotation(UserDefinedType.class);
 
 		if (userDefinedType != null) {
+			
 			userTypeName = userDefinedType.value();
 			forceQuote = userDefinedType.forceQuote();
+			
+			if (userTypeName == null || userTypeName.isEmpty()) {
+				userTypeName = getDefaultEntityName(iface);
+			}
+			
+			return new IdentityName(userTypeName, forceQuote);
 
-		} else if (required) {
+		} 
+		
+		if (required) {
 			throw new CasserMappingException(
 					"entity must have annotation @UserDefinedType " + iface);
 		}
 
-		if (userTypeName == null || userTypeName.isEmpty()) {
-			userTypeName = getDefaultName(iface);
-		}
+		return null;
 
-		return new IdentityName(userTypeName, forceQuote);
+	}
+	
+	public static boolean isTuple(Class<?> iface) {
+		
+		Tuple tuple = iface
+				.getDeclaredAnnotation(Tuple.class);
+		
+		return tuple != null;
+		
 	}
 
 	public static IdentityName getTableName(Class<?> iface, boolean required) {
@@ -101,13 +116,13 @@ public final class MappingUtil {
 		}
 
 		if (tableName == null || tableName.isEmpty()) {
-			tableName = getDefaultName(iface);
+			tableName = getDefaultEntityName(iface);
 		}
 
 		return new IdentityName(tableName, forceQuote);
 	}
 
-	public static String getDefaultName(Class<?> iface) {
+	public static String getDefaultEntityName(Class<?> iface) {
 		return Casser.settings().getPropertyToColumnConverter()
 				.apply(iface.getSimpleName());
 	}

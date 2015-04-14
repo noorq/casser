@@ -63,5 +63,10 @@ public final class UDTListDataType extends AbstractDataType {
 			ColumnMetadata columnMetadata) {
 		throw new CasserMappingException("alter of UDTList column is not possible now for " + columnName);
 	}
-	
+
+	@Override
+	public String toString() {
+		return "UDTList<" + udtName + ">";
+	}
+
 }

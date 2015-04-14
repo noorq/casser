@@ -99,6 +99,9 @@ public final class CasserMappingEntity implements CasserEntity {
 		case TABLE:
 			return MappingUtil.getTableName(iface, true);
 			
+		case TUPLE:
+			return IdentityName.of(MappingUtil.getDefaultEntityName(iface), false);
+			
 		case USER_DEFINED_TYPE:
 			return MappingUtil.getUserDefinedTypeName(iface, true);
 		}
@@ -114,12 +117,16 @@ public final class CasserMappingEntity implements CasserEntity {
 		if (null != iface.getDeclaredAnnotation(Table.class)) {
 			return CasserEntityType.TABLE;
 		}
+		
+		else if (null != iface.getDeclaredAnnotation(Tuple.class)) {
+			return CasserEntityType.TUPLE;
+		}
 
 		else if (null != iface.getDeclaredAnnotation(UserDefinedType.class)) {
 			return CasserEntityType.USER_DEFINED_TYPE;
 		}
-
-		throw new CasserMappingException("entity must be annotated by @Table or @UserDefinedType " + iface);
+		
+		throw new CasserMappingException("entity must be annotated by @Table or @Tuple or @UserDefinedType " + iface);
 	}
 	
 	@Override

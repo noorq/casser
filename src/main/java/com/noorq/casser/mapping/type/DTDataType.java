@@ -112,5 +112,12 @@ public final class DTDataType extends AbstractDataType {
 		
 		return null;
 	}
+
+	@Override
+	public String toString() {
+		return dataType.toString();
+	}
+	
+	
 	
 }

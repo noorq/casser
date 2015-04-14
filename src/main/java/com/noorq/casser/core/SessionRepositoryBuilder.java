@@ -109,8 +109,6 @@ public final class SessionRepositoryBuilder {
 		return entity;
 	}
 	
-	
-	
 	private void addUserDefinedTypes(Collection<CasserProperty> props) {
 		
 		for (CasserProperty prop : props) {

@@ -26,11 +26,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.TupleType;
 import com.datastax.driver.core.TupleValue;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
+import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.convert.DateToTimeUUIDConverter;
 import com.noorq.casser.mapping.convert.EntityToUDTValueConverter;
@@ -340,25 +343,52 @@ public final class CasserMappingProperty implements CasserProperty {
 			return new DTDataType(columnType, dataType);
 		}
 		
+	    if (MappingUtil.isTuple(javaType)) {
+	    	
+	    	CasserEntity tupleEntity = Casser.entity(javaType);
+	    	
+	    	List<DataType> tupleTypes = tupleEntity.getProperties().stream()
+		    	.map(p -> p.getDataType())
+		    	.filter(d -> d instanceof DTDataType)
+		    	.map(d -> (DTDataType) d)
+		    	.map(d -> d.getDataType())
+		    	.collect(Collectors.toList());
+	    	
+	    	if (tupleTypes.size() < tupleEntity.getProperties().size()) {
+	    		
+	    		List<IdentityName> wrongColumns = tupleEntity.getProperties().stream()
+	    				.filter(p -> !(p.getDataType() instanceof DTDataType))
+	    				.map(p -> p.getColumnName())
+	    				.collect(Collectors.toList());
+	    		
+	    		throw new CasserMappingException("non simple types in tuple " + tupleEntity.getMappingInterface() + " in columns: " + wrongColumns);
+	    	}
+	    	
+	    	TupleType tupleType = TupleType.of(tupleTypes.toArray(new DataType[tupleTypes.size()]));
+	    	
+	    	return new DTDataType(columnType, tupleType);
+	    }
+		
 		IdentityName udtName = null;
 		
 		if (isUDTValue(javaType)) {
+			
 			UserTypeName userTypeName = getter.getDeclaredAnnotation(UserTypeName.class);
 			if (userTypeName == null) {
 				throw new CasserMappingException("absent UserTypeName annotation for " + getter);
 			}
+			
 			udtName = new IdentityName(userTypeName.value(), userTypeName.forceQuote());
 		}
 		else {
 		    udtName = MappingUtil.getUserDefinedTypeName(javaType, false);
-		    
-		    if (udtName == null) {
-		    	throw new CasserMappingException("unknown property type for " + getter);
-		    }
-		    
 		}
 		
-		return new UDTDataType(columnType, udtName, javaType);
+		if (udtName != null) {
+			return new UDTDataType(columnType, udtName, javaType);
+		}
+		
+		throw new CasserMappingException("unknown type " + javaType + " in " + getter);
 		
 	}
 	
