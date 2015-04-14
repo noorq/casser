@@ -124,11 +124,13 @@ public final class CasserMappingEntity implements CasserEntity {
 	
 	@Override
 	public String toString() {
+		
 		StringBuilder str = new StringBuilder();
 		str.append(iface.getSimpleName())
 		.append("(").append(name.getName()).append(") ")
 		.append(type.name().toLowerCase())
 		.append(":\n");
+		
 		for (CasserProperty prop : props.values()) {
 			String columnName = prop.getColumnName().getName();
 			str.append("  ");
@@ -141,13 +143,17 @@ public final class CasserMappingEntity implements CasserEntity {
 			}
 			str.append(") ");
 			
-			if (prop.isPartitionKey()) {
+			ColumnType type = prop.getColumnType();
+			
+			switch(type) {
+			
+			case PARTITION_KEY:
 				str.append("partition_key[");
 				str.append(prop.getOrdinal());
 				str.append("] ");
-			}
-
-			if (prop.isClusteringColumn()) {
+				break;
+				
+			case CLUSTERING_COLUMN:
 				str.append("clustering_column[");
 				str.append(prop.getOrdinal());
 				str.append("] ");
@@ -155,10 +161,12 @@ public final class CasserMappingEntity implements CasserEntity {
 				if (od != null) {
 					str.append(od.name().toLowerCase()).append(" ");
 				}
-			}
-			
-			if (prop.isStatic()) {
+				break;
+				
+			case STATIC_COLUMN:
 				str.append("static ");
+				break;
+				
 			}
 			
 			Optional<IdentityName> idx = prop.getIndexName();

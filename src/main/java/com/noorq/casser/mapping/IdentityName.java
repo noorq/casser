@@ -28,6 +28,10 @@ public final class IdentityName {
 		this.forceQuote = forceQuote;
 	}
 
+	public static IdentityName of(String name, boolean forceQuote) {
+		return new IdentityName(name, forceQuote);
+	}
+	
 	public String getName() {
 		return name;
 	}

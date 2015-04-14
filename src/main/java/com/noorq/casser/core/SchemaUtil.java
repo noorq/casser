@@ -36,6 +36,7 @@ import com.datastax.driver.core.schemabuilder.SchemaStatement;
 import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.CasserProperty;
+import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.OrderingDirection;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.CqlUtil;
@@ -64,7 +65,9 @@ public final class SchemaUtil {
 
 		for (CasserProperty prop : entity.getProperties()) {
 			
-			if (prop.isPartitionKey() || prop.isClusteringColumn()) {
+			ColumnType columnType = prop.getColumnType();
+
+			if (columnType == ColumnType.PARTITION_KEY || columnType == ColumnType.CLUSTERING_COLUMN) {
 				throw new CasserMappingException("primary key columns are not supported in UserDefinedType for " + prop.getPropertyName() + " in entity " + entity);
 			}
  			
@@ -94,12 +97,19 @@ public final class SchemaUtil {
 
 		for (CasserProperty prop : entity.getProperties()) {
 
-			if (prop.isPartitionKey()) {
+			ColumnType columnType = prop.getColumnType();
+			
+			switch(columnType) {
+			case PARTITION_KEY:
 				partitionKeys.add(prop);
-			} else if (prop.isClusteringColumn()) {
+				break;
+			case CLUSTERING_COLUMN:
 				clusteringColumns.add(prop);
-			} else {
+				break;
+			case STATIC_COLUMN:
+			case COLUMN:
 				columns.add(prop);
+				break;
 			}
 
 		}
@@ -143,8 +153,10 @@ public final class SchemaUtil {
 			if (dropUnusedColumns) {
 				visitedColumns.add(columnName);
 			}
+			
+			ColumnType columnType = prop.getColumnType();
 
-			if (prop.isPartitionKey() || prop.isClusteringColumn()) {
+			if (columnType == ColumnType.PARTITION_KEY || columnType == ColumnType.CLUSTERING_COLUMN) {
 				throw new CasserMappingException(
 						"unable to alter column that is a part of primary key '"
 								+ columnName + "' for entity "

@@ -30,16 +30,6 @@ public final class MappingUtil {
 
 	private MappingUtil() {
 	}
-
-	public static boolean isStaticColumn(Method getter) {
-		
-		Column column = getter.getDeclaredAnnotation(Column.class);
-		if (column != null) {
-			return column.isStatic();
-		}
-
-		return false;
-	}
 	
 	public static Optional<IdentityName> getIndexName(Method getterMethod) {
 
@@ -59,52 +49,6 @@ public final class MappingUtil {
 		}
 
 		return indexName != null ? Optional.of(new IdentityName(indexName, forceQuote)) : Optional.empty();
-	}
-	
-	public static IdentityName getColumnName(Method getterMethod) {
-
-		String columnName = null;
-		boolean forceQuote = false;
-
-		Column column = getterMethod.getDeclaredAnnotation(Column.class);
-		if (column != null) {
-			columnName = column.value();
-			forceQuote = column.forceQuote();
-		}
-
-		PartitionKey partitionKey = getterMethod
-				.getDeclaredAnnotation(PartitionKey.class);
-		if (partitionKey != null) {
-
-			if (columnName != null) {
-				throw new CasserMappingException(
-						"property can be annotated only by single column type "
-								+ getterMethod);
-			}
-
-			columnName = partitionKey.value();
-			forceQuote = partitionKey.forceQuote();
-		}
-
-		ClusteringColumn clusteringColumn = getterMethod
-				.getDeclaredAnnotation(ClusteringColumn.class);
-		if (clusteringColumn != null) {
-
-			if (columnName != null) {
-				throw new CasserMappingException(
-						"property can be annotated only by single column type "
-								+ getterMethod);
-			}
-
-			columnName = clusteringColumn.value();
-			forceQuote = clusteringColumn.forceQuote();
-		}
-
-		if (columnName == null || columnName.isEmpty()) {
-			columnName = getDefaultColumnName(getterMethod);
-		}
-
-		return new IdentityName(columnName, forceQuote);
 	}
 
 	public static String getPropertyName(Method getter) {
