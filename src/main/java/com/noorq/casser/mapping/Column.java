@@ -29,6 +29,8 @@ public @interface Column {
 
 	String value() default "";
 
+	int ordinal() default 0;
+	
 	boolean isStatic() default false; 
 	
 	boolean forceQuote() default false;

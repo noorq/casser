@@ -21,12 +21,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import com.datastax.driver.core.TupleType;
 import com.datastax.driver.core.UDTValue;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.CasserMappingEntity;
 import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.type.AbstractDataType;
+import com.noorq.casser.mapping.type.DTDataType;
 import com.noorq.casser.mapping.type.UDTDataType;
 import com.noorq.casser.support.CasserException;
 import com.noorq.casser.support.DslPropertyException;
@@ -39,6 +41,7 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 	private final Map<Method, CasserProperty> map = new HashMap<Method, CasserProperty>();
 	
 	private final Map<Method, Object> udtMap = new HashMap<Method, Object>();
+	private final Map<Method, Object> tupleMap = new HashMap<Method, Object>();
 
 	public DslInvocationHandler(Class<E> iface, ClassLoader classLoader, Optional<CasserPropertyNode> parent) {
 		
@@ -57,6 +60,19 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 						Optional.of(new CasserPropertyNode(prop, parent)));
 				
 				udtMap.put(prop.getGetterMethod(), childDsl);
+			}
+			
+			if (type instanceof DTDataType) {
+				DTDataType dataType = (DTDataType) type;
+				
+				if (dataType.getDataType() instanceof TupleType) {
+					
+					Object childDsl = Casser.dsl(prop.getJavaType(), classLoader,
+							Optional.of(new CasserPropertyNode(prop, parent)));
+					
+					tupleMap.put(prop.getGetterMethod(), childDsl);
+					
+				}
 			}
 			
 		}
@@ -92,6 +108,20 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 					return childDsl;
 				}
 				
+			}
+			
+			if (type instanceof DTDataType) {
+				DTDataType dataType = (DTDataType) type;
+				
+				if (dataType.getDataType() instanceof TupleType) {
+					
+					Object childDsl = tupleMap.get(method);
+					
+					if (childDsl != null) {
+						return childDsl;
+					}
+					
+				}
 			}
 			
 			throw new DslPropertyException(new CasserPropertyNode(prop, parent));	

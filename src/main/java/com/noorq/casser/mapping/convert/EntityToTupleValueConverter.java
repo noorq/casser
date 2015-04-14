@@ -18,28 +18,28 @@ package com.noorq.casser.mapping.convert;
 import java.nio.ByteBuffer;
 import java.util.function.Function;
 
-import com.datastax.driver.core.UDTValue;
-import com.datastax.driver.core.UserType;
+import com.datastax.driver.core.TupleType;
+import com.datastax.driver.core.TupleValue;
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.CasserProperty;
-import com.noorq.casser.mapping.value.UDTColumnValuePreparer;
+import com.noorq.casser.mapping.value.TupleColumnValuePreparer;
 
-public final class EntityToUDTValueConverter extends AbstractEntityValueWriter<UDTValue> implements Function<Object, UDTValue> {
+public final class EntityToTupleValueConverter extends AbstractEntityValueWriter<TupleValue> implements Function<Object, TupleValue> {
 
-	private final UserType userType;
-	private final UDTColumnValuePreparer valuePreparer;
+	private final TupleType tupleType;
+	private final TupleColumnValuePreparer valuePreparer;
 	
-	public EntityToUDTValueConverter(Class<?> iface, UserType userType, SessionRepository repository) {
+	public EntityToTupleValueConverter(Class<?> iface, TupleType tupleType, SessionRepository repository) {
 		super(iface);
-
-		this.userType = userType;
-		this.valuePreparer = new UDTColumnValuePreparer(userType, repository);
+		
+		this.tupleType = tupleType;
+		this.valuePreparer = new TupleColumnValuePreparer(tupleType, repository);
 	}
 	
 	@Override
-	public UDTValue apply(Object source) {
+	public TupleValue apply(Object source) {
 		
-		UDTValue outValue = userType.newValue();
+		TupleValue outValue = tupleType.newValue();
 		
 		write(outValue, source);
 		
@@ -47,14 +47,14 @@ public final class EntityToUDTValueConverter extends AbstractEntityValueWriter<U
 	}
 
 	@Override
-	void writeColumn(UDTValue udtValue, Object value,
+	void writeColumn(TupleValue udtValue, Object value,
 			CasserProperty prop) {
 		
 		ByteBuffer bytes = (ByteBuffer) valuePreparer.prepareColumnValue(value, prop);
 		
 		if (bytes != null) {
-			udtValue.setBytesUnsafe(prop.getColumnName().getName(), bytes);
+			udtValue.setBytesUnsafe(prop.getOrdinal(), bytes);
 		}
 	}
-
+	
 }

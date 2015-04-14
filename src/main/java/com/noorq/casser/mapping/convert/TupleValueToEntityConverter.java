@@ -18,34 +18,33 @@ package com.noorq.casser.mapping.convert;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.datastax.driver.core.UDTValue;
+import com.datastax.driver.core.TupleValue;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.map.ValueProviderMap;
-import com.noorq.casser.mapping.value.UDTColumnValueProvider;
+import com.noorq.casser.mapping.value.TupleColumnValueProvider;
 
-public final class UDTValueToEntityConverter implements Function<UDTValue, Object> {
+public final class TupleValueToEntityConverter implements Function<TupleValue, Object> {
 
 	private final Class<?> iface;
 	private final SessionRepository repository;
 	private final CasserEntity entity;
 	
-	public UDTValueToEntityConverter(Class<?> iface, SessionRepository repository) {
+	public TupleValueToEntityConverter(Class<?> iface, SessionRepository repository) {
 		this.iface = iface;
 		this.repository = repository;
 		this.entity = Casser.entity(iface);
 	}
 
 	@Override
-	public Object apply(UDTValue source) {
+	public Object apply(TupleValue source) {
 		
 		Map<String, Object> map = new ValueProviderMap(source, 
-				new UDTColumnValueProvider(repository),
+				new TupleColumnValueProvider(repository),
 				entity);
 		
 		return Casser.map(iface, map);
 		
 	}
-
 }

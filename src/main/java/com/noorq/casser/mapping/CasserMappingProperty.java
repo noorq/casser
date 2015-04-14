@@ -36,10 +36,12 @@ import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.convert.DateToTimeUUIDConverter;
+import com.noorq.casser.mapping.convert.EntityToTupleValueConverter;
 import com.noorq.casser.mapping.convert.EntityToUDTValueConverter;
 import com.noorq.casser.mapping.convert.EnumToStringConverter;
 import com.noorq.casser.mapping.convert.StringToEnumConverter;
 import com.noorq.casser.mapping.convert.TimeUUIDToDateConverter;
+import com.noorq.casser.mapping.convert.TupleValueToEntityConverter;
 import com.noorq.casser.mapping.convert.TypedConverter;
 import com.noorq.casser.mapping.convert.UDTValueToEntityConverter;
 import com.noorq.casser.mapping.type.AbstractDataType;
@@ -166,18 +168,25 @@ public final class CasserMappingProperty implements CasserProperty {
 		}
 		else if (abstractDataType instanceof DTDataType) {
 		
-			Class<?> propertyType = getJavaType();
-	
-			if (Enum.class.isAssignableFrom(propertyType)) {
+			DataType dataType = ((DTDataType) abstractDataType).getDataType();
+			Class<Object> javaType = (Class<Object>) getJavaType();
+			
+			if (dataType.getName() == DataType.Name.TUPLE) {
+				
+				return TypedConverter.create(
+						TupleValue.class,
+						javaType,
+						new TupleValueToEntityConverter(javaType, repository));
+			}
+			
+			if (Enum.class.isAssignableFrom(javaType)) {
 				return TypedConverter.create(
 						String.class, 
 						Enum.class, 
-						new StringToEnumConverter(propertyType));
+						new StringToEnumConverter(javaType));
 			}
 	
-			DataType dataType = ((DTDataType) abstractDataType).getDataType();
-	
-			if (dataType.getName() == DataType.Name.TIMEUUID && propertyType == Date.class) {
+			if (dataType.getName() == DataType.Name.TIMEUUID && Date.class.isAssignableFrom(javaType)) {
 				return TypedConverter.create(
 						UUID.class, 
 						Date.class, 
@@ -225,9 +234,18 @@ public final class CasserMappingProperty implements CasserProperty {
 
 		}
 		else if (abstractDataType instanceof DTDataType) {
-		
-			Class<?> javaType = getJavaType();
+			
+			DataType dataType = ((DTDataType) abstractDataType).getDataType();
+			Class<Object> javaType = (Class<Object>) getJavaType();
 	
+			if (dataType.getName() == DataType.Name.TUPLE) {
+				
+				return TypedConverter.create(
+						javaType, 
+						TupleValue.class, 
+						new EntityToTupleValueConverter(javaType, (TupleType) dataType, repository));
+			}
+			
 			if (Enum.class.isAssignableFrom(javaType)) {
 				
 				return TypedConverter.create(
@@ -237,9 +255,7 @@ public final class CasserMappingProperty implements CasserProperty {
 				
 			}
 	
-			DataType dataType = ((DTDataType) abstractDataType).getDataType();
-	
-			if (dataType.getName() == DataType.Name.TIMEUUID && javaType == Date.class) {
+			if (dataType.getName() == DataType.Name.TIMEUUID && Date.class.isAssignableFrom(javaType)) {
 				
 				return TypedConverter.create(
 						Date.class, 

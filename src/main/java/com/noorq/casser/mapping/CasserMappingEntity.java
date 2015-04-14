@@ -65,6 +65,10 @@ public final class CasserMappingEntity implements CasserEntity {
 		}
 
 		this.props = propsBuilder.build();
+		
+		if (type == CasserEntityType.TUPLE) {
+			validateOrdinalsForTuple();
+		}
 	}
 
 	@Override
@@ -127,6 +131,33 @@ public final class CasserMappingEntity implements CasserEntity {
 		}
 		
 		throw new CasserMappingException("entity must be annotated by @Table or @Tuple or @UserDefinedType " + iface);
+	}
+	
+	private void validateOrdinalsForTuple() {
+		boolean[] ordinals = new boolean[props.size()];
+		
+		getProperties().forEach(p -> {
+			
+			int ordinal = p.getOrdinal();
+			
+			if (ordinal < 0 || ordinal >= ordinals.length) {
+				throw new CasserMappingException("invalid ordinal " + ordinal + " found for property " + p.getPropertyName() + " in " + p.getEntity());
+			}
+
+			if (ordinals[ordinal]) {
+				throw new CasserMappingException("detected two or more properties with the same ordinal " + ordinal + " in " + p.getEntity());
+			}
+			
+			ordinals[ordinal] = true;
+			
+		});
+		
+		for (int i = 0; i != ordinals.length; ++i) {
+			if (!ordinals[i]) {
+				throw new CasserMappingException("detected absent ordinal " + i + " in " + this);
+			}
+		}
+		
 	}
 	
 	@Override

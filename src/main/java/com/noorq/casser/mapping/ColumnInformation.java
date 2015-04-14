@@ -61,6 +61,7 @@ public final class ColumnInformation {
 			columnName = column.value();
 			forceQuote = column.forceQuote();
 			columnTypeLocal = column.isStatic() ? ColumnType.STATIC_COLUMN : ColumnType.COLUMN;
+			ordinalLocal = column.ordinal();
 		}
 		
 		if (columnName == null || columnName.isEmpty()) {

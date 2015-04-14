@@ -59,7 +59,6 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 	
 	public <V> UpdateOperation set(Getter<V> getter, V v) {
 		Objects.requireNonNull(getter, "getter is empty");
-		Objects.requireNonNull(v, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(getter);
 		

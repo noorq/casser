@@ -114,9 +114,11 @@ public final class SchemaUtil {
 
 		}
 
-		Collections
-				.sort(partitionKeys, OrdinalBasedPropertyComparator.INSTANCE);
+		Collections.sort(partitionKeys, 
+				OrdinalBasedPropertyComparator.INSTANCE);
 		Collections.sort(clusteringColumns,
+				OrdinalBasedPropertyComparator.INSTANCE);
+		Collections.sort(columns,
 				OrdinalBasedPropertyComparator.INSTANCE);
 
 		partitionKeys.forEach(p -> p.getDataType().addColumn(create, p.getColumnName()));
