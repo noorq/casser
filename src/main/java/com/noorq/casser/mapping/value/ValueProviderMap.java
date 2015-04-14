@@ -13,62 +13,63 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping.map;
+package com.noorq.casser.mapping.value;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import com.datastax.driver.core.Row;
 import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.CasserProperty;
-import com.noorq.casser.mapping.value.ColumnValueProvider;
 import com.noorq.casser.support.CasserMappingException;
 
-public final class RowProviderMap implements Map<String, Object> {
+public final class ValueProviderMap implements Map<String, Object> {
 
-	private final Row row;
+	private final Object source;
 	private final ColumnValueProvider valueProvider;
 	private final CasserEntity entity;
 	
-	public RowProviderMap(Row row, ColumnValueProvider valueProvider, CasserEntity entity) {
-		this.row = row;
+	public ValueProviderMap(Object source, ColumnValueProvider valueProvider, CasserEntity entity) {
+		this.source = source;
 		this.valueProvider = valueProvider;
 		this.entity = entity;
 	}
 	
-	@Override
-	public int size() {
-		return row.getColumnDefinitions().size();
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return row.getColumnDefinitions().size() == 0;
-	}
-
-	@Override
-	public boolean containsKey(Object key) {
-		if (key instanceof String) {
-			String name = (String) key;
-			CasserProperty prop = entity.getProperty(name);
-			if (prop != null) {
-				return row.getColumnDefinitions().contains(prop.getColumnName().getName());
-			}
-		}
-		return false;
-	}
-
 	@Override
 	public Object get(Object key) {
 		if (key instanceof String) {
 			String name = (String) key;
 			CasserProperty prop = entity.getProperty(name);
 			if (prop != null) {
-				return valueProvider.getColumnValue(row, -1, prop);
+				return valueProvider.getColumnValue(source, -1, prop);
 			}
 		}
 		return null;
+	}
+	
+	@Override
+	public Set<String> keySet() {
+		return entity.getProperties().stream().map(p -> p.getPropertyName()).collect(Collectors.toSet());
+	}
+	
+	@Override
+	public int size() {
+		return entity.getProperties().size();
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return entity.getProperties().size() > 0;
+	}
+
+	@Override
+	public boolean containsKey(Object key) {
+		if (key instanceof Object) {
+			String s = (String) key;
+			return keySet().contains(s);
+		}
+		return false;
 	}
 
 	@Override
@@ -76,7 +77,7 @@ public final class RowProviderMap implements Map<String, Object> {
 		throwShouldNeverCall();
 		return false;
 	}
-	
+
 	@Override
 	public Object put(String key, Object value) {
 		throwShouldNeverCall();
@@ -100,12 +101,6 @@ public final class RowProviderMap implements Map<String, Object> {
 	}
 
 	@Override
-	public Set<String> keySet() {
-		throwShouldNeverCall();
-		return null;
-	}
-
-	@Override
 	public Collection<Object> values() {
 		throwShouldNeverCall();
 		return null;
@@ -123,7 +118,7 @@ public final class RowProviderMap implements Map<String, Object> {
 
 	@Override
 	public String toString() {
-		return row.toString();
+		return source.toString();
 	}
-
+	
 }

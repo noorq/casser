@@ -22,8 +22,8 @@ import com.datastax.driver.core.UDTValue;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.CasserEntity;
-import com.noorq.casser.mapping.map.ValueProviderMap;
 import com.noorq.casser.mapping.value.UDTColumnValueProvider;
+import com.noorq.casser.mapping.value.ValueProviderMap;
 
 public final class UDTValueToEntityConverter implements Function<UDTValue, Object> {
 

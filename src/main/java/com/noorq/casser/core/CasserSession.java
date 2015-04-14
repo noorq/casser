@@ -39,11 +39,11 @@ import com.noorq.casser.core.tuple.Tuple6;
 import com.noorq.casser.core.tuple.Tuple7;
 import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.MappingUtil;
-import com.noorq.casser.mapping.map.RowProviderMap;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
 import com.noorq.casser.mapping.value.RowColumnValueProvider;
 import com.noorq.casser.mapping.value.StatementColumnValuePreparer;
+import com.noorq.casser.mapping.value.ValueProviderMap;
 
 public class CasserSession extends AbstractSessionOperations implements Closeable {
 
@@ -119,7 +119,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		ColumnValueProvider valueProvider = getValueProvider();
 		CasserEntity entity = Casser.entity(entityClass);
 		return new SelectOperation<E>(this, entity, (r) -> {
-			Map<String, Object> map = new RowProviderMap(r, valueProvider, entity);
+			Map<String, Object> map = new ValueProviderMap(r, valueProvider, entity);
 			return (E) Casser.map(entityClass, map);
 			
 		});
