@@ -43,6 +43,7 @@ import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
 public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 
+	static Address address = Casser.dsl(Address.class);
 	static Account account = Casser.dsl(Account.class);
 	
 	static CasserSession csession;
@@ -168,6 +169,7 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 	
 	@Test
 	public void testPrint() {
+		System.out.println(address);
 		System.out.println(account);
 	}
 	

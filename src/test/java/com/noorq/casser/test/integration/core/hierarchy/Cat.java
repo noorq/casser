@@ -21,7 +21,7 @@ import com.noorq.casser.mapping.annotation.entity.Table;
 @Table("cats")
 public interface Cat extends Animal {
 
-	@Column
+	@Column(0)
 	String nickname();
 	
 }

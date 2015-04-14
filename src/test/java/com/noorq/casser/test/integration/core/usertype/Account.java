@@ -17,18 +17,21 @@ package com.noorq.casser.test.integration.core.usertype;
 
 import com.datastax.driver.core.UDTValue;
 import com.noorq.casser.mapping.annotation.UserTypeName;
+import com.noorq.casser.mapping.annotation.column.Column;
 import com.noorq.casser.mapping.annotation.column.PartitionKey;
 import com.noorq.casser.mapping.annotation.entity.Table;
 
 @Table
 public interface Account {
 
-	@PartitionKey
+	@PartitionKey(0)
 	long id();
 	
+	@Column(1)
 	Address address();
 	
 	@UserTypeName("address0")
+	@Column(2)
 	UDTValue addressNoMapping();
 	
 }

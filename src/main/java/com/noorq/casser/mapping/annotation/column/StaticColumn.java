@@ -24,9 +24,9 @@ import java.lang.annotation.Target;
 @Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 public @interface StaticColumn {
 
-	String value() default "";
+	int value();
 
-	int ordinal() default 0;
+	String name() default "";
 	
 	boolean forceQuote() default false;
 

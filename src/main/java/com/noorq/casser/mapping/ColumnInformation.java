@@ -41,39 +41,39 @@ public final class ColumnInformation {
 		PartitionKey partitionKey = getter.getDeclaredAnnotation(PartitionKey.class);
 		
 		if (partitionKey != null) {
-			columnName = partitionKey.value();
+			columnName = partitionKey.name();
 			forceQuote = partitionKey.forceQuote();
 			columnTypeLocal = ColumnType.PARTITION_KEY;
-			ordinalLocal = partitionKey.ordinal();
+			ordinalLocal = partitionKey.value();
 		}
 		
 		ClusteringColumn clusteringColumn = getter.getDeclaredAnnotation(ClusteringColumn.class);
 		
 		if (clusteringColumn != null) {
 			ensureSingleColumnType(columnTypeLocal, getter);
-			columnName = clusteringColumn.value();
+			columnName = clusteringColumn.name();
 			forceQuote = clusteringColumn.forceQuote();
 			columnTypeLocal = ColumnType.CLUSTERING_COLUMN;
-			ordinalLocal = clusteringColumn.ordinal();
+			ordinalLocal = clusteringColumn.value();
 			orderingLocal = clusteringColumn.ordering();
 		}
 
 		StaticColumn staticColumn = getter.getDeclaredAnnotation(StaticColumn.class);
 		if (staticColumn != null) {
 			ensureSingleColumnType(columnTypeLocal, getter);
-			columnName = staticColumn.value();
+			columnName = staticColumn.name();
 			forceQuote = staticColumn.forceQuote();
 			columnTypeLocal = ColumnType.STATIC_COLUMN;
-			ordinalLocal = staticColumn.ordinal();
+			ordinalLocal = staticColumn.value();
 		}
 		
 		Column column = getter.getDeclaredAnnotation(Column.class);
 		if (column != null) {
 			ensureSingleColumnType(columnTypeLocal, getter);
-			columnName = column.value();
+			columnName = column.name();
 			forceQuote = column.forceQuote();
 			columnTypeLocal = ColumnType.COLUMN;
-			ordinalLocal = column.ordinal();
+			ordinalLocal = column.value();
 		}
 		
 		if (columnName == null || columnName.isEmpty()) {
@@ -109,5 +109,13 @@ public final class ColumnInformation {
 		}
 		
 	}
+
+	@Override
+	public String toString() {
+		return "ColumnInformation [columnName=" + columnName + ", columnType="
+				+ columnType + ", ordinal=" + ordinal + ", ordering="
+				+ ordering + "]";
+	}
+	
 	
 }

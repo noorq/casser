@@ -25,15 +25,19 @@ import com.noorq.casser.mapping.annotation.entity.UserDefinedType;
 @UserDefinedType("address0")
 public interface Address {
 
-	@Column("line_1")
+	@Column(value=0, name="line_1")
 	String street();
 
+	@Column(1)
 	String city();
 
+	@Column(2)
 	int zip();
 
+	@Column(3)
 	String country();
 	
+	@Column(4)
 	@DataTypeName(value = DataType.Name.SET, types={DataType.Name.TEXT})
 	Set<String> phones();
 

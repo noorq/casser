@@ -22,22 +22,26 @@ import java.util.UUID;
 
 import com.datastax.driver.core.DataType.Name;
 import com.noorq.casser.mapping.annotation.DataTypeName;
+import com.noorq.casser.mapping.annotation.column.Column;
 import com.noorq.casser.mapping.annotation.column.PartitionKey;
 import com.noorq.casser.mapping.annotation.entity.Table;
 
 @Table
 public interface Customer {
 
-	@PartitionKey
+	@PartitionKey(0)
 	UUID id();
 	
 	@DataTypeName(value = Name.SET, types={Name.TEXT})
+	@Column(1)
 	Set<String> aliases();
 	
 	@DataTypeName(value = Name.LIST, types={Name.TEXT})
+	@Column(2)
 	List<String> name();
 	
 	@DataTypeName(value = Name.MAP, types={Name.TEXT, Name.TEXT})
+	@Column(3)
 	Map<String, String> properties();
 
 }

@@ -24,9 +24,9 @@ import java.lang.annotation.Target;
 @Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 public @interface PartitionKey {
 
-	String value() default "";
-	
-	int ordinal() default 0;
+	int value();
+
+	String name() default "";
 	
 	boolean forceQuote() default false;
 

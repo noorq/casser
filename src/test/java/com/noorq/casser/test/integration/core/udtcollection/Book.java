@@ -17,15 +17,17 @@ package com.noorq.casser.test.integration.core.udtcollection;
 
 import java.util.List;
 
+import com.noorq.casser.mapping.annotation.column.Column;
 import com.noorq.casser.mapping.annotation.column.PartitionKey;
 import com.noorq.casser.mapping.annotation.entity.Table;
 
 @Table
 public interface Book {
 
-	@PartitionKey
+	@PartitionKey(0)
 	int id();
 	
+	@Column(1)
 	List<Author> authors();
 	
 }

@@ -25,7 +25,6 @@ import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedMap;
 import com.noorq.casser.config.CasserSettings;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.mapping.annotation.entity.Table;
@@ -70,6 +69,7 @@ public final class CasserMappingEntity implements CasserEntity {
 				
 				propsBuilder.put(prop.getPropertyName(), prop);
 				propsLocal.add(prop);
+
 			}
 			
 		}
@@ -79,9 +79,7 @@ public final class CasserMappingEntity implements CasserEntity {
 		Collections.sort(propsLocal, TypeAndOrdinalColumnComparator.INSTANCE);
 		this.orderedProps = ImmutableList.copyOf(propsLocal);
 
-		if (type == CasserEntityType.TUPLE) {
-			validateOrdinalsForTuple();
-		}
+		validateOrdinals();
 	}
 
 	@Override
@@ -146,7 +144,7 @@ public final class CasserMappingEntity implements CasserEntity {
 		throw new CasserMappingException("entity must be annotated by @Table or @Tuple or @UserDefinedType " + iface);
 	}
 	
-	private void validateOrdinalsForTuple() {
+	private void validateOrdinals() {
 		boolean[] ordinals = new boolean[props.size()];
 		
 		getOrderedProperties().forEach(p -> {
@@ -182,7 +180,7 @@ public final class CasserMappingEntity implements CasserEntity {
 		.append(type.name().toLowerCase())
 		.append(":\n");
 		
-		for (CasserProperty prop : props.values()) {
+		for (CasserProperty prop : getOrderedProperties()) {
 			String columnName = prop.getColumnName().getName();
 			str.append("  ");
 			str.append(prop.getDataType());

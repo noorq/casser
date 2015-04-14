@@ -22,16 +22,16 @@ import com.noorq.casser.mapping.annotation.entity.Table;
 @Table("cars")
 public interface Car {
 
-	@PartitionKey(ordinal=1)
+	@PartitionKey(0)
 	String make();
 	
-	@PartitionKey(ordinal=2)
+	@PartitionKey(1)
 	String model();
 
-	@Column
+	@Column(2)
 	int year();
 	
-	@Column
+	@Column(3)
 	double price();
 	
 }

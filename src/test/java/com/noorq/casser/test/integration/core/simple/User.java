@@ -22,15 +22,16 @@ import com.noorq.casser.mapping.annotation.entity.Table;
 @Table("simple_users")
 public interface User {
 
-	@PartitionKey
+	@PartitionKey(0)
 	Long id();
 	
-	@Column("override_name")
+	@Column(value=1, name="override_name")
 	String name();
 	
-	@Column
+	@Column(2)
 	Integer age();
 	
+	@Column(3)
 	String notAColumn();
 	
 }

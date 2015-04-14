@@ -29,14 +29,14 @@ import com.noorq.casser.mapping.annotation.entity.Table;
 @Table
 public interface Timeline {
 
-	@PartitionKey
+	@PartitionKey(0)
 	UUID userId();
 	
-	@ClusteringColumn
+	@ClusteringColumn(1)
 	@DataTypeName(Name.TIMEUUID)
 	Date timestamp();
 	
-	@Column
+	@Column(2)
 	String text();
 	
 }
