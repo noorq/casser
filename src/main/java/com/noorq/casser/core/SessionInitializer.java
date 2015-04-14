@@ -51,7 +51,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 	private KeyspaceMetadata keyspaceMetadata;
 	
 	private final List<Object> initList = new ArrayList<Object>();
-	private AutoDsl autoDsl = AutoDsl.UPDATE;
+	private AutoDdl autoDdl = AutoDdl.UPDATE;
 	
 	SessionInitializer(Session session) {
 		this.session = Objects.requireNonNull(session, "empty session");
@@ -130,27 +130,27 @@ public class SessionInitializer extends AbstractSessionOperations {
 	}
 	
 	public SessionInitializer autoValidate() {
-		this.autoDsl = AutoDsl.VALIDATE;
+		this.autoDdl = AutoDdl.VALIDATE;
 		return this;
 	}
 
 	public SessionInitializer autoUpdate() {
-		this.autoDsl = AutoDsl.UPDATE;
+		this.autoDdl = AutoDdl.UPDATE;
 		return this;
 	}
 
 	public SessionInitializer autoCreate() {
-		this.autoDsl = AutoDsl.CREATE;
+		this.autoDdl = AutoDdl.CREATE;
 		return this;
 	}
 
 	public SessionInitializer autoCreateDrop() {
-		this.autoDsl = AutoDsl.CREATE_DROP;
+		this.autoDdl = AutoDdl.CREATE_DROP;
 		return this;
 	}
 
-	public SessionInitializer auto(AutoDsl autoDsl) {
-		this.autoDsl = autoDsl;
+	public SessionInitializer auto(AutoDdl autoDdl) {
+		this.autoDdl = autoDdl;
 		return this;
 	}
 	
@@ -173,7 +173,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 				showCql, 
 				sessionRepository,
 				executor,
-				autoDsl == AutoDsl.CREATE_DROP);
+				autoDdl == AutoDdl.CREATE_DROP);
 	}
 
 	private void initialize() {
@@ -185,7 +185,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		TableOperations tableOps = new TableOperations(this, dropUnusedColumns, dropUnusedIndexes);
 		UserTypeOperations userTypeOps = new UserTypeOperations(this);
 		
-		switch(autoDsl) {
+		switch(autoDdl) {
 		
 		case CREATE:
 		case CREATE_DROP:

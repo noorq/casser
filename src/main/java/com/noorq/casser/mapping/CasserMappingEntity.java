@@ -16,11 +16,16 @@
 package com.noorq.casser.mapping;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.noorq.casser.config.CasserSettings;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.mapping.annotation.entity.Table;
@@ -34,6 +39,7 @@ public final class CasserMappingEntity implements CasserEntity {
 	private final CasserEntityType type;
 	private final IdentityName name;
 	private final ImmutableMap<String, CasserProperty> props;
+	private final ImmutableList<CasserProperty> orderedProps;
 	
 	public CasserMappingEntity(Class<?> iface) {
 		this(iface, autoDetectType(iface));
@@ -53,7 +59,8 @@ public final class CasserMappingEntity implements CasserEntity {
 		
 		Method[] all = iface.getDeclaredMethods();
 		
-		ImmutableMap.Builder<String, CasserProperty> propsBuilder = ImmutableMap.<String, CasserProperty>builder();
+		List<CasserProperty> propsLocal = new ArrayList<CasserProperty>();
+		ImmutableMap.Builder<String, CasserProperty> propsBuilder = ImmutableMap.builder();
 		
 		for (Method m : all) {
 			
@@ -62,13 +69,16 @@ public final class CasserMappingEntity implements CasserEntity {
 				CasserProperty prop = new CasserMappingProperty(this, m);
 				
 				propsBuilder.put(prop.getPropertyName(), prop);
-				
+				propsLocal.add(prop);
 			}
 			
 		}
-
+		
 		this.props = propsBuilder.build();
 		
+		Collections.sort(propsLocal, TypeAndOrdinalColumnComparator.INSTANCE);
+		this.orderedProps = ImmutableList.copyOf(propsLocal);
+
 		if (type == CasserEntityType.TUPLE) {
 			validateOrdinalsForTuple();
 		}
@@ -86,7 +96,7 @@ public final class CasserMappingEntity implements CasserEntity {
 
 	@Override
 	public Collection<CasserProperty> getProperties() {
-		return props.values();
+		return orderedProps;
 	}
 	
 	@Override

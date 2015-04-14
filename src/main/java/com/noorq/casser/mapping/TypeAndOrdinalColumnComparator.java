@@ -13,11 +13,23 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.core;
+package com.noorq.casser.mapping;
 
-public enum AutoDsl {
-	VALIDATE,
-	UPDATE,
-	CREATE,
-	CREATE_DROP;
+import java.util.Comparator;
+
+public enum TypeAndOrdinalColumnComparator implements Comparator<CasserProperty> {
+
+	INSTANCE;
+
+	public int compare(CasserProperty thisVal, CasserProperty anotherVal) {
+
+		int c = Integer.compare(thisVal.getColumnType().ordinal(), anotherVal.getColumnType().ordinal());
+		
+		if (c == 0) {
+			c = Integer.compare(thisVal.getOrdinal(), anotherVal.getOrdinal());
+		}
+
+		return c;
+	}
+	
 }

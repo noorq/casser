@@ -15,32 +15,9 @@
  */
 package com.noorq.casser.core;
 
-import java.util.Comparator;
-
-import com.noorq.casser.mapping.CasserProperty;
-
-public enum OrdinalBasedPropertyComparator implements Comparator<CasserProperty> {
-
-	INSTANCE;
-
-	public int compare(CasserProperty o1, CasserProperty o2) {
-
-		Integer ordinal1 = o1.getOrdinal();
-		Integer ordinal2 = o2.getOrdinal();
-
-		if (ordinal1 == null) {
-			if (ordinal2 == null) {
-				return 0;
-			}
-			return -1;
-		}
-
-		if (ordinal2 == null) {
-			return 1;
-		}
-
-		return ordinal1.compareTo(ordinal2);
-	}
-
-	
+public enum AutoDdl {
+	VALIDATE,
+	UPDATE,
+	CREATE,
+	CREATE_DROP;
 }

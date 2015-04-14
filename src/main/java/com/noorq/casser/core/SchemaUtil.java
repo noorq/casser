@@ -90,40 +90,20 @@ public final class SchemaUtil {
 		Create create = SchemaBuilder.createTable(entity.getName().toCql());
 
 		create.ifNotExists();
-		
-		List<CasserProperty> partitionKeys = new ArrayList<CasserProperty>();
+				
 		List<CasserProperty> clusteringColumns = new ArrayList<CasserProperty>();
-		List<CasserProperty> columns = new ArrayList<CasserProperty>();
 
 		for (CasserProperty prop : entity.getProperties()) {
 
 			ColumnType columnType = prop.getColumnType();
-			
-			switch(columnType) {
-			case PARTITION_KEY:
-				partitionKeys.add(prop);
-				break;
-			case CLUSTERING_COLUMN:
+
+			if (columnType == ColumnType.CLUSTERING_COLUMN) {
 				clusteringColumns.add(prop);
-				break;
-			case STATIC_COLUMN:
-			case COLUMN:
-				columns.add(prop);
-				break;
 			}
+			
+			prop.getDataType().addColumn(create, prop.getColumnName());
 
 		}
-
-		Collections.sort(partitionKeys, 
-				OrdinalBasedPropertyComparator.INSTANCE);
-		Collections.sort(clusteringColumns,
-				OrdinalBasedPropertyComparator.INSTANCE);
-		Collections.sort(columns,
-				OrdinalBasedPropertyComparator.INSTANCE);
-
-		partitionKeys.forEach(p -> p.getDataType().addColumn(create, p.getColumnName()));
-		clusteringColumns.forEach(p -> p.getDataType().addColumn(create, p.getColumnName()));
-		columns.forEach(p -> p.getDataType().addColumn(create, p.getColumnName()));
 
 		if (!clusteringColumns.isEmpty()) {
 			Options options = create.withOptions();
