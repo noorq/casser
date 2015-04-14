@@ -80,7 +80,7 @@ public abstract class AbstractEmbeddedCassandraTest {
 			session.close();
 			session = null;
 			EmbeddedCassandraServerHelper.cleanEmbeddedCassandra();
-			EmbeddedCassandraServerHelper.stopEmbeddedCassandra();
+			//EmbeddedCassandraServerHelper.stopEmbeddedCassandra();
 		}
 	}
 }
