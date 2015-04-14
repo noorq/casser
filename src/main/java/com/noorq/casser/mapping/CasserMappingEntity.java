@@ -17,6 +17,7 @@ package com.noorq.casser.mapping;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -143,8 +144,61 @@ public final class CasserMappingEntity implements CasserEntity {
 		
 		throw new CasserMappingException("entity must be annotated by @Table or @Tuple or @UserDefinedType " + iface);
 	}
-	
+
 	private void validateOrdinals() {
+		
+		switch(getType()) {
+		
+		case TABLE:
+			validateOrdinalsForTable();
+			break;
+			
+		case TUPLE:
+			validateOrdinalsForTuple();
+			break;
+			
+		default:
+			break;
+		}
+		
+	}
+	
+	private void validateOrdinalsForTable() {
+		
+		BitSet partitionKeys = new BitSet();
+		BitSet clusteringColumns = new BitSet();
+
+		for (CasserProperty prop : getOrderedProperties()) {
+			
+			ColumnType type = prop.getColumnType();
+			
+			int ordinal = prop.getOrdinal();
+
+			switch(type) {
+			
+			case PARTITION_KEY:
+				if (partitionKeys.get(ordinal)) {
+					throw new CasserMappingException("detected two or more partition key columns with the same ordinal " + ordinal + " in " + prop.getEntity());
+				}
+				partitionKeys.set(ordinal);
+				break;
+				
+			case CLUSTERING_COLUMN:
+				if (clusteringColumns.get(ordinal)) {
+					throw new CasserMappingException("detected two or clustering columns with the same ordinal " + ordinal + " in " + prop.getEntity());
+				}
+				clusteringColumns.set(ordinal);
+				break;
+				
+			default:
+				break;	
+			}
+		
+		}
+		
+	}
+	
+	private void validateOrdinalsForTuple() {
 		boolean[] ordinals = new boolean[props.size()];
 		
 		getOrderedProperties().forEach(p -> {

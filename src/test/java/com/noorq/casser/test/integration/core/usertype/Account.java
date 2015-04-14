@@ -27,11 +27,11 @@ public interface Account {
 	@PartitionKey(0)
 	long id();
 	
-	@Column(1)
+	@Column
 	Address address();
 	
 	@UserTypeName("address0")
-	@Column(2)
+	@Column
 	UDTValue addressNoMapping();
 	
 }
