@@ -53,14 +53,22 @@ public final class ColumnInformation {
 			ordinalLocal = clusteringColumn.ordinal();
 			orderingLocal = clusteringColumn.ordering();
 		}
-		
+
+		StaticColumn staticColumn = getter.getDeclaredAnnotation(StaticColumn.class);
+		if (staticColumn != null) {
+			ensureSingleColumnType(columnTypeLocal, getter);
+			columnName = staticColumn.value();
+			forceQuote = staticColumn.forceQuote();
+			columnTypeLocal = ColumnType.STATIC_COLUMN;
+			ordinalLocal = staticColumn.ordinal();
+		}
 		
 		Column column = getter.getDeclaredAnnotation(Column.class);
 		if (column != null) {
 			ensureSingleColumnType(columnTypeLocal, getter);
 			columnName = column.value();
 			forceQuote = column.forceQuote();
-			columnTypeLocal = column.isStatic() ? ColumnType.STATIC_COLUMN : ColumnType.COLUMN;
+			columnTypeLocal = ColumnType.COLUMN;
 			ordinalLocal = column.ordinal();
 		}
 		

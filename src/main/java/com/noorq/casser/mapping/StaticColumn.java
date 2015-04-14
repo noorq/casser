@@ -15,21 +15,19 @@
  */
 package com.noorq.casser.mapping;
 
-import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
-@Documented
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
-public @interface Column {
+public @interface StaticColumn {
 
 	String value() default "";
 
 	int ordinal() default 0;
 	
 	boolean forceQuote() default false;
+
 }
