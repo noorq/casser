@@ -19,16 +19,8 @@ import java.security.SecureRandom;
 import java.util.Date;
 import java.util.UUID;
 
-/**
- * Time UUID Util to generate random/special Time UUIDs.
- * 
- */
 public final class TimeUUIDUtil {
 
-	/*
-	 * The random number generator used by this class to create random
-	 * clockSequence and node for Time UUIDs.
-	 */
 	private static class Holder {
 		static final SecureRandom numberGenerator = new SecureRandom();
 	}
