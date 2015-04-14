@@ -33,7 +33,7 @@ import com.noorq.casser.support.CasserMappingException;
 
 public final class SessionRepositoryBuilder {
 
-	private static final Optional<CasserEntityType> OPTIONAL_UDT = Optional.of(CasserEntityType.USER_DEFINED_TYPE);
+	private static final Optional<CasserEntityType> OPTIONAL_UDT = Optional.of(CasserEntityType.UDT);
 	
 	private final Map<Class<?>, CasserEntity> entityMap = new HashMap<Class<?>, CasserEntity>();
 
@@ -121,7 +121,7 @@ public final class SessionRepositoryBuilder {
 					
 					CasserEntity addedUserType = add(udtClass, OPTIONAL_UDT);
 					
-					if (CasserEntityType.USER_DEFINED_TYPE == prop.getEntity().getType()) {
+					if (CasserEntityType.UDT == prop.getEntity().getType()) {
 						userTypeUsesMap.put(prop.getEntity(), addedUserType);
 					}
 					

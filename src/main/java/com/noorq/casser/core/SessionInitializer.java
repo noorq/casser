@@ -198,7 +198,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 			break;
 			
 		case VALIDATE:
-			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.USER_DEFINED_TYPE)
+			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.UDT)
 				.forEach(e -> userTypeOps.validateUserType(getUserType(e), e));
 			
 			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
@@ -206,7 +206,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 			break;
 			
 		case UPDATE:
-			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.USER_DEFINED_TYPE)
+			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.UDT)
 				.forEach(e -> userTypeOps.updateUserType(getUserType(e), e));
 
 			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
@@ -229,7 +229,7 @@ public class SessionInitializer extends AbstractSessionOperations {
 		Set<CasserEntity> stack = new HashSet<CasserEntity>();
 		
 		sessionRepository.entities().stream()
-		.filter(e -> e.getType() == CasserEntityType.USER_DEFINED_TYPE)
+		.filter(e -> e.getType() == CasserEntityType.UDT)
 		.forEach(e -> {
 		
 			stack.clear();

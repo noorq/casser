@@ -57,7 +57,7 @@ public final class SchemaUtil {
 
 	public static SchemaStatement createUserType(CasserEntity entity) {
 	
-		if (entity.getType() != CasserEntityType.USER_DEFINED_TYPE) {
+		if (entity.getType() != CasserEntityType.UDT) {
 			throw new CasserMappingException("expected user defined type entity " + entity);
 		}
 

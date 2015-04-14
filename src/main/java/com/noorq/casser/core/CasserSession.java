@@ -333,7 +333,7 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 			execute(SchemaUtil.dropTable(entity));
 			break;
 			
-		case USER_DEFINED_TYPE:
+		case UDT:
 			execute(SchemaUtil.dropUserType(entity));
 			break;
 		

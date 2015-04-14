@@ -36,7 +36,7 @@ import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.annotation.DataTypeName;
-import com.noorq.casser.mapping.annotation.UserTypeName;
+import com.noorq.casser.mapping.annotation.type.UDT;
 import com.noorq.casser.mapping.convert.DateToTimeUUIDConverter;
 import com.noorq.casser.mapping.convert.EntityToTupleValueConverter;
 import com.noorq.casser.mapping.convert.EntityToUDTValueConverter;
@@ -391,7 +391,7 @@ public final class CasserMappingProperty implements CasserProperty {
 		
 		if (isUDTValue(javaType)) {
 			
-			UserTypeName userTypeName = getter.getDeclaredAnnotation(UserTypeName.class);
+			UDT userTypeName = getter.getDeclaredAnnotation(UDT.class);
 			if (userTypeName == null) {
 				throw new CasserMappingException("absent UserTypeName annotation for " + getter);
 			}

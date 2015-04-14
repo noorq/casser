@@ -13,21 +13,23 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping.annotation.entity;
+package com.noorq.casser.mapping.annotation.type;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Inherited
+import com.datastax.driver.core.DataType;
+
+@Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE })
-public @interface UserDefinedType {
-
-	String value() default "";
-
-	boolean forceQuote() default false;
+@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+public @interface UDTValueMap {
+	
+	DataType.Name key();
+	
+	UDT value();
 	
 }

@@ -16,5 +16,5 @@
 package com.noorq.casser.mapping;
 
 public enum CasserEntityType {
-	TABLE, TUPLE, USER_DEFINED_TYPE;
+	TABLE, TUPLE, UDT;
 }

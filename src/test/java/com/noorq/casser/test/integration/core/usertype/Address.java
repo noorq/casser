@@ -20,9 +20,9 @@ import java.util.Set;
 import com.datastax.driver.core.DataType;
 import com.noorq.casser.mapping.annotation.DataTypeName;
 import com.noorq.casser.mapping.annotation.column.Column;
-import com.noorq.casser.mapping.annotation.entity.UserDefinedType;
+import com.noorq.casser.mapping.annotation.entity.UDT;
 
-@UserDefinedType("address0")
+@UDT("address0")
 public interface Address {
 
 	@Column(value=0, name="line_1")

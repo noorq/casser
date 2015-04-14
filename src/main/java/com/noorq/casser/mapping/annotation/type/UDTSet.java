@@ -13,25 +13,19 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.test.integration.core.usertype;
+package com.noorq.casser.mapping.annotation.type;
 
-import com.datastax.driver.core.UDTValue;
-import com.noorq.casser.mapping.annotation.column.Column;
-import com.noorq.casser.mapping.annotation.column.PartitionKey;
-import com.noorq.casser.mapping.annotation.entity.Table;
-import com.noorq.casser.mapping.annotation.type.UDT;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@Table
-public interface Account {
-
-	@PartitionKey(0)
-	long id();
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+public @interface UDTSet {
 	
-	@Column
-	Address address();
-	
-	@UDT("address0")
-	@Column
-	UDTValue addressNoMapping();
+	UDT value();
 	
 }

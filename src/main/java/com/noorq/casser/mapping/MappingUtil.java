@@ -26,7 +26,7 @@ import com.noorq.casser.core.reflect.MapExportable;
 import com.noorq.casser.mapping.annotation.Index;
 import com.noorq.casser.mapping.annotation.entity.Table;
 import com.noorq.casser.mapping.annotation.entity.Tuple;
-import com.noorq.casser.mapping.annotation.entity.UserDefinedType;
+import com.noorq.casser.mapping.annotation.entity.UDT;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.DslPropertyException;
 
@@ -69,8 +69,8 @@ public final class MappingUtil {
 		String userTypeName = null;
 		boolean forceQuote = false;
 		
-		UserDefinedType userDefinedType = iface
-				.getDeclaredAnnotation(UserDefinedType.class);
+		UDT userDefinedType = iface
+				.getDeclaredAnnotation(UDT.class);
 
 		if (userDefinedType != null) {
 			
@@ -155,7 +155,7 @@ public final class MappingUtil {
 				}
 				
 				if (iface.getDeclaredAnnotation(Table.class) != null ||
-						iface.getDeclaredAnnotation(UserDefinedType.class) != null ||
+						iface.getDeclaredAnnotation(UDT.class) != null ||
 						iface.getDeclaredAnnotation(Tuple.class) != null) {
 					
 					break;

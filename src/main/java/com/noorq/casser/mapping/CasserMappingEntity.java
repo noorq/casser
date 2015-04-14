@@ -30,7 +30,7 @@ import com.noorq.casser.config.CasserSettings;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.mapping.annotation.entity.Table;
 import com.noorq.casser.mapping.annotation.entity.Tuple;
-import com.noorq.casser.mapping.annotation.entity.UserDefinedType;
+import com.noorq.casser.mapping.annotation.entity.UDT;
 import com.noorq.casser.support.CasserMappingException;
 
 public final class CasserMappingEntity implements CasserEntity {
@@ -118,7 +118,7 @@ public final class CasserMappingEntity implements CasserEntity {
 		case TUPLE:
 			return IdentityName.of(MappingUtil.getDefaultEntityName(iface), false);
 			
-		case USER_DEFINED_TYPE:
+		case UDT:
 			return MappingUtil.getUserDefinedTypeName(iface, true);
 		}
 
@@ -138,8 +138,8 @@ public final class CasserMappingEntity implements CasserEntity {
 			return CasserEntityType.TUPLE;
 		}
 
-		else if (null != iface.getDeclaredAnnotation(UserDefinedType.class)) {
-			return CasserEntityType.USER_DEFINED_TYPE;
+		else if (null != iface.getDeclaredAnnotation(UDT.class)) {
+			return CasserEntityType.UDT;
 		}
 		
 		throw new CasserMappingException("entity must be annotated by @Table or @Tuple or @UserDefinedType " + iface);
