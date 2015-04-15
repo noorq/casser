@@ -27,13 +27,13 @@ import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.support.CasserMappingException;
 
-public final class DTKeyUTDValueMapDataType extends AbstractDataType {
+public final class DTKeyUDTValueMapDataType extends AbstractDataType {
 
 	private final DataType keyType;
 	private final IdentityName valueType;
 	private final Class<?> udtValueClass;
 	
-	public DTKeyUTDValueMapDataType(ColumnType columnType, DataType keyType, IdentityName valueType, Class<?> udtValueClass) {
+	public DTKeyUDTValueMapDataType(ColumnType columnType, DataType keyType, IdentityName valueType, Class<?> udtValueClass) {
 		super(columnType);
 		this.keyType = keyType;
 		this.valueType = valueType;

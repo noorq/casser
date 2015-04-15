@@ -48,7 +48,7 @@ import com.noorq.casser.mapping.convert.TypedConverter;
 import com.noorq.casser.mapping.convert.UDTValueToEntityConverter;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
-import com.noorq.casser.mapping.type.DTKeyUTDValueMapDataType;
+import com.noorq.casser.mapping.type.DTKeyUDTValueMapDataType;
 import com.noorq.casser.mapping.type.UDTDataType;
 import com.noorq.casser.mapping.type.UDTKeyDTValueMapDataType;
 import com.noorq.casser.mapping.type.UDTKeyUDTValueMapDataType;
@@ -296,7 +296,7 @@ public final class CasserMappingProperty implements CasserProperty {
 					return new DTDataType(columnType, DataType.map(key.getLeft(), value.getLeft()));
 				}
 				else {
-					return new DTKeyUTDValueMapDataType(columnType, 
+					return new DTKeyUDTValueMapDataType(columnType, 
 							key.getLeft(), 
 							value.getRight(),
 							(Class<?>) args[1]);

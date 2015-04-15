@@ -119,6 +119,10 @@ public final class SessionRepositoryBuilder {
 				
 				for (Class<?> udtClass : type.getUdtClasses()) {
 					
+					if (UDTValue.class.isAssignableFrom(udtClass)) {
+						continue;
+					}
+					
 					CasserEntity addedUserType = add(udtClass, OPTIONAL_UDT);
 					
 					if (CasserEntityType.UDT == prop.getEntity().getType()) {
