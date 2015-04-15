@@ -29,7 +29,7 @@ import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
 import com.noorq.casser.support.CasserMappingException;
 
-public final class KnownJavaTypes {
+public final class MappingJavaTypes {
 
 	private static final EnumJavaType ENUM_JAVA_TYPE = new EnumJavaType();
 	private static final UDTValueJavaType UDT_VALUE_JAVA_TYPE = new UDTValueJavaType();
@@ -77,7 +77,7 @@ public final class KnownJavaTypes {
 		
 	}
 	
-	private KnownJavaTypes() {
+	private MappingJavaTypes() {
 	}
 	
 	public static AbstractJavaType resolveJavaType(Class<?> javaClass) {

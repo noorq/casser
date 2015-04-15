@@ -38,7 +38,7 @@ public final class EnumJavaType extends AbstractJavaType {
 
 	@Override
 	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType) {
-		return new DTDataType(columnType, DataType.text(), (Class<?>) genericJavaType);
+		return new DTDataType(columnType, DataType.ascii(), (Class<?>) genericJavaType);
 	}
 
 	@Override

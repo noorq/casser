@@ -22,7 +22,7 @@ import java.util.function.Function;
 
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.javatype.AbstractJavaType;
-import com.noorq.casser.mapping.javatype.KnownJavaTypes;
+import com.noorq.casser.mapping.javatype.MappingJavaTypes;
 import com.noorq.casser.mapping.type.AbstractDataType;
 
 public final class CasserMappingProperty implements CasserProperty {
@@ -54,7 +54,7 @@ public final class CasserMappingProperty implements CasserProperty {
 	
 		this.genericJavaType = getter.getGenericReturnType();
 		this.javaType = getter.getReturnType();
-		this.abstractJavaType = KnownJavaTypes.resolveJavaType(this.javaType);
+		this.abstractJavaType = MappingJavaTypes.resolveJavaType(this.javaType);
 
 		this.dataType = abstractJavaType.resolveDataType(this.getter, this.genericJavaType, this.columnInfo.getColumnType());
 	}

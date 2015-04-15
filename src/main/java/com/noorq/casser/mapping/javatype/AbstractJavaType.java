@@ -26,7 +26,6 @@ import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.mapping.MappingUtil;
-import com.noorq.casser.mapping.SimpleDataTypes;
 import com.noorq.casser.mapping.annotation.type.UDT;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.support.CasserMappingException;
@@ -61,7 +60,7 @@ public abstract class AbstractJavaType {
 	}
 	
 	static DataType resolveSimpleType(Method getter, DataType.Name typeName) {
-		DataType dataType = SimpleDataTypes.getDataTypeByName(typeName);
+		DataType dataType = SimpleJavaTypes.getDataTypeByName(typeName);
 		if (dataType == null) {
 			throw new CasserMappingException(
 					"only primitive types are allowed inside collections for the property " + getter);
@@ -83,7 +82,7 @@ public abstract class AbstractJavaType {
 		if (type instanceof Class<?>) {
 			
 			Class<?> javaType = (Class<?>) type;
-			dataType = SimpleDataTypes.getDataTypeByJavaClass(javaType);
+			dataType = SimpleJavaTypes.getDataTypeByJavaClass(javaType);
 
 			if (dataType != null) {
 				return Either.left(dataType);
