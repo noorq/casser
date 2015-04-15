@@ -9,10 +9,10 @@ import com.noorq.casser.mapping.annotation.entity.Table;
 @Table
 public interface Customer {
 
-	@PartitionKey(0)
+	@PartitionKey
 	UUID id();
 	
-	@Column(1)
+	@Column
 	AddressInformation addressInformation();
 	
 }

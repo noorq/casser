@@ -21,10 +21,10 @@ import com.noorq.casser.mapping.annotation.entity.Tuple;
 @Tuple
 public interface AlbumInformation {
 
-	@Column(0)
+	@Column(ordinal=0)
 	String about();
 	
-	@Column(1)
+	@Column(ordinal=1)
 	String place();
 	
 }

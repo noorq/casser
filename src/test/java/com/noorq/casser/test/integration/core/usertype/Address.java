@@ -25,19 +25,19 @@ import com.noorq.casser.mapping.annotation.entity.UDT;
 @UDT("address0")
 public interface Address {
 
-	@Column(value=0, name="line_1")
+	@Column(ordinal=0, name="line_1")
 	String street();
 
-	@Column(1)
+	@Column
 	String city();
 
-	@Column(2)
+	@Column
 	int zip();
 
-	@Column(3)
+	@Column
 	String country();
 	
-	@Column(4)
+	@Column
 	@DataTypeName(value = DataType.Name.SET, types={DataType.Name.TEXT})
 	Set<String> phones();
 

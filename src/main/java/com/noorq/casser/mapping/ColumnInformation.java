@@ -44,7 +44,7 @@ public final class ColumnInformation {
 			columnName = partitionKey.name();
 			forceQuote = partitionKey.forceQuote();
 			columnTypeLocal = ColumnType.PARTITION_KEY;
-			ordinalLocal = partitionKey.value();
+			ordinalLocal = partitionKey.ordinal();
 		}
 		
 		ClusteringColumn clusteringColumn = getter.getDeclaredAnnotation(ClusteringColumn.class);
@@ -54,7 +54,7 @@ public final class ColumnInformation {
 			columnName = clusteringColumn.name();
 			forceQuote = clusteringColumn.forceQuote();
 			columnTypeLocal = ColumnType.CLUSTERING_COLUMN;
-			ordinalLocal = clusteringColumn.value();
+			ordinalLocal = clusteringColumn.ordinal();
 			orderingLocal = clusteringColumn.ordering();
 		}
 
@@ -64,7 +64,7 @@ public final class ColumnInformation {
 			columnName = staticColumn.name();
 			forceQuote = staticColumn.forceQuote();
 			columnTypeLocal = ColumnType.STATIC_COLUMN;
-			ordinalLocal = staticColumn.value();
+			ordinalLocal = staticColumn.ordinal();
 		}
 		
 		Column column = getter.getDeclaredAnnotation(Column.class);
@@ -73,7 +73,7 @@ public final class ColumnInformation {
 			columnName = column.name();
 			forceQuote = column.forceQuote();
 			columnTypeLocal = ColumnType.COLUMN;
-			ordinalLocal = column.value();
+			ordinalLocal = column.ordinal();
 		}
 		
 		if (columnName == null || columnName.isEmpty()) {

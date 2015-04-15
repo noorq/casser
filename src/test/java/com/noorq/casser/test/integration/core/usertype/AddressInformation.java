@@ -6,7 +6,7 @@ import com.noorq.casser.mapping.annotation.entity.UDT;
 @UDT
 public interface AddressInformation {
 
-	@Column(0)
+	@Column
 	Address address();
 	
 }

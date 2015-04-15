@@ -21,7 +21,7 @@ import com.noorq.casser.mapping.annotation.entity.Table;
 @Table
 public interface Album {
 
-	@PartitionKey(1)
+	@PartitionKey(ordinal=1)
 	int id();
 	
 	AlbumInformation info();

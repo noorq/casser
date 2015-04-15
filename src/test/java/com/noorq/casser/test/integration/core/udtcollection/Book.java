@@ -24,10 +24,10 @@ import com.noorq.casser.mapping.annotation.entity.Table;
 @Table
 public interface Book {
 
-	@PartitionKey(0)
+	@PartitionKey(ordinal=0)
 	int id();
 	
-	@Column(1)
+	@Column(ordinal=1)
 	List<Author> authors();
 	
 }

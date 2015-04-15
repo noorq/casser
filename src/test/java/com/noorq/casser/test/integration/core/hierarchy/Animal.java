@@ -20,10 +20,10 @@ import com.noorq.casser.mapping.annotation.column.PartitionKey;
 
 public interface Animal {
 
-	@PartitionKey(0)
+	@PartitionKey(ordinal=0)
 	int id();
 	
-	@Column(1)
+	@Column(ordinal=1)
 	boolean eatable();
 	
 }

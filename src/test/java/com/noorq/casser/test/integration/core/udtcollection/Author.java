@@ -21,10 +21,10 @@ import com.noorq.casser.mapping.annotation.entity.UDT;
 @UDT
 public interface Author {
 
-	@Column(0)
+	@Column(ordinal=0)
 	String name();
 	
-	@Column(1)
+	@Column(ordinal=1)
 	String city();
 	
 }

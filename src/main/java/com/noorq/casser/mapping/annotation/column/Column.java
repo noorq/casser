@@ -27,9 +27,9 @@ import java.lang.annotation.Target;
 @Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 public @interface Column {
 
-	int value() default 0;
-
 	String name() default "";
-	
+
+	int ordinal() default 0;
+
 	boolean forceQuote() default false;
 }

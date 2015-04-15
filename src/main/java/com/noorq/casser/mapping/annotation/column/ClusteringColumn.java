@@ -26,10 +26,10 @@ import com.noorq.casser.mapping.OrderingDirection;
 @Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 public @interface ClusteringColumn {
 
-	int value();
-
 	String name() default "";
 	
+	int ordinal() default 0;
+
 	OrderingDirection ordering() default OrderingDirection.ASC;
 	
 	boolean forceQuote() default false;

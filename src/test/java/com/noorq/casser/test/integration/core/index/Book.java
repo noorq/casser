@@ -23,14 +23,14 @@ import com.noorq.casser.mapping.annotation.entity.Table;
 @Table("books")
 public interface Book {
 
-	@PartitionKey(0)
+	@PartitionKey(ordinal=0)
 	long id();
 	
-	@Column(1)
+	@Column(ordinal=1)
 	@Index
 	String isbn();
 	
-	@Column(2)
+	@Column(ordinal=2)
 	String author();
 	
 }

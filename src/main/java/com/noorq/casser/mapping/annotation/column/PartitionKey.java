@@ -24,10 +24,10 @@ import java.lang.annotation.Target;
 @Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 public @interface PartitionKey {
 
-	int value();
-
 	String name() default "";
-	
+
+	int ordinal() default 0;
+
 	boolean forceQuote() default false;
 
 }

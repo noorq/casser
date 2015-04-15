@@ -24,7 +24,7 @@ import com.noorq.casser.mapping.annotation.type.UDT;
 @Table
 public interface Account {
 
-	@PartitionKey(0)
+	@PartitionKey(ordinal=0)
 	long id();
 	
 	@Column

@@ -26,14 +26,14 @@ import com.noorq.casser.mapping.annotation.entity.Table;
 @Table
 public interface Account {
 
-	@PartitionKey(0)
+	@PartitionKey
 	Long id();
 	
-	@ClusteringColumn(1)
+	@ClusteringColumn
 	Date time();
 	
 	@Index
-	@Column(value=2, name="is_active")
+	@Column(name="is_active")
 	boolean active();
 	
 }

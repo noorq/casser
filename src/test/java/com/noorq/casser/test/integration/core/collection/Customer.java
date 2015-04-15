@@ -29,19 +29,19 @@ import com.noorq.casser.mapping.annotation.entity.Table;
 @Table
 public interface Customer {
 
-	@PartitionKey(0)
+	@PartitionKey(ordinal=0)
 	UUID id();
 	
 	@DataTypeName(value = Name.SET, types={Name.TEXT})
-	@Column(1)
+	@Column(ordinal=1)
 	Set<String> aliases();
 	
 	@DataTypeName(value = Name.LIST, types={Name.TEXT})
-	@Column(2)
+	@Column(ordinal=2)
 	List<String> name();
 	
 	@DataTypeName(value = Name.MAP, types={Name.TEXT, Name.TEXT})
-	@Column(3)
+	@Column(ordinal=3)
 	Map<String, String> properties();
 
 }
