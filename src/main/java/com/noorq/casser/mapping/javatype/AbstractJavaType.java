@@ -36,6 +36,10 @@ public abstract class AbstractJavaType {
 
 	public abstract Class<?> getJavaClass();
 	
+	public boolean isApplicable(Class<?> javaClass) {
+		return false;
+	}
+	
 	public abstract AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType);
 
 	public Optional<Class<?>> getPrimitiveJavaClass() {

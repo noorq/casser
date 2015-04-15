@@ -30,14 +30,24 @@ public final class DTDataType extends AbstractDataType {
 	private static final Class<?>[] EMPTY_CLASSES = new Class<?>[] {};
 	
 	private final DataType dataType;
-	
+	private final Class<?> javaClass;
+
 	public DTDataType(ColumnType columnType, DataType dataType) {
+		this(columnType, dataType, dataType.asJavaClass());
+	}
+	
+	public DTDataType(ColumnType columnType, DataType dataType, Class<?> javaClass) {
 		super(columnType);
 		this.dataType = dataType;
+		this.javaClass = javaClass;
 	}
 
 	public DataType getDataType() {
 		return dataType;
+	}
+	
+	public Class<?> getJavaClass() {
+		return javaClass;
 	}
 
 	@Override

@@ -103,6 +103,15 @@ public final class MappingUtil {
 		
 	}
 
+	public static boolean isUDT(Class<?> iface) {
+		
+		UDT udt = iface
+				.getDeclaredAnnotation(UDT.class);
+		
+		return udt != null;
+		
+	}
+	
 	public static IdentityName getTableName(Class<?> iface, boolean required) {
 
 		String tableName = null;

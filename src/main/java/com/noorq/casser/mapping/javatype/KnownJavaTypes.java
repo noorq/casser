@@ -15,23 +15,52 @@
  */
 package com.noorq.casser.mapping.javatype;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.InetAddress;
 import java.util.Optional;
 
+import com.datastax.driver.core.DataType;
 import com.google.common.collect.ImmutableMap;
+import com.noorq.casser.mapping.ColumnType;
+import com.noorq.casser.mapping.type.AbstractDataType;
+import com.noorq.casser.mapping.type.DTDataType;
+import com.noorq.casser.support.CasserMappingException;
 
 public final class KnownJavaTypes {
 
+	private static final EnumJavaType ENUM_JAVA_TYPE = new EnumJavaType();
+	private static final UDTValueJavaType UDT_VALUE_JAVA_TYPE = new UDTValueJavaType();
+	private static final TupleValueJavaType TUPLE_VALUE_JAVA_TYPE = new TupleValueJavaType();
+	
 	private static final ImmutableMap<Class<?>, AbstractJavaType> knownTypes;
 	
 	static {
 		
 		ImmutableMap.Builder<Class<?>, AbstractJavaType> builder = ImmutableMap.builder();
 
+		add(builder, new BooleanJavaType());
+		add(builder, new BigDecimalJavaType());
+		add(builder, new BigIntegerJavaType());
+		add(builder, new DoubleJavaType());
+		add(builder, new FloatJavaType());
+		add(builder, new IntegerJavaType());
+		add(builder, new InetAddressJavaType());
+		
 		add(builder, new ByteBufferJavaType());
 		add(builder, new ByteArrayJavaType());
 		add(builder, new DateJavaType());
+		add(builder, new UUIDJavaType());
 		add(builder, new LongJavaType());
 		add(builder, new StringJavaType());
+		add(builder, ENUM_JAVA_TYPE);
+		add(builder, new ListJavaType());
+		add(builder, new SetJavaType());
+		add(builder, new MapJavaType());
+		add(builder, TUPLE_VALUE_JAVA_TYPE);
+		add(builder, UDT_VALUE_JAVA_TYPE);
 		
 		knownTypes = builder.build();
 		
@@ -51,8 +80,152 @@ public final class KnownJavaTypes {
 	private KnownJavaTypes() {
 	}
 	
-	public static AbstractJavaType findJavaType(Class<?> javaClass) {
-		return knownTypes.get(javaClass);
+	public static AbstractJavaType resolveJavaType(Class<?> javaClass) {
+		
+		AbstractJavaType ajt = knownTypes.get(javaClass);
+		if (ajt != null) {
+			return ajt;
+		}
+
+		if (Enum.class.isAssignableFrom(javaClass)) {
+			return ENUM_JAVA_TYPE;
+		}
+
+		if (TUPLE_VALUE_JAVA_TYPE.isApplicable(javaClass)) {
+			return TUPLE_VALUE_JAVA_TYPE;
+		}
+		
+		if (UDT_VALUE_JAVA_TYPE.isApplicable(javaClass)) {
+			return UDT_VALUE_JAVA_TYPE;
+		}
+		
+		throw new CasserMappingException("unknown java type " + javaClass);
 	}
 	
+	
+	public final static class BooleanJavaType extends AbstractJavaType {
+
+		@Override
+		public Class<?> getJavaClass() {
+			return Boolean.class;
+		}
+
+		@Override
+		public Optional<Class<?>> getPrimitiveJavaClass() {
+			return Optional.of(boolean.class);
+		}
+
+		@Override
+		public AbstractDataType resolveDataType(Method getter,
+				Type genericJavaType, ColumnType columnType) {
+			return new DTDataType(columnType, DataType.cboolean());
+		}
+		
+	}
+
+	public final static class BigDecimalJavaType extends AbstractJavaType {
+
+		@Override
+		public Class<?> getJavaClass() {
+			return BigDecimal.class;
+		}
+
+		@Override
+		public AbstractDataType resolveDataType(Method getter,
+				Type genericJavaType, ColumnType columnType) {
+			return new DTDataType(columnType, DataType.decimal());
+		}
+		
+	}
+	
+	public final static class BigIntegerJavaType extends AbstractJavaType {
+
+		@Override
+		public Class<?> getJavaClass() {
+			return BigInteger.class;
+		}
+
+		@Override
+		public AbstractDataType resolveDataType(Method getter,
+				Type genericJavaType, ColumnType columnType) {
+			return new DTDataType(columnType, DataType.varint());
+		}
+		
+	}
+	
+	
+	public final static class DoubleJavaType extends AbstractJavaType {
+
+		@Override
+		public Class<?> getJavaClass() {
+			return Double.class;
+		}
+
+		@Override
+		public Optional<Class<?>> getPrimitiveJavaClass() {
+			return Optional.of(double.class);
+		}
+
+		@Override
+		public AbstractDataType resolveDataType(Method getter,
+				Type genericJavaType, ColumnType columnType) {
+			return new DTDataType(columnType, DataType.cdouble());
+		}
+		
+	}
+	
+	public final static class FloatJavaType extends AbstractJavaType {
+
+		@Override
+		public Class<?> getJavaClass() {
+			return Float.class;
+		}
+
+		@Override
+		public Optional<Class<?>> getPrimitiveJavaClass() {
+			return Optional.of(float.class);
+		}
+
+		@Override
+		public AbstractDataType resolveDataType(Method getter,
+				Type genericJavaType, ColumnType columnType) {
+			return new DTDataType(columnType, DataType.cfloat());
+		}
+		
+	}
+	
+	public final static class IntegerJavaType extends AbstractJavaType {
+
+		@Override
+		public Class<?> getJavaClass() {
+			return Integer.class;
+		}
+
+		@Override
+		public Optional<Class<?>> getPrimitiveJavaClass() {
+			return Optional.of(int.class);
+		}
+
+		@Override
+		public AbstractDataType resolveDataType(Method getter,
+				Type genericJavaType, ColumnType columnType) {
+			return new DTDataType(columnType, DataType.cint());
+		}
+		
+	}
+	
+	public final static class InetAddressJavaType extends AbstractJavaType {
+
+		@Override
+		public Class<?> getJavaClass() {
+			return InetAddress.class;
+		}
+
+		@Override
+		public AbstractDataType resolveDataType(Method getter,
+				Type genericJavaType, ColumnType columnType) {
+			return new DTDataType(columnType, DataType.inet());
+		}
+		
+	}
 }
