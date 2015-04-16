@@ -24,8 +24,7 @@ import java.util.function.Function;
 import com.datastax.driver.core.DataType;
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.ColumnType;
-import com.noorq.casser.mapping.annotation.type.Blob;
-import com.noorq.casser.mapping.annotation.type.Custom;
+import com.noorq.casser.mapping.annotation.T;
 import com.noorq.casser.mapping.convert.ByteArrayToByteBufferConverter;
 import com.noorq.casser.mapping.convert.ByteBufferToByteArrayConverter;
 import com.noorq.casser.mapping.convert.TypedConverter;
@@ -42,11 +41,11 @@ public final class ByteArrayJavaType extends AbstractJavaType {
 	@Override
 	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType) {
 
-		if (null != getter.getDeclaredAnnotation(Blob.class)) {
+		if (null != getter.getDeclaredAnnotation(T.Blob.class)) {
 			 return new DTDataType(columnType, DataType.blob());
 		}
 
-		Custom custom = getter.getDeclaredAnnotation(Custom.class);
+		T.Custom custom = getter.getDeclaredAnnotation(T.Custom.class);
 		
 		if (null != custom) {
 			 return new DTDataType(columnType, DataType.custom(custom.className()));

@@ -21,8 +21,7 @@ import java.nio.ByteBuffer;
 
 import com.datastax.driver.core.DataType;
 import com.noorq.casser.mapping.ColumnType;
-import com.noorq.casser.mapping.annotation.type.Blob;
-import com.noorq.casser.mapping.annotation.type.Custom;
+import com.noorq.casser.mapping.annotation.T;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
 
@@ -36,11 +35,11 @@ public final class ByteBufferJavaType extends AbstractJavaType {
 	@Override
 	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType) {
 
-		if (null != getter.getDeclaredAnnotation(Blob.class)) {
+		if (null != getter.getDeclaredAnnotation(T.Blob.class)) {
 			 return new DTDataType(columnType, DataType.blob());
 		}
 
-		Custom custom = getter.getDeclaredAnnotation(Custom.class);
+		T.Custom custom = getter.getDeclaredAnnotation(T.Custom.class);
 		
 		if (null != custom) {
 			 return new DTDataType(columnType, DataType.custom(custom.className()));

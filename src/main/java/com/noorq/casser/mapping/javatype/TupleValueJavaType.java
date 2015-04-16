@@ -31,7 +31,7 @@ import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.mapping.MappingUtil;
-import com.noorq.casser.mapping.annotation.type.Tuple;
+import com.noorq.casser.mapping.annotation.T;
 import com.noorq.casser.mapping.convert.EntityToTupleValueConverter;
 import com.noorq.casser.mapping.convert.TupleValueToEntityConverter;
 import com.noorq.casser.mapping.convert.TypedConverter;
@@ -58,7 +58,7 @@ public final class TupleValueJavaType extends AbstractJavaType {
 
 		if (TupleValue.class.isAssignableFrom(javaType)) {
 			
-			Tuple tuple = getter.getDeclaredAnnotation(Tuple.class);
+			T.Tuple tuple = getter.getDeclaredAnnotation(T.Tuple.class);
 			if (tuple == null) {
 				throw new CasserMappingException("tuple must be annotated by @Tuple annotation in " + getter);
 			}
@@ -71,7 +71,7 @@ public final class TupleValueJavaType extends AbstractJavaType {
 				arguments[i] = resolveSimpleType(getter, tupleArguments[i]);
 			}
 			
-	    	TupleType tupleType = TupleType.of(arguments);
+			TupleType tupleType = TupleType.of(arguments);
 	    	
 	    	return new DTDataType(columnType, tupleType, javaType);
 			
@@ -140,7 +140,8 @@ public final class TupleValueJavaType extends AbstractJavaType {
 		return Optional.of(TypedConverter.create(
 				javaClass, 
 				TupleValue.class, 
-				new EntityToTupleValueConverter(javaClass, (TupleType) dt.getDataType(), repository)));
+				new EntityToTupleValueConverter(javaClass, 
+						(TupleType) dt.getDataType(), repository)));
 
 	}
 

@@ -23,8 +23,7 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
-import com.noorq.casser.mapping.annotation.type.CSet;
-import com.noorq.casser.mapping.annotation.type.UDTSet;
+import com.noorq.casser.mapping.annotation.T;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
 import com.noorq.casser.mapping.type.UDTSetDataType;
@@ -40,13 +39,13 @@ public final class SetJavaType extends AbstractJavaType {
 	@Override
 	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType) {
 
-		CSet cset = getter.getDeclaredAnnotation(CSet.class);
+		T.Set cset = getter.getDeclaredAnnotation(T.Set.class);
 		if (cset != null) {
 			return new DTDataType(columnType, 
 					DataType.set(resolveSimpleType(getter, cset.value())));
 		}
 
-		UDTSet udtSet = getter.getDeclaredAnnotation(UDTSet.class);
+		T.UDTSet udtSet = getter.getDeclaredAnnotation(T.UDTSet.class);
 		if (udtSet != null) {
 			return new UDTSetDataType(columnType, 
 					resolveUDT(udtSet.value()),

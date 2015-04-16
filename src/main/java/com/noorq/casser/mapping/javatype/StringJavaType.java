@@ -20,9 +20,7 @@ import java.lang.reflect.Type;
 
 import com.datastax.driver.core.DataType;
 import com.noorq.casser.mapping.ColumnType;
-import com.noorq.casser.mapping.annotation.type.Ascii;
-import com.noorq.casser.mapping.annotation.type.Text;
-import com.noorq.casser.mapping.annotation.type.Varchar;
+import com.noorq.casser.mapping.annotation.T;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
 
@@ -36,15 +34,15 @@ public final class StringJavaType extends AbstractJavaType {
 	@Override
 	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType) {
 
-		if (null != getter.getDeclaredAnnotation(Ascii.class)) {
+		if (null != getter.getDeclaredAnnotation(T.Ascii.class)) {
 			 return new DTDataType(columnType, DataType.ascii());
 		}
 
-		if (null != getter.getDeclaredAnnotation(Text.class)) {
+		if (null != getter.getDeclaredAnnotation(T.Text.class)) {
 			 return new DTDataType(columnType, DataType.text());
 		}
 
-		if (null != getter.getDeclaredAnnotation(Varchar.class)) {
+		if (null != getter.getDeclaredAnnotation(T.Varchar.class)) {
 			 return new DTDataType(columnType, DataType.varchar());
 		}
 

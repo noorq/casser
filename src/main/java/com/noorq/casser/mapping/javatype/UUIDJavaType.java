@@ -21,8 +21,7 @@ import java.util.UUID;
 
 import com.datastax.driver.core.DataType;
 import com.noorq.casser.mapping.ColumnType;
-import com.noorq.casser.mapping.annotation.type.Timeuuid;
-import com.noorq.casser.mapping.annotation.type.Uuid;
+import com.noorq.casser.mapping.annotation.T;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
 
@@ -36,11 +35,11 @@ public final class UUIDJavaType extends AbstractJavaType {
 	@Override
 	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType) {
 
-		if (null != getter.getDeclaredAnnotation(Uuid.class)) {
+		if (null != getter.getDeclaredAnnotation(T.Uuid.class)) {
 			 return new DTDataType(columnType, DataType.uuid());
 		}
 
-		if (null != getter.getDeclaredAnnotation(Timeuuid.class)) {
+		if (null != getter.getDeclaredAnnotation(T.Timeuuid.class)) {
 			 return new DTDataType(columnType, DataType.timeuuid());
 		}
 

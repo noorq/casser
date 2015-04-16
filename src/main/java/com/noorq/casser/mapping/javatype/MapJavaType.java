@@ -23,10 +23,7 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
-import com.noorq.casser.mapping.annotation.type.CMap;
-import com.noorq.casser.mapping.annotation.type.UDTKeyMap;
-import com.noorq.casser.mapping.annotation.type.UDTMap;
-import com.noorq.casser.mapping.annotation.type.UDTValueMap;
+import com.noorq.casser.mapping.annotation.T;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
 import com.noorq.casser.mapping.type.DTKeyUDTValueMapDataType;
@@ -44,7 +41,7 @@ public final class MapJavaType extends AbstractJavaType {
 	@Override
 	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType) {
 
-		CMap cmap = getter.getDeclaredAnnotation(CMap.class);
+		T.Map cmap = getter.getDeclaredAnnotation(T.Map.class);
 		if (cmap != null) {
 			return new DTDataType(columnType, 
 					DataType.map(
@@ -52,7 +49,7 @@ public final class MapJavaType extends AbstractJavaType {
 							resolveSimpleType(getter, cmap.value())));
 		}
 
-		UDTKeyMap udtKeyMap = getter.getDeclaredAnnotation(UDTKeyMap.class);
+		T.UDTKeyMap udtKeyMap = getter.getDeclaredAnnotation(T.UDTKeyMap.class);
 		if (udtKeyMap != null) {
 			return new UDTKeyDTValueMapDataType(columnType, 
 					resolveUDT(udtKeyMap.key()),
@@ -60,7 +57,7 @@ public final class MapJavaType extends AbstractJavaType {
 					resolveSimpleType(getter, udtKeyMap.value()));
 		}
 
-		UDTValueMap udtValueMap = getter.getDeclaredAnnotation(UDTValueMap.class);
+		T.UDTValueMap udtValueMap = getter.getDeclaredAnnotation(T.UDTValueMap.class);
 		if (udtValueMap != null) {
 			return new DTKeyUDTValueMapDataType(columnType, 
 					resolveSimpleType(getter, udtValueMap.key()),
@@ -68,7 +65,7 @@ public final class MapJavaType extends AbstractJavaType {
 					UDTValue.class);
 		}
 		
-		UDTMap udtMap = getter.getDeclaredAnnotation(UDTMap.class);
+		T.UDTMap udtMap = getter.getDeclaredAnnotation(T.UDTMap.class);
 		if (udtMap != null) {
 			return new UDTKeyUDTValueMapDataType(columnType, 
 					resolveUDT(udtMap.key()),

@@ -13,23 +13,14 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping.annotation.type;
+package com.noorq.casser.test.integration.core.tuple;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.noorq.casser.mapping.annotation.entity.Tuple;
 
-import com.datastax.driver.core.DataType;
 
-@Documented
-@Retention(RetentionPolicy.RUNTIME)
-@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
-public @interface UDTValueMap {
-	
-	DataType.Name key();
-	
-	UDT value();
+@Tuple
+public interface Photo {
+
+	byte[] blob();
 	
 }

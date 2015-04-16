@@ -25,8 +25,7 @@ import java.util.function.Function;
 import com.datastax.driver.core.DataType;
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.ColumnType;
-import com.noorq.casser.mapping.annotation.type.Timestamp;
-import com.noorq.casser.mapping.annotation.type.Timeuuid;
+import com.noorq.casser.mapping.annotation.T;
 import com.noorq.casser.mapping.convert.DateToTimeUUIDConverter;
 import com.noorq.casser.mapping.convert.TimeUUIDToDateConverter;
 import com.noorq.casser.mapping.convert.TypedConverter;
@@ -43,11 +42,11 @@ public final class DateJavaType extends AbstractJavaType {
 	@Override
 	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType) {
 
-		if (null != getter.getDeclaredAnnotation(Timestamp.class)) {
+		if (null != getter.getDeclaredAnnotation(T.Timestamp.class)) {
 			 return new DTDataType(columnType, DataType.timestamp());
 		}
 
-		if (null != getter.getDeclaredAnnotation(Timeuuid.class)) {
+		if (null != getter.getDeclaredAnnotation(T.Timeuuid.class)) {
 			 return new DTDataType(columnType, DataType.timeuuid());
 		}
 
