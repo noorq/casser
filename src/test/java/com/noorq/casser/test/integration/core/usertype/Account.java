@@ -16,7 +16,7 @@
 package com.noorq.casser.test.integration.core.usertype;
 
 import com.datastax.driver.core.UDTValue;
-import com.noorq.casser.mapping.annotation.T;
+import com.noorq.casser.mapping.annotation.Types;
 import com.noorq.casser.mapping.annotation.column.Column;
 import com.noorq.casser.mapping.annotation.column.PartitionKey;
 import com.noorq.casser.mapping.annotation.entity.Table;
@@ -30,7 +30,7 @@ public interface Account {
 	@Column
 	Address address();
 	
-	@T.UDT("address0")
+	@Types.UDT("address0")
 	@Column
 	UDTValue addressNoMapping();
 	

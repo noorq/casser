@@ -26,7 +26,7 @@ import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.mapping.MappingUtil;
-import com.noorq.casser.mapping.annotation.T;
+import com.noorq.casser.mapping.annotation.Types;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.Either;
@@ -55,7 +55,7 @@ public abstract class AbstractJavaType {
 		return Optional.empty();
 	}
 	
-	static IdentityName resolveUDT(T.UDT annotation) {
+	static IdentityName resolveUDT(Types.UDT annotation) {
 		return IdentityName.of(annotation.value(), annotation.forceQuote());
 	}
 	

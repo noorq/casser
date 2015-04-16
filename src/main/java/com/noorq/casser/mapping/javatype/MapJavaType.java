@@ -23,7 +23,7 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
-import com.noorq.casser.mapping.annotation.T;
+import com.noorq.casser.mapping.annotation.Types;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
 import com.noorq.casser.mapping.type.DTKeyUDTValueMapDataType;
@@ -41,7 +41,7 @@ public final class MapJavaType extends AbstractJavaType {
 	@Override
 	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType) {
 
-		T.Map cmap = getter.getDeclaredAnnotation(T.Map.class);
+		Types.Map cmap = getter.getDeclaredAnnotation(Types.Map.class);
 		if (cmap != null) {
 			return new DTDataType(columnType, 
 					DataType.map(
@@ -49,7 +49,7 @@ public final class MapJavaType extends AbstractJavaType {
 							resolveSimpleType(getter, cmap.value())));
 		}
 
-		T.UDTKeyMap udtKeyMap = getter.getDeclaredAnnotation(T.UDTKeyMap.class);
+		Types.UDTKeyMap udtKeyMap = getter.getDeclaredAnnotation(Types.UDTKeyMap.class);
 		if (udtKeyMap != null) {
 			return new UDTKeyDTValueMapDataType(columnType, 
 					resolveUDT(udtKeyMap.key()),
@@ -57,7 +57,7 @@ public final class MapJavaType extends AbstractJavaType {
 					resolveSimpleType(getter, udtKeyMap.value()));
 		}
 
-		T.UDTValueMap udtValueMap = getter.getDeclaredAnnotation(T.UDTValueMap.class);
+		Types.UDTValueMap udtValueMap = getter.getDeclaredAnnotation(Types.UDTValueMap.class);
 		if (udtValueMap != null) {
 			return new DTKeyUDTValueMapDataType(columnType, 
 					resolveSimpleType(getter, udtValueMap.key()),
@@ -65,7 +65,7 @@ public final class MapJavaType extends AbstractJavaType {
 					UDTValue.class);
 		}
 		
-		T.UDTMap udtMap = getter.getDeclaredAnnotation(T.UDTMap.class);
+		Types.UDTMap udtMap = getter.getDeclaredAnnotation(Types.UDTMap.class);
 		if (udtMap != null) {
 			return new UDTKeyUDTValueMapDataType(columnType, 
 					resolveUDT(udtMap.key()),

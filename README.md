@@ -52,7 +52,7 @@ public interface Timeline {
 	UUID userId();
 	
 	@ClusteringColumn
-	@Timeuuid
+	@Types.Timeuuid
 	Date timestamp();
 	
 	@Column

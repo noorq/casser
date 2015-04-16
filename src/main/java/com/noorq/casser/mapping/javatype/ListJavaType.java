@@ -23,7 +23,7 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
-import com.noorq.casser.mapping.annotation.T;
+import com.noorq.casser.mapping.annotation.Types;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
 import com.noorq.casser.mapping.type.UDTListDataType;
@@ -39,13 +39,13 @@ public final class ListJavaType extends AbstractJavaType {
 	@Override
 	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType) {
 
-		T.List clist = getter.getDeclaredAnnotation(T.List.class);
+		Types.List clist = getter.getDeclaredAnnotation(Types.List.class);
 		if (clist != null) {
 			return new DTDataType(columnType, 
 					DataType.list(resolveSimpleType(getter, clist.value())));
 		}
 
-		T.UDTList udtList = getter.getDeclaredAnnotation(T.UDTList.class);
+		Types.UDTList udtList = getter.getDeclaredAnnotation(Types.UDTList.class);
 		if (udtList != null) {
 			return new UDTListDataType(columnType, 
 					resolveUDT(udtList.value()),

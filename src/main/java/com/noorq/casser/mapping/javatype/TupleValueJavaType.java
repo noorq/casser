@@ -31,7 +31,7 @@ import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.mapping.MappingUtil;
-import com.noorq.casser.mapping.annotation.T;
+import com.noorq.casser.mapping.annotation.Types;
 import com.noorq.casser.mapping.convert.EntityToTupleValueConverter;
 import com.noorq.casser.mapping.convert.TupleValueToEntityConverter;
 import com.noorq.casser.mapping.convert.TypedConverter;
@@ -58,7 +58,7 @@ public final class TupleValueJavaType extends AbstractJavaType {
 
 		if (TupleValue.class.isAssignableFrom(javaType)) {
 			
-			T.Tuple tuple = getter.getDeclaredAnnotation(T.Tuple.class);
+			Types.Tuple tuple = getter.getDeclaredAnnotation(Types.Tuple.class);
 			if (tuple == null) {
 				throw new CasserMappingException("tuple must be annotated by @Tuple annotation in " + getter);
 			}

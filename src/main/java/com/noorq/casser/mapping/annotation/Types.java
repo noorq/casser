@@ -23,9 +23,9 @@ import java.lang.annotation.Target;
 
 import com.datastax.driver.core.DataType;
 
-public final class T {
+public final class Types {
 
-	private T() {
+	private Types() {
 	}
 	
 	@Documented

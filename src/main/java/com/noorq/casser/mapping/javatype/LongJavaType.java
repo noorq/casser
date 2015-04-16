@@ -21,7 +21,7 @@ import java.util.Optional;
 
 import com.datastax.driver.core.DataType;
 import com.noorq.casser.mapping.ColumnType;
-import com.noorq.casser.mapping.annotation.T;
+import com.noorq.casser.mapping.annotation.Types;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
 
@@ -40,11 +40,11 @@ public final class LongJavaType extends AbstractJavaType {
 	@Override
 	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType) {
 
-		if (null != getter.getDeclaredAnnotation(T.Counter.class)) {
+		if (null != getter.getDeclaredAnnotation(Types.Counter.class)) {
 			 return new DTDataType(columnType, DataType.counter());
 		}
 
-		if (null != getter.getDeclaredAnnotation(T.Bigint.class)) {
+		if (null != getter.getDeclaredAnnotation(Types.Bigint.class)) {
 			 return new DTDataType(columnType, DataType.bigint());
 		}
 
