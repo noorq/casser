@@ -33,7 +33,7 @@ public interface Account {
 	Date time();
 	
 	@Index
-	@Column(name="is_active")
+	@Column("is_active")
 	boolean active();
 	
 }

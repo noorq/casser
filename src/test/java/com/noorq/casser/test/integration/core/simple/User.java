@@ -25,7 +25,7 @@ public interface User {
 	@PartitionKey(ordinal=0)
 	Long id();
 	
-	@Column(ordinal=1, name="override_name")
+	@Column(ordinal=1, value="override_name")
 	String name();
 	
 	@Column(ordinal=2)

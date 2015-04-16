@@ -25,7 +25,7 @@ import com.noorq.casser.mapping.annotation.entity.UDT;
 @UDT("address0")
 public interface Address {
 
-	@Column(ordinal=0, name="line_1")
+	@Column(ordinal=0, value="line_1")
 	String street();
 
 	@Column

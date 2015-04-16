@@ -26,7 +26,7 @@ import com.noorq.casser.mapping.OrderingDirection;
 @Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 public @interface ClusteringColumn {
 
-	String name() default "";
+	String value() default "";
 	
 	int ordinal() default 0;
 
