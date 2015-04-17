@@ -18,25 +18,13 @@ package com.noorq.casser.test.integration.core.usertype;
 import static com.noorq.casser.core.Query.eq;
 
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
-import com.datastax.driver.core.querybuilder.Insert;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.querybuilder.Select;
-import com.datastax.driver.core.schemabuilder.Create;
-import com.datastax.driver.core.schemabuilder.CreateType;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.CasserSession;
 import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
@@ -46,9 +34,7 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 	static Address address = Casser.dsl(Address.class);
 	static Account account = Casser.dsl(Account.class);
 	
-	static CasserSession csession;
-	
-	static UserType fullname;
+	static CasserSession session;
 	
 	public static class AccountImpl implements Account {
 
@@ -111,60 +97,7 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 	
 	@BeforeClass
 	public static void beforeTest() {
-		csession = Casser.init(getSession()).showCql().add(Account.class).autoCreateDrop().get();
-		
-		Session session = getSession();
-		
-		
-		CreateType ct = SchemaBuilder.createType("address");
-		ct.addColumn("street", DataType.text());
-		ct.addColumn("city", DataType.text());
-		ct.addColumn("zip_code", DataType.cint());
-		ct.addColumn("phones", DataType.set(DataType.text()));
-		String cql = ct.build();
-		
-		System.out.println(cql);
-		
-		//session.execute("CREATE TYPE address (street text, city text, zip_code int, phones set<text>)");
-		
-		session.execute(cql);
-
-		
-		ct = SchemaBuilder.createType("fullname");
-		ct.addColumn("firstname", DataType.text());
-		ct.addColumn("lastname", DataType.text());
-		cql = ct.build();
-		
-		System.out.println(cql);
-		
-		session.execute(cql);
-		
-		//session.execute("CREATE TYPE fullname (firstname text,lastname text)");
-
-		System.out.println("keyspace = " + session.getLoggedKeyspace());
-		
-		KeyspaceMetadata km = session.getCluster().getMetadata().getKeyspace(session.getLoggedKeyspace());
-		
-		UserType address = km.getUserType("address");
-		fullname = km.getUserType("fullname");
-		
-		Create create = SchemaBuilder.createTable("users");
-		
-		create.addPartitionKey("id", DataType.uuid());
-		create.addUDTColumn("name", SchemaBuilder.frozen("fullname"));
-		create.addUDTMapColumn("addresses", DataType.ascii(), SchemaBuilder.frozen("address"));
-		
-		cql = create.buildInternal();
-		
-		System.out.println(cql);
-		
-		session.execute(create);
-		
-		//session.execute("CREATE TABLE users (id uuid PRIMARY KEY, name fullname, "
-		//		+ "addresses map<string, address>)");
-		
-		
-		
+		session = Casser.init(getSession()).showCql().add(Account.class).autoCreateDrop().get();
 	}
 	
 	@Test
@@ -174,7 +107,7 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 	}
 	
 	@Test
-	public void testMapping() {
+	public void testMappingCRUID() {
 		
 		AddressImpl addr = new AddressImpl();
 		addr.street = "1 st";
@@ -184,88 +117,101 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		acc.id = 123L;
 		acc.address = addr;
 
-		csession.upsert(acc).sync();
+		// CREATE
 		
-		String streetName = csession.select(account.address()::street).where(account::id, eq(123L)).sync().findFirst().get()._1;
+		session.upsert(acc).sync();
+		
+		// READ
+		
+		String streetName = session.select(account.address()::street).where(account::id, eq(123L)).sync().findFirst().get()._1;
 		
 		Assert.assertEquals("1 st", streetName);
+		
+		// UPDATE
+		
+		AddressImpl expected = new AddressImpl();
+		expected.street = "2 st";
+		expected.city = "San Francisco";
+		
+		session.update().set(account::address, expected).where(account::id, eq(123L)).sync();
+
+		Address actual = session.select(account::address).where(account::id, eq(123L)).sync().findFirst().get()._1;
+
+		Assert.assertEquals(expected.street(), actual.street());
+		Assert.assertEquals(expected.city(), actual.city());
+		Assert.assertNull(actual.country());
+		Assert.assertEquals(0, actual.zip());
+		
+		// INSERT
+		
+		session.update().set(account::address, null).where(account::id, eq(123L)).sync();
+		
+		Address adrNull = session.select(account::address).where(account::id, eq(123L)).sync().findFirst().get()._1;
+		Assert.assertNull(adrNull);
+		
+		// DELETE
+		
+		session.delete().where(account::id, eq(123L)).sync();
+		
+		Long cnt = session.count().where(account::id, eq(123L)).sync();
+		Assert.assertEquals(Long.valueOf(0), cnt);
+		
 	}
 	
 	@Test
 	public void testNoMapping() {
 		
 		String ks = getSession().getLoggedKeyspace();
-		UserType addressType = getSession().getCluster().getMetadata().getKeyspace(ks).getUserType("address0");
+		UserType addressType = getSession().getCluster().getMetadata().getKeyspace(ks).getUserType("address");
 		
 		UDTValue addressNoMapping = addressType.newValue();
-		addressNoMapping.setString("line_1", "Lundy Ave");
+		addressNoMapping.setString("line_1", "1st street");
 		addressNoMapping.setString("city", "San Jose");
 		
 		AccountImpl acc = new AccountImpl();
 		acc.id = 777L;
 		acc.addressNoMapping = addressNoMapping;
 
-		csession.upsert(acc).sync();
+		// CREATE
 		
-		UDTValue found = csession.select(account::addressNoMapping).where(account::id, eq(777L)).sync().findFirst().get()._1;
+		session.upsert(acc).sync();
+		
+		// READ
+		
+		UDTValue found = session.select(account::addressNoMapping).where(account::id, eq(777L)).sync().findFirst().get()._1;
 		
 		Assert.assertEquals(addressNoMapping.getType(), found.getType());
 		Assert.assertEquals(addressNoMapping.getString("line_1"), found.getString("line_1"));
 		Assert.assertEquals(addressNoMapping.getString("city"), found.getString("city"));
 		
-	}
-	
-	//@Test
-	public void testUDT() {
-		
-		
-		Session session = getSession();
-		
-		/*
-		Select select = QueryBuilder.select().column("\"name\".\"lastname\"").from("users");
-		
-		System.out.println(select);
-		
-		ResultSet resultSet = session.execute("SELECT \"name\".\"lastname\" FROM users;");
-		
-		System.out.println("resultSet = " + resultSet);
-		*/
-		
-		UUID id = UUID.randomUUID();
-		
-		UDTValue v = fullname.newValue();
-		v.setString("firstname", "alex");
-		v.setString("lastname", "s");
-		
-		Insert insert = QueryBuilder.insertInto("users").value("id", id).value("name", v);
-		System.out.println(insert.getQueryString());
-		session.execute(insert);
-		
-		Select select = QueryBuilder.select().column("name\".\"firstname").from("users");
+		// UPDATE
 
-		System.out.println(select.getQueryString());
-		ResultSet resultSet = session.execute(select);
+		addressNoMapping = addressType.newValue();
+		addressNoMapping.setString("line_1", "Market street");
+		addressNoMapping.setString("city", "San Francisco");
 		
-		for (Row row : resultSet) {
-			//System.out.println("row = " + row.getUDTValue(0));
-			System.out.println("row = " + row.getString(0));
-			
-		}
-		
-		System.out.println("resultSet = " + resultSet);
-		
-		AddressImpl addr = new AddressImpl();
-		addr.street = "1 st";
-		addr.city = "San Jose";
-		
-		AccountImpl acc = new AccountImpl();
-		acc.id = 123L;
-		acc.address = addr;
+		session.update().set(account::addressNoMapping, addressNoMapping).where(account::id, eq(777L)).sync();
 
-		csession.upsert(acc).sync();
+		found = session.select(account::addressNoMapping).where(account::id, eq(777L)).sync().findFirst().get()._1;
 		
-		//csession.insert(account::setId, 123L).value(account::getAddress, addr).sync();
+		Assert.assertEquals(addressNoMapping.getType(), found.getType());
+		Assert.assertEquals(addressNoMapping.getString("line_1"), found.getString("line_1"));
+		Assert.assertEquals(addressNoMapping.getString("city"), found.getString("city"));
+
 		
-		csession.select(account.address()::street).sync().forEach(System.out::println);
+		// INSERT
+		
+		session.update().set(account::addressNoMapping, null).where(account::id, eq(777L)).sync();
+
+		found = session.select(account::addressNoMapping).where(account::id, eq(777L)).sync().findFirst().get()._1;
+		Assert.assertNull(found);
+		
+		// DELETE
+		
+		session.delete().where(account::id, eq(777L)).sync();
+		
+		Long cnt = session.count().where(account::id, eq(777L)).sync();
+		Assert.assertEquals(Long.valueOf(0), cnt);
 	}
+
 }

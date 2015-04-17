@@ -40,9 +40,13 @@ public final class TupleColumnValueProvider implements ColumnValueProvider {
 		int columnIndex = property.getOrdinal();
 		
 		TupleValue source = (TupleValue) sourceObj;
-		TupleType tupleType = source.getType();
-
+		
 		ByteBuffer bytes = source.getBytesUnsafe(columnIndex);
+		if (bytes == null) {
+			return null;
+		}
+
+		TupleType tupleType = source.getType();
 		DataType fieldType = tupleType.getComponentTypes().get(columnIndex);
 
 		Object value = fieldType.deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);

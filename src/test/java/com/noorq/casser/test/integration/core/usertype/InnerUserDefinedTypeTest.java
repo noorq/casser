@@ -34,12 +34,12 @@ public class InnerUserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 	static Customer customer = Casser.dsl(Customer.class);
 	static AddressInformation accountInformation = Casser.dsl(AddressInformation.class);
 	
-	static CasserSession csession;
+	static CasserSession session;
 	
 	
 	@BeforeClass
 	public static void beforeTest() {
-		csession = Casser.init(getSession()).showCql().add(Customer.class).autoCreateDrop().get();
+		session = Casser.init(getSession()).showCql().add(Customer.class).autoCreateDrop().get();
 	}
 	
 	@Test
@@ -92,23 +92,23 @@ public class InnerUserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 			
 		};
 		
-		csession.insert()
+		session.insert()
 			.value(customer::id, id)
 			.value(customer::addressInformation, ai)
 			.sync();
 		
-		String cql = csession.update()
+		String cql = session.update()
 			.set(customer.addressInformation().address()::street, "3 st")
 			.where(customer::id, eq(id)).cql();
 
 		System.out.println("At the time when this test was written Cassandra did not support querties like this: " + cql);
 
-		csession.update()
+		session.update()
 			.set(customer::addressInformation, ai)
 			.where(customer::id, eq(id))
 			.sync();
 
-		String street = csession.select(customer.addressInformation().address()::street)
+		String street = session.select(customer.addressInformation().address()::street)
 			.where(customer::id, eq(id))
 			.sync()
 			.findFirst()
@@ -116,9 +116,9 @@ public class InnerUserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		
 		Assert.assertEquals("1 st", street);
 		
-		csession.delete().where(customer::id, eq(id)).sync();
+		session.delete().where(customer::id, eq(id)).sync();
 	
-		Long cnt = csession.count().where(customer::id, eq(id)).sync();
+		Long cnt = session.count().where(customer::id, eq(id)).sync();
 		
 		Assert.assertEquals(Long.valueOf(0), cnt);
 		

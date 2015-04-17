@@ -30,7 +30,7 @@ public interface Account {
 	@Column
 	Address address();
 	
-	@Types.UDT("address0")
+	@Types.UDT("address")
 	@Column
 	UDTValue addressNoMapping();
 	

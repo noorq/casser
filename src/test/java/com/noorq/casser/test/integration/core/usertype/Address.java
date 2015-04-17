@@ -22,7 +22,7 @@ import com.noorq.casser.mapping.annotation.Column;
 import com.noorq.casser.mapping.annotation.Types;
 import com.noorq.casser.mapping.annotation.UDT;
 
-@UDT("address0")
+@UDT("address")
 public interface Address {
 
 	@Column(ordinal=0, value="line_1")

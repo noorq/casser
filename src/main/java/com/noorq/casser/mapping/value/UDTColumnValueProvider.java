@@ -43,9 +43,12 @@ public final class UDTColumnValueProvider implements ColumnValueProvider {
 		
 		String name = property.getColumnName().getName();
 		
-		DataType fieldType = userType.getFieldType(name);
-		
 		ByteBuffer bytes = source.getBytesUnsafe(name);
+		if (bytes == null) {
+			return null;
+		}
+		
+		DataType fieldType = userType.getFieldType(name);
 		Object value = fieldType.deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);
 		
 		if (value != null) {
