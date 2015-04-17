@@ -1,7 +1,7 @@
 # casser            ![build](https://travis-ci.org/noorq/casser.svg?branch=master)
 Cutting edge Java 8 Cassandra Client
 
-Current status: Active development
+Current status: Almost all features are implemented, stabilizing, testing
 
 ### Features
 
