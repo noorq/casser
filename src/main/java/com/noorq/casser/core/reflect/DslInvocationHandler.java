@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.TupleType;
 import com.datastax.driver.core.TupleValue;
 import com.datastax.driver.core.UDTValue;
@@ -114,8 +115,11 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			
 			if (type instanceof DTDataType) {
 				DTDataType dataType = (DTDataType) type;
+				DataType dt = dataType.getDataType();
 				
-				if (dataType.getDataType() instanceof TupleType) {
+				switch(dt.getName()) {
+				
+				case TUPLE:
 					
 					Object childDsl = tupleMap.get(method);
 					
@@ -123,7 +127,23 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 						return childDsl;
 					}
 					
+					break;
+					
+				case SET:
+					return new SetDsl(new CasserPropertyNode(prop, parent));
+					
+				case LIST:
+					return new ListDsl(new CasserPropertyNode(prop, parent));
+
+				case MAP:
+					return new MapDsl(new CasserPropertyNode(prop, parent));
+
+				default:
+					break;
+					
 				}
+				
+
 			}
 			
 			throw new DslPropertyException(new CasserPropertyNode(prop, parent));	

@@ -37,12 +37,28 @@ public final class CasserPropertyNode implements Iterable<CasserProperty> {
 
 	public String getColumnName() {
 		if (next.isPresent()) {
+
 			List<String> columnNames = new ArrayList<String>();
 			for (CasserProperty p : this) {
 				columnNames.add(p.getColumnName().toCql(true));
 			}
 			Collections.reverse(columnNames);
-			return columnNames.stream().collect(Collectors.joining("."));
+			
+			if (prop instanceof CasserNamedProperty) {
+				int size = columnNames.size();
+				StringBuilder str = new StringBuilder();
+				for (int i = 0; i != size -1; ++i) {
+					if (str.length() != 0) {
+						str.append(".");
+					}
+					str.append(columnNames.get(i));
+				}
+				str.append("[").append(columnNames.get(size-1)).append("]");
+				return str.toString();
+			}
+			else {
+				return columnNames.stream().collect(Collectors.joining("."));
+			}
 		}
 		else {
 			return prop.getColumnName().toCql();

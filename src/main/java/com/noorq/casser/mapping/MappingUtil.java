@@ -22,7 +22,10 @@ import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.Getter;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.core.reflect.DslExportable;
+import com.noorq.casser.core.reflect.ListDsl;
+import com.noorq.casser.core.reflect.MapDsl;
 import com.noorq.casser.core.reflect.MapExportable;
+import com.noorq.casser.core.reflect.SetDsl;
 import com.noorq.casser.mapping.annotation.Index;
 import com.noorq.casser.mapping.annotation.Table;
 import com.noorq.casser.mapping.annotation.Tuple;
@@ -195,6 +198,21 @@ public final class MappingUtil {
 				return e.getParentDslCasserPropertyNode();
 			}
 			
+			else if (childDsl instanceof MapDsl) {
+				MapDsl mapDsl = (MapDsl) childDsl;
+				return mapDsl.getParent();
+			}
+
+			else if (childDsl instanceof ListDsl) {
+				ListDsl listDsl = (ListDsl) childDsl;
+				return listDsl.getParent();
+			}
+
+			else if (childDsl instanceof SetDsl) {
+				SetDsl setDsl = (SetDsl) childDsl;
+				return setDsl.getParent();
+			}
+
 			throw new CasserMappingException(
 					"getter must reference to the dsl object " + getter);
 			

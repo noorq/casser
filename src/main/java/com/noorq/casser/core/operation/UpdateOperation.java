@@ -309,7 +309,6 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		
 		Objects.requireNonNull(mapGetter, "mapGetter is empty");
 		Objects.requireNonNull(key, "key is empty");
-		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(mapGetter);
 		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());

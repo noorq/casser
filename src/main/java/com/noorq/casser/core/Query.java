@@ -17,6 +17,7 @@ package com.noorq.casser.core;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.datastax.driver.core.querybuilder.BindMarker;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
@@ -72,12 +73,31 @@ public final class Query {
 		return new Postulate<V>(Operator.IN, vals);
 	}
 	
-    public static <K,V> Getter<V> get(Getter<List<V>> listGetter, int index) {
-    	return null;
+    public static <K,V> Getter<V> getIdx(Getter<List<V>> listGetter, int index) {
+    	Objects.requireNonNull(listGetter, "listGetter is null");
+    	
+    	return new Getter<V>() {
+
+			@Override
+			public V get() {
+				return listGetter.get().get(index);
+			}
+    		
+    	};
     }
 	
-    public static <K,V> Getter<V> get(Getter<Map<K, V>> mapGetter, K k) {
-    	return null;
+    public static <K, V> Getter<V> get(Getter<Map<K, V>> mapGetter, K k) {
+    	Objects.requireNonNull(mapGetter, "mapGetter is null");
+    	Objects.requireNonNull(k, "key is null");
+    	
+    	return new Getter<V>() {
+
+			@Override
+			public V get() {
+				return mapGetter.get().get(k);
+			}
+    		
+    	};
     }
     
     

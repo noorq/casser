@@ -13,12 +13,11 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.test.integration.core.collection;
+package com.noorq.casser.test.unit.core.dsl;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import com.datastax.driver.core.DataType.Name;
 import com.noorq.casser.mapping.annotation.PartitionKey;
@@ -26,18 +25,18 @@ import com.noorq.casser.mapping.annotation.Table;
 import com.noorq.casser.mapping.annotation.Types;
 
 @Table
-public interface Customer {
+public interface AccountWithCollections {
 
 	@PartitionKey
-	UUID id();
+	long id();
 	
 	@Types.Set(Name.TEXT)
 	Set<String> aliases();
 	
 	@Types.List(Name.TEXT)
-	List<String> names();
+	List<String> name();
 	
 	@Types.Map(key=Name.TEXT, value=Name.TEXT)
 	Map<String, String> properties();
-
+	
 }

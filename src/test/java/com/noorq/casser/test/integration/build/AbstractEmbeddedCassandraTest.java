@@ -65,9 +65,15 @@ public abstract class AbstractEmbeddedCassandraTest {
 		KeyspaceMetadata kmd = cluster.getMetadata().getKeyspace(keyspace);
 		if (kmd == null) { 
 			session = cluster.connect();
-			session.execute("CREATE KEYSPACE " + keyspace
-					+ " WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};");
-			session.execute("USE " + keyspace + ";");
+			
+			String cql = "CREATE KEYSPACE " + keyspace
+			+ " WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};";
+			System.out.println(cql + "\n");
+			session.execute(cql);
+			
+			cql = "USE " + keyspace + ";";
+			System.out.println(cql + "\n");
+			session.execute(cql);
 		} else {
 			session = cluster.connect(keyspace);
 		}
