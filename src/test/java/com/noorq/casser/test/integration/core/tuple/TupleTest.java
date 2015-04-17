@@ -23,6 +23,9 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.TupleType;
+import com.datastax.driver.core.TupleValue;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.CasserSession;
 import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
@@ -124,6 +127,65 @@ public class TupleTest extends AbstractEmbeddedCassandraTest {
 		long cnt = session.select(album::info).where(album::id, eq(123)).sync().count();
 		Assert.assertEquals(0, cnt);
 		
+		
+	}
+	
+	@Test
+	public void testNoMapping() {
+		
+		TupleType tupleType = TupleType.of(DataType.text(), DataType.text());
+		TupleValue info = tupleType.newValue();
+		
+		info.setString(0, "Cassandra");
+		info.setString(1, "San Jose");
+		
+		// CREATE (C)
+		
+		session.insert()
+		.value(album::id, 555)
+		.value(album::infoNoMapping, info)
+		.sync();
+		
+		// READ (R)
+		
+		TupleValue actual = session.select(album::infoNoMapping).where(album::id, eq(555)).sync().findFirst().get()._1;
+		
+		Assert.assertEquals(info.getString(0), actual.getString(0));
+		Assert.assertEquals(info.getString(1), actual.getString(1));
+		
+		// UPDATE (U)
+		
+		TupleValue expected = tupleType.newValue();
+		
+		expected.setString(0, "Casser");
+		expected.setString(1, "Los Altos");
+		
+		session.update()
+		.set(album::infoNoMapping, expected)
+		.where(album::id, eq(555))
+		.sync();	
+		
+		actual = session.select(album::infoNoMapping).where(album::id, eq(555)).sync().findFirst().get()._1;
+		
+		Assert.assertEquals(expected.getString(0), actual.getString(0));
+		Assert.assertEquals(expected.getString(1), actual.getString(1));
+		
+		// INSERT (I) 
+		// let's insert null ;)
+		
+		session.update()
+		.set(album::infoNoMapping, null)
+		.where(album::id, eq(555))
+		.sync();	
+		
+		actual = session.select(album::infoNoMapping).where(album::id, eq(555)).sync().findFirst().get()._1;
+		Assert.assertNull(actual);
+		
+		// DELETE (D)
+		session.delete().where(album::id, eq(555)).sync();
+
+		long cnt = session.select(album::infoNoMapping).where(album::id, eq(555)).sync().count();
+		Assert.assertEquals(0, cnt);
 		
 	}
 	

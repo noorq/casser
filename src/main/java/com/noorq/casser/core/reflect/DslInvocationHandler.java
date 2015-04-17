@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.datastax.driver.core.TupleType;
+import com.datastax.driver.core.TupleValue;
 import com.datastax.driver.core.UDTValue;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.mapping.CasserEntity;
@@ -53,10 +54,11 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			map.put(prop.getGetterMethod(), prop);
 			
 			AbstractDataType type = prop.getDataType();
+			Class<?> javaType = prop.getJavaType();
 			
-			if (type instanceof UDTDataType && !UDTValue.class.isAssignableFrom(prop.getJavaType())) {
-				
-				Object childDsl = Casser.dsl(prop.getJavaType(), classLoader,
+			if (type instanceof UDTDataType && !UDTValue.class.isAssignableFrom(javaType)) {
+
+				Object childDsl = Casser.dsl(javaType, classLoader,
 						Optional.of(new CasserPropertyNode(prop, parent)));
 				
 				udtMap.put(prop.getGetterMethod(), childDsl);
@@ -65,9 +67,9 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 			if (type instanceof DTDataType) {
 				DTDataType dataType = (DTDataType) type;
 				
-				if (dataType.getDataType() instanceof TupleType) {
+				if (dataType.getDataType() instanceof TupleType && !TupleValue.class.isAssignableFrom(javaType)) {
 					
-					Object childDsl = Casser.dsl(prop.getJavaType(), classLoader,
+					Object childDsl = Casser.dsl(javaType, classLoader,
 							Optional.of(new CasserPropertyNode(prop, parent)));
 					
 					tupleMap.put(prop.getGetterMethod(), childDsl);

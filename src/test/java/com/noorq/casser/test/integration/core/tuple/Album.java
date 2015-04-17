@@ -15,8 +15,12 @@
  */
 package com.noorq.casser.test.integration.core.tuple;
 
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.TupleValue;
+import com.noorq.casser.mapping.annotation.Column;
 import com.noorq.casser.mapping.annotation.PartitionKey;
 import com.noorq.casser.mapping.annotation.Table;
+import com.noorq.casser.mapping.annotation.Types;
 
 @Table
 public interface Album {
@@ -25,5 +29,9 @@ public interface Album {
 	int id();
 	
 	AlbumInformation info();
+	
+	@Types.Tuple({DataType.Name.TEXT, DataType.Name.TEXT})
+	@Column(ordinal=1)
+	TupleValue infoNoMapping();
 	
 }
