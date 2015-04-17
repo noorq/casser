@@ -15,10 +15,10 @@
  */
 package com.noorq.casser.test.integration.core.index;
 
+import com.noorq.casser.mapping.annotation.Column;
 import com.noorq.casser.mapping.annotation.Index;
-import com.noorq.casser.mapping.annotation.column.Column;
-import com.noorq.casser.mapping.annotation.column.PartitionKey;
-import com.noorq.casser.mapping.annotation.entity.Table;
+import com.noorq.casser.mapping.annotation.PartitionKey;
+import com.noorq.casser.mapping.annotation.Table;
 
 @Table("books")
 public interface Book {

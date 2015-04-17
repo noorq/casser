@@ -24,9 +24,9 @@ import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.core.reflect.DslExportable;
 import com.noorq.casser.core.reflect.MapExportable;
 import com.noorq.casser.mapping.annotation.Index;
-import com.noorq.casser.mapping.annotation.entity.Table;
-import com.noorq.casser.mapping.annotation.entity.Tuple;
-import com.noorq.casser.mapping.annotation.entity.UDT;
+import com.noorq.casser.mapping.annotation.Table;
+import com.noorq.casser.mapping.annotation.Tuple;
+import com.noorq.casser.mapping.annotation.UDT;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.DslPropertyException;
 

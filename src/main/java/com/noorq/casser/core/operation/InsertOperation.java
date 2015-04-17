@@ -27,13 +27,13 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.core.Getter;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
-import com.noorq.casser.core.tuple.Fun;
-import com.noorq.casser.core.tuple.Fun.Tuple2;
 import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.value.BeanColumnValueProvider;
 import com.noorq.casser.support.CasserMappingException;
+import com.noorq.casser.support.Fun;
+import com.noorq.casser.support.Fun.Tuple2;
 
 public final class InsertOperation extends AbstractOperation<ResultSet, InsertOperation> {
 

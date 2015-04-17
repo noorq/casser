@@ -30,11 +30,6 @@ import com.noorq.casser.core.operation.InsertOperation;
 import com.noorq.casser.core.operation.SelectOperation;
 import com.noorq.casser.core.operation.UpdateOperation;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
-import com.noorq.casser.core.tuple.Fun;
-import com.noorq.casser.core.tuple.Fun.Tuple1;
-import com.noorq.casser.core.tuple.Fun.Tuple2;
-import com.noorq.casser.core.tuple.Fun.Tuple6;
-import com.noorq.casser.core.tuple.Mappers;
 import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
@@ -42,6 +37,10 @@ import com.noorq.casser.mapping.value.ColumnValueProvider;
 import com.noorq.casser.mapping.value.RowColumnValueProvider;
 import com.noorq.casser.mapping.value.StatementColumnValuePreparer;
 import com.noorq.casser.mapping.value.ValueProviderMap;
+import com.noorq.casser.support.Fun;
+import com.noorq.casser.support.Fun.Tuple1;
+import com.noorq.casser.support.Fun.Tuple2;
+import com.noorq.casser.support.Fun.Tuple6;
 
 public class CasserSession extends AbstractSessionOperations implements Closeable {
 

@@ -22,8 +22,8 @@ import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.CasserSession;
 import com.noorq.casser.core.Operator;
 import com.noorq.casser.core.operation.PreparedStreamOperation;
-import com.noorq.casser.core.tuple.Fun;
-import com.noorq.casser.core.tuple.Fun.Tuple1;
+import com.noorq.casser.support.Fun;
+import com.noorq.casser.support.Fun.Tuple1;
 
 public class Example {
 

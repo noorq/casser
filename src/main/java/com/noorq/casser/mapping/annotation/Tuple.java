@@ -13,7 +13,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping.annotation.entity;
+package com.noorq.casser.mapping.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -24,10 +24,6 @@ import java.lang.annotation.Target;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
-public @interface UDT {
-
-	String value() default "";
-
-	boolean forceQuote() default false;
+public @interface Tuple {
 	
 }

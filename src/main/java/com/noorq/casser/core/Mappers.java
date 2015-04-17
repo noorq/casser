@@ -13,7 +13,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.core.tuple;
+package com.noorq.casser.core;
 
 import java.util.function.Function;
 
@@ -21,6 +21,7 @@ import com.datastax.driver.core.Row;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
+import com.noorq.casser.support.Fun;
 
 public final class Mappers {
 

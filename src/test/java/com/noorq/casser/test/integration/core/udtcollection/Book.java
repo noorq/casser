@@ -17,9 +17,9 @@ package com.noorq.casser.test.integration.core.udtcollection;
 
 import java.util.List;
 
-import com.noorq.casser.mapping.annotation.column.Column;
-import com.noorq.casser.mapping.annotation.column.PartitionKey;
-import com.noorq.casser.mapping.annotation.entity.Table;
+import com.noorq.casser.mapping.annotation.Column;
+import com.noorq.casser.mapping.annotation.PartitionKey;
+import com.noorq.casser.mapping.annotation.Table;
 
 @Table
 public interface Book {
