@@ -17,8 +17,10 @@ package com.noorq.casser.test.integration.core.tuple;
 
 
 
-import org.junit.BeforeClass;
+import static com.noorq.casser.core.Query.eq;
 
+import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.noorq.casser.core.Casser;
@@ -39,6 +41,97 @@ public class InnerTupleTest extends AbstractEmbeddedCassandraTest {
 	@Test
 	public void testPrint() {
 		System.out.println(photoAlbum);
+	}
+	
+	
+	@Test
+	public void testCruid() {
+		
+		Photo photo = new Photo() {
+
+			@Override
+			public byte[] blob() {
+				return "jpeg".getBytes();
+			}
+			
+		};
+		
+		PhotoFolder folder = new PhotoFolder() {
+
+			@Override
+			public String name() {
+				return "first";
+			}
+
+			@Override
+			public Photo photo() {
+				return photo;
+			}
+			
+		};
+		
+		// CREATE (C)
+		
+		session.insert()
+			.value(photoAlbum::id, 123)
+			.value(photoAlbum::folder, folder)
+			.sync();
+		
+		// READ (R)
+		
+		PhotoFolder actual = session.select(photoAlbum::folder).where(photoAlbum::id, eq(123)).sync().findFirst().get()._1;
+		
+		Assert.assertEquals(folder.name(), actual.name());
+		
+		// UPDATE (U)
+		
+		// unfortunately this is not working right now in Cassandra, can not update a single column in tuple :(
+		//session.update()
+		//	.set(photoAlbum.folder().photo()::blob, "Casser".getBytes())
+		//	.where(photoAlbum::id, eq(123))
+		//	.sync();
+		
+		PhotoFolder expected = new PhotoFolder() {
+
+			@Override
+			public String name() {
+				return "seconds";
+			}
+
+			@Override
+			public Photo photo() {
+				return photo;
+			}
+			
+		};
+		
+		session.update()
+			.set(photoAlbum::folder, expected)
+			.where(photoAlbum::id, eq(123))
+			.sync();		
+		
+		actual = session.select(photoAlbum::folder).where(photoAlbum::id, eq(123)).sync().findFirst().get()._1;
+		
+		Assert.assertEquals(expected.name(), actual.name());
+		
+		// INSERT (I) 
+		// let's insert null ;)
+		
+		session.update()
+		.set(photoAlbum::folder, null)
+		.where(photoAlbum::id, eq(123))
+		.sync();	
+		
+		actual = session.select(photoAlbum::folder).where(photoAlbum::id, eq(123)).sync().findFirst().get()._1;
+		Assert.assertNull(actual);
+		
+		// DELETE (D)
+		session.delete().where(photoAlbum::id, eq(123)).sync();
+
+		long cnt = session.select(photoAlbum::folder).where(photoAlbum::id, eq(123)).sync().count();
+		Assert.assertEquals(0, cnt);
+		
+		
 	}
 	
 	
