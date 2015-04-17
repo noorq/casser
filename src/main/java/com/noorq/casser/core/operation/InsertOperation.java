@@ -27,7 +27,8 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.core.Getter;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
-import com.noorq.casser.core.tuple.Tuple2;
+import com.noorq.casser.core.tuple.Fun;
+import com.noorq.casser.core.tuple.Fun.Tuple2;
 import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.MappingUtil;
@@ -38,7 +39,7 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
 
 	private CasserEntity entity;
 	
-	private final List<Tuple2<CasserPropertyNode, Object>> values = new ArrayList<Tuple2<CasserPropertyNode, Object>>();
+	private final List<Fun.Tuple2<CasserPropertyNode, Object>> values = new ArrayList<Fun.Tuple2<CasserPropertyNode, Object>>();
 	private boolean ifNotExists;
 
 	private int[] ttl;

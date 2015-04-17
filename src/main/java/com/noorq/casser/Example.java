@@ -22,8 +22,8 @@ import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.CasserSession;
 import com.noorq.casser.core.Operator;
 import com.noorq.casser.core.operation.PreparedStreamOperation;
-import com.noorq.casser.core.tuple.Tuple1;
-import com.noorq.casser.core.tuple.Tuple2;
+import com.noorq.casser.core.tuple.Fun;
+import com.noorq.casser.core.tuple.Fun.Tuple1;
 
 public class Example {
 
@@ -33,7 +33,7 @@ public class Example {
 	
 	CasserSession session = Casser.connect(cluster).use("test").add(user).autoUpdate().get();
 	
-	public static User mapUser(final Tuple2<String, Integer> t) {
+	public static User mapUser(final Fun.Tuple2<String, Integer> t) {
 		
 		return new User() {
 

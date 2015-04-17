@@ -30,13 +30,11 @@ import com.noorq.casser.core.operation.InsertOperation;
 import com.noorq.casser.core.operation.SelectOperation;
 import com.noorq.casser.core.operation.UpdateOperation;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
-import com.noorq.casser.core.tuple.Tuple1;
-import com.noorq.casser.core.tuple.Tuple2;
-import com.noorq.casser.core.tuple.Tuple3;
-import com.noorq.casser.core.tuple.Tuple4;
-import com.noorq.casser.core.tuple.Tuple5;
-import com.noorq.casser.core.tuple.Tuple6;
-import com.noorq.casser.core.tuple.Tuple7;
+import com.noorq.casser.core.tuple.Fun;
+import com.noorq.casser.core.tuple.Fun.Tuple1;
+import com.noorq.casser.core.tuple.Fun.Tuple2;
+import com.noorq.casser.core.tuple.Fun.Tuple6;
+import com.noorq.casser.core.tuple.Mappers;
 import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
@@ -130,11 +128,11 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		return new SelectOperation<E>(this, Casser.entity(entityClass), rowMapper);
 	}
 	
-	public <V1> SelectOperation<Tuple1<V1>> select(Getter<V1> getter1) {
+	public <V1> SelectOperation<Fun.Tuple1<V1>> select(Getter<V1> getter1) {
 		Objects.requireNonNull(getter1, "field 1 is empty");
 		
 		CasserPropertyNode p1 = MappingUtil.resolveMappingProperty(getter1);
-		return new SelectOperation<Tuple1<V1>>(this, new Tuple1.Mapper<V1>(getValueProvider(), p1), p1);
+		return new SelectOperation<Tuple1<V1>>(this, new Mappers.Mapper1<V1>(getValueProvider(), p1), p1);
 	}
 
 	public <V1, V2> SelectOperation<Tuple2<V1, V2>> select(Getter<V1> getter1, Getter<V2> getter2) {
@@ -143,10 +141,10 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		
 		CasserPropertyNode p1 = MappingUtil.resolveMappingProperty(getter1);
 		CasserPropertyNode p2 = MappingUtil.resolveMappingProperty(getter2);
-		return new SelectOperation<Tuple2<V1, V2>>(this, new Tuple2.Mapper<V1, V2>(getValueProvider(), p1, p2), p1, p2);
+		return new SelectOperation<Fun.Tuple2<V1, V2>>(this, new Mappers.Mapper2<V1, V2>(getValueProvider(), p1, p2), p1, p2);
 	}
 
-	public <V1, V2, V3> SelectOperation<Tuple3<V1, V2, V3>> select(Getter<V1> getter1, Getter<V2> getter2, Getter<V3> getter3) {
+	public <V1, V2, V3> SelectOperation<Fun.Tuple3<V1, V2, V3>> select(Getter<V1> getter1, Getter<V2> getter2, Getter<V3> getter3) {
 		Objects.requireNonNull(getter1, "field 1 is empty");
 		Objects.requireNonNull(getter2, "field 2 is empty");
 		Objects.requireNonNull(getter3, "field 3 is empty");
@@ -154,10 +152,10 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		CasserPropertyNode p1 = MappingUtil.resolveMappingProperty(getter1);
 		CasserPropertyNode p2 = MappingUtil.resolveMappingProperty(getter2);
 		CasserPropertyNode p3 = MappingUtil.resolveMappingProperty(getter3);
-		return new SelectOperation<Tuple3<V1, V2, V3>>(this, new Tuple3.Mapper<V1, V2, V3>(getValueProvider(), p1, p2, p3), p1, p2, p3);
+		return new SelectOperation<Fun.Tuple3<V1, V2, V3>>(this, new Mappers.Mapper3<V1, V2, V3>(getValueProvider(), p1, p2, p3), p1, p2, p3);
 	}
 
-	public <V1, V2, V3, V4> SelectOperation<Tuple4<V1, V2, V3, V4>> select(
+	public <V1, V2, V3, V4> SelectOperation<Fun.Tuple4<V1, V2, V3, V4>> select(
 			Getter<V1> getter1, Getter<V2> getter2, Getter<V3> getter3, Getter<V4> getter4) {
 		Objects.requireNonNull(getter1, "field 1 is empty");
 		Objects.requireNonNull(getter2, "field 2 is empty");
@@ -168,10 +166,10 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		CasserPropertyNode p2 = MappingUtil.resolveMappingProperty(getter2);
 		CasserPropertyNode p3 = MappingUtil.resolveMappingProperty(getter3);
 		CasserPropertyNode p4 = MappingUtil.resolveMappingProperty(getter4);
-		return new SelectOperation<Tuple4<V1, V2, V3, V4>>(this, new Tuple4.Mapper<V1, V2, V3, V4>(getValueProvider(), p1, p2, p3, p4), p1, p2, p3, p4);
+		return new SelectOperation<Fun.Tuple4<V1, V2, V3, V4>>(this, new Mappers.Mapper4<V1, V2, V3, V4>(getValueProvider(), p1, p2, p3, p4), p1, p2, p3, p4);
 	}
 
-	public <V1, V2, V3, V4, V5> SelectOperation<Tuple5<V1, V2, V3, V4, V5>> select(
+	public <V1, V2, V3, V4, V5> SelectOperation<Fun.Tuple5<V1, V2, V3, V4, V5>> select(
 			Getter<V1> getter1, Getter<V2> getter2, Getter<V3> getter3, Getter<V4> getter4, Getter<V5> getter5) {
 		Objects.requireNonNull(getter1, "field 1 is empty");
 		Objects.requireNonNull(getter2, "field 2 is empty");
@@ -184,12 +182,12 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		CasserPropertyNode p3 = MappingUtil.resolveMappingProperty(getter3);
 		CasserPropertyNode p4 = MappingUtil.resolveMappingProperty(getter4);
 		CasserPropertyNode p5 = MappingUtil.resolveMappingProperty(getter5);
-		return new SelectOperation<Tuple5<V1, V2, V3, V4, V5>>(this, 
-				new Tuple5.Mapper<V1, V2, V3, V4, V5>(getValueProvider(), p1, p2, p3, p4, p5), 
+		return new SelectOperation<Fun.Tuple5<V1, V2, V3, V4, V5>>(this, 
+				new Mappers.Mapper5<V1, V2, V3, V4, V5>(getValueProvider(), p1, p2, p3, p4, p5), 
 				p1, p2, p3, p4, p5);
 	}
 	
-	public <V1, V2, V3, V4, V5, V6> SelectOperation<Tuple6<V1, V2, V3, V4, V5, V6>> select(
+	public <V1, V2, V3, V4, V5, V6> SelectOperation<Fun.Tuple6<V1, V2, V3, V4, V5, V6>> select(
 			Getter<V1> getter1, Getter<V2> getter2, Getter<V3> getter3, 
 			Getter<V4> getter4, Getter<V5> getter5, Getter<V6> getter6) {
 		Objects.requireNonNull(getter1, "field 1 is empty");
@@ -206,11 +204,11 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		CasserPropertyNode p5 = MappingUtil.resolveMappingProperty(getter5);
 		CasserPropertyNode p6 = MappingUtil.resolveMappingProperty(getter6);
 		return new SelectOperation<Tuple6<V1, V2, V3, V4, V5, V6>>(this, 
-				new Tuple6.Mapper<V1, V2, V3, V4, V5, V6>(getValueProvider(), p1, p2, p3, p4, p5, p6), 
+				new Mappers.Mapper6<V1, V2, V3, V4, V5, V6>(getValueProvider(), p1, p2, p3, p4, p5, p6), 
 				p1, p2, p3, p4, p5, p6);
 	}
 
-	public <V1, V2, V3, V4, V5, V6, V7> SelectOperation<Tuple7<V1, V2, V3, V4, V5, V6, V7>> select(
+	public <V1, V2, V3, V4, V5, V6, V7> SelectOperation<Fun.Tuple7<V1, V2, V3, V4, V5, V6, V7>> select(
 			Getter<V1> getter1, Getter<V2> getter2, Getter<V3> getter3, 
 			Getter<V4> getter4, Getter<V5> getter5, Getter<V6> getter6,
 			Getter<V7> getter7) {
@@ -229,8 +227,8 @@ public class CasserSession extends AbstractSessionOperations implements Closeabl
 		CasserPropertyNode p5 = MappingUtil.resolveMappingProperty(getter5);
 		CasserPropertyNode p6 = MappingUtil.resolveMappingProperty(getter6);
 		CasserPropertyNode p7 = MappingUtil.resolveMappingProperty(getter7);
-		return new SelectOperation<Tuple7<V1, V2, V3, V4, V5, V6, V7>>(this, 
-				new Tuple7.Mapper<V1, V2, V3, V4, V5, V6, V7>(
+		return new SelectOperation<Fun.Tuple7<V1, V2, V3, V4, V5, V6, V7>>(this, 
+				new Mappers.Mapper7<V1, V2, V3, V4, V5, V6, V7>(
 				getValueProvider(), 
 				p1, p2, p3, p4, p5, p6, p7), 
 				p1, p2, p3, p4, p5, p6, p7);
