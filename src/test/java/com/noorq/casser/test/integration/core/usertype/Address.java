@@ -19,7 +19,7 @@ import java.util.Set;
 
 import com.datastax.driver.core.DataType;
 import com.noorq.casser.mapping.annotation.Column;
-import com.noorq.casser.mapping.annotation.DataTypeName;
+import com.noorq.casser.mapping.annotation.Types;
 import com.noorq.casser.mapping.annotation.UDT;
 
 @UDT("address0")
@@ -38,7 +38,7 @@ public interface Address {
 	String country();
 	
 	@Column
-	@DataTypeName(value = DataType.Name.SET, types={DataType.Name.TEXT})
+	@Types.Set(DataType.Name.TEXT)
 	Set<String> phones();
 
 }

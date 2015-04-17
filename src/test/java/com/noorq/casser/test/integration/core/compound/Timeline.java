@@ -19,12 +19,11 @@ package com.noorq.casser.test.integration.core.compound;
 import java.util.Date;
 import java.util.UUID;
 
-import com.datastax.driver.core.DataType.Name;
 import com.noorq.casser.mapping.annotation.ClusteringColumn;
 import com.noorq.casser.mapping.annotation.Column;
-import com.noorq.casser.mapping.annotation.DataTypeName;
 import com.noorq.casser.mapping.annotation.PartitionKey;
 import com.noorq.casser.mapping.annotation.Table;
+import com.noorq.casser.mapping.annotation.Types;
 
 @Table
 public interface Timeline {
@@ -33,7 +32,7 @@ public interface Timeline {
 	UUID userId();
 	
 	@ClusteringColumn(ordinal=1)
-	@DataTypeName(Name.TIMEUUID)
+	@Types.Timeuuid
 	Date timestamp();
 	
 	@Column(ordinal=2)
