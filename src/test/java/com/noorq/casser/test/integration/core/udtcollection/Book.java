@@ -32,7 +32,7 @@ public interface Book {
 
 	Set<Author> reviewers();
 	
-	Map<String, Section> contents();
+	Map<Integer, Section> contents();
 	
 	Map<Section, String> notes();
 	

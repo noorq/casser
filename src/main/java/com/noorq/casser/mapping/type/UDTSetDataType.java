@@ -42,6 +42,10 @@ public final class UDTSetDataType extends AbstractDataType {
 		return new Class<?>[] { udtClass };
 	}
 	
+	public IdentityName getUdtName() {
+		return udtName;
+	}
+
 	@Override
 	public void addColumn(Create create, IdentityName columnName) {
 		ensureSimpleColumn(columnName);

@@ -15,6 +15,9 @@
  */
 package com.noorq.casser.test.integration.core.udtcollection;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -38,5 +41,72 @@ public class UDTCollectionTest extends AbstractEmbeddedCassandraTest {
 		System.out.println(book);	
 	}
 	
+	@Test
+	public void testSetCRUID() {
+		
+		int id = 555;
+		
+		// CREATE
+		
+		Set<Author> reviewers = new HashSet<Author>();
+		reviewers.add(new AuthorImpl("Alex", "San Jose"));
+		reviewers.add(new AuthorImpl("Bob", "San Francisco"));
+		
+		session.insert()
+		.value(book::id, id)
+		.value(book::reviewers, reviewers)
+		.sync();
+		
+		
+		
+	}
+	
+	
+	private static final class AuthorImpl implements Author {
+
+		String name;
+		String city;
+		
+		AuthorImpl(String name, String city) {
+			this.name = name;
+			this.city = city;
+		}
+		
+		@Override
+		public String name() {
+			return name;
+		}
+
+		@Override
+		public String city() {
+			return city;
+		}
+		
+	}
+
+	private static final class SectionImpl implements Section {
+
+		String title;
+		int page;
+		
+		SectionImpl(String title, int page) {
+			this.title = title;
+			this.page = page;
+		}
+		
+		@Override
+		public String title() {
+			return title;
+		}
+
+		@Override
+		public int page() {
+			return page;
+		}
+		
+	}
+	
 	
 }
+
+
