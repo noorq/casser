@@ -58,6 +58,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	
 	protected List<Ordering> ordering = null;
 	protected Integer limit = null;
+	protected boolean allowFiltering = false;
 	
 	public SelectOperation(AbstractSessionOperations sessionOperations, 
 			ColumnValueProvider valueProvider) {
@@ -184,6 +185,11 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		return this;
 	}
 	
+	public SelectOperation<E> allowFiltering() {
+		this.allowFiltering = true;
+		return this;
+	}
+	
 	@Override
 	public BuiltStatement buildStatement() {
 		
@@ -226,6 +232,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		
 		if (ifFilters != null && !ifFilters.isEmpty()) {
 			logger.warn("onlyIf conditions " + ifFilters + " will be ignored in the statement " + select);
+		}
+		
+		if (allowFiltering) {
+			select.allowFiltering();
 		}
 		
 		return select;
