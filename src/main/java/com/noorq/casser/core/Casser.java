@@ -16,6 +16,7 @@
 package com.noorq.casser.core;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -37,7 +38,17 @@ public final class Casser {
 	
 	private static final ConcurrentMap<Class<?>, Object> dslCache = new  ConcurrentHashMap<Class<?>, Object>();
 	
+	private static volatile CasserSession session;
+	
 	private Casser() {
+	}
+	
+	public static CasserSession session() {
+		return Objects.requireNonNull(session, "session is not initialized");
+	}
+	
+	protected static void register(CasserSession newSession) {
+		session = newSession;
 	}
 	
 	public static CasserSettings settings() {

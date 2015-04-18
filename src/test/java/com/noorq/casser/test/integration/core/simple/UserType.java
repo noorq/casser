@@ -13,24 +13,8 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.test.integration.core.prepared;
+package com.noorq.casser.test.integration.core.simple;
 
-import java.math.BigDecimal;
-
-import com.noorq.casser.mapping.annotation.PartitionKey;
-import com.noorq.casser.mapping.annotation.Table;
-
-@Table("cars")
-public interface Car {
-
-	@PartitionKey(ordinal=0)
-	String make();
-	
-	@PartitionKey(ordinal=1)
-	String model();
-
-	int year();
-	
-	BigDecimal price();
-	
+public enum UserType {
+	USER, ADMIN;
 }

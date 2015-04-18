@@ -36,7 +36,7 @@ import com.noorq.casser.mapping.value.ColumnValueProvider;
 import com.noorq.casser.support.CasserException;
 
 
-public class SessionInitializer extends AbstractSessionOperations {
+public final class SessionInitializer extends AbstractSessionOperations {
 
 	private final Session session;
 	private String usingKeyspace;
@@ -164,6 +164,13 @@ public class SessionInitializer extends AbstractSessionOperations {
 		session.execute(SchemaUtil.use(keyspace, forceQuote));
 		this.usingKeyspace = keyspace;
 		return this;
+	}
+	
+	public synchronized void register() {
+		if (Casser.session() != null) {
+			return;
+		}
+		Casser.register(get());
 	}
 	
 	public synchronized CasserSession get() {

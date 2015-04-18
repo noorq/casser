@@ -15,11 +15,32 @@
  */
 package com.noorq.casser.support;
 
+import java.util.Arrays;
+
 
 
 public final class Fun {
 
 	private Fun() {
+	}
+	
+	public final static class ArrayTuple {
+		
+		public final Object[] _a;
+		
+		public ArrayTuple(Object[] a) {
+			this._a = a;
+		}
+		
+		public static ArrayTuple of(Object[] a) {
+			return new ArrayTuple(a);
+		}
+
+		@Override
+		public String toString() {
+			return "ArrayTuple " + Arrays.toString(_a);
+		}
+		
 	}
 	
 	public final static class Tuple1<A> {

@@ -18,27 +18,41 @@ package com.noorq.casser.test.integration.core.prepared;
 import static com.noorq.casser.core.Query.eq;
 import static com.noorq.casser.core.Query.marker;
 
-import org.junit.Before;
+import java.math.BigDecimal;
+
+import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.datastax.driver.core.ResultSet;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.CasserSession;
 import com.noorq.casser.core.operation.PreparedOperation;
+import com.noorq.casser.core.operation.PreparedStreamOperation;
+import com.noorq.casser.support.Fun;
 import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
 public class PreparedStatementTest extends AbstractEmbeddedCassandraTest {
 
-	Car car;
+	static Car car;
 	
-	CasserSession session;
+	static CasserSession session;
 	
-	PreparedOperation<ResultSet> insertOp;
+	static PreparedOperation<ResultSet> insertOp;
 
-	PreparedOperation<ResultSet> updateOp;
+	static PreparedOperation<ResultSet> updateOp;
 
-	@Before
-	public void beforeTest() {
+	static PreparedStreamOperation<Car> selectOp;
+	
+	static PreparedStreamOperation<Fun.Tuple1<BigDecimal>> selectPriceOp;
+	
+	static PreparedOperation<ResultSet> deleteOp;
+	
+	static PreparedOperation<Long> countOp;
+
+	
+	@BeforeClass
+	public static void beforeTest() {
 
 		car = Casser.dsl(Car.class);
 		
@@ -56,17 +70,65 @@ public class PreparedStatementTest extends AbstractEmbeddedCassandraTest {
 				.and(car::model, eq(marker()))
 				.prepare();
 
+		selectOp = session.select(Car.class)
+				.where(car::make, eq(marker()))
+				.and(car::model, eq(marker()))
+				.prepare();
+		
+		selectPriceOp = session.select(car::price)
+				.where(car::make, eq(marker()))
+				.and(car::model, eq(marker()))
+				.prepare();
+		
+		deleteOp = session.delete()
+				.where(car::make, eq(marker()))
+				.and(car::model, eq(marker()))
+				.prepare();
+		
+		countOp = session.count()
+				.where(car::make, eq(marker()))
+				.and(car::model, eq(marker()))
+				.prepare();
+		
 	}
 	
+	@Test
+	public void testPrint() {
+		System.out.println(car);
+	}
 	
 	@Test
-	public void test() throws Exception {
+	public void testCRUID() throws Exception {
+		
+		// INSERT
 		
 		insertOp.bind("Nissan", "350Z").sync();
 		
-		updateOp.bind(Double.valueOf(10000.0), "Nissan", "350Z").sync();
+		// SELECT
 		
+		Car actual = selectOp.bind("Nissan", "350Z").sync().findFirst().get();
+		Assert.assertEquals("Nissan", actual.make());
+		Assert.assertEquals("350Z", actual.model());
+		Assert.assertEquals(2004, actual.year());
+		Assert.assertNull(actual.price());
+
+		// UPDATE
 		
+		updateOp.bind(BigDecimal.valueOf(10000.0), "Nissan", "350Z").sync();
+
+		BigDecimal price = selectPriceOp.bind("Nissan", "350Z").sync().findFirst().get()._1;
+		
+		Assert.assertEquals(BigDecimal.valueOf(10000.0), price);
+		
+		// DELETE
+		
+		Long cnt = countOp.bind("Nissan", "350Z").sync();
+		Assert.assertEquals(Long.valueOf(1), cnt);
+		
+		deleteOp.bind("Nissan", "350Z").sync();
+		
+		cnt = countOp.bind("Nissan", "350Z").sync();
+		Assert.assertEquals(Long.valueOf(0), cnt);
 		
 	}
 	
