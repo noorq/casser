@@ -16,6 +16,7 @@
 package com.noorq.casser.mapping.type;
 
 import com.datastax.driver.core.ColumnMetadata;
+import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.schemabuilder.Alter;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.CreateType;
@@ -26,24 +27,22 @@ import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.support.CasserMappingException;
 
-public final class UDTKeyUDTValueMapDataType extends AbstractDataType {
+public final class UDTKeyMapDataType extends AbstractDataType {
 
 	private final IdentityName keyType;
 	private final Class<?> udtKeyClass;
-	private final IdentityName valueType;
-	private final Class<?> udtValueClass;
+	private final DataType valueType;
 	
-	public UDTKeyUDTValueMapDataType(ColumnType columnType, IdentityName keyType, Class<?> udtKeyClass, IdentityName valueType, Class<?> udtValueClass) {
+	public UDTKeyMapDataType(ColumnType columnType, IdentityName keyType, Class<?> udtKeyClass, DataType valueType) {
 		super(columnType);
 		this.keyType = keyType;
 		this.udtKeyClass = udtKeyClass;
 		this.valueType = valueType;
-		this.udtValueClass = udtValueClass;
 	}
 	
 	@Override
 	public Class<?>[] getUdtClasses() {
-		return new Class<?>[] { udtKeyClass, udtValueClass };
+		return new Class<?>[] { udtKeyClass };
 	}
 	
 	@Override
@@ -51,8 +50,7 @@ public final class UDTKeyUDTValueMapDataType extends AbstractDataType {
 		ensureSimpleColumn(columnName);
 	
 		UDTType keyUdtType = SchemaBuilder.frozen(keyType.toCql());
-		UDTType valueUdtType = SchemaBuilder.frozen(valueType.toCql());
-		create.addUDTMapColumn(columnName.toCql(), keyUdtType, valueUdtType);
+		create.addUDTMapColumn(columnName.toCql(), keyUdtType, valueType);
 	}
 
 	@Override
@@ -60,8 +58,7 @@ public final class UDTKeyUDTValueMapDataType extends AbstractDataType {
 		ensureSimpleColumn(columnName);
 	
 		UDTType keyUdtType = SchemaBuilder.frozen(keyType.toCql());
-		UDTType valueUdtType = SchemaBuilder.frozen(valueType.toCql());
-		create.addUDTMapColumn(columnName.toCql(), keyUdtType, valueUdtType);
+		create.addUDTMapColumn(columnName.toCql(), keyUdtType, valueType);
 	}
 	
 	@Override
@@ -72,6 +69,7 @@ public final class UDTKeyUDTValueMapDataType extends AbstractDataType {
 	
 	@Override
 	public String toString() {
-		return "UDTMap<" + keyType + "," + valueType  + ">";
+		return "UDTKeyMap<" + keyType + "," + valueType  + ">";
 	}
+	
 }

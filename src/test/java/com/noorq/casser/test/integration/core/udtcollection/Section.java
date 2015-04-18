@@ -15,27 +15,13 @@
  */
 package com.noorq.casser.test.integration.core.udtcollection;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.noorq.casser.mapping.annotation.UDT;
 
-import com.noorq.casser.mapping.annotation.PartitionKey;
-import com.noorq.casser.mapping.annotation.Table;
+@UDT
+public interface Section {
 
-@Table
-public interface Book {
-
-	@PartitionKey
-	int id();
+	String title();
 	
-	List<Author> authors();
-
-	Set<Author> reviewers();
+	int page();
 	
-	Map<String, Section> contents();
-	
-	Map<Section, String> notes();
-	
-	Map<Section, Author> writers();
-
 }

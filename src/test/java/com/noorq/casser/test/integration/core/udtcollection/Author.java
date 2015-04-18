@@ -15,16 +15,13 @@
  */
 package com.noorq.casser.test.integration.core.udtcollection;
 
-import com.noorq.casser.mapping.annotation.Column;
 import com.noorq.casser.mapping.annotation.UDT;
 
 @UDT
 public interface Author {
 
-	@Column(ordinal=0)
 	String name();
 	
-	@Column(ordinal=1)
 	String city();
 	
 }

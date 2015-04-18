@@ -27,40 +27,40 @@ import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.support.CasserMappingException;
 
-public final class UDTKeyDTValueMapDataType extends AbstractDataType {
+public final class UDTValueMapDataType extends AbstractDataType {
 
-	private final IdentityName keyType;
-	private final Class<?> udtKeyClass;
-	private final DataType valueType;
+	private final DataType keyType;
+	private final IdentityName valueType;
+	private final Class<?> udtValueClass;
 	
-	public UDTKeyDTValueMapDataType(ColumnType columnType, IdentityName keyType, Class<?> udtKeyClass, DataType valueType) {
+	public UDTValueMapDataType(ColumnType columnType, DataType keyType, IdentityName valueType, Class<?> udtValueClass) {
 		super(columnType);
 		this.keyType = keyType;
-		this.udtKeyClass = udtKeyClass;
 		this.valueType = valueType;
+		this.udtValueClass = udtValueClass;
 	}
-	
+
 	@Override
 	public Class<?>[] getUdtClasses() {
-		return new Class<?>[] { udtKeyClass };
+		return new Class<?>[] { udtValueClass };
 	}
 	
 	@Override
 	public void addColumn(Create create, IdentityName columnName) {
 		ensureSimpleColumn(columnName);
-	
-		UDTType keyUdtType = SchemaBuilder.frozen(keyType.toCql());
-		create.addUDTMapColumn(columnName.toCql(), keyUdtType, valueType);
+
+		UDTType valueUdtType = SchemaBuilder.frozen(valueType.toCql());
+		create.addUDTMapColumn(columnName.toCql(), keyType, valueUdtType);
 	}
 
 	@Override
 	public void addColumn(CreateType create, IdentityName columnName) {
 		ensureSimpleColumn(columnName);
-	
-		UDTType keyUdtType = SchemaBuilder.frozen(keyType.toCql());
-		create.addUDTMapColumn(columnName.toCql(), keyUdtType, valueType);
+
+		UDTType valueUdtType = SchemaBuilder.frozen(valueType.toCql());
+		create.addUDTMapColumn(columnName.toCql(), keyType, valueUdtType);
 	}
-	
+
 	@Override
 	public SchemaStatement alterColumn(Alter alter, IdentityName columnName,
 			ColumnMetadata columnMetadata) {
@@ -69,7 +69,7 @@ public final class UDTKeyDTValueMapDataType extends AbstractDataType {
 	
 	@Override
 	public String toString() {
-		return "UDTMap<" + keyType + "," + valueType  + ">";
+		return "UDTValueMap<" + keyType + "," + valueType  + ">";
 	}
 	
 }

@@ -26,9 +26,9 @@ import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.mapping.annotation.Types;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
-import com.noorq.casser.mapping.type.DTKeyUDTValueMapDataType;
-import com.noorq.casser.mapping.type.UDTKeyDTValueMapDataType;
-import com.noorq.casser.mapping.type.UDTKeyUDTValueMapDataType;
+import com.noorq.casser.mapping.type.UDTValueMapDataType;
+import com.noorq.casser.mapping.type.UDTKeyMapDataType;
+import com.noorq.casser.mapping.type.UDTMapDataType;
 import com.noorq.casser.support.Either;
 
 public final class MapJavaType extends AbstractJavaType {
@@ -51,7 +51,7 @@ public final class MapJavaType extends AbstractJavaType {
 
 		Types.UDTKeyMap udtKeyMap = getter.getDeclaredAnnotation(Types.UDTKeyMap.class);
 		if (udtKeyMap != null) {
-			return new UDTKeyDTValueMapDataType(columnType, 
+			return new UDTKeyMapDataType(columnType, 
 					resolveUDT(udtKeyMap.key()),
 					UDTValue.class,
 					resolveSimpleType(getter, udtKeyMap.value()));
@@ -59,7 +59,7 @@ public final class MapJavaType extends AbstractJavaType {
 
 		Types.UDTValueMap udtValueMap = getter.getDeclaredAnnotation(Types.UDTValueMap.class);
 		if (udtValueMap != null) {
-			return new DTKeyUDTValueMapDataType(columnType, 
+			return new UDTValueMapDataType(columnType, 
 					resolveSimpleType(getter, udtValueMap.key()),
 					resolveUDT(udtValueMap.value()),
 					UDTValue.class);
@@ -67,7 +67,7 @@ public final class MapJavaType extends AbstractJavaType {
 		
 		Types.UDTMap udtMap = getter.getDeclaredAnnotation(Types.UDTMap.class);
 		if (udtMap != null) {
-			return new UDTKeyUDTValueMapDataType(columnType, 
+			return new UDTMapDataType(columnType, 
 					resolveUDT(udtMap.key()),
 					UDTValue.class,
 					resolveUDT(udtMap.value()),
@@ -83,10 +83,11 @@ public final class MapJavaType extends AbstractJavaType {
 		if (key.isLeft()) {
 			
 			if (value.isLeft()) {
-				return new DTDataType(columnType, DataType.map(key.getLeft(), value.getLeft()));
+				return new DTDataType(columnType, 
+						DataType.map(key.getLeft(), value.getLeft()));
 			}
 			else {
-				return new DTKeyUDTValueMapDataType(columnType, 
+				return new UDTValueMapDataType(columnType, 
 						key.getLeft(), 
 						value.getRight(),
 						(Class<?>) args[1]);
@@ -95,13 +96,13 @@ public final class MapJavaType extends AbstractJavaType {
 		else {
 			
 			if (value.isLeft()) {
-				return new UDTKeyDTValueMapDataType(columnType, 
+				return new UDTKeyMapDataType(columnType, 
 						key.getRight(), 
 						(Class<?>) args[0],
 						value.getLeft());
 			}
 			else {
-				return new UDTKeyUDTValueMapDataType(columnType, 
+				return new UDTMapDataType(columnType, 
 						key.getRight(), 
 						(Class<?>) args[0],
 						value.getRight(),

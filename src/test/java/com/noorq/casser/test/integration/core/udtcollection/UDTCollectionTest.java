@@ -18,12 +18,6 @@ package com.noorq.casser.test.integration.core.udtcollection;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.schemabuilder.Create;
-import com.datastax.driver.core.schemabuilder.CreateType;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.CasserSession;
 import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
@@ -32,44 +26,16 @@ public class UDTCollectionTest extends AbstractEmbeddedCassandraTest {
 
 	static Book book = Casser.dsl(Book.class);
 	
-	static CasserSession csession;
+	static CasserSession session;
 
 	@BeforeClass
 	public static void beforeTest() {
-		csession = Casser.init(getSession()).showCql().add(book).autoCreateDrop().get();
-		
-		/*
-		Session session = getSession();
-		
-		
-		CreateType ct = SchemaBuilder.createType("address");
-		ct.addColumn("street", DataType.text());
-		ct.addColumn("city", DataType.text());
-		ct.addColumn("zip_code", DataType.cint());
-		ct.addColumn("phones", DataType.set(DataType.text()));
-		String cql = ct.build();
-		
-		System.out.println(cql);
-		
-		session.execute(cql);
-		
-		Create create = SchemaBuilder.createTable("users");
-		
-		create.addPartitionKey("id", DataType.uuid());
-		create.addUDTMapColumn("addresses", DataType.text(), SchemaBuilder.frozen("address"));
-		
-		cql = create.buildInternal();
-		
-		System.out.println(cql);
-		*/
-		
+		session = Casser.init(getSession()).showCql().add(book).autoCreateDrop().get();
 	}
 	
 	@Test
 	public void test() {
-
-		//System.out.println(book);
-	
+		System.out.println(book);	
 	}
 	
 	
