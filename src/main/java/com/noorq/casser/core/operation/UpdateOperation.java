@@ -339,7 +339,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 	public BuiltStatement buildStatement() {
 		
 		if (entity == null) {
-			throw new CasserMappingException("unknown entity");
+			throw new CasserMappingException("empty update operation");
 		}
 		
 		Update update = QueryBuilder.update(entity.getName().toCql());

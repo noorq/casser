@@ -166,10 +166,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
 		return this;
 	}
 	
-	public synchronized void register() {
-		if (Casser.session() != null) {
-			return;
-		}
+	public void register() {
 		Casser.register(get());
 	}
 	

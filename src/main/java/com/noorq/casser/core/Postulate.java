@@ -15,12 +15,13 @@
  */
 package com.noorq.casser.core;
 
+import java.util.Arrays;
+
 import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
 import com.noorq.casser.support.CasserMappingException;
-import com.noorq.casser.support.Requires;
 
 public final class Postulate<V> {
 
@@ -28,7 +29,6 @@ public final class Postulate<V> {
 	private final V[] values;
 	
 	protected Postulate(Operator op, V[] values) {
-		Requires.nonNullArray(values);
 		this.operator = op;
 		this.values = values;
     }
@@ -78,7 +78,22 @@ public final class Postulate<V> {
 	public String toString() {
 		
 		if (operator == Operator.IN) {
-			return "in(" + values + ")";
+			
+			if (values == null) {
+				return "in()";
+			}
+			
+			int len = values.length;
+	        StringBuilder b = new StringBuilder();
+	        b.append("in(");
+	        for (int i = 0; i != len; i++) {
+	        	if (b.length() > 3) {
+		            b.append(", ");
+	        	}
+	            b.append(String.valueOf(values[i]));
+	        }
+            return b.append(')').toString();
+			
 		}
 		
 		return operator.getName() + values[0];
