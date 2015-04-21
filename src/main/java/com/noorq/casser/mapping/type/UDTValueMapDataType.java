@@ -45,6 +45,14 @@ public final class UDTValueMapDataType extends AbstractDataType {
 		return new Class<?>[] { udtValueClass };
 	}
 	
+	public IdentityName getUdtValueName() {
+		return valueType;
+	}
+
+	public Class<?> getUdtValueClass() {
+		return udtValueClass;
+	}
+	
 	@Override
 	public void addColumn(Create create, IdentityName columnName) {
 		ensureSimpleColumn(columnName);

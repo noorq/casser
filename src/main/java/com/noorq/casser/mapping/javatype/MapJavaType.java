@@ -18,17 +18,24 @@ package com.noorq.casser.mapping.javatype;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
+import com.datastax.driver.core.UserType;
+import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.mapping.annotation.Types;
+import com.noorq.casser.mapping.convert.MapToUDTKeyMapConverter;
+import com.noorq.casser.mapping.convert.UDTKeyMapToMapConverter;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
-import com.noorq.casser.mapping.type.UDTValueMapDataType;
 import com.noorq.casser.mapping.type.UDTKeyMapDataType;
 import com.noorq.casser.mapping.type.UDTMapDataType;
+import com.noorq.casser.mapping.type.UDTValueMapDataType;
+import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.Either;
 
 public final class MapJavaType extends AbstractJavaType {
@@ -111,5 +118,54 @@ public final class MapJavaType extends AbstractJavaType {
 			
 		}
 	}
+	
+
+	@Override
+	public Optional<Function<Object, Object>> resolveReadConverter(
+			AbstractDataType abstractDataType, SessionRepository repository) {
+		
+		if (abstractDataType instanceof UDTKeyMapDataType) {
+			
+			UDTKeyMapDataType dt = (UDTKeyMapDataType) abstractDataType;
+			
+			Class<Object> javaClass = (Class<Object>) dt.getUdtKeyClass();
+			
+			if (UDTValue.class.isAssignableFrom(javaClass)) {
+				return Optional.empty();
+			}
+			
+			return Optional.of(new UDTKeyMapToMapConverter(javaClass, repository));
+			
+		}
+		
+		return Optional.empty();
+	}
+
+	@Override
+	public Optional<Function<Object, Object>> resolveWriteConverter(
+			AbstractDataType abstractDataType, SessionRepository repository) {
+		
+		if (abstractDataType instanceof UDTKeyMapDataType) {
+			
+			UDTKeyMapDataType dt = (UDTKeyMapDataType) abstractDataType;
+			
+			Class<Object> javaClass = (Class<Object>) dt.getUdtKeyClass();
+			
+			if (UDTValue.class.isAssignableFrom(javaClass)) {
+				return Optional.empty();
+			}
+
+			UserType userType = repository.findUserType(dt.getUdtKeyName().getName());
+			if (userType == null) {
+				throw new CasserMappingException("UserType not found for " + dt.getUdtKeyName() + " with type " + javaClass);
+			}
+			
+			return Optional.of(new MapToUDTKeyMapConverter(javaClass, userType, repository));
+			
+		}
+		
+		return Optional.empty();
+	}
+	
 	
 }

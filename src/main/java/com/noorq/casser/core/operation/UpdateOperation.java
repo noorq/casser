@@ -16,6 +16,7 @@
 package com.noorq.casser.core.operation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -360,12 +361,22 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(key, "key is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(mapGetter);
-		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		CasserProperty prop = p.getProperty();
 		
-		assignments.add(QueryBuilder.put(p.getColumnName(), key, value));
+		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+		if (converter.isPresent()) {
+			Map<K, V> map = new HashMap<K, V>();
+			map.put(key,  value);
+			Map<Object, Object> convertedMap = (Map<Object, Object>) converter.get().apply(map);
+			for (Map.Entry<Object, Object> e : convertedMap.entrySet()) {
+				assignments.add(QueryBuilder.put(p.getColumnName(), e.getKey(), e.getValue()));
+			}
+		}
+		else {
+			assignments.add(QueryBuilder.put(p.getColumnName(), key, value));
+		}
 		
 		addPropertyNode(p);
-		
 		return this;
     }
 	
@@ -375,12 +386,18 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(map, "map is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(mapGetter);
-		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		CasserProperty prop = p.getProperty();
 		
-		assignments.add(QueryBuilder.putAll(p.getColumnName(), map));
+		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+		if (converter.isPresent()) {
+			Map convertedMap = (Map) converter.get().apply(map);
+			assignments.add(QueryBuilder.putAll(p.getColumnName(), convertedMap));
+		}
+		else {
+			assignments.add(QueryBuilder.putAll(p.getColumnName(), map));
+		}
 		
 		addPropertyNode(p);
-		
 		return this;
     }
 	

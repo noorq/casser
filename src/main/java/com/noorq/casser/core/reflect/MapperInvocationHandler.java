@@ -17,6 +17,7 @@ package com.noorq.casser.core.reflect;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.Map;
 
@@ -39,7 +40,14 @@ public class MapperInvocationHandler<E> implements InvocationHandler {
 		String methodName = method.getName();
 
 		if ("equals".equals(methodName) && method.getParameterCount() == 1) {
-			return this == args[0];
+			Object otherObj = args[0];
+			if (otherObj == null) {
+				return false;
+			}
+			if (Proxy.isProxyClass(otherObj.getClass())) {
+				return this == Proxy.getInvocationHandler(otherObj);
+			}
+			return false;
 		}
 		
 		if (method.getParameterCount() != 0 || method.getReturnType() == void.class) {
