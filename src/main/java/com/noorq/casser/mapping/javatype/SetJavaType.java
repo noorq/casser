@@ -122,6 +122,4 @@ public final class SetJavaType extends AbstractJavaType {
 		return Optional.empty();
 	}
 	
-	
-	
 }

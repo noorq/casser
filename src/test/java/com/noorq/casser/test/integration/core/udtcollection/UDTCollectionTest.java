@@ -16,8 +16,11 @@
 package com.noorq.casser.test.integration.core.udtcollection;
 
 import static com.noorq.casser.core.Query.eq;
+import static com.noorq.casser.core.Query.getIdx;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -134,6 +137,144 @@ public class UDTCollectionTest extends AbstractEmbeddedCassandraTest {
 		
 		for (Author e : expected) {
 			Author a = actual.stream().filter(p -> p.name().equals(e.name())).findFirst().get();
+			Assert.assertEquals(e.city(), a.city());
+		}
+		
+	}
+	
+	
+	@Test
+	public void testListCRUID() {
+		
+		int id = 777;
+		
+		List<Author> authors = new ArrayList<Author>();
+		authors.add(new AuthorImpl("Alex", "San Jose"));
+		authors.add(new AuthorImpl("Bob", "San Francisco"));
+		
+		// CREATE
+		
+		session.insert()
+		.value(book::id, id)
+		.value(book::authors, authors)
+		.sync();
+		
+		// READ
+		
+		// read full object
+		
+		Book actual = session.select(Book.class).where(book::id, eq(id)).sync().findFirst().get();
+		Assert.assertEquals(id, actual.id());
+		assertEqualLists(authors, actual.authors());
+		Assert.assertNull(actual.reviewers());
+		Assert.assertNull(actual.contents());
+		
+		// read full list
+		
+		List<Author> actualList = session.select(book::authors).where(book::id, eq(id)).sync().findFirst().get()._1;
+		assertEqualLists(authors, actualList);
+		
+		// read single value by index
+		
+		String cql = session.select(getIdx(book::authors, 1))
+				.where(book::id, eq(id)).cql();
+
+		System.out.println("Still not supporting cql = " + cql);
+		
+		// UPDATE
+		
+		List<Author> expected = new ArrayList<Author>();
+		expected.add(new AuthorImpl("Unknown", "City 17"));
+		
+		session.update().set(book::authors, expected).where(book::id, eq(id)).sync();
+		
+		actual = session.select(Book.class).where(book::id, eq(id)).sync().findFirst().get();
+		Assert.assertEquals(id, actual.id());
+		assertEqualLists(expected, actual.authors());
+		
+		// INSERT
+		
+		// prepend operation
+		
+		expected.add(0, new AuthorImpl("Prepend", "PrependCity"));
+		session.update().prepend(book::authors, new AuthorImpl("Prepend", "PrependCity")).where(book::id, eq(id)).sync();
+		
+		actualList = session.select(book::authors).where(book::id, eq(id)).sync().findFirst().get()._1;
+		assertEqualLists(expected, actualList);
+		
+		// append operation
+		
+		expected.add(new AuthorImpl("Append", "AppendCity"));
+		session.update().append(book::authors, new AuthorImpl("Append", "AppendCity")).where(book::id, eq(id)).sync();
+		
+		actualList = session.select(book::authors).where(book::id, eq(id)).sync().findFirst().get()._1;
+		assertEqualLists(expected, actualList);
+		
+		// prependAll operation
+		expected.addAll(0, authors);
+		session.update().prependAll(book::authors, authors).where(book::id, eq(id)).sync();
+		
+		actualList = session.select(book::authors).where(book::id, eq(id)).sync().findFirst().get()._1;
+		assertEqualLists(expected, actualList);
+		
+		// appendAll operation
+		expected.addAll(authors);
+		session.update().appendAll(book::authors, authors).where(book::id, eq(id)).sync();
+		
+		actualList = session.select(book::authors).where(book::id, eq(id)).sync().findFirst().get()._1;
+		assertEqualLists(expected, actualList);
+		
+		// set by Index
+		
+		Author inserted = new AuthorImpl("Insert", "InsertCity");
+		expected.set(5, inserted);
+		session.update().setIdx(book::authors, 5, inserted).where(book::id, eq(id)).sync();
+		
+		actualList = session.select(book::authors).where(book::id, eq(id)).sync().findFirst().get()._1;
+		assertEqualLists(expected, actualList);
+		
+		// DELETE
+		
+		// remove single value
+		
+		expected.remove(inserted);
+		session.update().discard(book::authors, inserted).where(book::id, eq(id)).sync();
+		
+		actualList = session.select(book::authors).where(book::id, eq(id)).sync().findFirst().get()._1;
+		assertEqualLists(expected, actualList);
+		
+		// remove values
+		
+		expected.removeAll(authors);
+		session.update().discardAll(book::authors, authors).where(book::id, eq(id)).sync();
+		
+		actualList = session.select(book::authors).where(book::id, eq(id)).sync().findFirst().get()._1;
+		assertEqualLists(expected, actualList);
+		
+		// remove full list
+		
+		session.update().set(book::authors, null).where(book::id, eq(id)).sync();
+		
+		actualList = session.select(book::authors).where(book::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertNull(actualList);
+		
+		// remove object
+		
+		session.delete().where(book::id, eq(id)).sync();
+		Long cnt = session.count().where(book::id, eq(id)).sync();
+		Assert.assertEquals(Long.valueOf(0), cnt);
+		
+	}
+	
+	private void assertEqualLists(List<Author> expected, List<Author> actual) {
+		Assert.assertEquals(expected.size(), actual.size());
+		
+		int size = expected.size();
+		
+		for (int i = 0; i != size; ++i) {
+			Author e = expected.get(i);
+			Author a = actual.get(i);
+			Assert.assertEquals(e.name(), a.name());
 			Assert.assertEquals(e.city(), a.city());
 		}
 		

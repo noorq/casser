@@ -18,15 +18,22 @@ package com.noorq.casser.mapping.javatype;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UDTValue;
+import com.datastax.driver.core.UserType;
+import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.mapping.annotation.Types;
+import com.noorq.casser.mapping.convert.ListToUDTListConverter;
+import com.noorq.casser.mapping.convert.UDTListToListConverter;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
 import com.noorq.casser.mapping.type.UDTListDataType;
+import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.Either;
 
 public final class ListJavaType extends AbstractJavaType {
@@ -66,6 +73,53 @@ public final class ListJavaType extends AbstractJavaType {
 					(Class<?>) args[0]);
 		}
 		
+	}
+	
+	@Override
+	public Optional<Function<Object, Object>> resolveReadConverter(
+			AbstractDataType abstractDataType, SessionRepository repository) {
+		
+		if (abstractDataType instanceof UDTListDataType) {
+			
+			UDTListDataType dt = (UDTListDataType) abstractDataType;
+			
+			Class<Object> javaClass = (Class<Object>) dt.getUdtClasses()[0];
+			
+			if (UDTValue.class.isAssignableFrom(javaClass)) {
+				return Optional.empty();
+			}
+			
+			return Optional.of(new UDTListToListConverter(javaClass, repository));
+			
+		}
+		
+		return Optional.empty();
+	}
+
+	@Override
+	public Optional<Function<Object, Object>> resolveWriteConverter(
+			AbstractDataType abstractDataType, SessionRepository repository) {
+		
+		if (abstractDataType instanceof UDTListDataType) {
+			
+			UDTListDataType dt = (UDTListDataType) abstractDataType;
+			
+			Class<Object> javaClass = (Class<Object>) dt.getUdtClasses()[0];
+			
+			if (UDTValue.class.isAssignableFrom(javaClass)) {
+				return Optional.empty();
+			}
+
+			UserType userType = repository.findUserType(dt.getUdtName().getName());
+			if (userType == null) {
+				throw new CasserMappingException("UserType not found for " + dt.getUdtName() + " with type " + javaClass);
+			}
+			
+			return Optional.of(new ListToUDTListConverter(javaClass, userType, repository));
+			
+		}
+		
+		return Optional.empty();
 	}
 	
 }

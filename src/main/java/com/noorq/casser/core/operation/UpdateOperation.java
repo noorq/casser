@@ -24,24 +24,19 @@ import java.util.Set;
 import java.util.function.Function;
 
 import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.UDTValue;
-import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.querybuilder.Assignment;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.core.Filter;
 import com.noorq.casser.core.Getter;
-import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.MappingUtil;
-import com.noorq.casser.mapping.convert.EntityToUDTValueConverter;
-import com.noorq.casser.mapping.type.AbstractDataType;
-import com.noorq.casser.mapping.type.UDTSetDataType;
 import com.noorq.casser.support.CasserMappingException;
 
 
@@ -139,12 +134,11 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
-		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
-		
-		assignments.add(QueryBuilder.prepend(p.getColumnName(), value));
+		Object valueObj = prepareSingleListValue(p, value);
+
+		assignments.add(QueryBuilder.prepend(p.getColumnName(), valueObj));
 		
 		addPropertyNode(p);
-		
 		return this;
 	}
 
@@ -154,12 +148,11 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
-		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		List valueObj = prepareListValue(p, value);
 		
-		assignments.add(QueryBuilder.prependAll(p.getColumnName(), value));
+		assignments.add(QueryBuilder.prependAll(p.getColumnName(), valueObj));
 		
 		addPropertyNode(p);
-		
 		return this;
 	}
 	
@@ -169,12 +162,11 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
-		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		Object valueObj = prepareSingleListValue(p, value);
 		
-		assignments.add(QueryBuilder.setIdx(p.getColumnName(), idx, value));
+		assignments.add(QueryBuilder.setIdx(p.getColumnName(), idx, valueObj));
 		
 		addPropertyNode(p);
-		
 		return this;
 	}
 	
@@ -184,12 +176,11 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
-		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
-		
-		assignments.add(QueryBuilder.append(p.getColumnName(), value));
+		Object valueObj = prepareSingleListValue(p, value);
+
+		assignments.add(QueryBuilder.append(p.getColumnName(), valueObj));
 		
 		addPropertyNode(p);
-		
 		return this;
 	}
 	
@@ -199,12 +190,11 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
-		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
-		
-		assignments.add(QueryBuilder.appendAll(p.getColumnName(), value));
+		List valueObj = prepareListValue(p, value);
+
+		assignments.add(QueryBuilder.appendAll(p.getColumnName(), valueObj));
 		
 		addPropertyNode(p);
-		
 		return this;
 	}
 	
@@ -215,12 +205,11 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
-		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		Object valueObj = prepareSingleListValue(p, value);
 		
-		assignments.add(QueryBuilder.discard(p.getColumnName(), value));
+		assignments.add(QueryBuilder.discard(p.getColumnName(), valueObj));
 		
 		addPropertyNode(p);
-		
 		return this;
 	}
 	
@@ -230,13 +219,40 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
-		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
-		
-		assignments.add(QueryBuilder.discardAll(p.getColumnName(), value));
+		List valueObj = prepareListValue(p, value);
+
+		assignments.add(QueryBuilder.discardAll(p.getColumnName(), valueObj));
 		
 		addPropertyNode(p);
-		
 		return this;
+	}
+	
+	private Object prepareSingleListValue(CasserPropertyNode p, Object value) {
+		CasserProperty prop = p.getProperty();
+
+		Object valueObj = value;
+		
+		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+		if (converter.isPresent()) {
+			List convertedList = (List) converter.get().apply(ImmutableList.builder().add(value).build());
+			valueObj = convertedList.get(0);
+		}
+		
+		return valueObj;
+	}
+	
+	private List prepareListValue(CasserPropertyNode p, List value) {
+		
+		CasserProperty prop = p.getProperty();
+		
+		List valueObj = value;
+		
+		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+		if (converter.isPresent()) {
+			valueObj = (List) converter.get().apply(value);
+		}
+
+		return valueObj;
 	}
 	
 	/*
@@ -253,15 +269,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
-		CasserProperty prop = p.getProperty();
-		
-		Object valueObj = value;
-		
-		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
-		if (converter.isPresent()) {
-			Set convertedSet = (Set) converter.get().apply(ImmutableSet.builder().add(value).build());
-			valueObj = convertedSet.iterator().next();
-		}
+		Object valueObj = prepareSingleSetValue(p, value);
 
 		assignments.add(QueryBuilder.add(p.getColumnName(), valueObj));
 		
@@ -275,14 +283,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
-		CasserProperty prop = p.getProperty();
-		
-		Set valueObj = value;
-		
-		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
-		if (converter.isPresent()) {
-			valueObj = (Set) converter.get().apply(value);
-		}
+		Set valueObj = prepareSetValue(p, value);
 		
 		assignments.add(QueryBuilder.addAll(p.getColumnName(), valueObj));
 		
@@ -296,16 +297,8 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
-		CasserProperty prop = p.getProperty();
+		Object valueObj = prepareSingleSetValue(p, value);
 		
-		Object valueObj = value;
-		
-		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
-		if (converter.isPresent()) {
-			Set convertedSet = (Set) converter.get().apply(ImmutableSet.builder().add(value).build());
-			valueObj = convertedSet.iterator().next();
-		}
-
 		assignments.add(QueryBuilder.remove(p.getColumnName(), valueObj));
 		
 		addPropertyNode(p);
@@ -318,8 +311,31 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
-		CasserProperty prop = p.getProperty();
+		Set valueObj = prepareSetValue(p, value);
 		
+		assignments.add(QueryBuilder.removeAll(p.getColumnName(), valueObj));
+		
+		addPropertyNode(p);
+		return this;
+	}
+	
+	private Object prepareSingleSetValue(CasserPropertyNode p, Object value) {
+		
+		CasserProperty prop = p.getProperty();
+		Object valueObj = value;
+		
+		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+		if (converter.isPresent()) {
+			Set convertedSet = (Set) converter.get().apply(ImmutableSet.builder().add(value).build());
+			valueObj = convertedSet.iterator().next();
+		}
+		
+		return valueObj;
+	}
+	
+	private Set prepareSetValue(CasserPropertyNode p, Set value) {
+		
+		CasserProperty prop = p.getProperty();
 		Set valueObj = value;
 		
 		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
@@ -327,10 +343,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 			valueObj = (Set) converter.get().apply(value);
 		}
 		
-		assignments.add(QueryBuilder.removeAll(p.getColumnName(), valueObj));
-		
-		addPropertyNode(p);
-		return this;
+		return valueObj;
 	}
 	
 	/*

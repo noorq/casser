@@ -41,6 +41,10 @@ public final class UDTListDataType extends AbstractDataType {
 	public Class<?>[] getUdtClasses() {
 		return new Class<?>[] { udtClass };
 	}
+	
+	public IdentityName getUdtName() {
+		return udtName;
+	}
 
 	@Override
 	public void addColumn(Create create, IdentityName columnName) {
