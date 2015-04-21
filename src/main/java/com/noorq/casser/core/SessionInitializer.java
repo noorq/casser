@@ -72,15 +72,20 @@ public final class SessionInitializer extends AbstractSessionOperations {
 	public Executor getExecutor() {
 		return executor;
 	}
-	
+
+	@Override
+	public SessionRepository getSessionRepository() {
+		throw new CasserException("not expected to call");
+	}
+
 	@Override
 	public ColumnValueProvider getValueProvider() {
-		throw new CasserException("not expected call");
+		throw new CasserException("not expected to call");
 	}
 	
 	@Override
 	public ColumnValuePreparer getValuePreparer() {
-		throw new CasserException("not expected call");
+		throw new CasserException("not expected to call");
 	}
 
 	public SessionInitializer showCql() {

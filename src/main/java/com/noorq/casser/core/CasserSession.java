@@ -100,7 +100,12 @@ public final class CasserSession extends AbstractSessionOperations implements Cl
 	public Executor getExecutor() {
 		return executor;
 	}
-	
+
+	@Override
+	public SessionRepository getSessionRepository() {
+		return sessionRepository;
+	}
+
 	@Override
 	public ColumnValueProvider getValueProvider() {
 		return valueProvider;
@@ -117,7 +122,7 @@ public final class CasserSession extends AbstractSessionOperations implements Cl
 		ColumnValueProvider valueProvider = getValueProvider();
 		CasserEntity entity = Casser.entity(entityClass);
 		
-		return new SelectOperation<E>(this, entity, getValueProvider(), (r) -> {
+		return new SelectOperation<E>(this, entity, (r) -> {
 			
 			Map<String, Object> map = new ValueProviderMap(r, valueProvider, entity);
 			return (E) Casser.map(entityClass, map);
@@ -126,25 +131,25 @@ public final class CasserSession extends AbstractSessionOperations implements Cl
 	}
 	
 	public SelectOperation<Fun.ArrayTuple> select() {
-		return new SelectOperation<Fun.ArrayTuple>(this, getValueProvider());
+		return new SelectOperation<Fun.ArrayTuple>(this);
 	}
 	
 	public SelectOperation<Row> selectAll(Class<?> entityClass) {
 		Objects.requireNonNull(entityClass, "entityClass is empty");
-		return new SelectOperation<Row>(this, Casser.entity(entityClass), getValueProvider());
+		return new SelectOperation<Row>(this, Casser.entity(entityClass));
 	}
 	
 	public <E> SelectOperation<E> selectAll(Class<E> entityClass, Function<Row, E> rowMapper) {
 		Objects.requireNonNull(entityClass, "entityClass is empty");
 		Objects.requireNonNull(rowMapper, "rowMapper is empty");
-		return new SelectOperation<E>(this, Casser.entity(entityClass), getValueProvider(), rowMapper);
+		return new SelectOperation<E>(this, Casser.entity(entityClass), rowMapper);
 	}
 	
 	public <V1> SelectOperation<Fun.Tuple1<V1>> select(Getter<V1> getter1) {
 		Objects.requireNonNull(getter1, "field 1 is empty");
 		
 		CasserPropertyNode p1 = MappingUtil.resolveMappingProperty(getter1);
-		return new SelectOperation<Tuple1<V1>>(this, getValueProvider(), new Mappers.Mapper1<V1>(getValueProvider(), p1), p1);
+		return new SelectOperation<Tuple1<V1>>(this, new Mappers.Mapper1<V1>(getValueProvider(), p1), p1);
 	}
 
 	public <V1, V2> SelectOperation<Tuple2<V1, V2>> select(Getter<V1> getter1, Getter<V2> getter2) {
@@ -153,7 +158,7 @@ public final class CasserSession extends AbstractSessionOperations implements Cl
 		
 		CasserPropertyNode p1 = MappingUtil.resolveMappingProperty(getter1);
 		CasserPropertyNode p2 = MappingUtil.resolveMappingProperty(getter2);
-		return new SelectOperation<Fun.Tuple2<V1, V2>>(this, getValueProvider(), new Mappers.Mapper2<V1, V2>(getValueProvider(), p1, p2), p1, p2);
+		return new SelectOperation<Fun.Tuple2<V1, V2>>(this, new Mappers.Mapper2<V1, V2>(getValueProvider(), p1, p2), p1, p2);
 	}
 
 	public <V1, V2, V3> SelectOperation<Fun.Tuple3<V1, V2, V3>> select(Getter<V1> getter1, Getter<V2> getter2, Getter<V3> getter3) {
@@ -164,7 +169,7 @@ public final class CasserSession extends AbstractSessionOperations implements Cl
 		CasserPropertyNode p1 = MappingUtil.resolveMappingProperty(getter1);
 		CasserPropertyNode p2 = MappingUtil.resolveMappingProperty(getter2);
 		CasserPropertyNode p3 = MappingUtil.resolveMappingProperty(getter3);
-		return new SelectOperation<Fun.Tuple3<V1, V2, V3>>(this, getValueProvider(), new Mappers.Mapper3<V1, V2, V3>(getValueProvider(), p1, p2, p3), p1, p2, p3);
+		return new SelectOperation<Fun.Tuple3<V1, V2, V3>>(this, new Mappers.Mapper3<V1, V2, V3>(getValueProvider(), p1, p2, p3), p1, p2, p3);
 	}
 
 	public <V1, V2, V3, V4> SelectOperation<Fun.Tuple4<V1, V2, V3, V4>> select(
@@ -178,7 +183,7 @@ public final class CasserSession extends AbstractSessionOperations implements Cl
 		CasserPropertyNode p2 = MappingUtil.resolveMappingProperty(getter2);
 		CasserPropertyNode p3 = MappingUtil.resolveMappingProperty(getter3);
 		CasserPropertyNode p4 = MappingUtil.resolveMappingProperty(getter4);
-		return new SelectOperation<Fun.Tuple4<V1, V2, V3, V4>>(this, getValueProvider(), new Mappers.Mapper4<V1, V2, V3, V4>(getValueProvider(), p1, p2, p3, p4), p1, p2, p3, p4);
+		return new SelectOperation<Fun.Tuple4<V1, V2, V3, V4>>(this, new Mappers.Mapper4<V1, V2, V3, V4>(getValueProvider(), p1, p2, p3, p4), p1, p2, p3, p4);
 	}
 
 	public <V1, V2, V3, V4, V5> SelectOperation<Fun.Tuple5<V1, V2, V3, V4, V5>> select(
@@ -194,7 +199,7 @@ public final class CasserSession extends AbstractSessionOperations implements Cl
 		CasserPropertyNode p3 = MappingUtil.resolveMappingProperty(getter3);
 		CasserPropertyNode p4 = MappingUtil.resolveMappingProperty(getter4);
 		CasserPropertyNode p5 = MappingUtil.resolveMappingProperty(getter5);
-		return new SelectOperation<Fun.Tuple5<V1, V2, V3, V4, V5>>(this, getValueProvider(), 
+		return new SelectOperation<Fun.Tuple5<V1, V2, V3, V4, V5>>(this, 
 				new Mappers.Mapper5<V1, V2, V3, V4, V5>(getValueProvider(), p1, p2, p3, p4, p5), 
 				p1, p2, p3, p4, p5);
 	}
@@ -215,7 +220,7 @@ public final class CasserSession extends AbstractSessionOperations implements Cl
 		CasserPropertyNode p4 = MappingUtil.resolveMappingProperty(getter4);
 		CasserPropertyNode p5 = MappingUtil.resolveMappingProperty(getter5);
 		CasserPropertyNode p6 = MappingUtil.resolveMappingProperty(getter6);
-		return new SelectOperation<Tuple6<V1, V2, V3, V4, V5, V6>>(this, getValueProvider(), 
+		return new SelectOperation<Tuple6<V1, V2, V3, V4, V5, V6>>(this,  
 				new Mappers.Mapper6<V1, V2, V3, V4, V5, V6>(getValueProvider(), p1, p2, p3, p4, p5, p6), 
 				p1, p2, p3, p4, p5, p6);
 	}
@@ -240,7 +245,6 @@ public final class CasserSession extends AbstractSessionOperations implements Cl
 		CasserPropertyNode p6 = MappingUtil.resolveMappingProperty(getter6);
 		CasserPropertyNode p7 = MappingUtil.resolveMappingProperty(getter7);
 		return new SelectOperation<Fun.Tuple7<V1, V2, V3, V4, V5, V6, V7>>(this, 
-				getValueProvider(), 
 				new Mappers.Mapper7<V1, V2, V3, V4, V5, V6, V7>(
 				getValueProvider(), 
 				p1, p2, p3, p4, p5, p6, p7), 

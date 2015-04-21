@@ -44,6 +44,8 @@ public abstract class AbstractSessionOperations {
 	
 	abstract public Executor getExecutor();
 	
+	abstract public SessionRepository getSessionRepository();
+	
 	abstract public ColumnValueProvider getValueProvider();
 	
 	abstract public ColumnValuePreparer getValuePreparer();

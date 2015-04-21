@@ -85,15 +85,29 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 	public Object invoke(Object proxy, Method method, Object[] args)
 			throws Throwable {
 		
-		if ("toString".equals(method.getName())) {
+		String methodName = method.getName();
+		
+		if ("equals".equals(methodName) && method.getParameterCount() == 1) {
+			return this == args[0];
+		}
+		
+		if (method.getParameterCount() != 0 || method.getReturnType() == void.class) {
+			throw new CasserException("invalid getter method " + method);
+		}
+		
+		if ("hashCode".equals(methodName)) {
+			return hashCode();
+		}
+		
+		if ("toString".equals(methodName)) {
 			return entity.toString();
 		}
 		
-		if (DslExportable.GET_ENTITY_METHOD.equals(method.getName())) {
+		if (DslExportable.GET_ENTITY_METHOD.equals(methodName)) {
 			return entity;
 		}
 		
-		if (DslExportable.GET_PARENT_METHOD.equals(method.getName())) {
+		if (DslExportable.GET_PARENT_METHOD.equals(methodName)) {
 			return parent.get();
 		}
 		

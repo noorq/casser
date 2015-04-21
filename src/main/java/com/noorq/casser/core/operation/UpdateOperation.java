@@ -19,19 +19,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.UDTValue;
+import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.querybuilder.Assignment;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
+import com.google.common.collect.ImmutableSet;
 import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.core.Filter;
 import com.noorq.casser.core.Getter;
+import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.core.reflect.CasserPropertyNode;
 import com.noorq.casser.mapping.CasserEntity;
+import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.MappingUtil;
+import com.noorq.casser.mapping.convert.EntityToUDTValueConverter;
+import com.noorq.casser.mapping.type.AbstractDataType;
+import com.noorq.casser.mapping.type.UDTSetDataType;
 import com.noorq.casser.support.CasserMappingException;
 
 
@@ -243,12 +253,19 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
-		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		CasserProperty prop = p.getProperty();
 		
-		assignments.add(QueryBuilder.add(p.getColumnName(), value));
+		Object valueObj = value;
+		
+		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+		if (converter.isPresent()) {
+			Set convertedSet = (Set) converter.get().apply(ImmutableSet.builder().add(value).build());
+			valueObj = convertedSet.iterator().next();
+		}
+
+		assignments.add(QueryBuilder.add(p.getColumnName(), valueObj));
 		
 		addPropertyNode(p);
-		
 		return this;
 	}
 	
@@ -258,12 +275,18 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
-		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		CasserProperty prop = p.getProperty();
 		
-		assignments.add(QueryBuilder.addAll(p.getColumnName(), value));
+		Set valueObj = value;
+		
+		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+		if (converter.isPresent()) {
+			valueObj = (Set) converter.get().apply(value);
+		}
+		
+		assignments.add(QueryBuilder.addAll(p.getColumnName(), valueObj));
 		
 		addPropertyNode(p);
-		
 		return this;
 	}
 	
@@ -273,12 +296,19 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
-		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		CasserProperty prop = p.getProperty();
 		
-		assignments.add(QueryBuilder.remove(p.getColumnName(), value));
+		Object valueObj = value;
+		
+		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+		if (converter.isPresent()) {
+			Set convertedSet = (Set) converter.get().apply(ImmutableSet.builder().add(value).build());
+			valueObj = convertedSet.iterator().next();
+		}
+
+		assignments.add(QueryBuilder.remove(p.getColumnName(), valueObj));
 		
 		addPropertyNode(p);
-		
 		return this;
 	}
 	
@@ -288,12 +318,18 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		Objects.requireNonNull(value, "value is empty");
 
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
-		//Object valueObj = sessionOps.getValuePreparer().prepareColumnValue(value, p.getProperty());
+		CasserProperty prop = p.getProperty();
 		
-		assignments.add(QueryBuilder.removeAll(p.getColumnName(), value));
+		Set valueObj = value;
+		
+		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+		if (converter.isPresent()) {
+			valueObj = (Set) converter.get().apply(value);
+		}
+		
+		assignments.add(QueryBuilder.removeAll(p.getColumnName(), valueObj));
 		
 		addPropertyNode(p);
-		
 		return this;
 	}
 	

@@ -52,7 +52,6 @@ import com.noorq.casser.support.Fun.ArrayTuple;
 
 public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectOperation<E>> {
 
-	protected final ColumnValueProvider valueProvider;
 	protected Function<Row, E> rowMapper = null;
 	protected final List<CasserPropertyNode> props = new ArrayList<CasserPropertyNode>();
 	
@@ -60,15 +59,15 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	protected Integer limit = null;
 	protected boolean allowFiltering = false;
 	
-	public SelectOperation(AbstractSessionOperations sessionOperations, 
-			ColumnValueProvider valueProvider) {
+	public SelectOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
-		this.valueProvider = valueProvider;
+		
 		this.rowMapper = new Function<Row, E>() {
 
 			@Override
 			public E apply(Row source) {
 				
+				ColumnValueProvider valueProvider = sessionOps.getValueProvider(); 
 				Object[] arr = new Object[props.size()];
 				
 				int i = 0;
@@ -84,11 +83,9 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	}
 	
 	public SelectOperation(AbstractSessionOperations sessionOperations, 
-			CasserEntity entity, 
-			ColumnValueProvider valueProvider) {
+			CasserEntity entity) {
 		
 		super(sessionOperations);
-		this.valueProvider = valueProvider;
 		
 		entity.getOrderedProperties()
 		.stream()
@@ -99,11 +96,9 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	
 	public SelectOperation(AbstractSessionOperations sessionOperations, 
 			CasserEntity entity, 
-			ColumnValueProvider valueProvider,
 			Function<Row, E> rowMapper) {
 		
 		super(sessionOperations);
-		this.valueProvider = valueProvider;
 		this.rowMapper = rowMapper;
 		
 		entity.getOrderedProperties()
@@ -114,12 +109,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	}
 
 	public SelectOperation(AbstractSessionOperations sessionOperations, 
-			ColumnValueProvider valueProvider, 
 			Function<Row, E> rowMapper, 
 			CasserPropertyNode... props) {
 		
 		super(sessionOperations);
-		this.valueProvider = valueProvider;
 		this.rowMapper = rowMapper;
 		Collections.addAll(this.props, props);
 	}
@@ -144,17 +137,13 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		
 		Objects.requireNonNull(entityClass, "entityClass is null");
 		
-		if (this.valueProvider == null) {
-			throw new CasserMappingException("mapTo operator is not available in current configuration");
-		}
-		
 		CasserEntity entity = Casser.entity(entityClass);
 		
 		this.rowMapper = null;
 		
 		return new SelectTransformingOperation<R, E>(this, (r) -> {
 
-			Map<String, Object> map = new ValueProviderMap(r, valueProvider, entity);
+			Map<String, Object> map = new ValueProviderMap(r, sessionOps.getValueProvider(), entity);
 			return (R) Casser.map(entityClass, map);
 			
 		});

@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.noorq.casser.core.Casser;
@@ -37,12 +37,12 @@ import com.noorq.casser.test.integration.build.AbstractEmbeddedCassandraTest;
 
 public class CollectionTest extends AbstractEmbeddedCassandraTest {
 
-	Customer customer = Casser.dsl(Customer.class);
+	static Customer customer = Casser.dsl(Customer.class);
 	
-	CasserSession session;
+	static CasserSession session;
 
-	@Before
-	public void beforeTest() {
+	@BeforeClass
+	public static void beforeTest() {
 		session = Casser.init(getSession()).showCql().add(customer).autoCreateDrop().get();
 	}
 	

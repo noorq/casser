@@ -35,13 +35,21 @@ public class MapperInvocationHandler<E> implements InvocationHandler {
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args)
 			throws Throwable {
+
+		String methodName = method.getName();
+
+		if ("equals".equals(methodName) && method.getParameterCount() == 1) {
+			return this == args[0];
+		}
 		
 		if (method.getParameterCount() != 0 || method.getReturnType() == void.class) {
 			throw new CasserException("invalid getter method " + method);
 		}
-		
-		String methodName = method.getName();
-		
+
+		if ("hashCode".equals(methodName)) {
+			return hashCode();
+		}
+
 		if ("toString".equals(methodName)) {
 			return iface.getSimpleName() + ": " + src.toString();
 		}
