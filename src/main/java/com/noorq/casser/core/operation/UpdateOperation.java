@@ -29,7 +29,6 @@ import com.datastax.driver.core.querybuilder.Assignment;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.core.Filter;
@@ -39,6 +38,7 @@ import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.support.CasserMappingException;
+import com.noorq.casser.support.Immutables;
 
 
 public final class UpdateOperation extends AbstractFilterOperation<ResultSet, UpdateOperation> {
@@ -98,7 +98,6 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		assignments.add(QueryBuilder.incr(p.getColumnName(), delta));
 		
 		addPropertyNode(p);
-		
 		return this;
 		
 	}
@@ -116,7 +115,6 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		assignments.add(QueryBuilder.decr(p.getColumnName(), delta));
 		
 		addPropertyNode(p);
-		
 		return this;
 		
 	}
@@ -235,7 +233,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		
 		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
 		if (converter.isPresent()) {
-			List convertedList = (List) converter.get().apply(ImmutableList.builder().add(value).build());
+			List convertedList = (List) converter.get().apply(Immutables.listOf(value));
 			valueObj = convertedList.get(0);
 		}
 		
@@ -327,7 +325,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		
 		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
 		if (converter.isPresent()) {
-			Set convertedSet = (Set) converter.get().apply(ImmutableSet.builder().add(value).build());
+			Set convertedSet = (Set) converter.get().apply(Immutables.setOf(value));
 			valueObj = convertedSet.iterator().next();
 		}
 		
@@ -365,9 +363,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
 		
 		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
 		if (converter.isPresent()) {
-			Map<K, V> map = new HashMap<K, V>();
-			map.put(key,  value);
-			Map<Object, Object> convertedMap = (Map<Object, Object>) converter.get().apply(map);
+			Map<Object, Object> convertedMap = (Map<Object, Object>) converter.get().apply(Immutables.mapOf(key, value));
 			for (Map.Entry<Object, Object> e : convertedMap.entrySet()) {
 				assignments.add(QueryBuilder.put(p.getColumnName(), e.getKey(), e.getValue()));
 			}
