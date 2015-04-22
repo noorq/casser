@@ -23,9 +23,9 @@ import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.SessionRepository;
 
-public final class MapToUDTKeyMapConverter extends UDTValueWriter implements Function<Object, Object> {
+public final class MapToUDTValueMapConverter extends UDTValueWriter implements Function<Object, Object> {
 
-	public MapToUDTKeyMapConverter(Class<?> iface, UserType userType, SessionRepository repository) {
+	public MapToUDTValueMapConverter(Class<?> iface, UserType userType, SessionRepository repository) {
 		super(iface, userType, repository);
 	}
 	
@@ -34,10 +34,11 @@ public final class MapToUDTKeyMapConverter extends UDTValueWriter implements Fun
 		
 		Map<Object, Object> sourceMap = (Map<Object, Object>) t;
 		
-		Map<UDTValue, Object> out = new HashMap<UDTValue, Object>();
+		Map<Object, UDTValue> out = new HashMap<Object, UDTValue>();
 		
 		for (Map.Entry<Object, Object> source : sourceMap.entrySet()) {
-			out.put(write(source.getKey()), source.getValue());
+			out.put(source.getKey(), write(source.getValue()));
+				
 	   }
 		
 		return out;

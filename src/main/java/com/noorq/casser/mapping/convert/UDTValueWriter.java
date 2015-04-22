@@ -23,12 +23,12 @@ import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.value.UDTColumnValuePreparer;
 
-public abstract class AbstractUDTValueWriter extends AbstractEntityValueWriter<UDTValue> {
+public class UDTValueWriter extends AbstractEntityValueWriter<UDTValue> {
 
 	protected final UserType userType;
 	protected final UDTColumnValuePreparer valuePreparer;
 	
-	public AbstractUDTValueWriter(Class<?> iface, UserType userType, SessionRepository repository) {
+	public UDTValueWriter(Class<?> iface, UserType userType, SessionRepository repository) {
 		super(iface);
 		
 		this.userType = userType;
@@ -44,6 +44,15 @@ public abstract class AbstractUDTValueWriter extends AbstractEntityValueWriter<U
 		if (bytes != null) {
 			udtValue.setBytesUnsafe(prop.getColumnName().getName(), bytes);
 		}
+	}
+	
+	UDTValue write(Object source) {
+		if (source != null) {
+			UDTValue outValue = userType.newValue();
+			write(outValue, source);
+			return outValue;
+		}
+		return null;
 	}
 	
 }

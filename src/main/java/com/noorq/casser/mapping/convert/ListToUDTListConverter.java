@@ -23,7 +23,7 @@ import com.datastax.driver.core.UserType;
 import com.google.common.collect.ImmutableList;
 import com.noorq.casser.core.SessionRepository;
 
-public final class ListToUDTListConverter extends AbstractUDTValueWriter implements Function<Object, Object> {
+public final class ListToUDTListConverter extends UDTValueWriter implements Function<Object, Object> {
 
 	public ListToUDTListConverter(Class<?> iface, UserType userType, SessionRepository repository) {
 		super(iface, userType, repository);
@@ -37,16 +37,7 @@ public final class ListToUDTListConverter extends AbstractUDTValueWriter impleme
 		ImmutableList.Builder<UDTValue> builder = ImmutableList.builder();
 
 		for (Object source : sourceSet) {
-		
-			UDTValue outValue = null;
-			
-			if (source != null) {
-				outValue = userType.newValue();
-				write(outValue, source);
-			}
-			
-			builder.add(outValue);
-				
+			builder.add(write(source));
 	   }
 		
 		return builder.build();

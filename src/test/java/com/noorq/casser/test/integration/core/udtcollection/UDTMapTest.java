@@ -24,22 +24,24 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class UDTKeyMapTest extends UDTCollectionTest {
+import com.noorq.casser.test.integration.core.udtcollection.UDTCollectionTest.AuthorImpl;
+
+public class UDTMapTest extends UDTCollectionTest {
 	
 	@Test
-	public void testKeyMapCRUID() {
+	public void testMapCRUID() {
 	
-		int id = 888;
+		int id = 333;
 		
-		Map<Section, String> notes = new HashMap<Section, String>();
-		notes.put(new SectionImpl("first", 1), "value1");
-		notes.put(new SectionImpl("second", 2), "value2");
+		Map<Section, Author> writers = new HashMap<Section, Author>();
+		writers.put(new SectionImpl("first", 1), new AuthorImpl("Alex", "San Jose"));
+		writers.put(new SectionImpl("second", 2), new AuthorImpl("Bob", "San Francisco"));
 		
 		// CREATE
 		
 		session.insert()
 		.value(book::id, id)
-		.value(book::notes, notes)
+		.value(book::writers, writers)
 		.sync();
 		
 		// READ
@@ -48,60 +50,61 @@ public class UDTKeyMapTest extends UDTCollectionTest {
 		
 		Book actual = session.select(Book.class).where(book::id, eq(id)).sync().findFirst().get();
 		Assert.assertEquals(id, actual.id());
-		assertEqualMaps(notes, actual.notes());
+		assertEqualMaps(writers, actual.writers());
 		Assert.assertNull(actual.reviewers());
-		Assert.assertNull(actual.writers());
+		Assert.assertNull(actual.notes());
 		Assert.assertNull(actual.contents());
 		
 		// read full map
 		
-		Map<Section, String> actualMap = session.select(book::notes).where(book::id, eq(id)).sync().findFirst().get()._1;
-		assertEqualMaps(notes, actualMap);
+		Map<Section, Author> actualMap = session.select(book::writers).where(book::id, eq(id)).sync().findFirst().get()._1;
+		assertEqualMaps(writers, actualMap);
 		
 		// read single key-value in map
 		
-		String cql = session.select(get(book::notes, new SectionImpl("first", 1)))
+		String cql = session.select(get(book::writers, new SectionImpl("first", 1)))
 				.where(book::id, eq(id)).cql();
 
 		System.out.println("Still not supporting cql = " + cql);
 		
 		// UPDATE
 		
-		Map<Section, String> expected = new HashMap<Section, String>();
-		expected.put(new SectionImpl("f", 1), "v1");
-		expected.put(new SectionImpl("s", 1), "v2");
+		Map<Section, Author> expected = new HashMap<Section, Author>();
+		expected.put(new SectionImpl("f", 1), new AuthorImpl("A", "SJ"));
+		expected.put(new SectionImpl("s", 1), new AuthorImpl("B", "SF"));
 		
-		session.update().set(book::notes, expected).where(book::id, eq(id)).sync();
+		session.update().set(book::writers, expected).where(book::id, eq(id)).sync();
 		
 		actual = session.select(Book.class).where(book::id, eq(id)).sync().findFirst().get();
 		Assert.assertEquals(id, actual.id());
-		assertEqualMaps(expected, actual.notes());
+		assertEqualMaps(expected, actual.writers());
 		
 		// INSERT
 		
 		// put operation
 		
 		Section third = new SectionImpl("t", 3);
+		Author unk = new AuthorImpl("Unk", "City 17");
 		
-		expected.put(third, "v3");
-		session.update().put(book::notes, third, "v3").where(book::id, eq(id)).sync();
+		expected.put(third, unk);
+		session.update().put(book::writers, third, unk).where(book::id, eq(id)).sync();
 		
-		actualMap = session.select(book::notes).where(book::id, eq(id)).sync().findFirst().get()._1;
+		actualMap = session.select(book::writers).where(book::id, eq(id)).sync().findFirst().get()._1;
 		assertEqualMaps(expected, actualMap);
 		
 		// putAll operation
-		expected.putAll(notes);
-		session.update().putAll(book::notes, notes).where(book::id, eq(id)).sync();
+		expected.putAll(writers);
+		session.update().putAll(book::writers, writers).where(book::id, eq(id)).sync();
 		
-		actualMap = session.select(book::notes).where(book::id, eq(id)).sync().findFirst().get()._1;
+		actualMap = session.select(book::writers).where(book::id, eq(id)).sync().findFirst().get()._1;
 		assertEqualMaps(expected, actualMap);
 		
 		// put existing
 		
-		expected.put(third, "v33");
-		session.update().put(book::notes, third, "v33").where(book::id, eq(id)).sync();
+		expected.put(third, unk);
+		session.update().put(book::writers, third, unk).where(book::id, eq(id)).sync();
 		
-		actualMap = session.select(book::notes).where(book::id, eq(id)).sync().findFirst().get()._1;
+		actualMap = session.select(book::writers).where(book::id, eq(id)).sync().findFirst().get()._1;
 		assertEqualMaps(expected, actualMap);
 		
 		// DELETE
@@ -109,16 +112,16 @@ public class UDTKeyMapTest extends UDTCollectionTest {
 		// remove single key
 		
 		expected.remove(third);
-		session.update().put(book::notes, third, null).where(book::id, eq(id)).sync();
+		session.update().put(book::writers, third, null).where(book::id, eq(id)).sync();
 		
-		actualMap = session.select(book::notes).where(book::id, eq(id)).sync().findFirst().get()._1;
+		actualMap = session.select(book::writers).where(book::id, eq(id)).sync().findFirst().get()._1;
 		assertEqualMaps(expected, actualMap);
 		
 		// remove full map
 		
-		session.update().set(book::notes, null).where(book::id, eq(id)).sync();
+		session.update().set(book::writers, null).where(book::id, eq(id)).sync();
 		
-		actualMap = session.select(book::notes).where(book::id, eq(id)).sync().findFirst().get()._1;
+		actualMap = session.select(book::writers).where(book::id, eq(id)).sync().findFirst().get()._1;
 		Assert.assertNull(actualMap);
 		
 		// remove object
@@ -129,7 +132,7 @@ public class UDTKeyMapTest extends UDTCollectionTest {
 		
 	}
 	
-	private void assertEqualMaps(Map<Section, String> expected, Map<Section, String> actual) {
+	private void assertEqualMaps(Map<Section, Author> expected, Map<Section, Author> actual) {
 		
 		Assert.assertEquals(expected.size(), actual.size());
 
@@ -137,7 +140,12 @@ public class UDTKeyMapTest extends UDTCollectionTest {
 			Section a = actual.keySet().stream().filter(p -> p.title().equals(e.title())).findFirst().get();
 			Assert.assertEquals(e.title(), a.title());
 			Assert.assertEquals(e.page(), a.page());
-			Assert.assertEquals(expected.get(e), actual.get(a));
+			
+			Author ea = expected.get(e);
+			Author aa = actual.get(a);
+			
+			Assert.assertEquals(ea.name(), aa.name());
+			Assert.assertEquals(ea.city(), aa.city());
 		}
 		
 	}

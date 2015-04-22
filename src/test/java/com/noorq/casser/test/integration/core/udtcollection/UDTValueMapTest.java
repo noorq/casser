@@ -24,22 +24,22 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class UDTKeyMapTest extends UDTCollectionTest {
+public class UDTValueMapTest extends UDTCollectionTest {
 	
 	@Test
-	public void testKeyMapCRUID() {
+	public void testValueMapCRUID() {
 	
-		int id = 888;
+		int id = 999;
 		
-		Map<Section, String> notes = new HashMap<Section, String>();
-		notes.put(new SectionImpl("first", 1), "value1");
-		notes.put(new SectionImpl("second", 2), "value2");
+		Map<Integer, Section> contents = new HashMap<Integer, Section>();
+		contents.put(1, new SectionImpl("first", 1));
+		contents.put(2, new SectionImpl("second", 2));
 		
 		// CREATE
 		
 		session.insert()
 		.value(book::id, id)
-		.value(book::notes, notes)
+		.value(book::contents, contents)
 		.sync();
 		
 		// READ
@@ -48,34 +48,34 @@ public class UDTKeyMapTest extends UDTCollectionTest {
 		
 		Book actual = session.select(Book.class).where(book::id, eq(id)).sync().findFirst().get();
 		Assert.assertEquals(id, actual.id());
-		assertEqualMaps(notes, actual.notes());
+		assertEqualMaps(contents, actual.contents());
 		Assert.assertNull(actual.reviewers());
 		Assert.assertNull(actual.writers());
-		Assert.assertNull(actual.contents());
+		Assert.assertNull(actual.notes());
 		
 		// read full map
 		
-		Map<Section, String> actualMap = session.select(book::notes).where(book::id, eq(id)).sync().findFirst().get()._1;
-		assertEqualMaps(notes, actualMap);
+		Map<Integer, Section> actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
+		assertEqualMaps(contents, actualMap);
 		
 		// read single key-value in map
 		
-		String cql = session.select(get(book::notes, new SectionImpl("first", 1)))
+		String cql = session.select(get(book::contents, 1))
 				.where(book::id, eq(id)).cql();
 
 		System.out.println("Still not supporting cql = " + cql);
 		
 		// UPDATE
 		
-		Map<Section, String> expected = new HashMap<Section, String>();
-		expected.put(new SectionImpl("f", 1), "v1");
-		expected.put(new SectionImpl("s", 1), "v2");
+		Map<Integer, Section> expected = new HashMap<Integer, Section>();
+		expected.put(4, new SectionImpl("4", 4));
+		expected.put(5, new SectionImpl("5", 5));
 		
-		session.update().set(book::notes, expected).where(book::id, eq(id)).sync();
+		session.update().set(book::contents, expected).where(book::id, eq(id)).sync();
 		
 		actual = session.select(Book.class).where(book::id, eq(id)).sync().findFirst().get();
 		Assert.assertEquals(id, actual.id());
-		assertEqualMaps(expected, actual.notes());
+		assertEqualMaps(expected, actual.contents());
 		
 		// INSERT
 		
@@ -83,42 +83,43 @@ public class UDTKeyMapTest extends UDTCollectionTest {
 		
 		Section third = new SectionImpl("t", 3);
 		
-		expected.put(third, "v3");
-		session.update().put(book::notes, third, "v3").where(book::id, eq(id)).sync();
+		expected.put(3, third);
+		session.update().put(book::contents, 3, third).where(book::id, eq(id)).sync();
 		
-		actualMap = session.select(book::notes).where(book::id, eq(id)).sync().findFirst().get()._1;
+		actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
 		assertEqualMaps(expected, actualMap);
 		
 		// putAll operation
-		expected.putAll(notes);
-		session.update().putAll(book::notes, notes).where(book::id, eq(id)).sync();
+		expected.putAll(contents);
+		session.update().putAll(book::contents, contents).where(book::id, eq(id)).sync();
 		
-		actualMap = session.select(book::notes).where(book::id, eq(id)).sync().findFirst().get()._1;
+		actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
 		assertEqualMaps(expected, actualMap);
 		
 		// put existing
 		
-		expected.put(third, "v33");
-		session.update().put(book::notes, third, "v33").where(book::id, eq(id)).sync();
+		third = new SectionImpl("t-replace", 3);
+		expected.put(3, third);
+		session.update().put(book::contents, 3, third).where(book::id, eq(id)).sync();
 		
-		actualMap = session.select(book::notes).where(book::id, eq(id)).sync().findFirst().get()._1;
+		actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
 		assertEqualMaps(expected, actualMap);
 		
 		// DELETE
 		
 		// remove single key
 		
-		expected.remove(third);
-		session.update().put(book::notes, third, null).where(book::id, eq(id)).sync();
+		expected.remove(3);
+		session.update().put(book::contents, 3, null).where(book::id, eq(id)).sync();
 		
-		actualMap = session.select(book::notes).where(book::id, eq(id)).sync().findFirst().get()._1;
+		actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
 		assertEqualMaps(expected, actualMap);
 		
 		// remove full map
 		
-		session.update().set(book::notes, null).where(book::id, eq(id)).sync();
+		session.update().set(book::contents, null).where(book::id, eq(id)).sync();
 		
-		actualMap = session.select(book::notes).where(book::id, eq(id)).sync().findFirst().get()._1;
+		actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
 		Assert.assertNull(actualMap);
 		
 		// remove object
@@ -129,15 +130,15 @@ public class UDTKeyMapTest extends UDTCollectionTest {
 		
 	}
 	
-	private void assertEqualMaps(Map<Section, String> expected, Map<Section, String> actual) {
+	private void assertEqualMaps(Map<Integer, Section> expected, Map<Integer, Section> actual) {
 		
 		Assert.assertEquals(expected.size(), actual.size());
 
-		for (Section e : expected.keySet()) {
-			Section a = actual.keySet().stream().filter(p -> p.title().equals(e.title())).findFirst().get();
+		for (Integer i : expected.keySet()) {
+			Section e = expected.get(i);
+			Section a = actual.get(i);
 			Assert.assertEquals(e.title(), a.title());
 			Assert.assertEquals(e.page(), a.page());
-			Assert.assertEquals(expected.get(e), actual.get(a));
 		}
 		
 	}

@@ -29,7 +29,11 @@ import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.mapping.annotation.Types;
 import com.noorq.casser.mapping.convert.MapToUDTKeyMapConverter;
+import com.noorq.casser.mapping.convert.MapToUDTMapConverter;
+import com.noorq.casser.mapping.convert.MapToUDTValueMapConverter;
 import com.noorq.casser.mapping.convert.UDTKeyMapToMapConverter;
+import com.noorq.casser.mapping.convert.UDTMapToMapConverter;
+import com.noorq.casser.mapping.convert.UDTValueMapToMapConverter;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
 import com.noorq.casser.mapping.type.UDTKeyMapDataType;
@@ -138,6 +142,35 @@ public final class MapJavaType extends AbstractJavaType {
 			
 		}
 		
+		else if (abstractDataType instanceof UDTValueMapDataType) {
+			
+			UDTValueMapDataType dt = (UDTValueMapDataType) abstractDataType;
+			
+			Class<Object> javaClass = (Class<Object>) dt.getUdtValueClass();
+			
+			if (UDTValue.class.isAssignableFrom(javaClass)) {
+				return Optional.empty();
+			}
+			
+			return Optional.of(new UDTValueMapToMapConverter(javaClass, repository));
+			
+		}
+		
+		else if (abstractDataType instanceof UDTMapDataType) {
+			
+			UDTMapDataType dt = (UDTMapDataType) abstractDataType;
+			
+			Class<Object> keyClass = (Class<Object>) dt.getUdtKeyClass();
+			Class<Object> valueClass = (Class<Object>) dt.getUdtValueClass();
+			
+			if (UDTValue.class.isAssignableFrom(keyClass) && UDTValue.class.isAssignableFrom(valueClass)) {
+				return Optional.empty();
+			}
+			
+			return Optional.of(new UDTMapToMapConverter(keyClass, valueClass, repository));
+			
+		}
+		
 		return Optional.empty();
 	}
 
@@ -161,6 +194,50 @@ public final class MapJavaType extends AbstractJavaType {
 			}
 			
 			return Optional.of(new MapToUDTKeyMapConverter(javaClass, userType, repository));
+			
+		}
+		
+		else if (abstractDataType instanceof UDTValueMapDataType) {
+			
+			UDTValueMapDataType dt = (UDTValueMapDataType) abstractDataType;
+			
+			Class<Object> javaClass = (Class<Object>) dt.getUdtValueClass();
+			
+			if (UDTValue.class.isAssignableFrom(javaClass)) {
+				return Optional.empty();
+			}
+
+			UserType userType = repository.findUserType(dt.getUdtValueName().getName());
+			if (userType == null) {
+				throw new CasserMappingException("UserType not found for " + dt.getUdtValueName() + " with type " + javaClass);
+			}
+			
+			return Optional.of(new MapToUDTValueMapConverter(javaClass, userType, repository));
+			
+		}
+		
+		else if (abstractDataType instanceof UDTMapDataType) {
+			
+			UDTMapDataType dt = (UDTMapDataType) abstractDataType;
+			
+			Class<Object> keyClass = (Class<Object>) dt.getUdtKeyClass();
+			Class<Object> valueClass = (Class<Object>) dt.getUdtValueClass();
+			
+			if (UDTValue.class.isAssignableFrom(keyClass) && UDTValue.class.isAssignableFrom(valueClass)) {
+				return Optional.empty();
+			}
+
+			UserType keyType = repository.findUserType(dt.getUdtKeyName().getName());
+			if (keyType == null) {
+				throw new CasserMappingException("UserType not found for " + dt.getUdtKeyName() + " with type " + keyClass);
+			}
+
+			UserType valueType = repository.findUserType(dt.getUdtValueName().getName());
+			if (valueType == null) {
+				throw new CasserMappingException("UserType not found for " + dt.getUdtValueName() + " with type " + valueClass);
+			}
+
+			return Optional.of(new MapToUDTMapConverter(keyClass, keyType, valueClass, valueType, repository));
 			
 		}
 		

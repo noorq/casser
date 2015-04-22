@@ -21,7 +21,7 @@ import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.SessionRepository;
 
-public final class EntityToUDTValueConverter extends AbstractUDTValueWriter implements Function<Object, UDTValue> {
+public final class EntityToUDTValueConverter extends UDTValueWriter implements Function<Object, UDTValue> {
 
 	public EntityToUDTValueConverter(Class<?> iface, UserType userType, SessionRepository repository) {
 		super(iface, userType, repository);
@@ -29,12 +29,7 @@ public final class EntityToUDTValueConverter extends AbstractUDTValueWriter impl
 	
 	@Override
 	public UDTValue apply(Object source) {
-		
-		UDTValue outValue = userType.newValue();
-		
-		write(outValue, source);
-		
-		return outValue;
+		return write(source);
 	}
 
 }

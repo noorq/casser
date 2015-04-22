@@ -23,7 +23,7 @@ import com.datastax.driver.core.UserType;
 import com.google.common.collect.ImmutableSet;
 import com.noorq.casser.core.SessionRepository;
 
-public final class SetToUDTSetConverter extends AbstractUDTValueWriter implements Function<Object, Object> {
+public final class SetToUDTSetConverter extends UDTValueWriter implements Function<Object, Object> {
 
 	public SetToUDTSetConverter(Class<?> iface, UserType userType, SessionRepository repository) {
 		super(iface, userType, repository);
@@ -37,16 +37,7 @@ public final class SetToUDTSetConverter extends AbstractUDTValueWriter implement
 		ImmutableSet.Builder<UDTValue> builder = ImmutableSet.builder();
 
 		for (Object source : sourceSet) {
-		
-			UDTValue outValue = null;
-			
-			if (source != null) {
-				outValue = userType.newValue();
-				write(outValue, source);
-			}
-			
-			builder.add(outValue);
-				
+			builder.add(write(source));
 	   }
 		
 		return builder.build();
