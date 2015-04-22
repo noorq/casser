@@ -82,7 +82,7 @@ public final class Immutables {
 
 		@Override
 		public int nextIndex() {
-			return processed ? 2 : 1;
+			return processed ? 1 : 0;
 		}
 
 		@Override
@@ -250,8 +250,7 @@ public final class Immutables {
 
 		@Override
 		public ListIterator<T> listIterator() {
-			// TODO Auto-generated method stub
-			return null;
+			return new SingleEntryListIterator<T>(entry);
 		}
 
 		@Override

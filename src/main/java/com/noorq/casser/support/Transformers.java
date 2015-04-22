@@ -15,12 +15,13 @@
  */
 package com.noorq.casser.support;
 
+import java.util.AbstractList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -38,11 +39,7 @@ public final class Transformers {
 	}
 	
 	public static <I, O> List<O> transformList(List<I> inputList, Function<I, O> func) {
-		List<O> list = Lists.newArrayList();
-		for (I in : inputList) {
-			list.add(func.apply(in));
-		}
-		return list;
+		return new TransformedImmutableList<I, O>(inputList, func);
 	}
 	
 	public static <I, O, V> Map<O, V> transformMapKey(Map<I, V> inputMap, Function<I, O> func) {
@@ -64,6 +61,29 @@ public final class Transformers {
 					funcValue.apply(e.getValue()));
 		}
 		return map;
+	}
+	
+	static final class TransformedImmutableList<I, O> extends AbstractList<O> implements List<O> {
+	
+		final List<I> inputList;
+		final Function<I, O> func;
+		
+		TransformedImmutableList(List<I> inputList, Function<I, O> func) {
+			this.inputList = Objects.requireNonNull(inputList, "inputList is null");
+			this.func = Objects.requireNonNull(func, "func is null");
+		}
+
+		@Override
+		public O get(int index) {
+			return func.apply(inputList.get(index));
+		}
+
+		@Override
+		public int size() {
+			return inputList.size();
+		}
+
+		
 	}
 	
 }
