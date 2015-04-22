@@ -16,6 +16,7 @@
 package com.noorq.casser.mapping.convert;
 
 import java.nio.ByteBuffer;
+import java.util.function.Function;
 
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
@@ -23,10 +24,10 @@ import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.value.UDTColumnValuePreparer;
 
-public class UDTValueWriter extends AbstractEntityValueWriter<UDTValue> {
+public class UDTValueWriter extends AbstractEntityValueWriter<UDTValue> implements Function<Object, UDTValue> {
 
-	protected final UserType userType;
-	protected final UDTColumnValuePreparer valuePreparer;
+	final UserType userType;
+	final UDTColumnValuePreparer valuePreparer;
 	
 	public UDTValueWriter(Class<?> iface, UserType userType, SessionRepository repository) {
 		super(iface);
@@ -46,7 +47,8 @@ public class UDTValueWriter extends AbstractEntityValueWriter<UDTValue> {
 		}
 	}
 	
-	UDTValue write(Object source) {
+	@Override
+	public UDTValue apply(Object source) {
 		if (source != null) {
 			UDTValue outValue = userType.newValue();
 			write(outValue, source);

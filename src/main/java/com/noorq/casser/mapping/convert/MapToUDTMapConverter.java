@@ -15,13 +15,12 @@
  */
 package com.noorq.casser.mapping.convert;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.SessionRepository;
+import com.noorq.casser.support.Transformers;
 
 public final class MapToUDTMapConverter implements Function<Object, Object> {
 
@@ -35,19 +34,7 @@ public final class MapToUDTMapConverter implements Function<Object, Object> {
 	
 	@Override
 	public Object apply(Object t) {
-		
-		Map<Object, Object> sourceMap = (Map<Object, Object>) t;
-		Map<UDTValue, UDTValue> out = new HashMap<UDTValue, UDTValue>();
-		
-		for (Map.Entry<Object, Object> source : sourceMap.entrySet()) {
-
-			out.put(keyWriter.write(source.getKey()), 
-					valueWriter.write(source.getValue()));
-				
-	    }
-		
-	    return out;
+		return Transformers.transformMap((Map<Object, Object>) t, keyWriter, valueWriter);
 	}
-
 
 }

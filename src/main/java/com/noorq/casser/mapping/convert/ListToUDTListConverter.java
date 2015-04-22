@@ -18,30 +18,21 @@ package com.noorq.casser.mapping.convert;
 import java.util.List;
 import java.util.function.Function;
 
-import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
-import com.google.common.collect.ImmutableList;
 import com.noorq.casser.core.SessionRepository;
+import com.noorq.casser.support.Transformers;
 
-public final class ListToUDTListConverter extends UDTValueWriter implements Function<Object, Object> {
+public final class ListToUDTListConverter implements Function<Object, Object> {
 
+	final UDTValueWriter writer;
+	
 	public ListToUDTListConverter(Class<?> iface, UserType userType, SessionRepository repository) {
-		super(iface, userType, repository);
+		this.writer = new UDTValueWriter(iface, userType, repository);
 	}
 	
 	@Override
 	public Object apply(Object t) {
-		
-		List<Object> sourceSet = (List<Object>) t;
-		
-		ImmutableList.Builder<UDTValue> builder = ImmutableList.builder();
-
-		for (Object source : sourceSet) {
-			builder.add(write(source));
-	   }
-		
-		return builder.build();
+		return Transformers.transformList((List<Object>) t, writer);
 	}
-
 
 }

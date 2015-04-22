@@ -15,21 +15,13 @@
  */
 package com.noorq.casser.mapping.convert;
 
-import java.util.function.Function;
-
-import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.SessionRepository;
 
-public final class EntityToUDTValueConverter extends UDTValueWriter implements Function<Object, UDTValue> {
+public final class EntityToUDTValueConverter extends UDTValueWriter {
 
 	public EntityToUDTValueConverter(Class<?> iface, UserType userType, SessionRepository repository) {
 		super(iface, userType, repository);
-	}
-	
-	@Override
-	public UDTValue apply(Object source) {
-		return write(source);
 	}
 
 }
