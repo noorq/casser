@@ -13,26 +13,28 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping.convert;
+package com.noorq.casser.mapping.convert.udt;
 
-import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.SessionRepository;
+import com.noorq.casser.mapping.convert.UDTValueWriter;
 import com.noorq.casser.support.Transformers;
 
-public final class ListToUDTListConverter implements Function<Object, Object> {
+public final class MapToUDTValueMapConverter implements Function<Object, Object> {
 
 	final UDTValueWriter writer;
 	
-	public ListToUDTListConverter(Class<?> iface, UserType userType, SessionRepository repository) {
+	public MapToUDTValueMapConverter(Class<?> iface, UserType userType, SessionRepository repository) {
 		this.writer = new UDTValueWriter(iface, userType, repository);
 	}
 	
 	@Override
 	public Object apply(Object t) {
-		return Transformers.transformList((List<Object>) t, writer);
+		return Transformers.transformMapValue((Map<Object, Object>) t, writer);
 	}
+
 
 }

@@ -13,15 +13,19 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping.convert;
+package com.noorq.casser.mapping.convert.tuple;
 
-import com.datastax.driver.core.UserType;
+import java.util.function.Function;
+
+import com.datastax.driver.core.TupleValue;
 import com.noorq.casser.core.SessionRepository;
+import com.noorq.casser.mapping.convert.ProxyValueReader;
+import com.noorq.casser.mapping.value.TupleColumnValueProvider;
 
-public final class EntityToUDTValueConverter extends UDTValueWriter {
+public final class TupleValueToEntityConverter extends ProxyValueReader<TupleValue> implements Function<TupleValue, Object> {
 
-	public EntityToUDTValueConverter(Class<?> iface, UserType userType, SessionRepository repository) {
-		super(iface, userType, repository);
+	public TupleValueToEntityConverter(Class<?> iface, SessionRepository repository) {
+		super(iface, new TupleColumnValueProvider(repository));
 	}
 
 }

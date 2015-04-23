@@ -13,27 +13,19 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping.convert;
+package com.noorq.casser.mapping.convert.tuple;
 
-import java.util.Map;
 import java.util.function.Function;
 
+import com.datastax.driver.core.TupleType;
 import com.datastax.driver.core.TupleValue;
 import com.noorq.casser.core.SessionRepository;
-import com.noorq.casser.mapping.value.TupleColumnValueProvider;
-import com.noorq.casser.support.Transformers;
+import com.noorq.casser.mapping.convert.TupleValueWriter;
 
-public final class TupleValueMapToMapConverter implements Function<Object, Object> {
-
-	final ProxyValueReader<TupleValue> reader;
+public final class EntityToTupleValueConverter extends TupleValueWriter implements Function<Object, TupleValue> {
 	
-	public TupleValueMapToMapConverter(Class<?> iface, SessionRepository repository) {
-		this.reader = new ProxyValueReader<TupleValue>(iface, new TupleColumnValueProvider(repository));
+	public EntityToTupleValueConverter(Class<?> iface, TupleType tupleType, SessionRepository repository) {
+		super(iface, tupleType, repository);
 	}
-
-	@Override
-	public Object apply(Object t) {
-		return Transformers.transformMapValue((Map<Object, TupleValue>) t, reader);
-	}
-
+	
 }

@@ -13,27 +13,28 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping.convert;
+package com.noorq.casser.mapping.convert.udt;
 
-import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
-import com.datastax.driver.core.TupleValue;
+import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.SessionRepository;
-import com.noorq.casser.mapping.value.TupleColumnValueProvider;
+import com.noorq.casser.mapping.convert.UDTValueWriter;
 import com.noorq.casser.support.Transformers;
 
-public final class TupleListToListConverter implements Function<Object, Object> {
+public final class MapToUDTKeyMapConverter implements Function<Object, Object> {
 
-	final ProxyValueReader<TupleValue> reader;
+	final UDTValueWriter writer;
 	
-	public TupleListToListConverter(Class<?> iface, SessionRepository repository) {
-		this.reader = new ProxyValueReader<TupleValue>(iface, new TupleColumnValueProvider(repository));
+	public MapToUDTKeyMapConverter(Class<?> iface, UserType userType, SessionRepository repository) {
+		this.writer = new UDTValueWriter(iface, userType, repository);
 	}
-
+	
 	@Override
 	public Object apply(Object t) {
-		return Transformers.transformList((List<TupleValue>) t, reader);
+		return Transformers.transformMapKey((Map<Object, Object>) t, writer);
 	}
+
 
 }

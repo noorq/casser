@@ -13,29 +13,28 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping.convert;
+package com.noorq.casser.mapping.convert.tuple;
 
 import java.util.Map;
 import java.util.function.Function;
 
-import com.datastax.driver.core.UDTValue;
+import com.datastax.driver.core.TupleValue;
 import com.noorq.casser.core.SessionRepository;
-import com.noorq.casser.mapping.value.UDTColumnValueProvider;
+import com.noorq.casser.mapping.convert.ProxyValueReader;
+import com.noorq.casser.mapping.value.TupleColumnValueProvider;
 import com.noorq.casser.support.Transformers;
 
-public final class UDTMapToMapConverter implements Function<Object, Object> {
+public final class TupleKeyMapToMapConverter implements Function<Object, Object> {
 
-	final ProxyValueReader<UDTValue> keyReader;
-	final ProxyValueReader<UDTValue> valueReader;
+	final ProxyValueReader<TupleValue> reader;
 	
-	public UDTMapToMapConverter(Class<?> keyClass, Class<?> valueClass, SessionRepository repository) {
-		this.keyReader = new ProxyValueReader<UDTValue>(keyClass, new UDTColumnValueProvider(repository));
-		this.valueReader = new ProxyValueReader<UDTValue>(valueClass, new UDTColumnValueProvider(repository));
+	public TupleKeyMapToMapConverter(Class<?> iface, SessionRepository repository) {
+		this.reader = new ProxyValueReader<TupleValue>(iface, new TupleColumnValueProvider(repository));
 	}
 
 	@Override
 	public Object apply(Object t) {
-		return Transformers.transformMap((Map<UDTValue, UDTValue>) t, keyReader, valueReader);
+		return Transformers.transformMapKey((Map<TupleValue, Object>) t, reader);
 	}
 
 }

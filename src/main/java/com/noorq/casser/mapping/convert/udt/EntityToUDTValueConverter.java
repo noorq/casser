@@ -13,18 +13,16 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping.convert;
+package com.noorq.casser.mapping.convert.udt;
 
-import java.util.function.Function;
-
-import com.datastax.driver.core.TupleType;
-import com.datastax.driver.core.TupleValue;
+import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.SessionRepository;
+import com.noorq.casser.mapping.convert.UDTValueWriter;
 
-public final class EntityToTupleValueConverter extends TupleValueWriter implements Function<Object, TupleValue> {
-	
-	public EntityToTupleValueConverter(Class<?> iface, TupleType tupleType, SessionRepository repository) {
-		super(iface, tupleType, repository);
+public final class EntityToUDTValueConverter extends UDTValueWriter {
+
+	public EntityToUDTValueConverter(Class<?> iface, UserType userType, SessionRepository repository) {
+		super(iface, userType, repository);
 	}
-	
+
 }

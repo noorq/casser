@@ -13,27 +13,29 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping.convert;
+package com.noorq.casser.mapping.convert.tuple;
 
-import java.util.Set;
+import java.util.Map;
 import java.util.function.Function;
 
-import com.datastax.driver.core.UDTValue;
+import com.datastax.driver.core.TupleType;
 import com.noorq.casser.core.SessionRepository;
-import com.noorq.casser.mapping.value.UDTColumnValueProvider;
+import com.noorq.casser.mapping.convert.TupleValueWriter;
 import com.noorq.casser.support.Transformers;
 
-public final class UDTSetToSetConverter implements Function<Object, Object> {
+public final class MapToTupleMapConverter implements Function<Object, Object> {
 
-	final ProxyValueReader<UDTValue> reader;
+	final TupleValueWriter keyWriter;
+	final TupleValueWriter valueWriter;
 	
-	public UDTSetToSetConverter(Class<?> iface, SessionRepository repository) {
-		this.reader = new ProxyValueReader<UDTValue>(iface, new UDTColumnValueProvider(repository));
+	public MapToTupleMapConverter(Class<?> keyClass, TupleType keyType, Class<?> valueClass, TupleType valueType, SessionRepository repository) {
+		this.keyWriter = new TupleValueWriter(keyClass, keyType, repository);
+		this.valueWriter = new TupleValueWriter(valueClass, valueType, repository);
 	}
-
+	
 	@Override
 	public Object apply(Object t) {
-		return Transformers.transformSet((Set<UDTValue>) t, reader);
+		return Transformers.transformMap((Map<Object, Object>) t, keyWriter, valueWriter);
 	}
 
 }
