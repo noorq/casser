@@ -22,13 +22,17 @@ import java.util.Set;
 import java.util.function.Function;
 
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.TupleType;
+import com.datastax.driver.core.TupleValue;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.mapping.annotation.Types;
+import com.noorq.casser.mapping.convert.SetToTupleSetConverter;
 import com.noorq.casser.mapping.convert.SetToUDTSetConverter;
+import com.noorq.casser.mapping.convert.TupleSetToSetConverter;
 import com.noorq.casser.mapping.convert.UDTSetToSetConverter;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
@@ -65,7 +69,7 @@ public final class SetJavaType extends AbstractJavaType {
 		Either<DataType, IdentityName> parameterType = autodetectParameterType(getter, args[0]);
 
 		if (parameterType.isLeft()) {
-			return new DTDataType(columnType, DataType.set(parameterType.getLeft()));
+			return DTDataType.set(columnType, parameterType.getLeft(), args[0]);
 		}
 		else {
 			return new UDTSetDataType(columnType, 
@@ -79,17 +83,33 @@ public final class SetJavaType extends AbstractJavaType {
 	public Optional<Function<Object, Object>> resolveReadConverter(
 			AbstractDataType abstractDataType, SessionRepository repository) {
 		
-		if (abstractDataType instanceof UDTSetDataType) {
+		if (abstractDataType instanceof DTDataType) {
+			
+			DTDataType dt = (DTDataType) abstractDataType;
+			DataType elementType = dt.getDataType().getTypeArguments().get(0);
+			if (elementType instanceof TupleType) {
+			
+				Class<?> tupleClass = dt.getTypeArguments()[0];
+				
+				if (TupleValue.class.isAssignableFrom(tupleClass)) {
+					return Optional.empty();
+				}
+				
+				return Optional.of(new TupleSetToSetConverter(tupleClass, repository));
+			}
+		}
+		
+		else if (abstractDataType instanceof UDTSetDataType) {
 			
 			UDTSetDataType dt = (UDTSetDataType) abstractDataType;
 			
-			Class<Object> javaClass = (Class<Object>) dt.getUdtClasses()[0];
+			Class<Object> udtClass = (Class<Object>) dt.getTypeArguments()[0];
 			
-			if (UDTValue.class.isAssignableFrom(javaClass)) {
+			if (UDTValue.class.isAssignableFrom(udtClass)) {
 				return Optional.empty();
 			}
 			
-			return Optional.of(new UDTSetToSetConverter(javaClass, repository));
+			return Optional.of(new UDTSetToSetConverter(udtClass, repository));
 			
 		}
 		
@@ -99,23 +119,41 @@ public final class SetJavaType extends AbstractJavaType {
 	@Override
 	public Optional<Function<Object, Object>> resolveWriteConverter(
 			AbstractDataType abstractDataType, SessionRepository repository) {
+
+		if (abstractDataType instanceof DTDataType) {
+			
+			DTDataType dt = (DTDataType) abstractDataType;
+			DataType elementType = dt.getDataType().getTypeArguments().get(0);
+			
+			if (elementType instanceof TupleType) {
+				
+				Class<?> tupleClass = dt.getTypeArguments()[0];
+				
+				if (TupleValue.class.isAssignableFrom(tupleClass)) {
+					return Optional.empty();
+				}
+				
+				return Optional.of(new SetToTupleSetConverter(tupleClass, (TupleType) elementType, repository));
+			}
+			
+		}
 		
-		if (abstractDataType instanceof UDTSetDataType) {
+		else if (abstractDataType instanceof UDTSetDataType) {
 			
 			UDTSetDataType dt = (UDTSetDataType) abstractDataType;
 			
-			Class<Object> javaClass = (Class<Object>) dt.getUdtClasses()[0];
+			Class<Object> udtClass = (Class<Object>) dt.getTypeArguments()[0];
 			
-			if (UDTValue.class.isAssignableFrom(javaClass)) {
+			if (UDTValue.class.isAssignableFrom(udtClass)) {
 				return Optional.empty();
 			}
 
 			UserType userType = repository.findUserType(dt.getUdtName().getName());
 			if (userType == null) {
-				throw new CasserMappingException("UserType not found for " + dt.getUdtName() + " with type " + javaClass);
+				throw new CasserMappingException("UserType not found for " + dt.getUdtName() + " with type " + udtClass);
 			}
 			
-			return Optional.of(new SetToUDTSetConverter(javaClass, userType, repository));
+			return Optional.of(new SetToUDTSetConverter(udtClass, userType, repository));
 			
 		}
 		

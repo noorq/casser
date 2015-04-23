@@ -15,37 +15,16 @@
  */
 package com.noorq.casser.mapping.convert;
 
-import java.util.Map;
 import java.util.function.Function;
 
 import com.datastax.driver.core.UDTValue;
-import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.SessionRepository;
-import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.value.UDTColumnValueProvider;
-import com.noorq.casser.mapping.value.ValueProviderMap;
 
-public final class UDTValueToEntityConverter implements Function<UDTValue, Object> {
+public final class UDTValueToEntityConverter extends ProxyValueReader<UDTValue> implements Function<UDTValue, Object> {
 
-	private final Class<?> iface;
-	private final CasserEntity entity;
-	private final UDTColumnValueProvider valueProvider;
-	
 	public UDTValueToEntityConverter(Class<?> iface, SessionRepository repository) {
-		this.iface = iface;
-		this.entity = Casser.entity(iface);
-		this.valueProvider = new UDTColumnValueProvider(repository);
-	}
-
-	@Override
-	public Object apply(UDTValue source) {
-		
-		Map<String, Object> map = new ValueProviderMap(source, 
-				valueProvider,
-				entity);
-		
-		return Casser.map(iface, map);
-		
+		super(iface, new UDTColumnValueProvider(repository));
 	}
 
 }

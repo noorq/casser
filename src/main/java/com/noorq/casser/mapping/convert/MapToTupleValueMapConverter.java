@@ -15,16 +15,25 @@
  */
 package com.noorq.casser.mapping.convert;
 
+import java.util.Map;
 import java.util.function.Function;
 
-import com.datastax.driver.core.TupleValue;
+import com.datastax.driver.core.TupleType;
 import com.noorq.casser.core.SessionRepository;
-import com.noorq.casser.mapping.value.TupleColumnValueProvider;
+import com.noorq.casser.support.Transformers;
 
-public final class TupleValueToEntityConverter extends ProxyValueReader<TupleValue> implements Function<TupleValue, Object> {
+public final class MapToTupleValueMapConverter implements Function<Object, Object> {
 
-	public TupleValueToEntityConverter(Class<?> iface, SessionRepository repository) {
-		super(iface, new TupleColumnValueProvider(repository));
+	final TupleValueWriter writer;
+	
+	public MapToTupleValueMapConverter(Class<?> iface, TupleType tupleType, SessionRepository repository) {
+		this.writer = new TupleValueWriter(iface, tupleType, repository);
 	}
+	
+	@Override
+	public Object apply(Object t) {
+		return Transformers.transformMapValue((Map<Object, Object>) t, writer);
+	}
+
 
 }

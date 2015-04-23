@@ -38,7 +38,7 @@ public final class UDTListDataType extends AbstractDataType {
 	}
 	
 	@Override
-	public Class<?>[] getUdtClasses() {
+	public Class<?>[] getTypeArguments() {
 		return new Class<?>[] { udtClass };
 	}
 	

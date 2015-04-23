@@ -75,6 +75,21 @@ public abstract class AbstractJavaType {
 		}
 	}
 	
+	static class DataTypeInfo {
+		final DataType dataType;
+		final Class<?> typeArgument;
+
+		DataTypeInfo(DataType dataType) {
+			this.dataType = dataType;
+			this.typeArgument = null;
+		}
+		
+		DataTypeInfo(DataType dataType, Class<?> typeArgument) {
+			this.dataType = dataType;
+			this.typeArgument = typeArgument;
+		}
+	}
+	
 	static Either<DataType, IdentityName> autodetectParameterType(Method getter, Type type) {
 		
 		DataType dataType = null;
@@ -88,6 +103,11 @@ public abstract class AbstractJavaType {
 				return Either.left(dataType);
 			}
 			
+			if (MappingUtil.isTuple(javaType)) {
+				dataType = TupleValueJavaType.toTupleType(javaType);
+				return Either.left(dataType);
+			}
+			
 			IdentityName udtName = MappingUtil.getUserDefinedTypeName(javaType, false);
 				
 			if (udtName != null) {
@@ -97,7 +117,7 @@ public abstract class AbstractJavaType {
 		}
 
 		throw new CasserMappingException(
-				"unknown parameter type " + type + " in the collection for the property " + getter);
+				"unknown parameter type " + type + " in the collection for the property " + getter);	
 	}
 	
 	static Type[] getTypeParameters(Type genericJavaType) {

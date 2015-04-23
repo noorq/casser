@@ -41,7 +41,7 @@ public final class UDTKeyMapDataType extends AbstractDataType {
 	}
 	
 	@Override
-	public Class<?>[] getUdtClasses() {
+	public Class<?>[] getTypeArguments() {
 		return new Class<?>[] { udtKeyClass };
 	}
 	

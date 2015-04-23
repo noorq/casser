@@ -79,7 +79,7 @@ public final class UDTValueJavaType extends AbstractJavaType {
 
 		UDTDataType dt = (UDTDataType) dataType;
 		
-		Class<Object> javaClass = (Class<Object>) dt.getUdtClasses()[0];
+		Class<Object> javaClass = (Class<Object>) dt.getTypeArguments()[0];
 		
 		if (UDTValue.class.isAssignableFrom(javaClass)) {
 			return Optional.empty();
@@ -97,7 +97,7 @@ public final class UDTValueJavaType extends AbstractJavaType {
 
 		UDTDataType dt = (UDTDataType) dataType;
 		
-		Class<Object> javaClass = (Class<Object>) dt.getUdtClasses()[0];
+		Class<Object> javaClass = (Class<Object>) dt.getTypeArguments()[0];
 		
 		if (UDTValue.class.isAssignableFrom(javaClass)) {
 			return Optional.empty();

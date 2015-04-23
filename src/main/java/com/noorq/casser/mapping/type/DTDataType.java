@@ -15,8 +15,11 @@
  */
 package com.noorq.casser.mapping.type;
 
+import java.lang.reflect.Type;
+
 import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.TupleType;
 import com.datastax.driver.core.schemabuilder.Alter;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.CreateType;
@@ -31,17 +34,74 @@ public final class DTDataType extends AbstractDataType {
 	
 	private final DataType dataType;
 	private final Class<?> javaClass;
-
+	private final Class<?>[] typeArguments;
+	
 	public DTDataType(ColumnType columnType, DataType dataType) {
-		this(columnType, dataType, dataType.asJavaClass());
+		this(columnType, dataType, dataType.asJavaClass(), EMPTY_CLASSES);
 	}
 	
 	public DTDataType(ColumnType columnType, DataType dataType, Class<?> javaClass) {
+		this(columnType, dataType, javaClass, EMPTY_CLASSES);
+	}
+	
+	public DTDataType(ColumnType columnType, DataType dataType, Class<?> javaClass, Class<?>[] typeArguments) {
 		super(columnType);
 		this.dataType = dataType;
 		this.javaClass = javaClass;
+		this.typeArguments = typeArguments;
 	}
 
+	public static DTDataType list(ColumnType columnType, DataType argumentDataType, Type argumentType) {
+		
+		DataType listDataType = DataType.list(argumentDataType);
+		
+		if (argumentDataType instanceof TupleType) {
+			return new DTDataType(columnType, listDataType, listDataType.asJavaClass(), 
+					new Class<?>[] { (Class<?>) argumentType });	
+		}
+		else {
+			return new DTDataType(columnType, listDataType);
+		}
+	}
+	
+	public static DTDataType set(ColumnType columnType, DataType argumentDataType, Type argumentType) {
+		
+		DataType setDataType = DataType.set(argumentDataType);
+		
+		if (argumentDataType instanceof TupleType) {
+			return new DTDataType(columnType, setDataType, setDataType.asJavaClass(), 
+					new Class<?>[] { (Class<?>) argumentType });	
+		}
+		else {
+			return new DTDataType(columnType, setDataType);
+		}
+	}
+	
+	public static DTDataType map(ColumnType columnType, 
+			DataType keyDataType, Type keyType, 
+			DataType valueDataType, Type valueType) {
+		
+		DataType mapDataType = DataType.map(keyDataType, valueDataType);
+		
+		Class<?>[] typeArguments = EMPTY_CLASSES; 
+		
+		if (keyDataType instanceof TupleType) {
+			if (valueDataType instanceof TupleType) {
+				typeArguments = new Class<?>[] { (Class<?>) keyType, (Class<?>) valueType };
+			}
+			else {
+				typeArguments = new Class<?>[] { (Class<?>) keyType };
+			}
+		}
+		else if (valueDataType instanceof TupleType) {
+			typeArguments = new Class<?>[] { (Class<?>) valueType };
+		}
+		
+		return new DTDataType(columnType, mapDataType, 
+				mapDataType.asJavaClass(), typeArguments);
+		
+	}
+	
 	public DataType getDataType() {
 		return dataType;
 	}
@@ -51,8 +111,8 @@ public final class DTDataType extends AbstractDataType {
 	}
 
 	@Override
-	public Class<?>[] getUdtClasses() {
-		return EMPTY_CLASSES;
+	public Class<?>[] getTypeArguments() {
+		return typeArguments;
 	}
 	
 	@Override

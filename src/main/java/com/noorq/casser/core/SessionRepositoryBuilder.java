@@ -28,7 +28,7 @@ import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.type.AbstractDataType;
-import com.noorq.casser.mapping.type.UDTDataType;
+import com.noorq.casser.mapping.type.DTDataType;
 import com.noorq.casser.support.CasserMappingException;
 
 public final class SessionRepositoryBuilder {
@@ -115,9 +115,13 @@ public final class SessionRepositoryBuilder {
 			
 			AbstractDataType type = prop.getDataType();
 			
+			if (type instanceof DTDataType) {
+				continue;
+			}
+			
 			if (!UDTValue.class.isAssignableFrom(prop.getJavaType())) {
 				
-				for (Class<?> udtClass : type.getUdtClasses()) {
+				for (Class<?> udtClass : type.getTypeArguments()) {
 					
 					if (UDTValue.class.isAssignableFrom(udtClass)) {
 						continue;

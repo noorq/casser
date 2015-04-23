@@ -72,38 +72,36 @@ public final class TupleValueJavaType extends AbstractJavaType {
 			}
 			
 			TupleType tupleType = TupleType.of(arguments);
-	    	
 	    	return new DTDataType(columnType, tupleType, javaType);
 			
 		}
 		else {
-			
-	    	CasserEntity tupleEntity = Casser.entity(javaType);
-	    	
-	    	List<DataType> tupleTypes = tupleEntity.getOrderedProperties().stream()
-		    	.map(p -> p.getDataType())
-		    	.filter(d -> d instanceof DTDataType)
-		    	.map(d -> (DTDataType) d)
-		    	.map(d -> d.getDataType())
-		    	.collect(Collectors.toList());
-	    	
-	    	if (tupleTypes.size() < tupleEntity.getOrderedProperties().size()) {
-	    		
-	    		List<IdentityName> wrongColumns = tupleEntity.getOrderedProperties().stream()
-	    				.filter(p -> !(p.getDataType() instanceof DTDataType))
-	    				.map(p -> p.getColumnName())
-	    				.collect(Collectors.toList());
-	    		
-	    		throw new CasserMappingException("non simple types in tuple " + tupleEntity.getMappingInterface() + " in columns: " + wrongColumns);
-	    	}
-	    	
-	    	TupleType tupleType = TupleType.of(tupleTypes.toArray(new DataType[tupleTypes.size()]));
-	    	
-	    	return new DTDataType(columnType, tupleType, javaType);
-    	
+	    	return new DTDataType(columnType, toTupleType(javaType), javaType);
 		 }
-
     	
+	}
+
+	public static TupleType toTupleType(Class<?> javaType) {
+		CasserEntity tupleEntity = Casser.entity(javaType);
+		
+		List<DataType> tupleTypes = tupleEntity.getOrderedProperties().stream()
+			.map(p -> p.getDataType())
+			.filter(d -> d instanceof DTDataType)
+			.map(d -> (DTDataType) d)
+			.map(d -> d.getDataType())
+			.collect(Collectors.toList());
+		
+		if (tupleTypes.size() < tupleEntity.getOrderedProperties().size()) {
+			
+			List<IdentityName> wrongColumns = tupleEntity.getOrderedProperties().stream()
+					.filter(p -> !(p.getDataType() instanceof DTDataType))
+					.map(p -> p.getColumnName())
+					.collect(Collectors.toList());
+			
+			throw new CasserMappingException("non simple types in tuple " + tupleEntity.getMappingInterface() + " in columns: " + wrongColumns);
+		}
+		
+		return TupleType.of(tupleTypes.toArray(new DataType[tupleTypes.size()]));
 	}
 
 	@Override

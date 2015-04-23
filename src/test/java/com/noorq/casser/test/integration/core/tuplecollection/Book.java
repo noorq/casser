@@ -13,18 +13,29 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping.convert;
+package com.noorq.casser.test.integration.core.tuplecollection;
 
-import java.util.function.Function;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import com.datastax.driver.core.TupleValue;
-import com.noorq.casser.core.SessionRepository;
-import com.noorq.casser.mapping.value.TupleColumnValueProvider;
+import com.noorq.casser.mapping.annotation.PartitionKey;
+import com.noorq.casser.mapping.annotation.Table;
 
-public final class TupleValueToEntityConverter extends ProxyValueReader<TupleValue> implements Function<TupleValue, Object> {
+@Table
+public interface Book {
 
-	public TupleValueToEntityConverter(Class<?> iface, SessionRepository repository) {
-		super(iface, new TupleColumnValueProvider(repository));
-	}
+	@PartitionKey
+	int id();
+	
+	List<Author> authors();
+
+	Set<Author> reviewers();
+	
+	Map<Integer, Section> contents();
+	
+	Map<Section, String> notes();
+	
+	Map<Section, Author> writers();
 
 }

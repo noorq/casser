@@ -41,7 +41,7 @@ public final class UDTValueMapDataType extends AbstractDataType {
 	}
 
 	@Override
-	public Class<?>[] getUdtClasses() {
+	public Class<?>[] getTypeArguments() {
 		return new Class<?>[] { udtValueClass };
 	}
 	

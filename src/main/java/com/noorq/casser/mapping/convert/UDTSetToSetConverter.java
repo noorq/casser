@@ -15,57 +15,25 @@
  */
 package com.noorq.casser.mapping.convert;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
 import com.datastax.driver.core.UDTValue;
-import com.google.common.collect.ImmutableSet;
-import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.SessionRepository;
-import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.value.UDTColumnValueProvider;
-import com.noorq.casser.mapping.value.ValueProviderMap;
+import com.noorq.casser.support.Transformers;
 
 public final class UDTSetToSetConverter implements Function<Object, Object> {
 
-	private final Class<?> iface;
-	private final CasserEntity entity;
-	private final UDTColumnValueProvider valueProvider;
+	final ProxyValueReader<UDTValue> reader;
 	
 	public UDTSetToSetConverter(Class<?> iface, SessionRepository repository) {
-		this.iface = iface;
-		this.entity = Casser.entity(iface);
-		this.valueProvider = new UDTColumnValueProvider(repository);
+		this.reader = new ProxyValueReader<UDTValue>(iface, new UDTColumnValueProvider(repository));
 	}
 
 	@Override
 	public Object apply(Object t) {
-		
-		Set<UDTValue> sourceSet = (Set<UDTValue>) t;
-		
-		ImmutableSet.Builder<Object> builder = ImmutableSet.builder();
-		
-		for (UDTValue source : sourceSet) {
-		
-			Object obj = null;
-			
-			if (source != null) {
-			
-				Map<String, Object> map = new ValueProviderMap(source, 
-						valueProvider,
-						entity);
-				
-				obj = Casser.map(iface, map);
-				
-			}
-			
-			builder.add(obj);
-		
-		}
-
-		return builder.build();
-		
+		return Transformers.transformSet((Set<UDTValue>) t, reader);
 	}
 
 }

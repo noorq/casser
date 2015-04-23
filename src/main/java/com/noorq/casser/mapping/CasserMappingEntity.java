@@ -154,7 +154,7 @@ public final class CasserMappingEntity implements CasserEntity {
 			break;
 			
 		case TUPLE:
-			validateOrdinalsForTuple();
+			validateOrdinalsInTuple();
 			break;
 			
 		default:
@@ -198,7 +198,7 @@ public final class CasserMappingEntity implements CasserEntity {
 		
 	}
 	
-	private void validateOrdinalsForTuple() {
+	private void validateOrdinalsInTuple() {
 		boolean[] ordinals = new boolean[props.size()];
 		
 		getOrderedProperties().forEach(p -> {

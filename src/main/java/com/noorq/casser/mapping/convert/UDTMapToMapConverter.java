@@ -19,67 +19,23 @@ import java.util.Map;
 import java.util.function.Function;
 
 import com.datastax.driver.core.UDTValue;
-import com.google.common.collect.ImmutableMap;
-import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.SessionRepository;
-import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.value.UDTColumnValueProvider;
-import com.noorq.casser.mapping.value.ValueProviderMap;
+import com.noorq.casser.support.Transformers;
 
 public final class UDTMapToMapConverter implements Function<Object, Object> {
 
-	private final Class<?> keyClass;
-	private final CasserEntity keyEntity;
-	private final Class<?> valueClass;
-	private final CasserEntity valueEntity;
-	private final UDTColumnValueProvider valueProvider;
+	final ProxyValueReader<UDTValue> keyReader;
+	final ProxyValueReader<UDTValue> valueReader;
 	
 	public UDTMapToMapConverter(Class<?> keyClass, Class<?> valueClass, SessionRepository repository) {
-		this.keyClass = keyClass;
-		this.keyEntity = Casser.entity(keyClass);
-		this.valueClass = valueClass;
-		this.valueEntity = Casser.entity(valueClass);
-		this.valueProvider = new UDTColumnValueProvider(repository);
+		this.keyReader = new ProxyValueReader<UDTValue>(keyClass, new UDTColumnValueProvider(repository));
+		this.valueReader = new ProxyValueReader<UDTValue>(valueClass, new UDTColumnValueProvider(repository));
 	}
 
 	@Override
 	public Object apply(Object t) {
-		
-		Map<UDTValue, UDTValue> sourceMap = (Map<UDTValue, UDTValue>) t;
-		
-		ImmutableMap.Builder<Object, Object> builder = ImmutableMap.builder();
-		
-		for (Map.Entry<UDTValue, UDTValue> source : sourceMap.entrySet()) {
-		
-			Object keyObj = null;
-			Object valueObj = null;
-			
-			if (source.getKey() != null) {
-			
-				Map<String, Object> map = new ValueProviderMap(source.getKey(), 
-						valueProvider,
-						keyEntity);
-				
-				keyObj = Casser.map(keyClass, map);
-				
-			}
-
-			if (source.getValue() != null) {
-				
-				Map<String, Object> map = new ValueProviderMap(source.getValue(), 
-						valueProvider,
-						valueEntity);
-				
-				valueObj = Casser.map(valueClass, map);
-				
-			}
-
-			builder.put(keyObj, valueObj);
-		
-		}
-
-		return builder.build();
-		
+		return Transformers.transformMap((Map<UDTValue, UDTValue>) t, keyReader, valueReader);
 	}
 
 }

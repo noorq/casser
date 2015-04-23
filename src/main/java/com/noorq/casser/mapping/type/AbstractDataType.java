@@ -32,7 +32,7 @@ public abstract class AbstractDataType {
 
 	public abstract SchemaStatement alterColumn(Alter alter, IdentityName columnName, ColumnMetadata columnMetadata);
 	
-	public abstract Class<?>[] getUdtClasses();
+	public abstract Class<?>[] getTypeArguments();
 	
 	final ColumnType columnType;
 	

@@ -22,15 +22,23 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.TupleType;
+import com.datastax.driver.core.TupleValue;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
 import com.noorq.casser.mapping.annotation.Types;
+import com.noorq.casser.mapping.convert.MapToTupleKeyMapConverter;
+import com.noorq.casser.mapping.convert.MapToTupleMapConverter;
+import com.noorq.casser.mapping.convert.MapToTupleValueMapConverter;
 import com.noorq.casser.mapping.convert.MapToUDTKeyMapConverter;
 import com.noorq.casser.mapping.convert.MapToUDTMapConverter;
 import com.noorq.casser.mapping.convert.MapToUDTValueMapConverter;
+import com.noorq.casser.mapping.convert.TupleKeyMapToMapConverter;
+import com.noorq.casser.mapping.convert.TupleMapToMapConverter;
+import com.noorq.casser.mapping.convert.TupleValueMapToMapConverter;
 import com.noorq.casser.mapping.convert.UDTKeyMapToMapConverter;
 import com.noorq.casser.mapping.convert.UDTMapToMapConverter;
 import com.noorq.casser.mapping.convert.UDTValueMapToMapConverter;
@@ -94,8 +102,9 @@ public final class MapJavaType extends AbstractJavaType {
 		if (key.isLeft()) {
 			
 			if (value.isLeft()) {
-				return new DTDataType(columnType, 
-						DataType.map(key.getLeft(), value.getLeft()));
+				return DTDataType.map(columnType, 
+						key.getLeft(), args[0], 
+						value.getLeft(), args[1]);
 			}
 			else {
 				return new UDTValueMapDataType(columnType, 
@@ -128,17 +137,21 @@ public final class MapJavaType extends AbstractJavaType {
 	public Optional<Function<Object, Object>> resolveReadConverter(
 			AbstractDataType abstractDataType, SessionRepository repository) {
 		
-		if (abstractDataType instanceof UDTKeyMapDataType) {
+		if (abstractDataType instanceof DTDataType) {
+			return resolveDTReadConverter((DTDataType) abstractDataType, repository);
+		}
+		
+		else if (abstractDataType instanceof UDTKeyMapDataType) {
 			
 			UDTKeyMapDataType dt = (UDTKeyMapDataType) abstractDataType;
 			
-			Class<Object> javaClass = (Class<Object>) dt.getUdtKeyClass();
+			Class<Object> keyClass = (Class<Object>) dt.getUdtKeyClass();
 			
-			if (UDTValue.class.isAssignableFrom(javaClass)) {
+			if (UDTValue.class.isAssignableFrom(keyClass)) {
 				return Optional.empty();
 			}
 			
-			return Optional.of(new UDTKeyMapToMapConverter(javaClass, repository));
+			return Optional.of(new UDTKeyMapToMapConverter(keyClass, repository));
 			
 		}
 		
@@ -146,13 +159,13 @@ public final class MapJavaType extends AbstractJavaType {
 			
 			UDTValueMapDataType dt = (UDTValueMapDataType) abstractDataType;
 			
-			Class<Object> javaClass = (Class<Object>) dt.getUdtValueClass();
+			Class<Object> valueClass = (Class<Object>) dt.getUdtValueClass();
 			
-			if (UDTValue.class.isAssignableFrom(javaClass)) {
+			if (UDTValue.class.isAssignableFrom(valueClass)) {
 				return Optional.empty();
 			}
 			
-			return Optional.of(new UDTValueMapToMapConverter(javaClass, repository));
+			return Optional.of(new UDTValueMapToMapConverter(valueClass, repository));
 			
 		}
 		
@@ -163,8 +176,17 @@ public final class MapJavaType extends AbstractJavaType {
 			Class<Object> keyClass = (Class<Object>) dt.getUdtKeyClass();
 			Class<Object> valueClass = (Class<Object>) dt.getUdtValueClass();
 			
-			if (UDTValue.class.isAssignableFrom(keyClass) && UDTValue.class.isAssignableFrom(valueClass)) {
-				return Optional.empty();
+			if (UDTValue.class.isAssignableFrom(keyClass)) {
+				
+				if (UDTValue.class.isAssignableFrom(valueClass)) {
+					return Optional.empty();
+				}
+				else {
+					return Optional.of(new UDTValueMapToMapConverter(valueClass, repository));	
+				}
+			}
+			else if (UDTValue.class.isAssignableFrom(valueClass)) {
+				return Optional.of(new UDTKeyMapToMapConverter(keyClass, repository));
 			}
 			
 			return Optional.of(new UDTMapToMapConverter(keyClass, valueClass, repository));
@@ -174,26 +196,84 @@ public final class MapJavaType extends AbstractJavaType {
 		return Optional.empty();
 	}
 
+	private Optional<Function<Object, Object>> resolveDTReadConverter(
+			DTDataType dt, SessionRepository repository) {
+		
+		DataType keyDataType = dt.getDataType().getTypeArguments().get(0);
+		DataType valueDataType = dt.getDataType().getTypeArguments().get(1);
+		
+		if (keyDataType instanceof TupleType) {
+			
+			if (valueDataType instanceof TupleType) {
+				
+				Class<?> keyClass = dt.getTypeArguments()[0];	
+				Class<?> valueClass = dt.getTypeArguments()[1];	
+				
+				if (TupleValue.class.isAssignableFrom(keyClass)) {
+					
+					if (TupleValue.class.isAssignableFrom(valueClass)) {
+						return Optional.empty();
+					}
+					else {
+						return Optional.of(new TupleValueMapToMapConverter(valueClass, repository));
+					}
+					
+				}
+				else if (TupleValue.class.isAssignableFrom(valueClass)) {
+					return Optional.of(new TupleKeyMapToMapConverter(keyClass, repository));
+				}
+				
+				return Optional.of(new TupleMapToMapConverter(keyClass, valueClass, repository));
+				
+			}
+			else {
+				Class<?> keyClass = dt.getTypeArguments()[0];
+				
+				if (TupleValue.class.isAssignableFrom(keyClass)) {
+					return Optional.empty();
+				}
+				
+				return Optional.of(new TupleKeyMapToMapConverter(keyClass, repository));
+			}
+		}
+		else if (valueDataType instanceof TupleType)  {
+			
+			Class<?> valueClass = dt.getTypeArguments()[0];
+			
+			if (TupleValue.class.isAssignableFrom(valueClass)) {
+				return Optional.empty();
+			}
+			
+			return Optional.of(new TupleValueMapToMapConverter(valueClass, repository));
+			
+		}
+
+		return Optional.empty();
+		
+	}
+	
 	@Override
 	public Optional<Function<Object, Object>> resolveWriteConverter(
 			AbstractDataType abstractDataType, SessionRepository repository) {
 		
-		if (abstractDataType instanceof UDTKeyMapDataType) {
+		if (abstractDataType instanceof DTDataType) {
+			return resolveDTWriteConverter((DTDataType) abstractDataType, repository);
+		}
+		
+		else if (abstractDataType instanceof UDTKeyMapDataType) {
 			
 			UDTKeyMapDataType dt = (UDTKeyMapDataType) abstractDataType;
 			
-			Class<Object> javaClass = (Class<Object>) dt.getUdtKeyClass();
+			Class<Object> keyClass = (Class<Object>) dt.getUdtKeyClass();
 			
-			if (UDTValue.class.isAssignableFrom(javaClass)) {
+			if (UDTValue.class.isAssignableFrom(keyClass)) {
 				return Optional.empty();
 			}
 
-			UserType userType = repository.findUserType(dt.getUdtKeyName().getName());
-			if (userType == null) {
-				throw new CasserMappingException("UserType not found for " + dt.getUdtKeyName() + " with type " + javaClass);
-			}
-			
-			return Optional.of(new MapToUDTKeyMapConverter(javaClass, userType, repository));
+			return Optional.of(new MapToUDTKeyMapConverter(
+					keyClass, 
+					getUserType(dt.getUdtKeyName(), keyClass, repository), 
+					repository));
 			
 		}
 		
@@ -201,18 +281,16 @@ public final class MapJavaType extends AbstractJavaType {
 			
 			UDTValueMapDataType dt = (UDTValueMapDataType) abstractDataType;
 			
-			Class<Object> javaClass = (Class<Object>) dt.getUdtValueClass();
+			Class<Object> valueClass = (Class<Object>) dt.getUdtValueClass();
 			
-			if (UDTValue.class.isAssignableFrom(javaClass)) {
+			if (UDTValue.class.isAssignableFrom(valueClass)) {
 				return Optional.empty();
 			}
 
-			UserType userType = repository.findUserType(dt.getUdtValueName().getName());
-			if (userType == null) {
-				throw new CasserMappingException("UserType not found for " + dt.getUdtValueName() + " with type " + javaClass);
-			}
-			
-			return Optional.of(new MapToUDTValueMapConverter(javaClass, userType, repository));
+			return Optional.of(new MapToUDTValueMapConverter(
+					valueClass, 
+					getUserType(dt.getUdtValueName(), valueClass, repository), 
+					repository));
 			
 		}
 		
@@ -223,26 +301,117 @@ public final class MapJavaType extends AbstractJavaType {
 			Class<Object> keyClass = (Class<Object>) dt.getUdtKeyClass();
 			Class<Object> valueClass = (Class<Object>) dt.getUdtValueClass();
 			
-			if (UDTValue.class.isAssignableFrom(keyClass) && UDTValue.class.isAssignableFrom(valueClass)) {
-				return Optional.empty();
+			if (UDTValue.class.isAssignableFrom(keyClass)) {
+				
+				if (UDTValue.class.isAssignableFrom(valueClass)) {
+					return Optional.empty();
+				}
+				else {
+					
+					return Optional.of(new MapToUDTValueMapConverter(
+							valueClass, 
+							getUserType(dt.getUdtValueName(), valueClass, repository), 
+							repository));
+				}
+			}
+			else if (UDTValue.class.isAssignableFrom(valueClass)) {
+				
+				return Optional.of(new MapToUDTKeyMapConverter(
+						keyClass, 
+						getUserType(dt.getUdtKeyName(), keyClass, repository), 
+						repository));
 			}
 
-			UserType keyType = repository.findUserType(dt.getUdtKeyName().getName());
-			if (keyType == null) {
-				throw new CasserMappingException("UserType not found for " + dt.getUdtKeyName() + " with type " + keyClass);
-			}
-
-			UserType valueType = repository.findUserType(dt.getUdtValueName().getName());
-			if (valueType == null) {
-				throw new CasserMappingException("UserType not found for " + dt.getUdtValueName() + " with type " + valueClass);
-			}
-
-			return Optional.of(new MapToUDTMapConverter(keyClass, keyType, valueClass, valueType, repository));
+			return Optional.of(new MapToUDTMapConverter(
+					keyClass, 
+					getUserType(dt.getUdtKeyName(), keyClass, repository), 
+					valueClass, 
+					getUserType(dt.getUdtValueName(), valueClass, repository), 
+					repository));
 			
 		}
 		
 		return Optional.empty();
 	}
 	
+	private Optional<Function<Object, Object>> resolveDTWriteConverter(
+			DTDataType dt, SessionRepository repository) {
+
+		DataType keyDataType = dt.getDataType().getTypeArguments().get(0);
+		DataType valueDataType = dt.getDataType().getTypeArguments().get(1);
+		
+		if (keyDataType instanceof TupleType) {
+			
+			if (valueDataType instanceof TupleType) {
+				
+				Class<?> keyClass = dt.getTypeArguments()[0];	
+				Class<?> valueClass = dt.getTypeArguments()[1];	
+				
+				if (TupleValue.class.isAssignableFrom(keyClass)) {
+					
+					if (TupleValue.class.isAssignableFrom(valueClass)) {
+						return Optional.empty();
+					}
+					else {
+						return Optional.of(new MapToTupleValueMapConverter(
+								valueClass, 
+								(TupleType) valueDataType, 
+								repository));
+					}
+					
+				}
+				else if (TupleValue.class.isAssignableFrom(valueClass)) {
+
+					return Optional.of(new MapToTupleKeyMapConverter(
+							keyClass, 
+							(TupleType) keyDataType, 
+							repository));
+				}
+				
+				return Optional.of(new MapToTupleMapConverter(
+						keyClass, 
+						(TupleType) keyDataType, 
+						valueClass, 
+						(TupleType) valueDataType, 
+						repository));
+				
+			}
+			else {
+				
+				Class<?> keyClass = dt.getTypeArguments()[0];
+				
+				if (TupleValue.class.isAssignableFrom(keyClass)) {
+					return Optional.empty();
+				}
+				
+				return Optional.of(new MapToTupleKeyMapConverter(
+						keyClass, 
+						(TupleType) keyDataType, 
+						repository));
+			}
+		}
+		else if (valueDataType instanceof TupleType) {
+			
+			Class<?> valueClass = dt.getTypeArguments()[0];
+			
+			if (TupleValue.class.isAssignableFrom(valueClass)) {
+				return Optional.empty();
+			}
+			
+			return Optional.of(new MapToTupleValueMapConverter(
+					valueClass, 
+					(TupleType) valueDataType, 
+					repository));
+		}
+
+		return Optional.empty();
+	}
 	
+	private UserType getUserType(IdentityName name, Class<?> javaClass, SessionRepository repository) {
+		UserType userType = repository.findUserType(name.getName());
+		if (userType == null) {
+			throw new CasserMappingException("UserType not found for " + name + " with type " + javaClass);
+		}
+		return userType;
+	}
 }

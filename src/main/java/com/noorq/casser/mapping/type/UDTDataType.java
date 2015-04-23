@@ -39,7 +39,7 @@ public final class UDTDataType extends AbstractDataType {
 	}
 
 	@Override
-	public Class<?>[] getUdtClasses() {
+	public Class<?>[] getTypeArguments() {
 		return new Class<?>[] { udtClass };
 	}
 	
@@ -127,7 +127,7 @@ public final class UDTDataType extends AbstractDataType {
 
 	@Override
 	public String toString() {
-		return "<" + udtName + ">";
+		return "UDT<" + udtName + ">";
 	}
 
 }
