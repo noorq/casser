@@ -139,10 +139,7 @@ public final class SchemaUtil {
 			ColumnType columnType = prop.getColumnType();
 
 			if (columnType == ColumnType.PARTITION_KEY || columnType == ColumnType.CLUSTERING_COLUMN) {
-				throw new CasserMappingException(
-						"unable to alter column that is a part of primary key '"
-								+ columnName + "' for entity "
-								+ entity);
+				continue;
 			}
 			
 			ColumnMetadata columnMetadata = tmd.getColumn(columnName);
