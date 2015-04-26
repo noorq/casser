@@ -47,7 +47,7 @@ public final class Casser {
 		return Objects.requireNonNull(session, "session is not initialized");
 	}
 	
-	protected static synchronized void register(CasserSession newSession) {
+	protected static synchronized void singelton(CasserSession newSession) {
 		if (session == null) {
 			session = newSession;
 		}

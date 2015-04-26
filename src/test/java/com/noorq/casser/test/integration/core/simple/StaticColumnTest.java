@@ -34,7 +34,7 @@ public class StaticColumnTest extends AbstractEmbeddedCassandraTest {
 	
 	@BeforeClass
 	public static void beforeTest() {
-		Casser.init(getSession()).showCql().add(Message.class).autoCreateDrop().register();
+		Casser.init(getSession()).showCql().add(Message.class).autoCreateDrop().singleton();
 	}
 	
 	@Test
