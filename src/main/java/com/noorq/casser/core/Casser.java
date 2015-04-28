@@ -47,17 +47,23 @@ public final class Casser {
 		return Objects.requireNonNull(session, "session is not initialized");
 	}
 	
-	protected static synchronized void singelton(CasserSession newSession) {
-		if (session == null) {
-			session = newSession;
+	protected static void setSession(CasserSession newSession) {
+		session = newSession;
+	}
+	
+	public static void shutdown() {
+		if (session != null) {
+			session.close();
 		}
+		session = null;
+		dslCache.clear();
 	}
 	
 	public static CasserSettings settings() {
 		return settings;
 	}
 
-	public static CasserSettings configure(CasserSettings overrideSettings) {
+	public static CasserSettings settings(CasserSettings overrideSettings) {
 		CasserSettings old = settings;
 		settings = overrideSettings;
 		return old;

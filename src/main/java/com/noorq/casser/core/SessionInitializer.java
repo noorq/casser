@@ -184,7 +184,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
 	}
 	
 	public void singleton() {
-		Casser.singelton(get());
+		Casser.setSession(get());
 	}
 	
 	public synchronized CasserSession get() {
