@@ -39,7 +39,7 @@ public final class TableOperations {
 	
 	public void createTable(CasserEntity entity) {
 		
-		sessionOps.execute(SchemaUtil.createTable(entity));
+		sessionOps.execute(SchemaUtil.createTable(entity), true);
 		
 		executeBatch(SchemaUtil.createIndexes(entity));
 		
@@ -74,7 +74,7 @@ public final class TableOperations {
 	private void executeBatch(List<SchemaStatement> list) {
 		
 		list.forEach(s -> {
-			sessionOps.execute(s);
+			sessionOps.execute(s, true);
 		});
 		
 	}

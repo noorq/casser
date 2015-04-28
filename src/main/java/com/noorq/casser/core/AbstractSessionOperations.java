@@ -15,6 +15,7 @@
  */
 package com.noorq.casser.core;
 
+import java.io.PrintStream;
 import java.util.concurrent.Executor;
 
 import org.slf4j.Logger;
@@ -42,6 +43,8 @@ public abstract class AbstractSessionOperations {
 	
 	abstract public boolean isShowCql();
 	
+	abstract public PrintStream getPrintStream();
+	
 	abstract public Executor getExecutor();
 	
 	abstract public SessionRepository getSessionRepository();
@@ -54,7 +57,7 @@ public abstract class AbstractSessionOperations {
 		
 		try {
 			
-			log(statement);
+			log(statement, false);
 			
 			return currentSession().prepare(statement);
 			
@@ -69,7 +72,7 @@ public abstract class AbstractSessionOperations {
 		
 		try {
 			
-			log(statement);
+			log(statement, false);
 			
 			return currentSession().prepareAsync(statement);
 			
@@ -80,17 +83,17 @@ public abstract class AbstractSessionOperations {
 		
 	}
 	
-	public ResultSet execute(Statement statement) {
+	public ResultSet execute(Statement statement, boolean showValues) {
 		
-		return executeAsync(statement).getUninterruptibly();
+		return executeAsync(statement, showValues).getUninterruptibly();
 		
 	}
 	
-	public ResultSetFuture executeAsync(Statement statement) {
+	public ResultSetFuture executeAsync(Statement statement, boolean showValues) {
 		
 		try {
 			
-			log(statement);
+			log(statement, showValues);
 			
 			return currentSession().executeAsync(statement);
 			
@@ -101,7 +104,8 @@ public abstract class AbstractSessionOperations {
 		
 	}
 
-	void log(Statement statement) {
+	void log(Statement statement, boolean showValues) {
+		
 		if (logger.isInfoEnabled()) {
 			logger.info("Execute statement " + statement);
 		}
@@ -112,19 +116,21 @@ public abstract class AbstractSessionOperations {
 				
 				BuiltStatement builtStatement = (BuiltStatement) statement;
 
-				RegularStatement regularStatement = builtStatement.setForceNoValues(true);
+				if (showValues) {
+					RegularStatement regularStatement = builtStatement.setForceNoValues(true);
+					printCql(regularStatement.getQueryString());
+				}
+				else {
+					printCql(builtStatement.getQueryString());
+				}
 				
-				System.out.println(regularStatement.getQueryString());
 			}
 			else if (statement instanceof RegularStatement) {
-				
 				RegularStatement regularStatement = (RegularStatement) statement;
-				
-				System.out.println(regularStatement.getQueryString());
-				
+				printCql(regularStatement.getQueryString());
 			}
 			else {
-				System.out.println(statement.toString());
+				printCql(statement.toString());
 			}
 			
 
@@ -138,6 +144,10 @@ public abstract class AbstractSessionOperations {
 		}
 		
 		throw new CasserException(e);
+	}
+	
+	void printCql(String cql) {
+		getPrintStream().println(cql);
 	}
 	
 }

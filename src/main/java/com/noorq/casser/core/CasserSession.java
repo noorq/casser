@@ -16,6 +16,7 @@
 package com.noorq.casser.core;
 
 import java.io.Closeable;
+import java.io.PrintStream;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -47,6 +48,7 @@ public final class CasserSession extends AbstractSessionOperations implements Cl
 	private final Session session;
 	private volatile String usingKeyspace;
 	private volatile boolean showCql;
+	private final PrintStream printStream;
 	private final SessionRepository sessionRepository;
 	private final Executor executor;
 	private final boolean dropSchemaOnClose;
@@ -57,12 +59,14 @@ public final class CasserSession extends AbstractSessionOperations implements Cl
 	CasserSession(Session session,
 			String usingKeyspace,
 			boolean showCql, 
+			PrintStream printStream,
 			SessionRepositoryBuilder sessionRepositoryBuilder, 
 			Executor executor,
 			boolean dropSchemaOnClose) {
 		this.session = session;
 		this.usingKeyspace = Objects.requireNonNull(usingKeyspace, "keyspace needs to be selected before creating session");
 		this.showCql = showCql;
+		this.printStream = printStream;
 		this.sessionRepository = sessionRepositoryBuilder.build();
 		this.executor = executor;
 		this.dropSchemaOnClose = dropSchemaOnClose;
@@ -81,9 +85,20 @@ public final class CasserSession extends AbstractSessionOperations implements Cl
 		return usingKeyspace;
 	}
 	
+	public CasserSession useKeyspace(String keyspace) {
+		session.execute(SchemaUtil.use(keyspace, false));
+		this.usingKeyspace = keyspace;
+		return this;
+	}
+	
 	@Override
 	public boolean isShowCql() {
 		return showCql;
+	}
+
+	@Override
+	public PrintStream getPrintStream() {
+		return printStream;
 	}
 
 	public CasserSession showCql() {
@@ -345,11 +360,11 @@ public final class CasserSession extends AbstractSessionOperations implements Cl
 		switch(entity.getType()) {
 		
 		case TABLE:
-			execute(SchemaUtil.dropTable(entity));
+			execute(SchemaUtil.dropTable(entity), true);
 			break;
 			
 		case UDT:
-			execute(SchemaUtil.dropUserType(entity));
+			execute(SchemaUtil.dropUserType(entity), true);
 			break;
 		
 		}

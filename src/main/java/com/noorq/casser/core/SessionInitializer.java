@@ -15,6 +15,7 @@
  */
 package com.noorq.casser.core;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -29,8 +30,8 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.UserType;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.CasserEntity;
+import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
 import com.noorq.casser.support.CasserException;
@@ -41,6 +42,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
 	private final Session session;
 	private String usingKeyspace;
 	private boolean showCql = false;
+	private PrintStream printStream = System.out;
 	private Executor executor = MoreExecutors.sameThreadExecutor();
 	
 	private SessionRepositoryBuilder sessionRepository = new SessionRepositoryBuilder();
@@ -95,6 +97,16 @@ public final class SessionInitializer extends AbstractSessionOperations {
 	
 	public SessionInitializer showCql(boolean enabled) {
 		this.showCql = enabled;
+		return this;
+	}
+
+	@Override
+	public PrintStream getPrintStream() {
+		return printStream;
+	}
+
+	public SessionInitializer printTo(PrintStream out) {
+		this.printStream = out;
 		return this;
 	}
 	
@@ -180,6 +192,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
 		return new CasserSession(session, 
 				usingKeyspace,
 				showCql, 
+				printStream,
 				sessionRepository,
 				executor,
 				autoDdl == AutoDdl.CREATE_DROP);

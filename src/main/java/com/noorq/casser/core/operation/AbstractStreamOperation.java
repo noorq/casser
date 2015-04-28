@@ -54,14 +54,14 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 	
 	public Stream<E> sync() {
 		
-		ResultSet resultSet = sessionOps.executeAsync(options(buildStatement())).getUninterruptibly();
+		ResultSet resultSet = sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
 
 		return transform(resultSet);
 	}
 	
 	public ListenableFuture<Stream<E>> async() {
 		
-		ResultSetFuture resultSetFuture = sessionOps.executeAsync(options(buildStatement()));
+		ResultSetFuture resultSetFuture = sessionOps.executeAsync(options(buildStatement()), showValues);
 
 		ListenableFuture<Stream<E>> future = Futures.transform(resultSetFuture, new Function<ResultSet, Stream<E>>() {
 

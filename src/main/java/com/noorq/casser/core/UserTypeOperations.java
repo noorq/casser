@@ -27,7 +27,7 @@ public final class UserTypeOperations {
 	}
 	
 	public void createUserType(CasserEntity entity) {
-		sessionOps.execute(SchemaUtil.createUserType(entity));
+		sessionOps.execute(SchemaUtil.createUserType(entity), true);
 	}
 
 	public void validateUserType(UserType userType, CasserEntity entity) {

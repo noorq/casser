@@ -39,6 +39,7 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 	
 	public abstract Statement buildStatement();
 	
+	protected boolean showValues = true;
 	private ConsistencyLevel consistencyLevel;
 	private ConsistencyLevel serialConsistencyLevel;
 	private RetryPolicy retryPolicy;
@@ -48,6 +49,11 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 	
 	public AbstractStatementOperation(AbstractSessionOperations sessionOperations) {
 		this.sessionOps = sessionOperations;
+	}
+	
+	public O showValues(boolean enabled) {
+		this.showValues = enabled;
+		return (O) this;
 	}
 	
 	public O defaultTimestamp(long timestamp) {
