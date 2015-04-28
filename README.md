@@ -8,16 +8,27 @@ Current status: First application is using in production!
 * Leverages Java 8 language capabilities to build CQL queries
 * Simple function-style stream API
 * Reactive asynchronous and synchronous API
-* Provides Java mapping for Tables, Tuples, User Defined Types, Collections, UDT Collections, Tuple Collections
+* Provides Java mapping for Tables, Tuples, UDFs (User Defined Types), Collections, UDT Collections, Tuple Collections
 
 ### Requirements
 
 * Only JVM 8
 * Latest Datastax Driver 2.1.5
-* Latest Cassandra
+* Latest Cassandra 2.1.4
 * Maven
 
 ### Maven
+
+Latest release dependency:
+```
+<dependencies>
+	<dependency>
+		<groupId>com.noorq.casser</groupId>
+		<artifactId>casser-core</artifactId>
+		<version>1.0.0</version>
+	</dependency>
+</dependencies>
+```
 
 Active development dependency:
 ```
@@ -25,7 +36,7 @@ Active development dependency:
 	<dependency>
 		<groupId>com.noorq.casser</groupId>
 		<artifactId>casser-core</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.1.0-SNAPSHOT</version>
 	</dependency>
 </dependencies>
 
