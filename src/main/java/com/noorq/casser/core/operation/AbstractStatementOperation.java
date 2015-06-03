@@ -18,6 +18,8 @@ package com.noorq.casser.core.operation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import scala.concurrent.Future;
+
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.RegularStatement;
@@ -30,6 +32,7 @@ import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.support.CasserException;
+import com.noorq.casser.support.Scala;
 
 public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>> {
 
@@ -230,4 +233,9 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		
 		throw new CasserException("only RegularStatements can be prepared");
 	}
+	
+	public Future<PreparedStatement> prepareStatementFuture() {
+		return Scala.asFuture(prepareStatementAsync());
+	}
+	
 }

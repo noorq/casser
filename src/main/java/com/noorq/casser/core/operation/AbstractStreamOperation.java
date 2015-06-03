@@ -17,6 +17,8 @@ package com.noorq.casser.core.operation;
 
 import java.util.stream.Stream;
 
+import scala.concurrent.Future;
+
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
@@ -24,6 +26,7 @@ import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.noorq.casser.core.AbstractSessionOperations;
+import com.noorq.casser.support.Scala;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>> extends AbstractStatementOperation<E, O> {
 
@@ -52,6 +55,10 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 			
 	}
 	
+	public Future<PreparedStreamOperation<E>> prepareFuture() {
+		return Scala.asFuture(prepareAsync());
+	}
+	
 	public Stream<E> sync() {
 		
 		ResultSet resultSet = sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
@@ -75,5 +82,8 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 		return future;
 	}
 	
+	public Future<Stream<E>> future() {
+		return Scala.asFuture(async());
+	}
 	
 }
