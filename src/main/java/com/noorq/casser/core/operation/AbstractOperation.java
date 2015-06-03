@@ -24,6 +24,7 @@ import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.noorq.casser.core.AbstractSessionOperations;
+import com.noorq.casser.support.Fun;
 import com.noorq.casser.support.Scala;
 
 public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> extends AbstractStatementOperation<E, O> {
@@ -56,6 +57,22 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> ex
 	public Future<PreparedOperation<E>> prepareFuture() {
 		return Scala.asFuture(prepareAsync());
 	}
+
+	public <A> Future<Fun.Tuple2<PreparedOperation<E>, A>> prepareFuture(A a) {
+		return Scala.asFuture(prepareAsync(), a);
+	}
+
+	public <A, B> Future<Fun.Tuple3<PreparedOperation<E>, A, B>> prepareFuture(A a, B b) {
+		return Scala.asFuture(prepareAsync(), a, b);
+	}
+
+	public <A, B, C> Future<Fun.Tuple4<PreparedOperation<E>, A, B, C>> prepareFuture(A a, B b, C c) {
+		return Scala.asFuture(prepareAsync(), a, b, c);
+	}
+
+	public <A, B, C, D> Future<Fun.Tuple5<PreparedOperation<E>, A, B, C, D>> prepareFuture(A a, B b, C c, D d) {
+		return Scala.asFuture(prepareAsync(), a, b, c, d);
+	}
 	
 	public E sync() {
 		
@@ -82,6 +99,22 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> ex
 	
 	public Future<E> future() {
 		return Scala.asFuture(async());
+	}
+	
+	public <A> Future<Fun.Tuple2<E, A>> future(A a) {
+		return Scala.asFuture(async(), a);
+	}
+
+	public <A, B> Future<Fun.Tuple3<E, A, B>> future(A a, B b) {
+		return Scala.asFuture(async(), a, b);
+	}
+
+	public <A, B, C> Future<Fun.Tuple4<E, A, B, C>> future(A a, B b, C c) {
+		return Scala.asFuture(async(), a, b, c);
+	}
+
+	public <A, B, C, D> Future<Fun.Tuple5<E, A, B, C, D>> future(A a, B b, C c, D d) {
+		return Scala.asFuture(async(), a, b, c, d);
 	}
 	
 }

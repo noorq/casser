@@ -26,6 +26,7 @@ import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.noorq.casser.core.AbstractSessionOperations;
+import com.noorq.casser.support.Fun;
 import com.noorq.casser.support.Scala;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>> extends AbstractStatementOperation<E, O> {
@@ -59,6 +60,22 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 		return Scala.asFuture(prepareAsync());
 	}
 	
+	public <A> Future<Fun.Tuple2<PreparedStreamOperation<E>, A>> prepareFuture(A a) {
+		return Scala.asFuture(prepareAsync(), a);
+	}
+
+	public <A, B> Future<Fun.Tuple3<PreparedStreamOperation<E>, A, B>> prepareFuture(A a, B b) {
+		return Scala.asFuture(prepareAsync(), a, b);
+	}
+
+	public <A, B, C> Future<Fun.Tuple4<PreparedStreamOperation<E>, A, B, C>> prepareFuture(A a, B b, C c) {
+		return Scala.asFuture(prepareAsync(), a, b, c);
+	}
+
+	public <A, B, C, D> Future<Fun.Tuple5<PreparedStreamOperation<E>, A, B, C, D>> prepareFuture(A a, B b, C c, D d) {
+		return Scala.asFuture(prepareAsync(), a, b, c, d);
+	}
+
 	public Stream<E> sync() {
 		
 		ResultSet resultSet = sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
@@ -84,6 +101,22 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 	
 	public Future<Stream<E>> future() {
 		return Scala.asFuture(async());
+	}
+
+	public <A> Future<Fun.Tuple2<Stream<E>, A>> future(A a) {
+		return Scala.asFuture(async(), a);
+	}
+
+	public <A, B> Future<Fun.Tuple3<Stream<E>, A, B>> future(A a, B b) {
+		return Scala.asFuture(async(), a, b);
+	}
+
+	public <A, B, C> Future<Fun.Tuple4<Stream<E>, A, B, C>> future(A a, B b, C c) {
+		return Scala.asFuture(async(), a, b, c);
+	}
+
+	public <A, B, C, D> Future<Fun.Tuple5<Stream<E>, A, B, C, D>> future(A a, B b, C c, D d) {
+		return Scala.asFuture(async(), a, b, c, d);
 	}
 	
 }
