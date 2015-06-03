@@ -58,22 +58,6 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> ex
 		return Scala.asFuture(prepareAsync());
 	}
 
-	public <A> Future<Fun.Tuple2<PreparedOperation<E>, A>> prepareFuture(A a) {
-		return Scala.asFuture(prepareAsync(), a);
-	}
-
-	public <A, B> Future<Fun.Tuple3<PreparedOperation<E>, A, B>> prepareFuture(A a, B b) {
-		return Scala.asFuture(prepareAsync(), a, b);
-	}
-
-	public <A, B, C> Future<Fun.Tuple4<PreparedOperation<E>, A, B, C>> prepareFuture(A a, B b, C c) {
-		return Scala.asFuture(prepareAsync(), a, b, c);
-	}
-
-	public <A, B, C, D> Future<Fun.Tuple5<PreparedOperation<E>, A, B, C, D>> prepareFuture(A a, B b, C c, D d) {
-		return Scala.asFuture(prepareAsync(), a, b, c, d);
-	}
-	
 	public E sync() {
 		
 		ResultSet resultSet = sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();

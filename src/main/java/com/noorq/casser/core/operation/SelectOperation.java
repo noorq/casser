@@ -133,6 +133,11 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		return new CountOperation(sessionOps, entity);
 	}
 	
+	public SelectFirstOperation<E> single() {
+		limit(1);
+		return new SelectFirstOperation<E>(this);
+	}
+	
 	public <R> SelectTransformingOperation<R, E> mapTo(Class<R> entityClass) {
 		
 		Objects.requireNonNull(entityClass, "entityClass is null");
@@ -149,14 +154,14 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		});
 	}
 	
+	public <R> SelectTransformingOperation<R, E> map(Function<E, R> fn) {
+		return new SelectTransformingOperation<R, E>(this, fn);
+	}
+	
 	public SelectOperation<E> column(Getter<?> getter) {
 		CasserPropertyNode p = MappingUtil.resolveMappingProperty(getter);
 		this.props.add(p);
 		return this;
-	}
-	
-	public <R> SelectTransformingOperation<R, E> map(Function<E, R> fn) {
-		return new SelectTransformingOperation<R, E>(this, fn);
 	}
 	
 	public SelectOperation<E> orderBy(Getter<?> getter, OrderingDirection direction) {

@@ -32,7 +32,6 @@ import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.support.CasserException;
-import com.noorq.casser.support.Fun;
 import com.noorq.casser.support.Scala;
 
 public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>> {
@@ -237,22 +236,6 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 	
 	public Future<PreparedStatement> prepareStatementFuture() {
 		return Scala.asFuture(prepareStatementAsync());
-	}
-
-	public <A> Future<Fun.Tuple2<PreparedStatement, A>> prepareStatementFuture(A a) {
-		return Scala.asFuture(prepareStatementAsync(), a);
-	}
-
-	public <A, B> Future<Fun.Tuple3<PreparedStatement, A, B>> prepareStatementFuture(A a, B b) {
-		return Scala.asFuture(prepareStatementAsync(), a, b);
-	}
-
-	public <A, B, C> Future<Fun.Tuple4<PreparedStatement, A, B, C>> prepareStatementFuture(A a, B b, C c) {
-		return Scala.asFuture(prepareStatementAsync(), a, b, c);
-	}
-
-	public <A, B, C, D> Future<Fun.Tuple5<PreparedStatement, A, B, C, D>> prepareStatementFuture(A a, B b, C c, D d) {
-		return Scala.asFuture(prepareStatementAsync(), a, b, c, d);
 	}
 
 }

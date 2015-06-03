@@ -15,7 +15,7 @@
  */
 package com.noorq.casser.core.operation;
 
-import java.util.stream.Stream;
+import java.util.Optional;
 
 import scala.concurrent.Future;
 
@@ -29,52 +29,52 @@ import com.noorq.casser.core.AbstractSessionOperations;
 import com.noorq.casser.support.Fun;
 import com.noorq.casser.support.Scala;
 
-public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>> extends AbstractStatementOperation<E, O> {
+public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>> extends AbstractStatementOperation<E, O> {
 
-	public AbstractStreamOperation(AbstractSessionOperations sessionOperations) {
+	public AbstractOptionalOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
 	}
 	
-	public abstract Stream<E> transform(ResultSet resultSet);
+	public abstract Optional<E> transform(ResultSet resultSet);
 	
-	public PreparedStreamOperation<E> prepare() {
-		return new PreparedStreamOperation<E>(prepareStatement(), this);
+	public PreparedOptionalOperation<E> prepare() {
+		return new PreparedOptionalOperation<E>(prepareStatement(), this);
 	}
 	
-	public ListenableFuture<PreparedStreamOperation<E>> prepareAsync() {
+	public ListenableFuture<PreparedOptionalOperation<E>> prepareAsync() {
 
 		final O _this = (O) this;
 		
-		return Futures.transform(prepareStatementAsync(), new Function<PreparedStatement, PreparedStreamOperation<E>>() {
+		return Futures.transform(prepareStatementAsync(), new Function<PreparedStatement, PreparedOptionalOperation<E>>() {
 
 			@Override
-			public PreparedStreamOperation<E> apply(PreparedStatement preparedStatement) {
-				return new PreparedStreamOperation<E>(preparedStatement, _this);
+			public PreparedOptionalOperation<E> apply(PreparedStatement preparedStatement) {
+				return new PreparedOptionalOperation<E>(preparedStatement, _this);
 			}
 			
 		});
 			
 	}
 	
-	public Future<PreparedStreamOperation<E>> prepareFuture() {
+	public Future<PreparedOptionalOperation<E>> prepareFuture() {
 		return Scala.asFuture(prepareAsync());
 	}
 
-	public Stream<E> sync() {
+	public Optional<E> sync() {
 		
 		ResultSet resultSet = sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
 
 		return transform(resultSet);
 	}
 	
-	public ListenableFuture<Stream<E>> async() {
+	public ListenableFuture<Optional<E>> async() {
 		
 		ResultSetFuture resultSetFuture = sessionOps.executeAsync(options(buildStatement()), showValues);
 
-		ListenableFuture<Stream<E>> future = Futures.transform(resultSetFuture, new Function<ResultSet, Stream<E>>() {
+		ListenableFuture<Optional<E>> future = Futures.transform(resultSetFuture, new Function<ResultSet, Optional<E>>() {
 
 			@Override
-			public Stream<E> apply(ResultSet resultSet) {
+			public Optional<E> apply(ResultSet resultSet) {
 				return transform(resultSet);
 			}
 
@@ -83,23 +83,23 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 		return future;
 	}
 	
-	public Future<Stream<E>> future() {
+	public Future<Optional<E>> future() {
 		return Scala.asFuture(async());
 	}
 
-	public <A> Future<Fun.Tuple2<Stream<E>, A>> future(A a) {
+	public <A> Future<Fun.Tuple2<Optional<E>, A>> future(A a) {
 		return Scala.asFuture(async(), a);
 	}
 
-	public <A, B> Future<Fun.Tuple3<Stream<E>, A, B>> future(A a, B b) {
+	public <A, B> Future<Fun.Tuple3<Optional<E>, A, B>> future(A a, B b) {
 		return Scala.asFuture(async(), a, b);
 	}
 
-	public <A, B, C> Future<Fun.Tuple4<Stream<E>, A, B, C>> future(A a, B b, C c) {
+	public <A, B, C> Future<Fun.Tuple4<Optional<E>, A, B, C>> future(A a, B b, C c) {
 		return Scala.asFuture(async(), a, b, c);
 	}
 
-	public <A, B, C, D> Future<Fun.Tuple5<Stream<E>, A, B, C, D>> future(A a, B b, C c, D d) {
+	public <A, B, C, D> Future<Fun.Tuple5<Optional<E>, A, B, C, D>> future(A a, B b, C c, D d) {
 		return Scala.asFuture(async(), a, b, c, d);
 	}
 	

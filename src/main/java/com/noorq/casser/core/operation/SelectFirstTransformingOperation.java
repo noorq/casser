@@ -15,19 +15,19 @@
  */
 package com.noorq.casser.core.operation;
 
+import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 
 
-public final class SelectTransformingOperation<R, E> extends AbstractFilterStreamOperation<R, SelectTransformingOperation<R, E>> {
+public final class SelectFirstTransformingOperation<R, E> extends AbstractFilterOptionalOperation<R, SelectFirstTransformingOperation<R, E>> {
 
 	private final SelectOperation<E> src;
 	private final Function<E, R> fn;
 	
-	public SelectTransformingOperation(SelectOperation<E> src, Function<E, R> fn) {
+	public SelectFirstTransformingOperation(SelectOperation<E> src, Function<E, R> fn) {
 		super(src.sessionOps);
 		
 		this.src = src;
@@ -42,9 +42,8 @@ public final class SelectTransformingOperation<R, E> extends AbstractFilterStrea
 	}
 
 	@Override
-	public Stream<R> transform(ResultSet resultSet) {
-		return src.transform(resultSet).map(fn);
+	public Optional<R> transform(ResultSet resultSet) {
+		return src.transform(resultSet).findFirst().map(fn);
 	}
-	
-	
+
 }
