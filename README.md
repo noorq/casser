@@ -9,7 +9,8 @@ Current status: First application in production (may be more)
 * Simple function-style stream API
 * Reactive asynchronous and synchronous API
 * Provides Java mapping for Tables, Tuples, UDTs (User Defined Type), Collections, UDT Collections, Tuple Collections
-* Provides Lazy mapping in all cases where possible
+* Uses lazy mapping in all cases where possible
+* Supports Guava ListenableFuture and Scala Future
 
 ### Requirements
 
