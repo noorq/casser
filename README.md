@@ -81,7 +81,7 @@ Timeline timeline = Casser.dsl(Timeline.class);
 CasserSession session = Casser.init(getSession()).showCql().add(Timeline.class).autoCreateDrop().get();
 ```
 
-Select information:
+Select example:
 ```
 session.select(timeline::userId, timeline::timestamp, timeline::text)
   .where(timeline::userId, Query.eq(userId))
@@ -89,11 +89,119 @@ session.select(timeline::userId, timeline::timestamp, timeline::text)
   .forEach(System.out::println);
 ```
 
-Insert information:
+Insert example:
 ```
 TimelineImpl post = new TimelineImpl();
 post.userId=userId;
 post.timestamp=new Date(postTime+1000L*i);
 post.text="hello";
 session.upsert(post).sync();
+```
+
+### Model and Repository Example
+
+Account model:
+```
+@Table
+public interface Account {
+
+	@PartitionKey
+	String accountId();
+	
+	Date createdAt();
+	
+	String organization();
+	
+	String team();
+	
+	String timezone();
+
+	Map<String, AccountUser> users();
+}
+```
+
+Abstract repository:
+```
+public interface AbstractRepository {
+
+	CasserSession session();
+	
+}
+```
+
+Account repository:
+```
+import scala.concurrent.Future;
+
+public interface AccountRepository extends AbstractRepository {
+
+	static final Account account = Casser.dsl(Account.class);
+	
+	static final String DEFAULT_TIMEZONE = "America/Los_Angeles";
+	
+	default Future<Optional<Account>> findAccount(String accountId) {
+		
+		return session()
+				.select(Account.class)
+				.where(account::accountId, eq(accountId))
+				.single()
+				.future();
+		
+	}
+	
+	default Future<Fun.Tuple2<ResultSet, String>> createAccount(
+			String email,
+			AccountUser user,
+			String organization,
+			String team,
+			String timezone) {
+		
+		String accountId = AccountId.next();
+
+		if (timezone == null || timezone.isEmpty()) {
+			timezone = DEFAULT_TIMEZONE;
+		}
+		
+		return session()
+			.insert()
+			.value(account::accountId, accountId)
+			.value(account::createdAt, new Date())
+			.value(account::organization, organization)
+			.value(account::team, team)
+			.value(account::timezone, timezone)
+			.value(account::users, ImmutableMap.of(email, user))
+			.future(accountId);
+		
+	}
+	
+	default Future<ResultSet> putAccountUser(String accountId, String email, AccountUser user) {
+		
+		return session()
+				.update()
+				.put(account::users, email.toLowerCase(), user)
+				.where(account::accountId, eq(accountId))
+				.future();
+		
+	}
+	
+	default Future<ResultSet> removeAccountUser(String accountId, String email) {
+		
+		return session()
+				.update()
+				.put(account::users, email.toLowerCase(), null)
+				.where(account::accountId, eq(accountId))
+				.future();
+		
+	}
+	
+	default Future<ResultSet> dropAccount(String accountId) {
+		
+		return session()
+				.delete()
+				.where(account::accountId, eq(accountId))
+				.future();
+		
+	}
+
+}
 ```
