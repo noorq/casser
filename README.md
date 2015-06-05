@@ -55,9 +55,9 @@ Active development dependency for Scala 2.11:
 </repositories>
 ```
 
-### Example
+### Simple Example
 
-Entity definition:
+Model definition:
 ```
 @Table("timelines")
 public interface Timeline {
@@ -117,6 +117,20 @@ public interface Account {
 	String timezone();
 
 	Map<String, AccountUser> users();
+}
+```
+
+AccountUser model:
+```
+@UDT
+public interface AccountUser {
+
+	String email();
+	
+	String firstName();
+
+	String lastName();
+	
 }
 ```
 
