@@ -33,13 +33,13 @@ Latest release dependency:
 </dependencies>
 ```
 
-Active development dependency:
+Active development dependency for Scala 2.11:
 ```
 <dependencies>
 	<dependency>
 		<groupId>com.noorq.casser</groupId>
 		<artifactId>casser-core</artifactId>
-		<version>1.1.0-SNAPSHOT</version>
+		<version>1.1.0_2.11-SNAPSHOT</version>
 	</dependency>
 </dependencies>
 
