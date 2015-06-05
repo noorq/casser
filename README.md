@@ -1,7 +1,7 @@
 # casser
-Cutting edge Java 8 and Scala 2.11 Cassandra Client
+Fast and easy, functional style cutting edge Java 8 and Scala 2.11 Cassandra client
 
-Current status: First application is using in production!
+Current status: First application in production (may be more)
 
 ### Features
 
