@@ -1,5 +1,5 @@
-# casser        
-Cutting edge Java 8 Cassandra Client
+# casser
+Cutting edge Java 8 and Scala 2.11 Cassandra Client
 
 Current status: First application is using in production!
 
@@ -12,10 +12,11 @@ Current status: First application is using in production!
 
 ### Requirements
 
-* Only JVM 8
+* Latest JVM 8
 * Latest Datastax Driver 2.1.5
 * Latest Cassandra 2.1.4
-* Maven
+* Latest Scala 2.11
+* Latest Maven as well
 
 ### Maven
 
@@ -61,14 +62,14 @@ public interface Timeline {
 
 	@PartitionKey
 	UUID userId();
-	
+
 	@ClusteringColumn
 	@Types.Timeuuid
 	Date timestamp();
-	
+
 	@Column
 	String text();
-	
+
 }
 ```
 
