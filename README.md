@@ -1,5 +1,5 @@
-# casser        
-Cutting edge Java 8 Cassandra Client
+# casser
+Cutting edge Java 8 and Scala 2.11 Cassandra Client
 
 Current status: First application is using in production!
 
@@ -61,14 +61,14 @@ public interface Timeline {
 
 	@PartitionKey
 	UUID userId();
-	
+
 	@ClusteringColumn
 	@Types.Timeuuid
 	Date timestamp();
-	
+
 	@Column
 	String text();
-	
+
 }
 ```
 
