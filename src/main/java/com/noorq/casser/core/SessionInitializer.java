@@ -139,7 +139,10 @@ public final class SessionInitializer extends AbstractSessionOperations {
 	
 	public SessionInitializer addPackage(String packageName) {
 		try {
-			PackageUtil.getClasses(packageName).forEach(initList::add);
+			PackageUtil.getClasses(packageName)
+				.stream()
+				.filter(c -> c.isInterface())
+				.forEach(initList::add);
 		} catch (ClassNotFoundException e) {
 			throw new CasserException("fail to add package " + packageName, e);
 		}
