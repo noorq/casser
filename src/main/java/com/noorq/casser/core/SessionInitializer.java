@@ -35,6 +35,7 @@ import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.value.ColumnValuePreparer;
 import com.noorq.casser.mapping.value.ColumnValueProvider;
 import com.noorq.casser.support.CasserException;
+import com.noorq.casser.support.PackageUtil;
 
 
 public final class SessionInitializer extends AbstractSessionOperations {
@@ -134,6 +135,15 @@ public final class SessionInitializer extends AbstractSessionOperations {
 	@Override
 	public boolean isShowCql() {
 		return showCql;
+	}
+	
+	public SessionInitializer addPackage(String packageName) {
+		try {
+			PackageUtil.getClasses(packageName).forEach(initList::add);
+		} catch (ClassNotFoundException e) {
+			throw new CasserException("fail to add package " + packageName, e);
+		}
+		return this;
 	}
 	
 	public SessionInitializer add(Object... dsls) {
