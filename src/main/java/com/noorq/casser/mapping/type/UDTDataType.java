@@ -15,7 +15,6 @@
  */
 package com.noorq.casser.mapping.type;
 
-import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.schemabuilder.Alter;
@@ -88,7 +87,7 @@ public final class UDTDataType extends AbstractDataType {
 
 	@Override
 	public SchemaStatement alterColumn(Alter alter, IdentityName columnName,
-			ColumnMetadata columnMetadata) {
+			OptionalColumnMetadata columnMetadata) {
 		
 		ensureSimpleColumn(columnName);
 		

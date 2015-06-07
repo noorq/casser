@@ -15,7 +15,10 @@
  */
 package com.noorq.casser.mapping.type;
 
-import com.datastax.driver.core.ColumnMetadata;
+import java.util.List;
+
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.schemabuilder.Alter;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.CreateType;
@@ -64,8 +67,41 @@ public final class UDTListDataType extends AbstractDataType {
 
 	@Override
 	public SchemaStatement alterColumn(Alter alter, IdentityName columnName,
-			ColumnMetadata columnMetadata) {
-		throw new CasserMappingException("alter of UDTList column is not possible now for " + columnName);
+			OptionalColumnMetadata columnMetadata) {
+		
+		if (columnMetadata == null) {
+			return notSupportedOperation("add", columnName);
+		}
+		
+		DataType schemaDataType = columnMetadata.getType();
+		if (schemaDataType.getName() != DataType.Name.LIST) {
+			return notSupportedOperation("alter", columnName);
+		}
+		
+		List<DataType> args = columnMetadata.getType().getTypeArguments();
+		if (args.size() != 1) {
+			return notSupportedOperation("alter", columnName);
+		}
+		
+		DataType valueDataType = args.get(0);
+		if (valueDataType.getName() != DataType.Name.UDT ||
+				!(valueDataType instanceof UserType)) {
+			return notSupportedOperation("alter", columnName);
+		}
+		
+		UserType udtValueType = (UserType) valueDataType;
+		
+		if (!udtName.getName().equals(udtValueType.getTypeName())) {
+			return notSupportedOperation("alter", columnName);
+		}
+
+		// equals
+		return null;
+		
+	}
+	
+	private SchemaStatement notSupportedOperation(String op, IdentityName columnName) {
+		throw new CasserMappingException(op + " UDTList column is not supported by Cassandra Driver for column '" + columnName + "'");
 	}
 
 	@Override

@@ -24,9 +24,11 @@ import java.util.stream.Collectors;
 
 import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.ColumnMetadata.IndexMetadata;
+import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.SimpleStatement;
 import com.datastax.driver.core.TableMetadata;
+import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.schemabuilder.Alter;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.Create.Options;
@@ -38,6 +40,7 @@ import com.noorq.casser.mapping.CasserEntityType;
 import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.OrderingDirection;
+import com.noorq.casser.mapping.type.OptionalColumnMetadata;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.CqlUtil;
 
@@ -58,7 +61,7 @@ public final class SchemaUtil {
 	public static SchemaStatement createUserType(CasserEntity entity) {
 	
 		if (entity.getType() != CasserEntityType.UDT) {
-			throw new CasserMappingException("expected user defined type entity " + entity);
+			throw new CasserMappingException("expected UDT entity " + entity);
 		}
 
 		CreateType create = SchemaBuilder.createType(entity.getName().toCql());
@@ -71,13 +74,79 @@ public final class SchemaUtil {
 				throw new CasserMappingException("primary key columns are not supported in UserDefinedType for " + prop.getPropertyName() + " in entity " + entity);
 			}
  			
-			prop.getDataType().addColumn(create, prop.getColumnName());
+			try {
+				prop.getDataType().addColumn(create, prop.getColumnName());
+			}
+			catch(IllegalArgumentException e) {
+				throw new CasserMappingException("invalid column name '" + prop.getColumnName() + "' in entity '" + entity.getName().getName() + "'", e);
+			}
 		}
 		
 		return create;
 	}
 	
+	public static List<SchemaStatement> alterUserType(UserType userType,
+			CasserEntity entity, boolean dropUnusedColumns) {
+
+		if (entity.getType() != CasserEntityType.UDT) {
+			throw new CasserMappingException("expected UDT entity " + entity);
+		}
+		
+		List<SchemaStatement> result = new ArrayList<SchemaStatement>();
+		
+		/**
+		 * TODO: In future replace SchemaBuilder.alterTable by SchemaBuilder.alterType when it will exist
+		 */
+		
+		Alter alter = SchemaBuilder.alterTable(entity.getName().toCql());
+
+		final Set<String> visitedColumns = dropUnusedColumns ? new HashSet<String>()
+				: Collections.<String> emptySet();
+
+		for (CasserProperty prop : entity.getOrderedProperties()) {
+
+			String columnName = prop.getColumnName().getName();
+
+			if (dropUnusedColumns) {
+				visitedColumns.add(columnName);
+			}
+			
+			ColumnType columnType = prop.getColumnType();
+
+			if (columnType == ColumnType.PARTITION_KEY || columnType == ColumnType.CLUSTERING_COLUMN) {
+				continue;
+			}
+			
+			DataType dataType = userType.getFieldType(columnName);
+			SchemaStatement stmt = prop.getDataType().alterColumn(alter, prop.getColumnName(), optional(columnName, dataType));
+			
+			if (stmt != null) {
+				result.add(stmt);
+			}
+	
+		}
+		
+		if (dropUnusedColumns) {
+			for (String field : userType.getFieldNames()) {
+				if (!visitedColumns.contains(field)) {
+			
+					result.add(alter.dropColumn(field));	
+					
+				}
+			}
+		}
+		
+		return result;
+
+	}
+
+	
 	public static SchemaStatement dropUserType(CasserEntity entity) {
+		
+		if (entity.getType() != CasserEntityType.UDT) {
+			throw new CasserMappingException("expected UDT entity " + entity);
+		}
+		
 		return SchemaBuilder.dropType(entity.getName().toCql());
 	}
 	
@@ -143,7 +212,7 @@ public final class SchemaUtil {
 			}
 			
 			ColumnMetadata columnMetadata = tmd.getColumn(columnName);
-			SchemaStatement stmt = prop.getDataType().alterColumn(alter, prop.getColumnName(), columnMetadata);
+			SchemaStatement stmt = prop.getDataType().alterColumn(alter, prop.getColumnName(), optional(columnMetadata));
 			
 			if (stmt != null) {
 				result.add(stmt);
@@ -267,4 +336,43 @@ public final class SchemaUtil {
 						+ "' type is '" + prop.getJavaType() + "' in the entity " + prop.getEntity());
 
 	}
+
+	private static OptionalColumnMetadata optional(final ColumnMetadata columnMetadata) {
+		if (columnMetadata != null) {
+			return new OptionalColumnMetadata() {
+
+				@Override
+				public String getName() {
+					return columnMetadata.getName();
+				}
+
+				@Override
+				public DataType getType() {
+					return columnMetadata.getType();
+				}
+				
+			};
+		}
+		return null;
+	}
+	
+	private static OptionalColumnMetadata optional(final String name, final DataType dataType) {
+		if (dataType != null) {
+			return new OptionalColumnMetadata() {
+
+				@Override
+				public String getName() {
+					return name;
+				}
+
+				@Override
+				public DataType getType() {
+					return dataType;
+				}
+				
+			};
+		}
+		return null;
+	}
+	
 }

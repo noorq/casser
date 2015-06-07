@@ -17,10 +17,7 @@ package com.noorq.casser.core;
 
 import java.util.List;
 
-import com.datastax.driver.core.RegularStatement;
 import com.datastax.driver.core.TableMetadata;
-import com.datastax.driver.core.querybuilder.Batch;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.schemabuilder.SchemaStatement;
 import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.support.CasserException;

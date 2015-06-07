@@ -153,7 +153,7 @@ public final class DTDataType extends AbstractDataType {
 	}
 	
 	@Override
-	public SchemaStatement alterColumn(Alter alter, IdentityName columnName, ColumnMetadata columnMetadata) {
+	public SchemaStatement alterColumn(Alter alter, IdentityName columnName, OptionalColumnMetadata columnMetadata) {
 		
 		if (columnMetadata != null) {
 			

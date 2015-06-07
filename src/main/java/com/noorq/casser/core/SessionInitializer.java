@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Session;
@@ -218,31 +219,32 @@ public final class SessionInitializer extends AbstractSessionOperations {
 		initList.forEach(dsl -> sessionRepository.add(dsl));
 
 		TableOperations tableOps = new TableOperations(this, dropUnusedColumns, dropUnusedIndexes);
-		UserTypeOperations userTypeOps = new UserTypeOperations(this);
+		UserTypeOperations userTypeOps = new UserTypeOperations(this, dropUnusedColumns);
+		
 		
 		switch(autoDdl) {
 		
 		case CREATE:
 		case CREATE_DROP:
-			
-			createUserTypesInOrder(userTypeOps);
 
+			eachUserTypeInOrder(userTypeOps, e -> userTypeOps.createUserType(e));
+			
 			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
 				.forEach(e -> tableOps.createTable(e));
 			
 			break;
 			
 		case VALIDATE:
-			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.UDT)
-				.forEach(e -> userTypeOps.validateUserType(getUserType(e), e));
+			
+			eachUserTypeInOrder(userTypeOps, e -> userTypeOps.validateUserType(getUserType(e), e));
 			
 			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
 				.forEach(e -> tableOps.validateTable(getTableMetadata(e), e));
 			break;
 			
 		case UPDATE:
-			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.UDT)
-				.forEach(e -> userTypeOps.updateUserType(getUserType(e), e));
+			
+			eachUserTypeInOrder(userTypeOps, e -> userTypeOps.updateUserType(getUserType(e), e));
 
 			sessionRepository.entities().stream().filter(e -> e.getType() == CasserEntityType.TABLE)
 				.forEach(e -> tableOps.updateTable(getTableMetadata(e), e));
@@ -258,9 +260,9 @@ public final class SessionInitializer extends AbstractSessionOperations {
 		
 	}
 	
-	private void createUserTypesInOrder(UserTypeOperations userTypeOps) {
+	private void eachUserTypeInOrder(UserTypeOperations userTypeOps, Consumer<? super CasserEntity> action) {
 		
-		Set<CasserEntity> createdSet = new HashSet<CasserEntity>();
+		Set<CasserEntity> processedSet = new HashSet<CasserEntity>();
 		Set<CasserEntity> stack = new HashSet<CasserEntity>();
 		
 		sessionRepository.entities().stream()
@@ -268,29 +270,29 @@ public final class SessionInitializer extends AbstractSessionOperations {
 		.forEach(e -> {
 		
 			stack.clear();
-			createUserTypeInRecursion(e, createdSet, stack, userTypeOps);
+			eachUserTypeInRecursion(e, processedSet, stack, userTypeOps, action);
 			
 		});
 		
 
 	}
 	
-	private void createUserTypeInRecursion(CasserEntity e, Set<CasserEntity> createdSet, Set<CasserEntity> stack, UserTypeOperations userTypeOps) {
+	private void eachUserTypeInRecursion(CasserEntity e, Set<CasserEntity> processedSet, Set<CasserEntity> stack, UserTypeOperations userTypeOps, Consumer<? super CasserEntity> action) {
 		
 		stack.add(e);
 		
 		Collection<CasserEntity> createBefore = sessionRepository.getUserTypeUses(e);
 		
 		for (CasserEntity be : createBefore) {
-			if (!createdSet.contains(be) && !stack.contains(be)) {
-				createUserTypeInRecursion(be, createdSet, stack, userTypeOps);
-				createdSet.add(be);
+			if (!processedSet.contains(be) && !stack.contains(be)) {
+				eachUserTypeInRecursion(be, processedSet, stack, userTypeOps, action);
+				processedSet.add(be);
 			}
 		}
 		
-		if (!createdSet.contains(e)) {
-			userTypeOps.createUserType(e);
-			createdSet.add(e);
+		if (!processedSet.contains(e)) {
+			action.accept(e);
+			processedSet.add(e);
 		}
 		
 	}

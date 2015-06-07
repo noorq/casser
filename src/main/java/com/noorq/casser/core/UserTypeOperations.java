@@ -15,29 +15,61 @@
  */
 package com.noorq.casser.core;
 
+import java.util.List;
+
 import com.datastax.driver.core.UserType;
+import com.datastax.driver.core.schemabuilder.SchemaStatement;
 import com.noorq.casser.mapping.CasserEntity;
+import com.noorq.casser.support.CasserException;
 
 public final class UserTypeOperations {
 	
 	private final AbstractSessionOperations sessionOps;
+	private final boolean dropUnusedColumns;
 	
-	public UserTypeOperations(AbstractSessionOperations sessionOps) {
+	public UserTypeOperations(AbstractSessionOperations sessionOps, boolean dropUnusedColumns) {
 		this.sessionOps = sessionOps;
+		this.dropUnusedColumns = dropUnusedColumns;
 	}
 	
 	public void createUserType(CasserEntity entity) {
+		
 		sessionOps.execute(SchemaUtil.createUserType(entity), true);
+		
 	}
 
 	public void validateUserType(UserType userType, CasserEntity entity) {
+		
+		if (userType == null) {
+			throw new CasserException("userType not exists " + entity.getName() + "for entity " + entity.getMappingInterface());
+		}
+		
+		List<SchemaStatement> list = SchemaUtil.alterUserType(userType, entity, dropUnusedColumns);
+		
+		if (!list.isEmpty()) {
+			throw new CasserException("schema changed for entity " + entity.getMappingInterface() + ", apply this command: " + list);
+		}
 		
 	}
 
 	
 	public void updateUserType(UserType userType, CasserEntity entity) {
 		
+		if (userType == null) {
+			createUserType(entity);
+			return;
+		}
+		
+		executeBatch(SchemaUtil.alterUserType(userType, entity, dropUnusedColumns));
+		
 	}
 
+	private void executeBatch(List<SchemaStatement> list) {
+		
+		list.forEach(s -> {
+			sessionOps.execute(s, true);
+		});
+		
+	}
 
 }

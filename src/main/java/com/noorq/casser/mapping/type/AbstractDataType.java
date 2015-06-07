@@ -15,7 +15,6 @@
  */
 package com.noorq.casser.mapping.type;
 
-import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.schemabuilder.Alter;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.CreateType;
@@ -30,7 +29,7 @@ public abstract class AbstractDataType {
 
 	public abstract void addColumn(CreateType create, IdentityName columnName);
 
-	public abstract SchemaStatement alterColumn(Alter alter, IdentityName columnName, ColumnMetadata columnMetadata);
+	public abstract SchemaStatement alterColumn(Alter alter, IdentityName columnName, OptionalColumnMetadata columnInformation);
 	
 	public abstract Class<?>[] getTypeArguments();
 	
