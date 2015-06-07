@@ -43,6 +43,8 @@ public final class Constraint {
 	/**
 	 *  NotNull annotation is using to check that value is not null before storing it 
 	 *  
+	 *  Applicable to use in any @java.lang.Object
+	 *  
 	 *  It does not check on selects and data retrieval operations
      *
 	 */
@@ -56,6 +58,8 @@ public final class Constraint {
 	
 	/**
 	 *  NotEmptyText annotation is using to check that value has text before storing it 
+	 *  
+	 *  Can be used only for @java.lang.CharSequence
 	 *  
 	 *  It does not check on selects and data retrieval operations
      *
@@ -71,6 +75,8 @@ public final class Constraint {
 	/**
 	 *  Email annotation is using to check that value has a valid email before storing it 
 	 *  
+     *  Can be used only for @java.lang.CharSequence
+	 *  
 	 *  It does not check on selects and data retrieval operations
      *
 	 */
@@ -84,6 +90,8 @@ public final class Constraint {
 	
 	/**
 	 *  Number annotation is using to check that all letters in value are digits before storing it 
+	 *  
+	 *  Can be used only for @java.lang.CharSequence
 	 *  
 	 *  It does not check on selects and data retrieval operations
      *
@@ -100,6 +108,8 @@ public final class Constraint {
 	/**
 	 *  Alphabet annotation is using to check that all letters in value are in specific alphabet before storing it 
 	 *  
+	 *  Can be used only for @java.lang.CharSequence
+	 *  
 	 *  It does not check on selects and data retrieval operations
      *
 	 */
@@ -109,12 +119,20 @@ public final class Constraint {
 	@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 	public @interface Alphabet {
 
-		char[] value();
+		/**
+		 * Defines alphabet that will be used to check value
+		 * 
+		 * @return alphabet characters in the string
+		 */
+		
+		String value();
 		
 	}
 	
 	/**
 	 *  Length annotation is using to ensure that value has exact length before storing it
+	 *
+	 *  Can be used for @java.lang.CharSequence, @ByteBuffer and byte[]
 	 *
 	 *  It does not have effect on selects and data retrieval operations
 	 *
@@ -132,6 +150,8 @@ public final class Constraint {
 	/**
 	 *  MaxLength annotation is using to ensure that value has length less or equal to some threshold before storing it
 	 *
+	 *  Can be used for @java.lang.CharSequence, @ByteBuffer and byte[]
+	 *
 	 *  It does not have effect on selects and data retrieval operations
 	 *
 	 */
@@ -147,6 +167,8 @@ public final class Constraint {
 	
 	/**
 	 *  MinLength annotation is using to ensure that value has length greater or equal to some threshold before storing it
+	 *
+	 *  Can be used for @java.lang.CharSequence, @ByteBuffer and byte[]
 	 *
 	 *  It does not have effect on selects and data retrieval operations
 	 *
@@ -164,6 +186,8 @@ public final class Constraint {
 	/**
 	 *  LowerCase annotation is using to ensure that value is in lower case before storing it
 	 *
+	 *  Can be used only for @java.lang.CharSequence
+	 *
 	 *  It does not have effect on selects and data retrieval operations
 	 *
 	 */		
@@ -177,6 +201,8 @@ public final class Constraint {
 
 	/**
 	 *  UpperCase annotation is using to ensure that value is in upper case before storing it
+	 *
+	 *  Can be used only for @java.lang.CharSequence
 	 *
 	 *  It does not have effect on selects and data retrieval operations
 	 *
@@ -192,6 +218,8 @@ public final class Constraint {
 	/**
 	 *  Pattern annotation is LowerCase annotation is using to ensure that value is upper case before storing it
 	 *
+	 *  Can be used only for @java.lang.CharSequence
+	 *
 	 *  It does not have effect on selects and data retrieval operations
 	 *
 	 */	
@@ -204,7 +232,7 @@ public final class Constraint {
 		/**
 		 * User defined regex expression to check match of the value
 		 * 
-		 * @return Regex pattern
+		 * @return Java regex pattern
 		 */
 		
 		String value();
@@ -213,6 +241,8 @@ public final class Constraint {
 	
 	/**
 	 *  Custom annotation is using special implementation to check value before storing it
+	 *
+	 *  Applicable to use in any @java.lang.Object
 	 *
 	 *  It does not have effect on selects and data retrieval operations
 	 *
@@ -224,13 +254,22 @@ public final class Constraint {
 	public @interface Custom {
 
 		/**
-		 * Defines class name of the custom implementation of the checker.
-		 * Class must implement special interface for this and be thread-safe and do not relay that it will be a singleton.
+		 * Defines value that will be passed to the checker
 		 * 
-		 * @return className of the custom implementation
+		 * @return value in the string form, can be anything that checker implemented in className understands
 		 */
 		
 		String value();
+
+		/**
+		 * Defines class name of the custom implementation of the checker.
+		 * Class must implement special interface for this and be thread-safe and do not relay that it will be a singleton.
+		 * 
+		 * 
+		 * @return className of the custom implementation
+		 */
+
+		String className();
 		
 	}
 	
