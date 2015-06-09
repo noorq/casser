@@ -57,7 +57,7 @@ public final class Constraints {
 	}
 	
 	/**
-	 *  NotEmptyText annotation is using to check that value has text before storing it 
+	 *  NotEmpty annotation is using to check that value has text before storing it 
 	 *  
 	 *  Can be used only for @java.lang.CharSequence
 	 *  
@@ -68,7 +68,7 @@ public final class Constraints {
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
-	public @interface NotEmptyText {
+	public @interface NotEmpty {
 
 	}
 	
