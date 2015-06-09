@@ -59,6 +59,8 @@ public final class Constraints {
 	/**
 	 *  NotEmpty annotation is using to check that value has text before storing it 
 	 *  
+	 *  Also checks for the null and it is more strict annotation then @NotNull
+	 *  
 	 *  Can be used only for @java.lang.CharSequence
 	 *  
 	 *  It does not check on selects and data retrieval operations
