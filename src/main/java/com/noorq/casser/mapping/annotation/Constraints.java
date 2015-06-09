@@ -35,9 +35,9 @@ import java.lang.annotation.Target;
  *
  */
 
-public final class Constraint {
+public final class Constraints {
 
-	private Constraint() {
+	private Constraints() {
 	}
 
 	/**
