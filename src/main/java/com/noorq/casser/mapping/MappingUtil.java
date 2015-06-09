@@ -15,8 +15,14 @@
  */
 package com.noorq.casser.mapping;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+
+import javax.validation.Constraint;
+import javax.validation.ConstraintValidator;
 
 import com.noorq.casser.core.Casser;
 import com.noorq.casser.core.Getter;
@@ -25,6 +31,7 @@ import com.noorq.casser.core.reflect.DslExportable;
 import com.noorq.casser.core.reflect.ListDsl;
 import com.noorq.casser.core.reflect.MapDsl;
 import com.noorq.casser.core.reflect.MapExportable;
+import com.noorq.casser.core.reflect.ReflectionInstantiator;
 import com.noorq.casser.core.reflect.SetDsl;
 import com.noorq.casser.mapping.annotation.Index;
 import com.noorq.casser.mapping.annotation.Table;
@@ -33,9 +40,51 @@ import com.noorq.casser.mapping.annotation.UDT;
 import com.noorq.casser.support.CasserMappingException;
 import com.noorq.casser.support.DslPropertyException;
 
+
 public final class MappingUtil {
 
+	@SuppressWarnings("unchecked")
+	public static final ConstraintValidator<? extends Annotation, ?>[] EMPTY_VALIDATORS = new ConstraintValidator[0];
+	
 	private MappingUtil() {
+	}
+	
+	public static ConstraintValidator<? extends Annotation, ?>[] getValidators(Method getterMethod) {
+
+		List<ConstraintValidator<? extends Annotation, ?>> list = null;
+		
+		for (Annotation constraintAnnotation : getterMethod.getDeclaredAnnotations()) {
+			
+			Class<? extends Annotation> annotationType = constraintAnnotation.annotationType();
+			
+			Constraint constraint = annotationType.getDeclaredAnnotation(Constraint.class);
+			
+			if (constraint == null) {
+				continue;
+			}
+			
+			for (Class<? extends ConstraintValidator<?, ?>> clazz : constraint.validatedBy()) {
+
+				ConstraintValidator<? extends Annotation, ?> validator = ReflectionInstantiator.instantiateClass(clazz);
+				
+				((ConstraintValidator) validator).initialize(constraintAnnotation);
+				
+				if (list == null) {
+					list = new ArrayList<ConstraintValidator<? extends Annotation, ?>>();
+				}
+				
+				list.add(validator);
+
+			}
+			
+		}
+		
+		if (list == null) {
+			return EMPTY_VALIDATORS;
+		}
+		else {
+			return list.toArray(EMPTY_VALIDATORS);
+		}
 	}
 	
 	public static Optional<IdentityName> getIndexName(Method getterMethod) {

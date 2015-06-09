@@ -15,10 +15,13 @@
  */
 package com.noorq.casser.mapping;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Optional;
 import java.util.function.Function;
+
+import javax.validation.ConstraintValidator;
 
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.javatype.AbstractJavaType;
@@ -43,6 +46,8 @@ public final class CasserMappingProperty implements CasserProperty {
 	private volatile Optional<Function<Object, Object>> readConverter = null;
 	private volatile Optional<Function<Object, Object>> writeConverter = null;
 	
+	private final ConstraintValidator<? extends Annotation, ?>[] validators;
+	
 	public CasserMappingProperty(CasserMappingEntity entity, Method getter) {
 		this.entity = entity;
 		this.getter = getter;
@@ -57,6 +62,8 @@ public final class CasserMappingProperty implements CasserProperty {
 		this.abstractJavaType = MappingJavaTypes.resolveJavaType(this.javaType);
 
 		this.dataType = abstractJavaType.resolveDataType(this.getter, this.genericJavaType, this.columnInfo.getColumnType());
+		
+		this.validators = MappingUtil.getValidators(getter);
 	}
 	
 	@Override
@@ -129,4 +136,10 @@ public final class CasserMappingProperty implements CasserProperty {
 		return writeConverter;
 	}
 
+	@Override
+	public ConstraintValidator<? extends Annotation, ?>[] getValidators() {
+		return validators;
+	}
+
+	
 }

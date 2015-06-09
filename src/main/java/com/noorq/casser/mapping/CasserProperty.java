@@ -15,9 +15,12 @@
  */
 package com.noorq.casser.mapping;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.Function;
+
+import javax.validation.ConstraintValidator;
 
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.type.AbstractDataType;
@@ -48,4 +51,6 @@ public interface CasserProperty {
 	
 	Optional<Function<Object, Object>> getWriteConverter(SessionRepository repository);
 
+	ConstraintValidator<? extends Annotation, ?>[] getValidators();
+	
 }

@@ -15,15 +15,19 @@
  */
 package com.noorq.casser.core.reflect;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.Function;
+
+import javax.validation.ConstraintValidator;
 
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.CasserEntity;
 import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.IdentityName;
+import com.noorq.casser.mapping.MappingUtil;
 import com.noorq.casser.mapping.OrderingDirection;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.support.CasserMappingException;
@@ -98,4 +102,8 @@ public final class CasserNamedProperty implements CasserProperty {
 		return Optional.empty();
 	}
 	
+	@Override
+	public ConstraintValidator<? extends Annotation, ?>[] getValidators() {
+		return MappingUtil.EMPTY_VALIDATORS;
+	}
 }
