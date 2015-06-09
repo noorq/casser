@@ -21,6 +21,20 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import javax.validation.Constraint;
+
+import com.noorq.casser.mapping.validator.AlphabetValidator;
+import com.noorq.casser.mapping.validator.EmailValidator;
+import com.noorq.casser.mapping.validator.LengthValidator;
+import com.noorq.casser.mapping.validator.LowerCaseValidator;
+import com.noorq.casser.mapping.validator.MaxLengthValidator;
+import com.noorq.casser.mapping.validator.MinLengthValidator;
+import com.noorq.casser.mapping.validator.NotEmptyValidator;
+import com.noorq.casser.mapping.validator.NotNullValidator;
+import com.noorq.casser.mapping.validator.NumberValidator;
+import com.noorq.casser.mapping.validator.PatternValidator;
+import com.noorq.casser.mapping.validator.UpperCaseValidator;
+
 /**
  * Constraint annotations are using for data integrity mostly for @java.lang.String types.  
  * The place of the annotation is the particular method in model interface.
@@ -52,6 +66,7 @@ public final class Constraints {
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+	@Constraint(validatedBy = NotNullValidator.class)
 	public @interface NotNull {
 
 	}
@@ -61,7 +76,7 @@ public final class Constraints {
 	 *  
 	 *  Also checks for the null and it is more strict annotation then @NotNull
 	 *  
-	 *  Can be used only for @java.lang.CharSequence
+	 *  Can be used for @java.lang.CharSequence, @ByteBuffer and any array
 	 *  
 	 *  It does not check on selects and data retrieval operations
      *
@@ -70,14 +85,15 @@ public final class Constraints {
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+	@Constraint(validatedBy = NotEmptyValidator.class)
 	public @interface NotEmpty {
-
+		
 	}
 	
 	/**
 	 *  Email annotation is using to check that value has a valid email before storing it 
 	 *  
-     *  Can be used only for @java.lang.CharSequence
+     *  Can be used only for @CharSequence
 	 *  
 	 *  It does not check on selects and data retrieval operations
      *
@@ -86,6 +102,7 @@ public final class Constraints {
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+	@Constraint(validatedBy = EmailValidator.class)
 	public @interface Email {
 
 	}
@@ -102,6 +119,7 @@ public final class Constraints {
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+	@Constraint(validatedBy = NumberValidator.class)
 	public @interface Number {
 
 	}
@@ -119,6 +137,7 @@ public final class Constraints {
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+	@Constraint(validatedBy = AlphabetValidator.class)
 	public @interface Alphabet {
 
 		/**
@@ -134,7 +153,7 @@ public final class Constraints {
 	/**
 	 *  Length annotation is using to ensure that value has exact length before storing it
 	 *
-	 *  Can be used for @java.lang.CharSequence, @ByteBuffer and byte[]
+	 *  Can be used for @java.lang.CharSequence, @ByteBuffer and any array
 	 *
 	 *  It does not have effect on selects and data retrieval operations
 	 *
@@ -143,6 +162,7 @@ public final class Constraints {
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+	@Constraint(validatedBy = LengthValidator.class)
 	public @interface Length {
 
 		int value();
@@ -161,6 +181,7 @@ public final class Constraints {
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+	@Constraint(validatedBy = MaxLengthValidator.class)
 	public @interface MaxLength {
 
 		int value();
@@ -179,6 +200,7 @@ public final class Constraints {
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+	@Constraint(validatedBy = MinLengthValidator.class)
 	public @interface MinLength {
 
 		int value();
@@ -197,6 +219,7 @@ public final class Constraints {
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+	@Constraint(validatedBy = LowerCaseValidator.class)
 	public @interface LowerCase {
 
 	}
@@ -213,6 +236,7 @@ public final class Constraints {
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+	@Constraint(validatedBy = UpperCaseValidator.class)
 	public @interface UpperCase {
 
 	}
@@ -229,6 +253,7 @@ public final class Constraints {
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+	@Constraint(validatedBy = PatternValidator.class)
 	public @interface Pattern {
 
 		/**
@@ -239,39 +264,13 @@ public final class Constraints {
 		
 		String value();
 		
-	}
-	
-	/**
-	 *  Custom annotation is using special implementation to check value before storing it
-	 *
-	 *  Applicable to use in any @java.lang.Object
-	 *
-	 *  It does not have effect on selects and data retrieval operations
-	 *
-	 */	
-	
-	@Documented
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
-	public @interface Custom {
-
 		/**
-		 * Defines value that will be passed to the checker
+		 * Regex flags composition
 		 * 
-		 * @return value in the string form, can be anything that checker implemented in className understands
+		 * @return Java regex flags
 		 */
 		
-		String value();
-
-		/**
-		 * Defines class name of the custom implementation of the checker.
-		 * Class must implement special interface for this and be thread-safe and do not relay that it will be a singleton.
-		 * 
-		 * 
-		 * @return className of the custom implementation
-		 */
-
-		String className();
+		int flags();
 		
 	}
 	
