@@ -55,26 +55,14 @@ public final class MappingUtil {
 		
 		for (Annotation constraintAnnotation : getterMethod.getDeclaredAnnotations()) {
 			
+			list = addValidators(constraintAnnotation, list);
+			
 			Class<? extends Annotation> annotationType = constraintAnnotation.annotationType();
 			
-			Constraint constraint = annotationType.getDeclaredAnnotation(Constraint.class);
-			
-			if (constraint == null) {
-				continue;
-			}
-			
-			for (Class<? extends ConstraintValidator<?, ?>> clazz : constraint.validatedBy()) {
-
-				ConstraintValidator<? extends Annotation, ?> validator = ReflectionInstantiator.instantiateClass(clazz);
+			for (Annotation possibleConstraint : annotationType.getDeclaredAnnotations()) {
 				
-				((ConstraintValidator) validator).initialize(constraintAnnotation);
+				list = addValidators(possibleConstraint, list);
 				
-				if (list == null) {
-					list = new ArrayList<ConstraintValidator<? extends Annotation, ?>>();
-				}
-				
-				list.add(validator);
-
 			}
 			
 		}
@@ -85,6 +73,38 @@ public final class MappingUtil {
 		else {
 			return list.toArray(EMPTY_VALIDATORS);
 		}
+	}
+	
+	private static List<ConstraintValidator<? extends Annotation, ?>> addValidators(Annotation constraintAnnotation, List<ConstraintValidator<? extends Annotation, ?>> list) {
+		
+		Class<? extends Annotation> annotationType = constraintAnnotation.annotationType();
+		
+		for (Annotation possibleConstraint : annotationType.getDeclaredAnnotations()) {
+			
+			if (possibleConstraint instanceof Constraint) {
+				
+				Constraint constraint = (Constraint) possibleConstraint; 
+				
+				for (Class<? extends ConstraintValidator<?, ?>> clazz : constraint.validatedBy()) {
+
+					ConstraintValidator<? extends Annotation, ?> validator = ReflectionInstantiator.instantiateClass(clazz);
+					
+					((ConstraintValidator) validator).initialize(constraintAnnotation);
+					
+					if (list == null) {
+						list = new ArrayList<ConstraintValidator<? extends Annotation, ?>>();
+					}
+					
+					list.add(validator);
+
+				}
+				
+			}
+			
+		}
+		
+		return list;
+		
 	}
 	
 	public static Optional<IdentityName> getIndexName(Method getterMethod) {

@@ -15,22 +15,19 @@
  */
 package com.noorq.casser.test.integration.core.simple;
 
-import com.noorq.casser.mapping.annotation.Column;
-import com.noorq.casser.mapping.annotation.PartitionKey;
-import com.noorq.casser.mapping.annotation.Table;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@Table("simple_users")
-public interface User {
+import com.noorq.casser.mapping.annotation.Constraints;
 
-	@PartitionKey
-	Long id();
-	
-	@Username
-	@Column("override_name")
-	String name();
-	
-	Integer age();
-	
-	UserType type();
-	
+
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+@Constraints.LowerCase
+public @interface Username {
+
 }
