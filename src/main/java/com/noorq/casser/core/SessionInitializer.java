@@ -16,6 +16,7 @@
 package com.noorq.casser.core;
 
 import java.io.PrintStream;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -142,7 +143,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
 		try {
 			PackageUtil.getClasses(packageName)
 				.stream()
-				.filter(c -> c.isInterface())
+				.filter(c -> c.isInterface() && !c.isAnnotation())
 				.forEach(initList::add);
 		} catch (ClassNotFoundException e) {
 			throw new CasserException("fail to add package " + packageName, e);
