@@ -23,13 +23,11 @@ import com.noorq.casser.mapping.CasserProperty;
 import com.noorq.casser.support.CasserException;
 import com.noorq.casser.support.CasserMappingException;
 
-public final class CasserValidator {
+public enum CasserValidator implements PropertyValueValidator {
 
-	private CasserValidator() {
-		
-	}
+	INSTANCE;
 	
-	public static void validate(CasserProperty prop, Object value) {
+	public void validate(CasserProperty prop, Object value) {
 		
 		for (ConstraintValidator<? extends Annotation, ?> validator : prop.getValidators()) {
 			
@@ -46,7 +44,7 @@ public final class CasserValidator {
 			}
 			
 			if (!valid) {
-				throw new CasserException("wrong value type '" + value + "' for " + prop);
+				throw new CasserException("wrong value '" + value + "' for " + prop);
 			}
 		}
 		

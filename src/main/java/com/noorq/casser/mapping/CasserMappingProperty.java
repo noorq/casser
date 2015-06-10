@@ -141,5 +141,58 @@ public final class CasserMappingProperty implements CasserProperty {
 		return validators;
 	}
 
+	@Override
+	public String toString() {
+		
+		StringBuilder str = new StringBuilder();
+		
+		String columnName = this.getColumnName().getName();
+		str.append("  ");
+		str.append(this.getDataType());
+		str.append(" ");
+		str.append(this.getPropertyName());
+		str.append("(");
+		if (!columnName.equals(this.getPropertyName())) {
+			str.append(columnName);
+		}
+		str.append(") ");
+		
+		ColumnType type = this.getColumnType();
+		
+		switch(type) {
+		
+		case PARTITION_KEY:
+			str.append("partition_key[");
+			str.append(this.getOrdinal());
+			str.append("] ");
+			break;
+			
+		case CLUSTERING_COLUMN:
+			str.append("clustering_column[");
+			str.append(this.getOrdinal());
+			str.append("] ");
+			OrderingDirection od = this.getOrdering();
+			if (od != null) {
+				str.append(od.name().toLowerCase()).append(" ");
+			}
+			break;
+			
+		case STATIC_COLUMN:
+			str.append("static ");
+			break;
+			
+		case COLUMN:
+			break;
+			
+		}
+		
+		Optional<IdentityName> idx = this.getIndexName();
+		if (idx.isPresent()) {
+			str.append("index(").append(idx.get().getName()).append(") "); 
+		}
+		
+		return str.toString();
+	}
+
 	
 }

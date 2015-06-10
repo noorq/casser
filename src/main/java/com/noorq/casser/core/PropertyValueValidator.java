@@ -13,25 +13,12 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.test.integration.core.simple;
+package com.noorq.casser.core;
 
-import com.noorq.casser.mapping.annotation.Column;
-import com.noorq.casser.mapping.annotation.Constraints;
-import com.noorq.casser.mapping.annotation.PartitionKey;
-import com.noorq.casser.mapping.annotation.Table;
+import com.noorq.casser.mapping.CasserProperty;
 
-@Table("simple_users")
-public interface User {
+public interface PropertyValueValidator {
 
-	@PartitionKey
-	Long id();
-	
-	@Constraints.LowerCase
-	@Column("override_name")
-	String name();
-	
-	Integer age();
-	
-	UserType type();
+	void validate(CasserProperty prop, Object value);
 	
 }

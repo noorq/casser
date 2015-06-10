@@ -29,6 +29,7 @@ import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
 import com.noorq.casser.core.AbstractSessionOperations;
+import com.noorq.casser.core.CasserValidator;
 import com.noorq.casser.core.Filter;
 import com.noorq.casser.core.Getter;
 import com.noorq.casser.core.reflect.CasserPropertyNode;

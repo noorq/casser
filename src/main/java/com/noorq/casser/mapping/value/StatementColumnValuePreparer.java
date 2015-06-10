@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import com.datastax.driver.core.querybuilder.BindMarker;
+import com.noorq.casser.core.CasserValidator;
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.CasserProperty;
 
@@ -34,12 +35,14 @@ public final class StatementColumnValuePreparer implements ColumnValuePreparer {
 	@Override
 	public Object prepareColumnValue(Object value, CasserProperty prop) {
 
+		if (value instanceof BindMarker) {
+			return value;
+		}
+		
+		CasserValidator.INSTANCE.validate(prop, value);
+		
 		if (value != null) {
 
-			if (value instanceof BindMarker) {
-				return value;
-			}
-			
 			Optional<Function<Object, Object>> converter = prop.getWriteConverter(repository);
 
 			if (converter.isPresent()) {

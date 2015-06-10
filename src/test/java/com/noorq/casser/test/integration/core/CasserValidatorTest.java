@@ -39,16 +39,16 @@ public class CasserValidatorTest {
 	
 	@Test(expected=CasserMappingException.class)
 	public void testWrongType() {
-		CasserValidator.validate(prop, Integer.valueOf(123));
+		CasserValidator.INSTANCE.validate(prop, Integer.valueOf(123));
 	}
 
 	@Test(expected=CasserException.class)
 	public void testWrongValue() {
-		CasserValidator.validate(prop, "123");
+		CasserValidator.INSTANCE.validate(prop, "123");
 	}
 
 
 	public void testOk() {
-		CasserValidator.validate(prop, "a@b.c");
+		CasserValidator.INSTANCE.validate(prop, "a@b.c");
 	}
 }

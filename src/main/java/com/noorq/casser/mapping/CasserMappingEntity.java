@@ -235,48 +235,7 @@ public final class CasserMappingEntity implements CasserEntity {
 		.append(":\n");
 		
 		for (CasserProperty prop : getOrderedProperties()) {
-			String columnName = prop.getColumnName().getName();
-			str.append("  ");
-			str.append(prop.getDataType());
-			str.append(" ");
-			str.append(prop.getPropertyName());
-			str.append("(");
-			if (!columnName.equals(prop.getPropertyName())) {
-				str.append(columnName);
-			}
-			str.append(") ");
-			
-			ColumnType type = prop.getColumnType();
-			
-			switch(type) {
-			
-			case PARTITION_KEY:
-				str.append("partition_key[");
-				str.append(prop.getOrdinal());
-				str.append("] ");
-				break;
-				
-			case CLUSTERING_COLUMN:
-				str.append("clustering_column[");
-				str.append(prop.getOrdinal());
-				str.append("] ");
-				OrderingDirection od = prop.getOrdering();
-				if (od != null) {
-					str.append(od.name().toLowerCase()).append(" ");
-				}
-				break;
-				
-			case STATIC_COLUMN:
-				str.append("static ");
-				break;
-				
-			}
-			
-			Optional<IdentityName> idx = prop.getIndexName();
-			if (idx.isPresent()) {
-				str.append("index(").append(idx.get().getName()).append(") "); 
-			}
-			
+			str.append(prop.toString());
 			str.append("\n");
 		}
 		return str.toString();
