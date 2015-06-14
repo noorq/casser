@@ -69,7 +69,7 @@ public final class Query {
 		return Postulate.of(Operator.GTE, val);
 	}
 
-	public static <V> Postulate<V> in(Getter<V> getter, V[] vals) {
+	public static <V> Postulate<V> in(V[] vals) {
 		return new Postulate<V>(Operator.IN, vals);
 	}
 	
