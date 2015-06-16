@@ -28,7 +28,7 @@ Latest release dependency:
 	<dependency>
 		<groupId>com.noorq.casser</groupId>
 		<artifactId>casser-core</artifactId>
-		<version>1.0.0</version>
+		<version>1.1.0_2.11</version>
 	</dependency>
 </dependencies>
 ```
@@ -39,7 +39,7 @@ Active development dependency for Scala 2.11:
 	<dependency>
 		<groupId>com.noorq.casser</groupId>
 		<artifactId>casser-core</artifactId>
-		<version>1.1.0_2.11-SNAPSHOT</version>
+		<version>1.2.0_2.11-SNAPSHOT</version>
 	</dependency>
 </dependencies>
 
