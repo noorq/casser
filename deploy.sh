@@ -1,4 +1,3 @@
 #!/bin/bash
 
-mvn clean jar:jar javadoc:jar source:jar gpg:sign deploy -Pcasser 
-
+mvn clean jar:jar javadoc:jar source:jar deploy -Prelease 

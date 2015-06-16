@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.noorq.casser</groupId>
 	<artifactId>casser-core</artifactId>
-	<version>1.1.0_2.11</version>
+	<version>1.2.0_2.11-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>casser</name>
@@ -58,18 +58,18 @@
 	</properties>
 
     <profiles>
-    
+
     <profile>
       <id>release</id>
-    
+
       <build>
-      
+
         <plugins>
-        
+
 			<plugin>
 			    <groupId>org.apache.maven.plugins</groupId>
 			    <artifactId>maven-gpg-plugin</artifactId>
-			    <version>1.4</version>
+			    <version>1.6</version>
 			    <executions>
 			        <execution>
 			            <id>sign-artifacts</id>
@@ -79,15 +79,15 @@
 			            </goals>
 			        </execution>
 			    </executions>
-			  </plugin>        
-        
+			  </plugin>
+
         </plugins>
-      
-      
+
+
       </build>
-    
+
     </profile>
-    
+
     </profiles>
 
 	<dependencies>
@@ -97,7 +97,7 @@
 			<artifactId>scala-library</artifactId>
 			<version>2.11.6</version>
 		</dependency>
-			
+
 		<dependency>
 			<groupId>com.datastax.cassandra</groupId>
 			<artifactId>cassandra-driver-core</artifactId>
@@ -403,7 +403,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 		</plugins>
 	</build>
 
