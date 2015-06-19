@@ -21,6 +21,21 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Entity annotation
+ * 
+ * Tuple annotation is used to define Tuple type mapping to some interface
+ *
+ * There are three types of Entity mapping annotations: @Table, @UDT, @Tuple 
+ * 
+ * Tuple is fully embedded type, it is the sequence of the underline types and
+ * the order of the sub-types is important, therefore all @Column-s must have ordinal()
+ * and only @Column annotation supported for underline types
+ * 
+ * @author Albert Shift
+ *
+ */
+
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })

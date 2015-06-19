@@ -21,13 +21,42 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Index annotation is using under the specific column or method in entity interface with @Table annotation.
+ * 
+ * The corresponding secondary index will be created in the underline @Table for the specific column.
+ * 
+ * Currently Cassandra supports only single column index, so this index works only for single column.
+ * 
+ * Make sure that you are using low cardinality columns for this index, that is the requirement of the Cassandra.
+ * Low cardinality fields examples: gender, country, age, status and etc
+ * High cardinality fields examples: id, email, timestamp, UUID and etc 
+ * 
+ * @author Albert Shift
+ *
+ */
 
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 public @interface Index {
 
+	/**
+	 * Defined the name of the index. By default will be used the column name.
+	 * 
+	 * @return name of the index
+	 */
+	
 	String value() default "";
+	
+	/**
+	 * For reserved words in Cassandra we need quotation in CQL queries. This property marks that
+	 * the name of the UDT type needs to be quoted.
+	 * 
+	 * Default value is false, we are quoting only selected names.
+	 * 
+	 * @return true if name have to be quoted
+	 */	
 	
 	boolean forceQuote() default false;
 }

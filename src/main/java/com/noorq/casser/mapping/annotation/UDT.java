@@ -15,6 +15,18 @@
  */
 package com.noorq.casser.mapping.annotation;
 
+/**
+ *  Entity annotation
+ *  
+ *  UDT annotation is used to define the UDT (User Defined Type) mapping for some interface
+ *  
+ *  There are three types of Entity mapping annotations: @Table, @UDT, @Tuple
+ *  
+ *  For each annotated @UDT type Casser will create/update/verify Cassandra Type on startup
+ *  
+ *  @author Albert Shift
+ */
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
@@ -26,8 +38,23 @@ import java.lang.annotation.Target;
 @Target({ ElementType.TYPE })
 public @interface UDT {
 
+	/**
+	 * Default value is the SimpleName of the interface normalized to underscore 
+	 * 
+	 * @return name of the UDT type
+	 */
+	
 	String value() default "";
 
+	/**
+	 * For reserved words in Cassandra we need quotation in CQL queries. This property marks that
+	 * the name of the UDT type needs to be quoted.
+	 * 
+	 * Default value is false, we are quoting only selected names.
+	 * 
+	 * @return true if name have to be quoted
+	 */
+	
 	boolean forceQuote() default false;
 	
 }
