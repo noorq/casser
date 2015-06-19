@@ -108,6 +108,8 @@ public final class Types {
 		 * It supports only simple data type (not Collection, UDT or Tuple)
 		 * 
 		 * In case if you need UDT sub-type in the list, consider @UDTList annotation
+		 * 
+		 * @return data type name of the value
 		 */
 		
 		DataType.Name value();
@@ -138,6 +140,8 @@ public final class Types {
 		 * It supports only simple data type (not Collection, UDT or Tuple)
 		 * 
 		 * In case if you need UDT key sub-type in the map, consider @UDTKeyMap or @UDTMap annotations
+		 * 
+		 * @return data type name of the key
 		 */
 		
 		DataType.Name key();
@@ -147,6 +151,8 @@ public final class Types {
 		 * It supports only simple data type (not Collection, UDT or Tuple)
 		 * 
 		 * In case if you need UDT value sub-type in the map, consider @UDTValueMap or @UDTMap annotations
+		 * 
+		 * @return data type name of the value
 		 */
 		
 		DataType.Name value();
@@ -192,6 +198,8 @@ public final class Types {
 		 * It supports only simple data type (not Collection, UDT or Tuple)
 		 * 
 		 * In case if you need UDT sub-type in the set, consider @UDTSet annotation
+		 * 
+		 * @return data type name of the value
 		 */
 		
 		DataType.Name value();
@@ -213,6 +221,8 @@ public final class Types {
 
 		/**
 		 *  Class name of the custom user type that is implementation of the type
+		 *  
+		 *  @return class name of the custom type implementation
 		 */
 		
 		String className();
@@ -273,6 +283,8 @@ public final class Types {
 		 *  
 		 *  In case if Java type is the model interface with @Tuple annotation then
 		 *  all methods in this interface can have Types annotations that can be complex types as well.
+		 *  
+		 *  @return data type name sequence
 		 */
 		
 		DataType.Name[] value() default {};
@@ -297,6 +309,8 @@ public final class Types {
 		 *  
 		 *  In case of Java type is the model interface with @UDT annotation then
 		 *  this field is not using since model interface defines UserDefinedType with specific name
+		 *  
+		 *  @return UDT name
 		 */
 		
 		String value() default "";
@@ -308,6 +322,8 @@ public final class Types {
 		 *  forceQuote will add additional quotes around this name in all CQL queries.
 		 *  
 		 *  Default value is false.
+		 *  
+		 *  @return true if quotation is needed
 		 */
 		
 		boolean forceQuote() default false;
@@ -335,6 +351,8 @@ public final class Types {
 		
 		/**
 		 * Clarification of using the UDT data type as a key sub-type in the collection.
+		 * 
+		 * @return annotation of UDT type
 		 */
 		
 		UDT key();
@@ -344,6 +362,8 @@ public final class Types {
 		 * It supports only simple data type (not Collection, UDT or Tuple)
 		 * 
 		 * In case if you need UDT value sub-type in the map, consider @UDTMap annotations
+		 * 
+		 * @return data type name of the value
 		 */		
 		
 		DataType.Name value();
@@ -370,6 +390,8 @@ public final class Types {
 		
 		/**
 		 * Clarification of using the UDT data type as a sub-type in the collection.
+		 * 
+		 * @return annotation of the UDT value
 		 */
 		
 		UDT value();
@@ -397,12 +419,16 @@ public final class Types {
 		
 		/**
 		 * Clarification of using the UDT data type as a key sub-type in the collection.
+		 * 
+		 * @return annotation of the UDT key 
 		 */		
 		
 		UDT key();
 		
 		/**
 		 * Clarification of using the UDT data type as a value sub-type in the collection.
+		 * 
+		 * @return annotation of the UDT value
 		 */
 		
 		UDT value();
@@ -430,6 +456,8 @@ public final class Types {
 		
 		/**
 		 * Clarification of using the UDT data type as a sub-type in the collection.
+		 * 
+		 * @return annotation of the UDT value
 		 */		
 		
 		UDT value();
@@ -460,12 +488,16 @@ public final class Types {
 		 * It supports only simple data type (not Collection, UDT or Tuple)
 		 * 
 		 * In case if you need UDT key sub-type in the map, consider @UDTMap annotations
+		 * 
+		 * @return data type name of the key
 		 */		
 		
 		DataType.Name key();
 		
 		/**
 		 * Clarification of using the UDT data type as a value sub-type in the collection.
+		 * 
+		 * @return annotation of the UDT value
 		 */		
 		
 		UDT value();

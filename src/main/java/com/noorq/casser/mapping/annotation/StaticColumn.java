@@ -21,7 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @StaticColumn annotation is using to define a static column in Cassandra Table
+ * StaticColumn annotation is using to define a static column in Cassandra Table
  * 
  * It does not have effect in @UDT and @Tuple types and in @Table-s that does not have @ClusteringColumn-s 
  * 

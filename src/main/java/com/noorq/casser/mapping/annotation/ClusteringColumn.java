@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 import com.noorq.casser.mapping.OrderingDirection;
 
 /**
- * @ClusteringColumn is the family column in legacy Cassandra API
+ * ClusteringColumn is the family column in legacy Cassandra API
  * 
  * The purpose of this column is have additional dimension in the table.
  * Both @PartitionKey and @ClusteringColumn together are parts of the primary key of the table.
