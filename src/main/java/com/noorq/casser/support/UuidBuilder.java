@@ -13,17 +13,19 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping.convert;
+package com.noorq.casser.support;
 
 import java.util.UUID;
 
 
-public final class UUIDBuilder {
+public final class UuidBuilder {
 
 	public static final long NUM_100NS_IN_MILLISECOND = 10000L;
 
 	public static final long NUM_100NS_SINCE_UUID_EPOCH = 0x01b21dd213814000L;
 
+    private static final long MIN_CLOCK_SEQ_AND_NODE = 0x8080808080808080L;
+    private static final long MAX_CLOCK_SEQ_AND_NODE = 0x7f7f7f7f7f7f7f7fL;
 	
 	private long leastSigBits = 0x8000000000000000L;
 
@@ -41,7 +43,7 @@ public final class UUIDBuilder {
 		return new UUID(mostSigBits, leastSigBits);
 	}
 
-	public UUIDBuilder addVersion(int version) {
+	public UuidBuilder addVersion(int version) {
 		if (version < 1 || version > 4) {
 			throw new IllegalArgumentException("unsupported version " + version);
 		}
@@ -51,7 +53,7 @@ public final class UUIDBuilder {
 		return this;
 	}
 
-	public UUIDBuilder addTimestamp(long uuid100Nanos) {
+	public UuidBuilder addTimestamp100Nanos(long uuid100Nanos) {
 
 		long timeLow = uuid100Nanos & 0xffffffffL;
 		long timeMid = uuid100Nanos & 0xffff00000000L;
@@ -62,18 +64,28 @@ public final class UUIDBuilder {
 		return this;
 	}
 
-	public UUIDBuilder addTimestampMillis(long milliseconds) {
+	public UuidBuilder addTimestampMillis(long milliseconds) {
 		long uuid100Nanos = milliseconds * NUM_100NS_IN_MILLISECOND + NUM_100NS_SINCE_UUID_EPOCH;
-		return addTimestamp(uuid100Nanos);
+		return addTimestamp100Nanos(uuid100Nanos);
 	}
 
-	public UUIDBuilder addClockSequence(int clockSequence) {
+	public UuidBuilder addClockSequence(int clockSequence) {
 		leastSigBits |= ((long) (clockSequence & 0x3fff)) << 48;
 		return this;
 	}
 
-	public UUIDBuilder addNode(long node) {
+	public UuidBuilder addNode(long node) {
 		leastSigBits |= node & 0xffffffffffffL;
+		return this;
+	}
+
+	public UuidBuilder setMinClockSeqAndNode() {
+		this.leastSigBits = MIN_CLOCK_SEQ_AND_NODE;
+		return this;
+	}
+
+	public UuidBuilder setMaxClockSeqAndNode() {
+		this.leastSigBits = MAX_CLOCK_SEQ_AND_NODE;
 		return this;
 	}
 

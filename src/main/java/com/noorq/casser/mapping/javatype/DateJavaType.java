@@ -26,8 +26,8 @@ import com.datastax.driver.core.DataType;
 import com.noorq.casser.core.SessionRepository;
 import com.noorq.casser.mapping.ColumnType;
 import com.noorq.casser.mapping.annotation.Types;
-import com.noorq.casser.mapping.convert.DateToTimeUUIDConverter;
-import com.noorq.casser.mapping.convert.TimeUUIDToDateConverter;
+import com.noorq.casser.mapping.convert.DateToTimeuuidConverter;
+import com.noorq.casser.mapping.convert.TimeuuidToDateConverter;
 import com.noorq.casser.mapping.convert.TypedConverter;
 import com.noorq.casser.mapping.type.AbstractDataType;
 import com.noorq.casser.mapping.type.DTDataType;
@@ -63,7 +63,7 @@ public final class DateJavaType extends AbstractJavaType {
 			return Optional.of(TypedConverter.create(
 					UUID.class, 
 					Date.class, 
-					TimeUUIDToDateConverter.INSTANCE));			
+					TimeuuidToDateConverter.INSTANCE));			
 		}
 		
 		return Optional.empty();
@@ -79,7 +79,7 @@ public final class DateJavaType extends AbstractJavaType {
 			return Optional.of(TypedConverter.create(
 					Date.class, 
 					UUID.class, 
-					DateToTimeUUIDConverter.INSTANCE));			
+					DateToTimeuuidConverter.INSTANCE));			
 		}
 		
 		return Optional.empty();

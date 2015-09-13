@@ -13,36 +13,52 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package com.noorq.casser.mapping.convert;
+package com.noorq.casser.support;
 
 import java.security.SecureRandom;
 import java.util.Date;
 import java.util.UUID;
 
-public final class TimeUUIDUtil {
+public final class Timeuuid {
 
 	private static class Holder {
 		static final SecureRandom numberGenerator = new SecureRandom();
 	}
 
-	private TimeUUIDUtil() {
+	private Timeuuid() {
 	}
 
-	public static UUID createTimeUUID(long timestampMillis, int clockSequence, long node) {
-		return new UUIDBuilder().addVersion(1).addTimestampMillis(timestampMillis).addClockSequence(clockSequence)
+	public static UUID of(long timestampMillis, int clockSequence, long node) {
+		return new UuidBuilder().addVersion(1).addTimestampMillis(timestampMillis).addClockSequence(clockSequence)
 				.addNode(node).build();
 	}
 
-	public static UUID createTimeUUID(Date date, int clockSequence, long node) {
-		return createTimeUUID(date.getTime(), clockSequence, node);
+	public static UUID of(Date date, int clockSequence, long node) {
+		return of(date.getTime(), clockSequence, node);
 	}
 
-	public static UUID createTimeUUID(long timestampMillis) {
-		return createTimeUUID(timestampMillis, randomClockSequence(), randomNode());
+	public static UUID of(long timestampMillis) {
+		return of(timestampMillis, randomClockSequence(), randomNode());
 	}
 
-	public static UUID createTimeUUID(Date date) {
-		return createTimeUUID(date.getTime());
+	public static UUID of(Date date) {
+		return of(date.getTime());
+	}
+
+	public static UUID minOf(long timestampMillis) {
+		return new UuidBuilder().addVersion(1).addTimestampMillis(timestampMillis).setMinClockSeqAndNode().build();
+	}
+	
+	public static UUID minOf(Date date) {
+		return minOf(date.getTime());
+	}
+
+	public static UUID maxOf(long timestampMillis) {
+		return new UuidBuilder().addVersion(1).addTimestampMillis(timestampMillis).setMaxClockSeqAndNode().build();
+	}
+	
+	public static UUID maxOf(Date date) {
+		return maxOf(date.getTime());
 	}
 
 	public static int randomClockSequence() {
@@ -54,6 +70,6 @@ public final class TimeUUIDUtil {
 	}
 
 	public static long getTimestampMillis(UUID uuid) {
-		return UUIDBuilder.getTimestampMillis(uuid);
+		return UuidBuilder.getTimestampMillis(uuid);
 	}
 }
