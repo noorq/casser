@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2015 Noorq, Inc.
+ *      Copyright (C) 2015 The Casser Authors
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ import com.noorq.casser.mapping.OrderingDirection;
  *   ORDER BY first ASC, second DESC 
  *   WHERE second=? ORDER BY first (ASC,DESC)
  * 
- * @author Albert Shift
+ * @author Alex Shvid
  *
  */
 

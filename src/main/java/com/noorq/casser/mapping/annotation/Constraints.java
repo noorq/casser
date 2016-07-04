@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2015 Noorq, Inc.
+ *      Copyright (C) 2015 The Casser Authors
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ import com.noorq.casser.mapping.validator.UpperCaseValidator;
  * - @NotNull supports any @java.lang.Object type
  * - All annotations support @java.lang.String type
  * 
- * @author Albert Shift
+ * @author Alex Shvid
  *
  */
 

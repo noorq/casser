@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2015 Noorq, Inc.
+ *      Copyright (C) 2015 The Casser Authors
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  * In case of using @ClusteringColumn we can repeat some information that is unique for a row.
  * For this purpose we can define @StaticColumn annotation, that will create static column in the table
  * 
- * @author Albert Shift
+ * @author Alex Shvid
  *
  */
 

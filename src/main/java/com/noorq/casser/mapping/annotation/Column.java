@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2015 Noorq, Inc.
+ *      Copyright (C) 2015 The Casser Authors
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import java.lang.annotation.Target;
  * columns, but in @Tuple mapping it is required, because tuple itself represents the
  * sequence of the types with particular order in the table's column
  * 
- * @author Albert Shift
+ * @author Alex Shvid
  *
  */
 

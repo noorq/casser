@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2015 Noorq, Inc.
+ *      Copyright (C) 2015 The Casser Authors
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ package com.noorq.casser.mapping.annotation;
  *  
  *  For each annotated @UDT type Casser will create/update/verify Cassandra Type on startup
  *  
- *  @author Albert Shift
+ *  @author Alex Shvid
  */
 
 import java.lang.annotation.ElementType;

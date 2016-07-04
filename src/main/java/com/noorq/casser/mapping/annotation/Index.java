@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2015 Noorq, Inc.
+ *      Copyright (C) 2015 The Casser Authors
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import java.lang.annotation.Target;
  * Low cardinality fields examples: gender, country, age, status and etc
  * High cardinality fields examples: id, email, timestamp, UUID and etc 
  * 
- * @author Albert Shift
+ * @author Alex Shvid
  *
  */
 

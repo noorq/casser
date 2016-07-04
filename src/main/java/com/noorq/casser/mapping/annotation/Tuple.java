@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2015 Noorq, Inc.
+ *      Copyright (C) 2015 The Casser Authors
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import java.lang.annotation.Target;
  * the order of the sub-types is important, therefore all @Column-s must have ordinal()
  * and only @Column annotation supported for underline types
  * 
- * @author Albert Shift
+ * @author Alex Shvid
  *
  */
 

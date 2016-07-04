@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2015 Noorq, Inc.
+ *      Copyright (C) 2015 The Casser Authors
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -22,6 +22,13 @@ import org.junit.BeforeClass;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Session;
+
+/**
+ * AbstractEmbeddedCassandraTest
+ * 
+ * @author Alex Shvid
+ *
+ */
 
 public abstract class AbstractEmbeddedCassandraTest {
 

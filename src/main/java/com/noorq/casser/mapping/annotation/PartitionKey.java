@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2015 Noorq, Inc.
+ *      Copyright (C) 2015 The Casser Authors
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
  * For @Table mapping entity it is required to have as minimum one PartitionKey column.
  * For @UDT and @Tuple mapping entities @PartitionKey annotation is not using.
  * 
- * @author Albert Shift
+ * @author Alex Shvid
  *
  */
 
