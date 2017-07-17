@@ -1,4 +1,4 @@
-# casser
+# helenus
 Fast and easy, functional style cutting edge Java 8 and Scala 2.11 Cassandra client
 
 Current status: First application in production (may be more)
@@ -26,8 +26,8 @@ Latest release dependency:
 ```
 <dependencies>
 	<dependency>
-		<groupId>com.noorq.casser</groupId>
-		<artifactId>casser-core</artifactId>
+		<groupId>net.helenus</groupId>
+		<artifactId>helenus-core</artifactId>
 		<version>1.1.0_2.11</version>
 	</dependency>
 </dependencies>
@@ -37,8 +37,8 @@ Active development dependency for Scala 2.11:
 ```
 <dependencies>
 	<dependency>
-		<groupId>com.noorq.casser</groupId>
-		<artifactId>casser-core</artifactId>
+		<groupId>net.helenus</groupId>
+		<artifactId>helenus-core</artifactId>
 		<version>1.2.0_2.11-SNAPSHOT</version>
 	</dependency>
 </dependencies>
@@ -77,8 +77,8 @@ public interface Timeline {
 
 Session initialization:
 ```
-Timeline timeline = Casser.dsl(Timeline.class);
-CasserSession session = Casser.init(getSession()).showCql().add(Timeline.class).autoCreateDrop().get();
+Timeline timeline = Helenus.dsl(Timeline.class);
+HelenusSession session = Helenus.init(getSession()).showCql().add(Timeline.class).autoCreateDrop().get();
 ```
 
 Select example:
@@ -138,7 +138,7 @@ Abstract repository:
 ```
 public interface AbstractRepository {
 
-	CasserSession session();
+	HelenusSession session();
 	
 }
 ```
@@ -149,7 +149,7 @@ import scala.concurrent.Future;
 
 public interface AccountRepository extends AbstractRepository {
 
-	static final Account account = Casser.dsl(Account.class);
+	static final Account account = Helenus.dsl(Account.class);
 	
 	static final String DEFAULT_TIMEZONE = "America/Los_Angeles";
 	
