@@ -22,13 +22,13 @@
 
     <scm>
         <url>https://github.net.helenus</url>
-        <connection>scm:git:git@github.com:gburd/helenus.git</connection>
-        <developerConnection>scm:git:git@github.com:gburd/helenus.git</developerConnection>
+        <connection>scm:git:git@github.com:onshape/helenus.git</connection>
+        <developerConnection>scm:git:git@github.com:onshape/helenus.git</developerConnection>
     </scm>
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/gburd/helenus/issues</url>
+        <url>https://github.com/onshape/helenus/issues</url>
     </issueManagement>
 
     <parent>

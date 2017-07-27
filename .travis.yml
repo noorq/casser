@@ -1,8 +1,0 @@
-language: java
-script: mvn deploy --settings .travis-oss-settings.xml
-jdk:
-- oraclejdk8
-env:
-  global:
-  - OSS_USERNAME=3Lzxrh8k
-  - secure: U8xjxbMSNTEhJZLQMRiGT4LP1wsUqczlPRO68J5Yo9VG15SKGIDV6xfAcnhNEVUUL47Ubwkmzk2JO+tKgqsXM9O9KgXEAmEV4mdoBP48OFw85u+nUrbbKGDHd2sA9tBjvu0meqxffdIge7f3nNLEmzJHke5ru+yo2204EvSZYHc=
