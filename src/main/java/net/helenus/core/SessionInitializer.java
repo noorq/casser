@@ -15,6 +15,7 @@
  */
 package net.helenus.core;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -41,7 +42,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
 	private String usingKeyspace;
 	private boolean showCql = false;
 	private PrintStream printStream = System.out;
-	private Executor executor = MoreExecutors.sameThreadExecutor();
+	private Executor executor = MoreExecutors.directExecutor();
 
 	private SessionRepositoryBuilder sessionRepository;
 
@@ -144,9 +145,9 @@ public final class SessionInitializer extends AbstractSessionOperations {
 		try {
 			PackageUtil.getClasses(packageName).stream().filter(c -> c.isInterface() && !c.isAnnotation())
 					.forEach(initList::add);
-		} catch (ClassNotFoundException e) {
+		} catch (IOException | ClassNotFoundException e) {
 			throw new HelenusException("fail to add package " + packageName, e);
-		}
+        }
 		return this;
 	}
 

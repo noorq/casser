@@ -26,6 +26,7 @@ import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Session;
 
 import java.io.IOException;
+import java.util.UUID;
 
 /**
  * AbstractEmbeddedCassandraTest
@@ -37,7 +38,7 @@ public abstract class AbstractEmbeddedCassandraTest {
 
 	private static Cluster cluster;
 
-	private static String keyspace = BuildProperties.getRandomKeyspace();
+	private static String keyspace;
 
 	private static Session session;
 
@@ -64,14 +65,13 @@ public abstract class AbstractEmbeddedCassandraTest {
 	}
 
 	@BeforeClass
-    public static void before() throws TTransportException, IOException, InterruptedException, ConfigurationException {
-        //EmbeddedCassandraServerHelper.startEmbeddedCassandra(BuildProperties.getCassandraConfig());
+    public static void startCassandraEmbeddedServer() throws TTransportException, IOException, InterruptedException, ConfigurationException {
+	    keyspace = "test" + UUID.randomUUID().toString().replace("-", "");
+        EmbeddedCassandraServerHelper.startEmbeddedCassandra(EmbeddedCassandraServerHelper.CASSANDRA_RNDPORT_YML_FILE);
 
 		cluster = Cluster.builder()
-				.addContactPoint("localhost")
-                //.addContactPoint(BuildProperties.getCassandraHost())
-				.withPort(9042)
-                //.withPort(BuildProperties.getCassandraNativePort())
+                .addContactPoint(EmbeddedCassandraServerHelper.getHost())
+                .withPort(EmbeddedCassandraServerHelper.getNativeTransportPort())
 				.build();
 
 		KeyspaceMetadata kmd = cluster.getMetadata().getKeyspace(keyspace);
@@ -95,13 +95,9 @@ public abstract class AbstractEmbeddedCassandraTest {
 	@AfterClass
 	public static void after() {
 		if (!keep && isConnected()) {
-            String cql = "DROP " + keyspace + ";";
-            System.out.println(cql + "\n");
-//            session.execute(cql);
-
 			session.close();
 			session = null;
-//			EmbeddedCassandraServerHelper.cleanEmbeddedCassandra();
+			EmbeddedCassandraServerHelper.cleanEmbeddedCassandra();
 		}
 	}
 }

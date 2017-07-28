@@ -51,7 +51,7 @@ public class PackageUtil {
 		}
 	}
 
-	public static Set<Class<?>> getClasses(String packagePath) throws ClassNotFoundException {
+	public static Set<Class<?>> getClasses(String packagePath) throws ClassNotFoundException, IOException {
 		Set<Class<?>> classes = new HashSet<Class<?>>();
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		if (classLoader == null) {
@@ -81,9 +81,9 @@ public class PackageUtil {
 				if (!"".equals(rootEntry) && !rootEntry.endsWith("/")) {
 					rootEntry = rootEntry + "/";
 				}
+                JarFile jarFile = null;
 				try {
-					JarFile jarFile = null;
-					URLConnection con = url.openConnection();
+                    URLConnection con = url.openConnection();
 					if (con instanceof JarURLConnection) {
 						JarURLConnection jarCon = (JarURLConnection) con;
 						jarCon.setUseCaches(false);
@@ -107,7 +107,10 @@ public class PackageUtil {
 					}
 				} catch (IOException e) {
 					throw new ClassNotFoundException("jar fail", e);
-				}
+				} finally {
+				    if (jarFile != null)
+                        jarFile.close();
+                }
 			}
 		}
 		return classes;
