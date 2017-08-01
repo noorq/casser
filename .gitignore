@@ -1,3 +1,5 @@
+*.iml
+.idea
 infer-out
 
 *.class

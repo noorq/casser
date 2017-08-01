@@ -18,6 +18,8 @@ package net.helenus.test.unit.core.dsl;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.helenus.core.HelenusSession;
+import net.helenus.mapping.value.ValueProviderMap;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -45,9 +47,15 @@ public class WrapperTest {
 	@Test
 	public void testPrimitive() throws Exception {
 
+	    // NOTE: noramlly a ValueProviderMap for the entity would include all keys for an entity
+        // at creation time.  This test need to validate that MapperInvocationHander will return
+        // the correct default value for an entity, the twist is that if the key doesn't exist
+        // in the map then it returns null (so as to support the partial update feature).  Here we
+        // need to setup the test with a null value for the key we'd like to test.
 		Map<String, Object> map = new HashMap<String, Object>();
 
 		map.put("id", 123L);
+		map.put("active", null);
 
 		Account account = Helenus.map(Account.class, map);
 

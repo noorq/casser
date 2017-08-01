@@ -35,6 +35,9 @@ public final class StatementColumnValuePreparer implements ColumnValuePreparer {
 	@Override
 	public Object prepareColumnValue(Object value, HelenusProperty prop) {
 
+		if (value == null)
+			return null;
+
 		if (value instanceof BindMarker) {
 			return value;
 		}

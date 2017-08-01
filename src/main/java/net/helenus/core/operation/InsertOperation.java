@@ -60,11 +60,9 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
 		for (HelenusProperty prop : entity.getOrderedProperties()) {
 
 			Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
-
 			value = sessionOps.getValuePreparer().prepareColumnValue(value, prop);
 
 			if (value != null) {
-
 				HelenusPropertyNode node = new HelenusPropertyNode(prop, Optional.empty());
 				values.add(Fun.Tuple2.of(node, value));
 			}
@@ -89,7 +87,6 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
 
 		if (val != null) {
 			HelenusPropertyNode node = MappingUtil.resolveMappingProperty(getter);
-
 			Object value = sessionOps.getValuePreparer().prepareColumnValue(val, node.getProperty());
 
 			if (value != null) {

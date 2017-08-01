@@ -88,7 +88,7 @@ public class MapperInvocationHandler<E> implements InvocationHandler {
 
 		Object value = src.get(methodName);
 
-		if (value == null) {
+		if (value == null && src.containsKey(methodName)) {
 
             Class<?> returnType = method.getReturnType();
 

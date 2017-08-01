@@ -23,20 +23,20 @@ import org.junit.Test;
 public class DslTest {
 
 	static Account account;
-	
+
 	@BeforeClass
 	public static void beforeTests() {
 		account = Helenus.dsl(Account.class);
 	}
-	
+
 	@Test
 	public void testToString() throws Exception {
 		System.out.println(account);
 	}
-	
+
 	@Test(expected=DslPropertyException.class)
 	public void test() throws Exception {
 		account.id();
 	}
-	
+
 }
