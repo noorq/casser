@@ -52,6 +52,7 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 
 	public AbstractStatementOperation(AbstractSessionOperations sessionOperations) {
 		this.sessionOps = sessionOperations;
+		this.consistencyLevel = sessionOperations.getDefaultConsistencyLevel();
 	}
 
 	public O showValues(boolean enabled) {
@@ -100,17 +101,32 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		return (O) this;
 	}
 
-	public O consistencyQuorum() {
-		this.consistencyLevel = ConsistencyLevel.QUORUM;
-		return (O) this;
-	}
+    public O consistencyQuorum() {
+        this.consistencyLevel = ConsistencyLevel.QUORUM;
+        return (O) this;
+    }
 
 	public O consistencyAll() {
 		this.consistencyLevel = ConsistencyLevel.ALL;
 		return (O) this;
 	}
 
-	public O serialConsistency(ConsistencyLevel level) {
+    public O consistencyLocalOne() {
+        this.consistencyLevel = ConsistencyLevel.LOCAL_ONE;
+        return (O) this;
+    }
+
+    public O consistencyLocalQuorum() {
+        this.consistencyLevel = ConsistencyLevel.LOCAL_QUORUM;
+        return (O) this;
+    }
+
+    public O consistencyEachQuorum() {
+        this.consistencyLevel = ConsistencyLevel.EACH_QUORUM;
+        return (O) this;
+    }
+
+    public O serialConsistency(ConsistencyLevel level) {
 		this.serialConsistencyLevel = level;
 		return (O) this;
 	}
@@ -130,10 +146,20 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		return (O) this;
 	}
 
-	public O serialConsistencyAll() {
-		this.serialConsistencyLevel = ConsistencyLevel.ALL;
-		return (O) this;
-	}
+    public O serialConsistencyAll() {
+        this.serialConsistencyLevel = ConsistencyLevel.ALL;
+        return (O) this;
+    }
+
+    public O serialConsistencyLocal() {
+        this.serialConsistencyLevel = ConsistencyLevel.LOCAL_SERIAL;
+        return (O) this;
+    }
+
+    public O serialConsistencyLocalQuorum() {
+        this.serialConsistencyLevel = ConsistencyLevel.LOCAL_QUORUM;
+        return (O) this;
+    }
 
 	public O disableTracing() {
 		this.enableTracing = false;

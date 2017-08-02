@@ -52,6 +52,8 @@ public abstract class AbstractSessionOperations {
 
 	abstract public ColumnValuePreparer getValuePreparer();
 
+	abstract public ConsistencyLevel getDefaultConsistencyLevel();
+
 	public PreparedStatement prepare(RegularStatement statement) {
 
 		try {

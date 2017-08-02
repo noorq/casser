@@ -46,6 +46,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 	private final CodecRegistry registry;
 	private volatile String usingKeyspace;
 	private volatile boolean showCql;
+	private final ConsistencyLevel defaultConsistencyLevel;
 	private final PrintStream printStream;
 	private final SessionRepository sessionRepository;
 	private final Executor executor;
@@ -59,7 +60,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 
 	HelenusSession(Session session, String usingKeyspace, CodecRegistry registry, boolean showCql,
             PrintStream printStream, SessionRepositoryBuilder sessionRepositoryBuilder, Executor executor,
-            boolean dropSchemaOnClose) {
+            boolean dropSchemaOnClose, ConsistencyLevel consistencyLevel) {
 		this.session = session;
 		this.registry = registry == null ? CodecRegistry.DEFAULT_INSTANCE : registry;
 		this.usingKeyspace = Objects.requireNonNull(usingKeyspace,
@@ -69,6 +70,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		this.sessionRepository = sessionRepositoryBuilder.build();
 		this.executor = executor;
 		this.dropSchemaOnClose = dropSchemaOnClose;
+		this.defaultConsistencyLevel = consistencyLevel;
 
 		this.valueProvider = new RowColumnValueProvider(this.sessionRepository);
 		this.valuePreparer = new StatementColumnValuePreparer(this.sessionRepository);
@@ -133,6 +135,10 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 	public ColumnValuePreparer getValuePreparer() {
 		return valuePreparer;
 	}
+
+	public ConsistencyLevel getDefaultConsistencyLevel() {
+	    return defaultConsistencyLevel;
+    }
 
     public Metadata getMetadata() { return metadata; }
 
