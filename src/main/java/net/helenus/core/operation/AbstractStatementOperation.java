@@ -193,6 +193,7 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 
 	public String cql() {
 		Statement statement = buildStatement();
+		if (statement == null) return "";
 		if (statement instanceof BuiltStatement) {
 			BuiltStatement buildStatement = (BuiltStatement) statement;
 			return buildStatement.setForceNoValues(true).getQueryString();

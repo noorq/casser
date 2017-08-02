@@ -54,9 +54,7 @@ public class CompondKeyTest extends AbstractEmbeddedCassandraTest {
 		public String text() {
 			return text;
 		}
-		
-		
-		
+
 	}
 	
 	@Before

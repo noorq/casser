@@ -15,19 +15,21 @@
  */
 package net.helenus.core.operation;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
+import com.google.common.base.Predicates;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.Getter;
 import net.helenus.core.reflect.HelenusPropertyNode;
+import net.helenus.core.reflect.MapExportable;
+import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
@@ -55,17 +57,26 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
 			boolean ifNotExists) {
 		super(sessionOperations);
 
+		this.entity = entity;
 		this.ifNotExists = ifNotExists;
+        Set<String> keys = (pojo instanceof MapExportable) ? ((MapExportable)pojo).toMap().keySet() : null;
+        Collection<HelenusProperty> properties = entity.getOrderedProperties();
 
-		for (HelenusProperty prop : entity.getOrderedProperties()) {
+        for (HelenusProperty prop : properties) {
 
-			Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
-			value = sessionOps.getValuePreparer().prepareColumnValue(value, prop);
+            // Skip properties that are not in the map of the pojo we're storing.  This creates a path
+            // for entity instances to be {in,up}serted without including all columns in the INSERT statement.
+		    if (keys == null || keys.contains(prop.getPropertyName())) {
 
-			if (value != null) {
-				HelenusPropertyNode node = new HelenusPropertyNode(prop, Optional.empty());
-				values.add(Fun.Tuple2.of(node, value));
-			}
+                Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
+                value = sessionOps.getValuePreparer().prepareColumnValue(value, prop);
+
+                if (value != null) {
+                    HelenusPropertyNode node = new HelenusPropertyNode(prop, Optional.empty());
+                    values.add(Fun.Tuple2.of(node, value));
+                }
+
+            }
 
 		}
 
@@ -101,6 +112,9 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
 	public BuiltStatement buildStatement() {
 
 		values.forEach(t -> addPropertyNode(t._1));
+
+		if (values.isEmpty())
+		    return null;
 
 		if (entity == null) {
 			throw new HelenusMappingException("unknown entity");
