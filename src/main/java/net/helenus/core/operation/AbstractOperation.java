@@ -26,6 +26,9 @@ import net.helenus.core.AbstractSessionOperations;
 import net.helenus.support.Fun;
 import net.helenus.support.Scala;
 import scala.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
+import static net.javacrumbs.futureconverter.java8guava.FutureConverter.*;
+
 
 public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> extends AbstractStatementOperation<E, O> {
 
@@ -95,6 +98,10 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> ex
 
 		return future;
 	}
+
+    public CompletableFuture<E> completable() {
+        return toCompletableFuture(async());
+    }
 
 	public Future<E> future() {
 		return Scala.asFuture(async());
