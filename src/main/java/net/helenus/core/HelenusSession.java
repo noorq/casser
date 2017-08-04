@@ -26,6 +26,7 @@ import java.util.function.Function;
 import com.datastax.driver.core.*;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.diffplug.common.base.Errors;
 
 import net.helenus.core.operation.*;
 import net.helenus.core.reflect.HelenusPropertyNode;
@@ -152,12 +153,10 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 	}
 
     public synchronized Function<Void, Void> commit() throws ConflictingUnitOfWorkException {
-        final Function<Void, Void> f = Function.<Void>identity();
-	    synchronized(currentUnitOfWork) {
-            if (currentUnitOfWork != null) {
-                currentUnitOfWork.commit().andThen((it) -> { return f; });
-                currentUnitOfWork = null;
-            }
+        Function<Void, Void> f = Function.<Void>identity();
+        if (currentUnitOfWork != null) {
+            f = Errors.rethrow().<Function<Void, Void>>wrap(currentUnitOfWork::commit).get();
+            currentUnitOfWork = null;
         }
         return f;
 	}

@@ -31,8 +31,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.support.HelenusException;
-import net.helenus.support.Scala;
-import scala.concurrent.Future;
+
 
 public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>> {
 
@@ -255,10 +254,6 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		}
 
 		throw new HelenusException("only RegularStatements can be prepared");
-	}
-
-	public Future<PreparedStatement> prepareStatementFuture() {
-		return Scala.asFuture(prepareStatementAsync());
 	}
 
 }

@@ -1,5 +1,5 @@
 # Helenus
-Fast and easy, functional style cutting edge Java 8 and Scala 2.11 Cassandra client for C* 3.x
+Fast and easy, functional style cutting edge Java 8 Cassandra client for C* 3.x
 
 
 ### Features
@@ -9,14 +9,13 @@ Fast and easy, functional style cutting edge Java 8 and Scala 2.11 Cassandra cli
 * Reactive asynchronous and synchronous API
 * Provides Java mapping for Tables, Tuples, UDTs (User Defined Type), Collections, UDT Collections, Tuple Collections
 * Uses lazy mapping in all cases where possible
-* Supports Guava ListenableFuture and Scala Future
+* Supports Java 8 Futures and Guava ListenableFuture
 
 ### Requirements
 
 * JVM 8
 * Datastax Driver 3.x
 * Cassandra 3.x
-* Scala 2.11+
 * Maven
 
 ### Maven
@@ -32,27 +31,6 @@ Latest release dependency:
 </dependencies>
 ```
 
-Active development dependency for Scala 2.11:
-```
-<dependencies>
-	<dependency>
-		<groupId>net.helenus</groupId>
-		<artifactId>helenus-core</artifactId>
-		<version>1.2.0_2.11-SNAPSHOT</version>
-	</dependency>
-</dependencies>
-
-<repositories>
-    <repository>
-        <id>oss-sonatype</id>
-        <name>oss-sonatype</name>
-        <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-        <snapshots>
-            <enabled>true</enabled>
-        </snapshots>
-    </repository>
-</repositories>
-```
 
 ### Simple Example
 
@@ -132,7 +110,6 @@ public interface AbstractRepository {
 
 Account repository:
 ```
-import scala.concurrent.Future;
 
 public interface AccountRepository extends AbstractRepository {
 

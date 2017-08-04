@@ -25,13 +25,9 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import net.helenus.core.AbstractSessionOperations;
-import net.helenus.support.Fun;
-import net.helenus.support.Scala;
-import scala.concurrent.Future;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>>
-		extends
-			AbstractStatementOperation<E, O> {
+		extends AbstractStatementOperation<E, O> {
 
 	public AbstractStreamOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
@@ -44,85 +40,31 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 	}
 
 	public ListenableFuture<PreparedStreamOperation<E>> prepareAsync() {
-
 		final O _this = (O) this;
-
 		return Futures.transform(prepareStatementAsync(),
 				new Function<PreparedStatement, PreparedStreamOperation<E>>() {
-
 					@Override
 					public PreparedStreamOperation<E> apply(PreparedStatement preparedStatement) {
 						return new PreparedStreamOperation<E>(preparedStatement, _this);
 					}
-
 				});
-
-	}
-
-	public Future<PreparedStreamOperation<E>> prepareFuture() {
-		return Scala.asFuture(prepareAsync());
 	}
 
 	public Stream<E> sync() {
-
 		ResultSet resultSet = sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
-
 		return transform(resultSet);
 	}
 
 	public ListenableFuture<Stream<E>> async() {
-
 		ResultSetFuture resultSetFuture = sessionOps.executeAsync(options(buildStatement()), showValues);
-
-		ListenableFuture<Stream<E>> future = Futures.transform(resultSetFuture, new Function<ResultSet, Stream<E>>() {
-
-			@Override
-			public Stream<E> apply(ResultSet resultSet) {
+		ListenableFuture<Stream<E>> future = Futures.transform(resultSetFuture,
+                new Function<ResultSet, Stream<E>>() {
+                    @Override
+                    public Stream<E> apply(ResultSet resultSet) {
 				return transform(resultSet);
 			}
-
-		}, sessionOps.getExecutor());
-
+                }, sessionOps.getExecutor());
 		return future;
-	}
-
-	public ListenableFuture<scala.collection.immutable.Stream<E>> asyncForScala() {
-
-		ResultSetFuture resultSetFuture = sessionOps.executeAsync(options(buildStatement()), showValues);
-
-		ListenableFuture<scala.collection.immutable.Stream<E>> future = Futures.transform(resultSetFuture,
-				new Function<ResultSet, scala.collection.immutable.Stream<E>>() {
-
-					@Override
-					public scala.collection.immutable.Stream<E> apply(ResultSet resultSet) {
-						Stream<E> stream = transform(resultSet);
-						return scala.collection.JavaConversions.asScalaIterator(stream.iterator()).toStream();
-					}
-
-				}, sessionOps.getExecutor());
-
-		return future;
-	}
-
-	public Future<scala.collection.immutable.Stream<E>> future() {
-		return Scala.asFuture(asyncForScala());
-	}
-
-	public <A> Future<Fun.Tuple2<scala.collection.immutable.Stream<E>, A>> future(A a) {
-		return Scala.asFuture(asyncForScala(), a);
-	}
-
-	public <A, B> Future<Fun.Tuple3<scala.collection.immutable.Stream<E>, A, B>> future(A a, B b) {
-		return Scala.asFuture(asyncForScala(), a, b);
-	}
-
-	public <A, B, C> Future<Fun.Tuple4<scala.collection.immutable.Stream<E>, A, B, C>> future(A a, B b, C c) {
-		return Scala.asFuture(asyncForScala(), a, b, c);
-	}
-
-	public <A, B, C, D> Future<Fun.Tuple5<scala.collection.immutable.Stream<E>, A, B, C, D>> future(A a, B b, C c,
-			D d) {
-		return Scala.asFuture(asyncForScala(), a, b, c, d);
 	}
 
 }

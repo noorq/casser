@@ -1,5 +1,7 @@
 package net.helenus.core;
 
+import com.diffplug.common.base.Errors;
+
 import java.util.ArrayList;
 import java.util.function.Function;
 
@@ -40,11 +42,11 @@ public class UnitOfWork {
 	 *             when the work overlaps with other concurrent writers.
 	 */
 	public Function<Void, Void> commit() throws ConflictingUnitOfWorkException {
-		// nested.foreach.commit()
+	    nested.forEach((uow) -> Errors.rethrow().wrap(uow::commit));
 		// log.record(txn::provisionalCommit)
-		// examine log for conflicts in read-set and write-set between begin and
-		// provisional commit
+		// examine log for conflicts in read-set and write-set between begin and provisional commit
 		// if (conflict) { throw new ConflictingUnitOfWorkException(this) }
+        // else return function so as to enable commit.andThen(() -> { do something iff commit was successful; })
 		return Function.<Void>identity();
 	}
 
