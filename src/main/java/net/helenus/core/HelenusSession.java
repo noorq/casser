@@ -151,11 +151,15 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		}
 	}
 
-	public synchronized void commit() throws ConflictingUnitOfWorkException {
-        if (currentUnitOfWork != null) {
-            currentUnitOfWork.commit();
-            currentUnitOfWork = null;
+    public synchronized Function<Void, Void> commit() throws ConflictingUnitOfWorkException {
+        final Function<Void, Void> f = Function.<Void>identity();
+	    synchronized(currentUnitOfWork) {
+            if (currentUnitOfWork != null) {
+                currentUnitOfWork.commit().andThen((it) -> { return f; });
+                currentUnitOfWork = null;
+            }
         }
+        return f;
 	}
 
 	public synchronized void abort() {

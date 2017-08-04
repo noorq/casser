@@ -1,6 +1,7 @@
 package net.helenus.core;
 
 import java.util.ArrayList;
+import java.util.function.Function;
 
 /**
  * Encapsulates the concept of a "transaction" as a unit-of-work.
@@ -34,15 +35,17 @@ public class UnitOfWork {
 	 * Checks to see if the work performed between calling begin and now can be
 	 * committed or not.
 	 *
+     * @return a function from which to chain work that only happens when commit is successful
 	 * @throws ConflictingUnitOfWorkException
 	 *             when the work overlaps with other concurrent writers.
 	 */
-	public void commit() throws ConflictingUnitOfWorkException {
+	public Function<Void, Void> commit() throws ConflictingUnitOfWorkException {
 		// nested.foreach.commit()
 		// log.record(txn::provisionalCommit)
 		// examine log for conflicts in read-set and write-set between begin and
 		// provisional commit
 		// if (conflict) { throw new ConflictingUnitOfWorkException(this) }
+		return Function.<Void>identity();
 	}
 
 	/**
