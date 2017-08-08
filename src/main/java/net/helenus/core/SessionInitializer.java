@@ -15,6 +15,7 @@
  */
 package net.helenus.core;
 
+import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.*;
 import com.google.common.util.concurrent.MoreExecutors;
 import net.helenus.mapping.HelenusEntity;
@@ -23,6 +24,8 @@ import net.helenus.mapping.value.ColumnValuePreparer;
 import net.helenus.mapping.value.ColumnValueProvider;
 import net.helenus.support.HelenusException;
 import net.helenus.support.PackageUtil;
+
+import brave.Tracer;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -38,6 +41,8 @@ public final class SessionInitializer extends AbstractSessionOperations {
     private String usingKeyspace;
     private boolean showCql = false;
     private ConsistencyLevel consistencyLevel;
+    private MetricRegistry metricRegistry;
+    private Tracer zipkinTracer;
     private PrintStream printStream = System.out;
     private Executor executor = MoreExecutors.directExecutor();
 
@@ -94,6 +99,16 @@ public final class SessionInitializer extends AbstractSessionOperations {
 
     public SessionInitializer showCql(boolean enabled) {
         this.showCql = enabled;
+        return this;
+    }
+
+    public SessionInitializer metricRegistry(MetricRegistry metricRegistry) {
+        this.metricRegistry = metricRegistry;
+        return this;
+    }
+
+    public SessionInitializer zipkinTracer(Tracer tracer) {
+        this.zipkinTracer = tracer;
         return this;
     }
 
@@ -213,7 +228,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
     public synchronized HelenusSession get() {
         initialize();
         return new HelenusSession(session, usingKeyspace, registry, showCql, printStream, sessionRepository, executor,
-                autoDdl == AutoDdl.CREATE_DROP, consistencyLevel);
+                autoDdl == AutoDdl.CREATE_DROP, consistencyLevel, metricRegistry, zipkinTracer);
     }
 
     private void initialize() {

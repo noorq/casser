@@ -23,6 +23,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import brave.Tracer;
+import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.*;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -48,6 +50,8 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 	private volatile String usingKeyspace;
 	private volatile boolean showCql;
 	private final ConsistencyLevel defaultConsistencyLevel;
+	private final MetricRegistry metricRegistry;
+	private final Tracer zipkinTracer;
 	private final PrintStream printStream;
 	private final SessionRepository sessionRepository;
 	private final Executor executor;
@@ -61,7 +65,8 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 
 	HelenusSession(Session session, String usingKeyspace, CodecRegistry registry, boolean showCql,
             PrintStream printStream, SessionRepositoryBuilder sessionRepositoryBuilder, Executor executor,
-            boolean dropSchemaOnClose, ConsistencyLevel consistencyLevel) {
+            boolean dropSchemaOnClose, ConsistencyLevel consistencyLevel, MetricRegistry metricRegistry,
+            Tracer tracer) {
 		this.session = session;
 		this.registry = registry == null ? CodecRegistry.DEFAULT_INSTANCE : registry;
 		this.usingKeyspace = Objects.requireNonNull(usingKeyspace,
@@ -72,6 +77,8 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		this.executor = executor;
 		this.dropSchemaOnClose = dropSchemaOnClose;
 		this.defaultConsistencyLevel = consistencyLevel;
+		this.metricRegistry = metricRegistry;
+		this.zipkinTracer = tracer;
 
 		this.valueProvider = new RowColumnValueProvider(this.sessionRepository);
 		this.valuePreparer = new StatementColumnValuePreparer(this.sessionRepository);
@@ -80,6 +87,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 				.expireAfterAccess(MAX_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS).recordStats().build();
 		this.currentUnitOfWork = null;
 	}
+
 
 	@Override
 	public Session currentSession() {
@@ -137,7 +145,13 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		return valuePreparer;
 	}
 
-	public ConsistencyLevel getDefaultConsistencyLevel() {
+	@Override
+    public Tracer getZipkinTracer() { return zipkinTracer; }
+
+    @Override
+    public MetricRegistry getMetricRegistry() { return metricRegistry; }
+
+    public ConsistencyLevel getDefaultConsistencyLevel() {
 	    return defaultConsistencyLevel;
     }
 
@@ -367,7 +381,11 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		return session;
 	}
 
-	public void close() {
+    public <E> E dsl(Class<E> iface) {
+        return Helenus.dsl(iface, getMetadata());
+    }
+
+    public void close() {
 
 		if (session.isClosed()) {
 			return;

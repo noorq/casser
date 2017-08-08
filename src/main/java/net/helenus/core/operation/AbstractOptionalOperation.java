@@ -15,19 +15,22 @@
  */
 package net.helenus.core.operation;
 
-import java.util.Optional;
-
+import brave.Span;
+import brave.Tracer;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import net.helenus.core.AbstractSessionOperations;
+
+import java.util.Optional;
 
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
 		extends AbstractStatementOperation<E, O> {
+
+    Span span;
 
 	public AbstractOptionalOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
@@ -50,17 +53,51 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 				});
 	}
 
+	public AbstractOptionalOperation<E, O> withinSpan(Span span) {
+	    if (span != null) {
+            Tracer tracer = this.sessionOps.getZipkinTracer();
+            if (tracer != null) {
+                this.span = span;
+            }
+        }
+
+        return this;
+    }
+
 	public Optional<E> sync() {
-		ResultSet resultSet = sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
-		return transform(resultSet);
+        Tracer tracer = this.sessionOps.getZipkinTracer();
+        final Span cassandraSpan = (tracer != null && span != null) ? tracer.newChild(span.context()) : null;
+        if (cassandraSpan != null) {
+            cassandraSpan.name("cassandra");
+            cassandraSpan.start();
+        }
+
+        ResultSet resultSet = sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
+        Optional<E> result = transform(resultSet);
+
+        if (cassandraSpan != null) {
+            cassandraSpan.finish();
+        }
+
+        return result;
 	}
 
 	public ListenableFuture<Optional<E>> async() {
-		ResultSetFuture resultSetFuture = sessionOps.executeAsync(options(buildStatement()), showValues);
+        final Tracer tracer = this.sessionOps.getZipkinTracer();
+        final Span cassandraSpan = (tracer != null && span != null) ? tracer.newChild(span.context()) : null;
+        if (cassandraSpan != null) {
+            cassandraSpan.name("cassandra");
+            cassandraSpan.start();
+        }
+
+        ResultSetFuture resultSetFuture = sessionOps.executeAsync(options(buildStatement()), showValues);
 		ListenableFuture<Optional<E>> future = Futures.transform(resultSetFuture,
 				new Function<ResultSet, Optional<E>>() {
 					@Override
 					public Optional<E> apply(ResultSet resultSet) {
+                        if (cassandraSpan != null) {
+                            cassandraSpan.finish();
+                        }
 						return transform(resultSet);
 					}
 				}, sessionOps.getExecutor());

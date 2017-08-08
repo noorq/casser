@@ -19,6 +19,8 @@ import java.io.PrintStream;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
+import brave.Tracer;
+import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.schemabuilder.SchemaStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,6 +110,10 @@ public abstract class AbstractSessionOperations {
 			}
 		}
 	}
+
+    public Tracer getZipkinTracer() { return null; }
+
+    public MetricRegistry getMetricRegistry() { return null; }
 
 	public void cache(String key, Object value) {
 	}

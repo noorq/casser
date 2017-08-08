@@ -148,6 +148,25 @@
             <version>20.0</version>
         </dependency>
 
+        <!-- Metrics and tracing -->
+        <dependency>
+            <groupId>io.zipkin.java</groupId>
+            <artifactId>zipkin</artifactId>
+            <version>1.29.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.zipkin.brave</groupId>
+            <artifactId>brave</artifactId>
+            <version>4.0.6</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
+            <version>3.2.2</version>
+        </dependency>
+
         <!-- Validation -->
         <dependency>
             <groupId>javax.validation</groupId>

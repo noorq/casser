@@ -88,9 +88,9 @@ public class MapperInvocationHandler<E> implements InvocationHandler {
 
 		Object value = src.get(methodName);
 
-		if (value == null) {
+        Class<?> returnType = method.getReturnType();
 
-            Class<?> returnType = method.getReturnType();
+		if (value == null) {
 
 			if (returnType.isPrimitive()) {
 
@@ -101,9 +101,17 @@ public class MapperInvocationHandler<E> implements InvocationHandler {
 
 				return type.getDefaultValue();
 
+			}  else if (returnType.isEnum()) {
+				throw new HelenusException("missing default type for enum user type " + returnType);
 			}
 
-		}
+		} else if (returnType.isEnum() && (value.getClass() == Integer.class || value.getClass() == int.class)) {
+		    try {
+                value = returnType.getClass().getEnumConstants()[(int) value];
+            } catch (ArrayIndexOutOfBoundsException e) {
+		        throw new IllegalArgumentException("invalid ordinal " + value + " for enum type " + returnType.getSimpleName());
+            }
+        }
 
 		return value;
 	}

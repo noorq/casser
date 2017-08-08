@@ -17,7 +17,6 @@
     <orderEntry type="library" name="Maven: io.netty:netty-common:4.0.47.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-transport:4.0.47.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-codec:4.0.47.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.dropwizard.metrics:metrics-core:3.2.2" level="project" />
     <orderEntry type="library" name="Maven: com.github.jnr:jnr-ffi:2.0.7" level="project" />
     <orderEntry type="library" name="Maven: com.github.jnr:jffi:1.2.10" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: com.github.jnr:jffi:native:1.2.10" level="project" />
@@ -36,6 +35,10 @@
     <orderEntry type="library" name="Maven: org.springframework:spring-core:4.3.10.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: commons-logging:commons-logging:1.2" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:20.0" level="project" />
+    <orderEntry type="library" name="Maven: io.zipkin.java:zipkin:1.29.2" level="project" />
+    <orderEntry type="library" name="Maven: io.zipkin.brave:brave:4.0.6" level="project" />
+    <orderEntry type="library" name="Maven: io.zipkin.reporter:zipkin-reporter:0.6.12" level="project" />
+    <orderEntry type="library" name="Maven: io.dropwizard.metrics:metrics-core:3.2.2" level="project" />
     <orderEntry type="library" name="Maven: javax.validation:validation-api:2.0.0.CR3" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.codehaus.jackson:jackson-mapper-asl:1.9.13" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.anthemengineering.mojo:infer-maven-plugin:0.1.0" level="project" />
