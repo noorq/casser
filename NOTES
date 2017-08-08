@@ -1,0 +1,38 @@
+primitive types have default values, (e.g. boolean, int, ...) but primative wrapper classes do not and can be null (e.g. Boolean, Integer, ...)
+
+create table wal {
+  id timeuuid,
+  follows timeuuid,
+  read <Counting Quotient Filter, Set<{keyspace, col, schema generation, timestamp}>>
+  write <Counting Quotient Filter, Set<{keyspace, col, schema generation, timestamp}>>
+  primary key (id, follows)
+}
+begin:
+  - insert into wal (timeuuid, parent timeuuid,
+
+
+
+        // NOTE: Update operations have no meaning when they only contain primary key components, so
+        // given that `properties` is ordered with the keys first if we find that the last element
+        // is either a partition key or clustering column then we know we should just skip this operation.
+        ColumnType ct = ((HelenusProperty) properties.toArray()[properties.size() - 1]).getColumnType();
+        if (ct != ColumnType.PARTITION_KEY && ct != ColumnType.CLUSTERING_COLUMN) {
+            return;
+        }
+
+
+
+	public Stream<E> sync() {
+	    ListenableFuture<Stream<E>> future = async();
+        Futures.addCallback(future, new FutureCallback<String>() {
+            @Override
+            public void onSuccess(String contents) {
+                //...process web site contents
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                log.error("Exception in task", throwable);
+            }
+        });
+	}
