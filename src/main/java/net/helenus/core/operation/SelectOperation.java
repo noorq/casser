@@ -166,7 +166,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		return this;
 	}
 
-	@Override
+    @Override
 	public BuiltStatement buildStatement() {
 
 		HelenusEntity entity = null;

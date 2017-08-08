@@ -17,6 +17,8 @@ package net.helenus.core.operation;
 
 import java.util.stream.Stream;
 
+import brave.Span;
+import brave.Tracer;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
@@ -50,19 +52,43 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 				});
 	}
 
-	public Stream<E> sync() {
-		ResultSet resultSet = sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
-		return transform(resultSet);
+    public Stream<E> sync() {
+        Tracer tracer = this.sessionOps.getZipkinTracer();
+        final Span cassandraSpan = (tracer != null && span != null) ? tracer.newChild(span.context()) : null;
+        if (cassandraSpan != null) {
+            cassandraSpan.name("cassandra");
+            cassandraSpan.start();
+        }
+
+        ResultSet resultSet = sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
+		Stream<E> result = transform(resultSet);
+
+        if (cassandraSpan != null) {
+            cassandraSpan.finish();
+        }
+
+        return result;
 	}
 
 	public ListenableFuture<Stream<E>> async() {
+        Tracer tracer = this.sessionOps.getZipkinTracer();
+        final Span cassandraSpan = (tracer != null && span != null) ? tracer.newChild(span.context()) : null;
+        if (cassandraSpan != null) {
+            cassandraSpan.name("cassandra");
+            cassandraSpan.start();
+        }
+
 		ResultSetFuture resultSetFuture = sessionOps.executeAsync(options(buildStatement()), showValues);
 		ListenableFuture<Stream<E>> future = Futures.transform(resultSetFuture,
                 new Function<ResultSet, Stream<E>>() {
                     @Override
                     public Stream<E> apply(ResultSet resultSet) {
-				return transform(resultSet);
-			}
+                        Stream<E> result = transform(resultSet);
+                        if (cassandraSpan != null) {
+                            cassandraSpan.finish();
+                        }
+                        return result;
+                    }
                 }, sessionOps.getExecutor());
 		return future;
 	}

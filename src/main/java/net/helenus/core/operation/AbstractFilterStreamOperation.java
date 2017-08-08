@@ -21,8 +21,7 @@ import java.util.List;
 import net.helenus.core.*;
 
 public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterStreamOperation<E, O>>
-		extends
-			AbstractStreamOperation<E, O> {
+		extends AbstractStreamOperation<E, O> {
 
 	protected List<Filter<?>> filters = null;
 	protected List<Filter<?>> ifFilters = null;

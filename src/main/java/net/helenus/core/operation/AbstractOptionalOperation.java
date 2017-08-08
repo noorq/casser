@@ -30,8 +30,6 @@ import java.util.Optional;
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
 		extends AbstractStatementOperation<E, O> {
 
-    Span span;
-
 	public AbstractOptionalOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
 	}
@@ -52,17 +50,6 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 					}
 				});
 	}
-
-	public AbstractOptionalOperation<E, O> withinSpan(Span span) {
-	    if (span != null) {
-            Tracer tracer = this.sessionOps.getZipkinTracer();
-            if (tracer != null) {
-                this.span = span;
-            }
-        }
-
-        return this;
-    }
 
 	public Optional<E> sync() {
         Tracer tracer = this.sessionOps.getZipkinTracer();
@@ -95,10 +82,11 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 				new Function<ResultSet, Optional<E>>() {
 					@Override
 					public Optional<E> apply(ResultSet resultSet) {
+                        Optional<E> result = transform(resultSet);
                         if (cassandraSpan != null) {
                             cassandraSpan.finish();
                         }
-						return transform(resultSet);
+                        return result;
 					}
 				}, sessionOps.getExecutor());
 
