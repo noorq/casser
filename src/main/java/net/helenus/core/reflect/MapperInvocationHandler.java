@@ -107,7 +107,7 @@ public class MapperInvocationHandler<E> implements InvocationHandler {
 
 		} else if (returnType.isEnum() && (value.getClass() == Integer.class || value.getClass() == int.class)) {
 		    try {
-                value = returnType.getClass().getEnumConstants()[(int) value];
+                value = Class.forName(returnType.getName()).getEnumConstants()[(Integer) value];
             } catch (ArrayIndexOutOfBoundsException e) {
 		        throw new IllegalArgumentException("invalid ordinal " + value + " for enum type " + returnType.getSimpleName());
             }
