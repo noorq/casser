@@ -15,8 +15,8 @@
  */
 package net.helenus.core.operation;
 
-import brave.Span;
 import brave.Tracer;
+import brave.propagation.TraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 	public abstract Statement buildStatement();
 
 	protected boolean showValues = true;
-    protected Span span;
+    protected TraceContext traceContext;
 	private ConsistencyLevel consistencyLevel;
 	private ConsistencyLevel serialConsistencyLevel;
 	private RetryPolicy retryPolicy;
@@ -215,11 +215,11 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		return statement;
 	}
 
-    public O withinSpan(Span span) {
-        if (span != null) {
+    public O zipkinContext(TraceContext traceContext) {
+        if (traceContext != null) {
             Tracer tracer = this.sessionOps.getZipkinTracer();
             if (tracer != null) {
-                this.span = span;
+                this.traceContext = traceContext;
             }
         }
 

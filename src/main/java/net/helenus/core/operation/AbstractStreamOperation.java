@@ -54,7 +54,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
     public Stream<E> sync() {
         Tracer tracer = this.sessionOps.getZipkinTracer();
-        final Span cassandraSpan = (tracer != null && span != null) ? tracer.newChild(span.context()) : null;
+        final Span cassandraSpan = (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
         if (cassandraSpan != null) {
             cassandraSpan.name("cassandra");
             cassandraSpan.start();
@@ -72,7 +72,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
 	public ListenableFuture<Stream<E>> async() {
         Tracer tracer = this.sessionOps.getZipkinTracer();
-        final Span cassandraSpan = (tracer != null && span != null) ? tracer.newChild(span.context()) : null;
+        final Span cassandraSpan = (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
         if (cassandraSpan != null) {
             cassandraSpan.name("cassandra");
             cassandraSpan.start();

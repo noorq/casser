@@ -53,7 +53,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 
 	public Optional<E> sync() {
         Tracer tracer = this.sessionOps.getZipkinTracer();
-        final Span cassandraSpan = (tracer != null && span != null) ? tracer.newChild(span.context()) : null;
+        final Span cassandraSpan = (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
         if (cassandraSpan != null) {
             cassandraSpan.name("cassandra");
             cassandraSpan.start();
@@ -71,7 +71,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 
 	public ListenableFuture<Optional<E>> async() {
         final Tracer tracer = this.sessionOps.getZipkinTracer();
-        final Span cassandraSpan = (tracer != null && span != null) ? tracer.newChild(span.context()) : null;
+        final Span cassandraSpan = (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
         if (cassandraSpan != null) {
             cassandraSpan.name("cassandra");
             cassandraSpan.start();
