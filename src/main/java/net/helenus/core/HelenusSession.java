@@ -19,6 +19,7 @@ import java.io.Closeable;
 import java.io.PrintStream;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -31,6 +32,7 @@ import com.google.common.cache.CacheBuilder;
 import com.diffplug.common.base.Errors;
 
 import net.helenus.core.operation.*;
+import net.helenus.core.reflect.Drafted;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.MappingUtil;
@@ -346,13 +348,21 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		return new InsertOperation(this, true);
 	}
 
-	public InsertOperation insert(Object pojo) {
+    public InsertOperation insert(Object pojo) {
+        return insert(pojo, null);
+    }
+
+    public InsertOperation insert(Drafted draft) {
+	    return insert(draft.build(), draft.mutated());
+    }
+
+    public InsertOperation insert(Object pojo, Set<String> mutations) {
 		Objects.requireNonNull(pojo, "pojo is empty");
 
 		Class<?> iface = MappingUtil.getMappingInterface(pojo);
 		HelenusEntity entity = Helenus.entity(iface);
 
-		return new InsertOperation(this, entity, pojo, true);
+		return new InsertOperation(this, entity, pojo, mutations, true);
 	}
 
 	public InsertOperation upsert() {
@@ -365,7 +375,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		Class<?> iface = MappingUtil.getMappingInterface(pojo);
 		HelenusEntity entity = Helenus.entity(iface);
 
-		return new InsertOperation(this, entity, pojo, false);
+		return new InsertOperation(this, entity, pojo, null, false);
 	}
 
 	public DeleteOperation delete() {

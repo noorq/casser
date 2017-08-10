@@ -48,21 +48,14 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
         this.ifNotExists = ifNotExists;
     }
 
-    public InsertOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity, Object pojo,
-            boolean ifNotExists) {
+    public InsertOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity,
+            Object pojo, Set<String> mutations, boolean ifNotExists) {
         super(sessionOperations);
 
         this.entity = entity;
         this.ifNotExists = ifNotExists;
         Collection<HelenusProperty> properties = entity.getOrderedProperties();
-        Set<String> keys = null;
-
-        if (pojo instanceof MapExportable) {
-            keys = ((MapExportable) pojo).mutated();
-            if (keys == null) {
-                keys = ((MapExportable) pojo).toMap().keySet();
-            }
-        }
+        Set<String> keys = (mutations == null) ?  ((MapExportable) pojo).toMap().keySet() : mutations;
 
         for (HelenusProperty prop : properties) {
 
