@@ -344,38 +344,36 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		return new UpdateOperation(this, p, v);
 	}
 
-	public InsertOperation insert() {
-		return new InsertOperation(this, true);
-	}
+	public <T> InsertOperation<T> insert() { return new InsertOperation<T>(this, true); }
 
-    public InsertOperation insert(Object pojo) {
-        return insert(pojo, null);
-    }
+    public <T> InsertOperation<T> insert(Object pojo) { return this.<T>insert(pojo, null); }
 
-    public InsertOperation insert(Drafted draft) {
-	    return insert(draft.build(), draft.mutated());
-    }
+    public <T> InsertOperation<T> insert(Drafted draft) { return this.<T>insert(draft.build(), draft.mutated()); }
 
-    public InsertOperation insert(Object pojo, Set<String> mutations) {
+    public <T> InsertOperation<T> insert(Object pojo, Set<String> mutations) {
 		Objects.requireNonNull(pojo, "pojo is empty");
 
 		Class<?> iface = MappingUtil.getMappingInterface(pojo);
 		HelenusEntity entity = Helenus.entity(iface);
 
-		return new InsertOperation(this, entity, pojo, mutations, true);
+		return new InsertOperation<T>(this, entity, pojo, mutations, true);
 	}
 
-	public InsertOperation upsert() {
-		return new InsertOperation(this, false);
+	public <T> InsertOperation<T> upsert() {
+		return new InsertOperation<T>(this, false);
 	}
 
-	public InsertOperation upsert(Object pojo) {
+    public <T> InsertOperation<T> upsert(Drafted draft) { return this.<T>upsert(draft.build(), draft.mutated()); }
+
+    public <T> InsertOperation<T> upsert(Object pojo) { return this.<T>upsert(pojo, null); }
+
+	public <T> InsertOperation<T> upsert(Object pojo, Set<String> mutations) {
 		Objects.requireNonNull(pojo, "pojo is empty");
 
 		Class<?> iface = MappingUtil.getMappingInterface(pojo);
 		HelenusEntity entity = Helenus.entity(iface);
 
-		return new InsertOperation(this, entity, pojo, null, false);
+		return new InsertOperation<T>(this, entity, pojo, mutations, false);
 	}
 
 	public DeleteOperation delete() {

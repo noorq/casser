@@ -101,8 +101,6 @@ public class MapperInvocationHandler<E> implements InvocationHandler {
 
 				return type.getDefaultValue();
 
-			}  else if (returnType.isEnum()) {
-				throw new HelenusException("missing default type for enum user type " + returnType);
 			}
 
         }

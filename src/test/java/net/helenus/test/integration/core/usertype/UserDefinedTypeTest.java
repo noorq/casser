@@ -143,8 +143,7 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		Assert.assertNull(actual.country());
 		Assert.assertEquals(0, actual.zip());
 
-		// INSERT
-
+		// INSERT using UPDATE
 		session.update().set(account::address, null).where(account::id, Query.eq(123L)).sync();
 
 		Address adrNull = session.select(account::address).where(account::id, Query.eq(123L)).sync().findFirst().get()._1;
@@ -200,8 +199,7 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 		Assert.assertEquals(addressNoMapping.getString("city"), found.getString("city"));
 
 
-		// INSERT
-
+		// INSERT using UPDATE
 		session.update().set(account::addressNoMapping, null).where(account::id, Query.eq(777L)).sync();
 
 		found = session.select(account::addressNoMapping).where(account::id, Query.eq(777L)).sync().findFirst().get()._1;
