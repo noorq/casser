@@ -48,7 +48,7 @@ public class InsertPartialTest extends AbstractEmbeddedCassandraTest {
         Long id = rnd.nextLong();
         map.put("id", id);
         map.put("age", 5);
-        InsertOperation insert = session.insert(Helenus.map(User.class, map));
+        InsertOperation<User> insert = session.<User>insert(Helenus.map(User.class, map));
         String cql = "INSERT INTO simple_users (id,age) VALUES (" + id.toString() + ",5) IF NOT EXISTS;";
         Assert.assertEquals(cql, insert.cql());
         insert.sync();
