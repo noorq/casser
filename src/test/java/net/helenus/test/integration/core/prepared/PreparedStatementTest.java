@@ -18,6 +18,7 @@ package net.helenus.test.integration.core.prepared;
 import static net.helenus.core.Query.marker;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import net.helenus.core.HelenusSession;
 import net.helenus.core.Query;
@@ -57,7 +58,7 @@ public class PreparedStatementTest extends AbstractEmbeddedCassandraTest {
 		session = Helenus.init(getSession()).showCql().add(Car.class).autoCreateDrop().get();
 		car = Helenus.dsl(Car.class, session.getMetadata());
 
-		insertOp = session.insert()
+		insertOp = session.<ResultSet>insert()
 		  .value(car::make, Query.marker())
 		  .value(car::model, Query.marker())
 		  .value(car::year, 2004)

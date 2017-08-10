@@ -16,7 +16,10 @@
 package net.helenus.test.unit.core.dsl;
 
 import java.util.Date;
+import java.util.Map;
+import java.util.Set;
 
+import net.helenus.core.reflect.Drafted;
 import net.helenus.mapping.annotation.*;
 
 @Table
@@ -35,6 +38,21 @@ public interface Account {
 
 	@Transient
 	default Draft draft() { return new Draft(); }
-	class Draft {}
+	class Draft implements Drafted { //TODO
+		@Override
+		public Set<String> mutated() {
+			return null;
+		}
+
+		@Override
+		public Object build() {
+			return null;
+		}
+
+		@Override
+		public Map<String, Object> toMap() {
+			return null;
+		}
+	}
 
 }

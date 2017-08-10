@@ -21,8 +21,8 @@ import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.Getter;
+import net.helenus.core.Helenus;
 import net.helenus.core.reflect.HelenusPropertyNode;
-import net.helenus.core.reflect.MapExportable;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
@@ -32,12 +32,13 @@ import net.helenus.support.HelenusMappingException;
 
 import java.util.*;
 
-public final class InsertOperation extends AbstractOperation<ResultSet, InsertOperation> {
+public final class InsertOperation<T> extends AbstractOperation<T, InsertOperation<T>> {
 
     private HelenusEntity entity;
 
     private final List<Fun.Tuple2<HelenusPropertyNode, Object>> values = new ArrayList<Fun.Tuple2<HelenusPropertyNode, Object>>();
     private boolean ifNotExists;
+    private Object pojo;
 
     private int[] ttl;
     private long[] timestamp;
@@ -48,21 +49,15 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
         this.ifNotExists = ifNotExists;
     }
 
-    public InsertOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity, Object pojo,
-            boolean ifNotExists) {
+    public InsertOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity,
+            Object pojo, Set<String> mutations, boolean ifNotExists) {
         super(sessionOperations);
 
         this.entity = entity;
+        this.pojo = pojo;
         this.ifNotExists = ifNotExists;
         Collection<HelenusProperty> properties = entity.getOrderedProperties();
-        Set<String> keys = null;
-
-        if (pojo instanceof MapExportable) {
-            keys = ((MapExportable) pojo).mutated();
-            if (keys == null) {
-                keys = ((MapExportable) pojo).toMap().keySet();
-            }
-        }
+        Set<String> keys = (mutations == null) ?  null : mutations;
 
         for (HelenusProperty prop : properties) {
 
@@ -82,17 +77,17 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
 
     }
 
-    public InsertOperation ifNotExists() {
+    public InsertOperation<T> ifNotExists() {
         this.ifNotExists = true;
         return this;
     }
 
-    public InsertOperation ifNotExists(boolean enable) {
+    public InsertOperation<T> ifNotExists(boolean enable) {
         this.ifNotExists = enable;
         return this;
     }
 
-    public <V> InsertOperation value(Getter<V> getter, V val) {
+    public <V> InsertOperation<T> value(Getter<V> getter, V val) {
 
         Objects.requireNonNull(getter, "getter is empty");
 
@@ -141,17 +136,26 @@ public final class InsertOperation extends AbstractOperation<ResultSet, InsertOp
     }
 
     @Override
-    public ResultSet transform(ResultSet resultSet) {
-        return resultSet;
+    public T transform(ResultSet resultSet) {
+        if (pojo != null && ((T) pojo).getClass().isAssignableFrom(ResultSet.class)) {
+            return (T) pojo;
+        } else {
+            if (values.size() > 0) {
+                Map<String, Object> backingMap = new HashMap<String, Object>(values.size());
+                values.forEach(t -> backingMap.put(t._1.getProperty().getPropertyName(), t._2));
+                pojo = Helenus.map(values.get(0)._1.getEntity().getMappingInterface(), backingMap);
+            }
+        }
+        return (T) pojo;
     }
 
-    public InsertOperation usingTtl(int ttl) {
+    public InsertOperation<T> usingTtl(int ttl) {
         this.ttl = new int[1];
         this.ttl[0] = ttl;
         return this;
     }
 
-    public InsertOperation usingTimestamp(long timestamp) {
+    public InsertOperation<T> usingTimestamp(long timestamp) {
         this.timestamp = new long[1];
         this.timestamp[0] = timestamp;
         return this;

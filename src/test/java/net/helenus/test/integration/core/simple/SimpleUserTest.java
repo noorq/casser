@@ -28,6 +28,8 @@ import net.helenus.core.Operator;
 import net.helenus.support.Fun;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
 
+import java.util.Optional;
+
 public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
 	static User user;
@@ -164,6 +166,12 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 		Assert.assertEquals(Integer.valueOf(35), u.age());
 
 		// INSERT
+		User greg = session.<User>insert()
+				.value(user::name, "greg")
+				.value(user::age, 44)
+				.value(user::type, UserType.USER)
+                .value(user::id, 1234L)
+                .sync();
 
 		session.update()
 			.set(user::name, null)
