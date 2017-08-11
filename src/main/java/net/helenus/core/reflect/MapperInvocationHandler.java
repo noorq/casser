@@ -86,22 +86,22 @@ public class MapperInvocationHandler<E> implements InvocationHandler {
 			return Collections.unmodifiableMap(src);
 		}
 
-		Object value = src.get(methodName);
+        Object value = src.get(methodName);
 
         Class<?> returnType = method.getReturnType();
 
-		if (value == null) {
+        if (value == null) {
 
-			if (returnType.isPrimitive()) {
+            if (returnType.isPrimitive()) {
 
-				DefaultPrimitiveTypes type = DefaultPrimitiveTypes.lookup(returnType);
-				if (type == null) {
-					throw new HelenusException("unknown primitive type " + returnType);
-				}
+                DefaultPrimitiveTypes type = DefaultPrimitiveTypes.lookup(returnType);
+                if (type == null) {
+                    throw new HelenusException("unknown primitive type " + returnType);
+                }
 
-				return type.getDefaultValue();
+                return type.getDefaultValue();
 
-			}
+            }
 
         }
 

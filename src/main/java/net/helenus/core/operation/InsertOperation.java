@@ -22,6 +22,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.Getter;
 import net.helenus.core.Helenus;
+import net.helenus.core.reflect.DefaultPrimitiveTypes;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.core.reflect.MapExportable;
 import net.helenus.mapping.HelenusEntity;
@@ -29,6 +30,7 @@ import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.mapping.value.BeanColumnValueProvider;
 import net.helenus.support.Fun;
+import net.helenus.support.HelenusException;
 import net.helenus.support.HelenusMappingException;
 
 import java.util.*;
@@ -142,9 +144,36 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
             return (T) pojo;
         } else {
             if (values.size() > 0) {
-                Map<String, Object> backingMap = new HashMap<String, Object>(values.size());
+                Collection<HelenusProperty> properties = entity.getOrderedProperties();
+                Map<String, Object> backingMap = new HashMap<String, Object>(properties.size());
+
+                // First, add all the inserted values into our new map.
                 values.forEach(t -> backingMap.put(t._1.getProperty().getPropertyName(), t._2));
-                pojo = Helenus.map(values.get(0)._1.getEntity().getMappingInterface(), backingMap);
+
+                // Then, fill in all the rest of the properties.
+                for (HelenusProperty prop : properties) {
+                    String key = prop.getPropertyName();
+                    if (!backingMap.containsKey(key)) {
+                        // If we started this operation with an instance of this type, use values from that.
+                        if (pojo != null) {
+                            backingMap.put(key, BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+                        } else {
+                            // Otherwise we'll use default values for the property type if available.
+                            Class<?> propType = prop.getJavaType();
+                            if (propType.isPrimitive()) {
+                                DefaultPrimitiveTypes type = DefaultPrimitiveTypes.lookup(propType);
+                                if (type == null) {
+                                    throw new HelenusException("unknown primitive type " + propType);
+                                }
+                                backingMap.put(key, type.getDefaultValue());
+                            }
+                        }
+                    }
+                }
+
+                // Lastly, create a new proxy object for the entity and return the new instance.
+                Class<?> iface = entity.getMappingInterface();
+                pojo = Helenus.map(iface, backingMap);
             }
         }
         return (T) pojo;

@@ -74,46 +74,46 @@ public final class ValueProviderMap implements Map<String, Object> {
 
 	@Override
 	public boolean containsValue(Object value) {
-		throwShouldNeverCall();
+		throwShouldNeverCall("containsValue()");
 		return false;
 	}
 
 	@Override
 	public Object put(String key, Object value) {
-		throwShouldNeverCall();
+		throwShouldNeverCall("put()");
 		return null;
 	}
 
 	@Override
 	public Object remove(Object key) {
-		throwShouldNeverCall();
+		throwShouldNeverCall("remove()");
 		return null;
 	}
 
 	@Override
 	public void putAll(Map<? extends String, ? extends Object> m) {
-		throwShouldNeverCall();
+		throwShouldNeverCall("putAll()");
 	}
 
 	@Override
 	public void clear() {
-		throwShouldNeverCall();
+		throwShouldNeverCall("clear()");
 	}
 
 	@Override
 	public Collection<Object> values() {
-		throwShouldNeverCall();
+		throwShouldNeverCall("values()");
 		return null;
 	}
 
 	@Override
 	public Set<java.util.Map.Entry<String, Object>> entrySet() {
-		throwShouldNeverCall();
+		throwShouldNeverCall("entrySet()");
 		return null;
 	}
 
-	private void throwShouldNeverCall() {
-		throw new HelenusMappingException("should never be called");
+	private void throwShouldNeverCall(String methodName) {
+		throw new HelenusMappingException(String.format("the method {} should never be called on an instance of a Helenus ValueProviderMap", methodName));
 	}
 
 	@Override
