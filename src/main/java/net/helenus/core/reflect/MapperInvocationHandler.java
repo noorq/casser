@@ -62,7 +62,7 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
 	    // Transient, default methods should simply be invoked as-is.
-        if (method.isDefault() && method.getDeclaredAnnotation(Transient.class) == null) {
+        if (method.isDefault() && method.getDeclaredAnnotation(Transient.class) != null) {
             return invokeDefault(proxy, method, args);
         }
 
