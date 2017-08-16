@@ -34,6 +34,7 @@ import net.helenus.support.HelenusException;
 import net.helenus.support.HelenusMappingException;
 
 import java.util.*;
+import java.util.function.Function;
 
 public final class InsertOperation<T> extends AbstractOperation<T, InsertOperation<T>> {
 
@@ -153,7 +154,14 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
                 // Then, fill in all the rest of the properties.
                 for (HelenusProperty prop : properties) {
                     String key = prop.getPropertyName();
-                    if (!backingMap.containsKey(key)) {
+                    if (backingMap.containsKey(key)) {
+                        // Some values man need to be converted (e.g. from String to Enum).  This is done
+                        // within the BeanColumnValueProvider below.
+                        Optional<Function<Object, Object>> converter = prop.getReadConverter(sessionOps.getSessionRepository());
+                        if (converter.isPresent()) {
+                            backingMap.put(key, converter.get().apply(backingMap.get(key)));
+                        }
+                    } else {
                         // If we started this operation with an instance of this type, use values from that.
                         if (pojo != null) {
                             backingMap.put(key, BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
