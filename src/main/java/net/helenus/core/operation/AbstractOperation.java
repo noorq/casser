@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import net.helenus.core.AbstractSessionOperations;
 
 public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
-    extends AbstractStatementOperation<E, O> {
+    extends AbstractStatementOperation<E, O> implements Transformational<E> {
 
   public abstract E transform(ResultSet resultSet);
 
@@ -41,16 +41,12 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
   }
 
   public E sync() {
-    ResultSet resultSet =
-        sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
-    E result = transform(resultSet);
-    if (cacheable()) {
-      sessionOps.cache(getCacheKey(), result);
-    }
-    return result;
+    return Executioner.INSTANCE.<E>sync(sessionOps, options(buildStatement()),
+            traceContext, this, showValues);
   }
 
   public CompletableFuture<E> async() {
-    return CompletableFuture.supplyAsync(this::sync);
+    return Executioner.INSTANCE.<E>async(sessionOps, options(buildStatement()),
+            traceContext, this, showValues);
   }
 }

@@ -15,8 +15,7 @@
  */
 package net.helenus.test.integration.core.tuple;
 
-
-
+import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.core.Query;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
@@ -24,115 +23,121 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import net.helenus.core.Helenus;
-
 public class InnerTupleTest extends AbstractEmbeddedCassandraTest {
 
-	static PhotoAlbum photoAlbum;
+  static PhotoAlbum photoAlbum;
 
-	static HelenusSession session;
+  static HelenusSession session;
 
-	@BeforeClass
-	public static void beforeTest() {
-		session = Helenus.init(getSession()).showCql().add(PhotoAlbum.class).autoCreateDrop().get();
-		photoAlbum = Helenus.dsl(PhotoAlbum.class, session.getMetadata());
-	}
+  @BeforeClass
+  public static void beforeTest() {
+    session = Helenus.init(getSession()).showCql().add(PhotoAlbum.class).autoCreateDrop().get();
+    photoAlbum = Helenus.dsl(PhotoAlbum.class, session.getMetadata());
+  }
 
-	@Test
-	public void testPrint() {
-		System.out.println(photoAlbum);
-	}
+  @Test
+  public void testPrint() {
+    System.out.println(photoAlbum);
+  }
 
+  @Test
+  public void testCruid() {
 
-	@Test
-	public void testCruid() {
+    Photo photo =
+        new Photo() {
 
-		Photo photo = new Photo() {
+          @Override
+          public byte[] blob() {
+            return "jpeg".getBytes();
+          }
+        };
 
-			@Override
-			public byte[] blob() {
-				return "jpeg".getBytes();
-			}
+    PhotoFolder folder =
+        new PhotoFolder() {
 
-		};
+          @Override
+          public String name() {
+            return "first";
+          }
 
-		PhotoFolder folder = new PhotoFolder() {
+          @Override
+          public Photo photo() {
+            return photo;
+          }
+        };
 
-			@Override
-			public String name() {
-				return "first";
-			}
+    // CREATE (C)
 
-			@Override
-			public Photo photo() {
-				return photo;
-			}
+    session.insert().value(photoAlbum::id, 123).value(photoAlbum::folder, folder).sync();
 
-		};
+    // READ (R)
 
-		// CREATE (C)
+    PhotoFolder actual =
+        session
+            .select(photoAlbum::folder)
+            .where(photoAlbum::id, Query.eq(123))
+            .sync()
+            .findFirst()
+            .get()
+            ._1;
 
-		session.insert()
-			.value(photoAlbum::id, 123)
-			.value(photoAlbum::folder, folder)
-			.sync();
+    Assert.assertEquals(folder.name(), actual.name());
 
-		// READ (R)
+    // UPDATE (U)
 
-		PhotoFolder actual = session.select(photoAlbum::folder).where(photoAlbum::id, Query.eq(123)).sync().findFirst().get()._1;
+    // unfortunately this is not working right now in Cassandra, can not update a single column in tuple :(
+    //session.update()
+    //	.set(photoAlbum.folder().photo()::blob, "Helenus".getBytes())
+    //	.where(photoAlbum::id, eq(123))
+    //	.sync();
 
-		Assert.assertEquals(folder.name(), actual.name());
+    PhotoFolder expected =
+        new PhotoFolder() {
 
-		// UPDATE (U)
+          @Override
+          public String name() {
+            return "seconds";
+          }
 
-		// unfortunately this is not working right now in Cassandra, can not update a single column in tuple :(
-		//session.update()
-		//	.set(photoAlbum.folder().photo()::blob, "Helenus".getBytes())
-		//	.where(photoAlbum::id, eq(123))
-		//	.sync();
+          @Override
+          public Photo photo() {
+            return photo;
+          }
+        };
 
-		PhotoFolder expected = new PhotoFolder() {
+    session.update().set(photoAlbum::folder, expected).where(photoAlbum::id, Query.eq(123)).sync();
 
-			@Override
-			public String name() {
-				return "seconds";
-			}
+    actual =
+        session
+            .select(photoAlbum::folder)
+            .where(photoAlbum::id, Query.eq(123))
+            .sync()
+            .findFirst()
+            .get()
+            ._1;
 
-			@Override
-			public Photo photo() {
-				return photo;
-			}
+    Assert.assertEquals(expected.name(), actual.name());
 
-		};
+    // INSERT (I)
+    // let's insert null ;)
 
-		session.update()
-			.set(photoAlbum::folder, expected)
-			.where(photoAlbum::id, Query.eq(123))
-			.sync();
+    session.update().set(photoAlbum::folder, null).where(photoAlbum::id, Query.eq(123)).sync();
 
-		actual = session.select(photoAlbum::folder).where(photoAlbum::id, Query.eq(123)).sync().findFirst().get()._1;
+    actual =
+        session
+            .select(photoAlbum::folder)
+            .where(photoAlbum::id, Query.eq(123))
+            .sync()
+            .findFirst()
+            .get()
+            ._1;
+    Assert.assertNull(actual);
 
-		Assert.assertEquals(expected.name(), actual.name());
+    // DELETE (D)
+    session.delete().where(photoAlbum::id, Query.eq(123)).sync();
 
-		// INSERT (I)
-		// let's insert null ;)
-
-		session.update()
-		.set(photoAlbum::folder, null)
-		.where(photoAlbum::id, Query.eq(123))
-		.sync();
-
-		actual = session.select(photoAlbum::folder).where(photoAlbum::id, Query.eq(123)).sync().findFirst().get()._1;
-		Assert.assertNull(actual);
-
-		// DELETE (D)
-		session.delete().where(photoAlbum::id, Query.eq(123)).sync();
-
-		long cnt = session.select(photoAlbum::folder).where(photoAlbum::id, Query.eq(123)).sync().count();
-		Assert.assertEquals(0, cnt);
-
-
-	}
-
-
+    long cnt =
+        session.select(photoAlbum::folder).where(photoAlbum::id, Query.eq(123)).sync().count();
+    Assert.assertEquals(0, cnt);
+  }
 }

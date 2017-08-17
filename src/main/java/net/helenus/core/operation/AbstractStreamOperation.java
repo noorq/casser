@@ -15,19 +15,18 @@
  */
 package net.helenus.core.operation;
 
-import brave.Span;
-import brave.Tracer;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import net.helenus.core.AbstractSessionOperations;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>>
-    extends AbstractStatementOperation<E, O> {
+    extends AbstractStatementOperation<E, O> implements Transformational<Stream<E>> {
 
   public AbstractStreamOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
@@ -52,50 +51,12 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
   }
 
   public Stream<E> sync() {
-    Tracer tracer = this.sessionOps.getZipkinTracer();
-    final Span cassandraSpan =
-        (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
-    if (cassandraSpan != null) {
-      cassandraSpan.name("cassandra");
-      cassandraSpan.start();
-    }
-
-    ResultSet resultSet =
-        sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
-    Stream<E> result = transform(resultSet);
-
-    if (cassandraSpan != null) {
-      cassandraSpan.finish();
-    }
-
-    return result;
+    return Executioner.INSTANCE.<Stream<E>>sync(sessionOps, options(buildStatement()),
+            traceContext, this, showValues);
   }
 
-  public ListenableFuture<Stream<E>> async() {
-    Tracer tracer = this.sessionOps.getZipkinTracer();
-    final Span cassandraSpan =
-        (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
-    if (cassandraSpan != null) {
-      cassandraSpan.name("cassandra");
-      cassandraSpan.start();
-    }
-
-    ResultSetFuture resultSetFuture =
-        sessionOps.executeAsync(options(buildStatement()), showValues);
-    ListenableFuture<Stream<E>> future =
-        Futures.transform(
-            resultSetFuture,
-            new Function<ResultSet, Stream<E>>() {
-              @Override
-              public Stream<E> apply(ResultSet resultSet) {
-                Stream<E> result = transform(resultSet);
-                if (cassandraSpan != null) {
-                  cassandraSpan.finish();
-                }
-                return result;
-              }
-            },
-            sessionOps.getExecutor());
-    return future;
+  public CompletableFuture<Stream<E>> async() {
+    return Executioner.INSTANCE.<Stream<E>>async(sessionOps, options(buildStatement()),
+            traceContext, this, showValues);
   }
 }
