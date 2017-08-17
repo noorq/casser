@@ -21,9 +21,8 @@ import net.helenus.mapping.annotation.Table;
 @Table
 public interface PhotoAlbum {
 
-	@PartitionKey
-	int id();
+  @PartitionKey
+  int id();
 
-	PhotoFolder folder();
-
+  PhotoFolder folder();
 }

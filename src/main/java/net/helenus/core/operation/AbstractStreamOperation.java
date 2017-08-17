@@ -20,7 +20,6 @@ import com.datastax.driver.core.ResultSet;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import net.helenus.core.AbstractSessionOperations;
@@ -51,12 +50,12 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
   }
 
   public Stream<E> sync() {
-    return Executioner.INSTANCE.<Stream<E>>sync(sessionOps, options(buildStatement()),
-            traceContext, this, showValues);
+    return Executioner.INSTANCE.<Stream<E>>sync(
+        sessionOps, options(buildStatement()), traceContext, this, showValues);
   }
 
   public CompletableFuture<Stream<E>> async() {
-    return Executioner.INSTANCE.<Stream<E>>async(sessionOps, options(buildStatement()),
-            traceContext, this, showValues);
+    return Executioner.INSTANCE.<Stream<E>>async(
+        sessionOps, options(buildStatement()), traceContext, this, showValues);
   }
 }

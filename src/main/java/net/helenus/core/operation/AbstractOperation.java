@@ -41,12 +41,12 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
   }
 
   public E sync() {
-    return Executioner.INSTANCE.<E>sync(sessionOps, options(buildStatement()),
-            traceContext, this, showValues);
+    return Executioner.INSTANCE.<E>sync(
+        sessionOps, options(buildStatement()), traceContext, this, showValues);
   }
 
   public CompletableFuture<E> async() {
-    return Executioner.INSTANCE.<E>async(sessionOps, options(buildStatement()),
-            traceContext, this, showValues);
+    return Executioner.INSTANCE.<E>async(
+        sessionOps, options(buildStatement()), traceContext, this, showValues);
   }
 }

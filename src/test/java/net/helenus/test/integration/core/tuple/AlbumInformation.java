@@ -21,10 +21,9 @@ import net.helenus.mapping.annotation.Tuple;
 @Tuple
 public interface AlbumInformation {
 
-	@Column(ordinal=0)
-	String about();
+  @Column(ordinal = 0)
+  String about();
 
-	@Column(ordinal=1)
-	String place();
-
+  @Column(ordinal = 1)
+  String place();
 }

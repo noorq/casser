@@ -25,13 +25,12 @@ import net.helenus.mapping.annotation.Types;
 @Table
 public interface Album {
 
-	@PartitionKey(ordinal=1)
-	int id();
+  @PartitionKey(ordinal = 1)
+  int id();
 
-	AlbumInformation info();
+  AlbumInformation info();
 
-	@Types.Tuple({DataType.Name.TEXT, DataType.Name.TEXT})
-	@Column(ordinal=1)
-	TupleValue infoNoMapping();
-
+  @Types.Tuple({DataType.Name.TEXT, DataType.Name.TEXT})
+  @Column(ordinal = 1)
+  TupleValue infoNoMapping();
 }

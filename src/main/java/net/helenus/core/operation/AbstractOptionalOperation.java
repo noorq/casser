@@ -20,13 +20,12 @@ import com.datastax.driver.core.ResultSet;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import net.helenus.core.AbstractSessionOperations;
-
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import net.helenus.core.AbstractSessionOperations;
 
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
-   extends AbstractStatementOperation<E, O> implements Transformational<Optional<E>> {
+    extends AbstractStatementOperation<E, O> implements Transformational<Optional<E>> {
 
   public AbstractOptionalOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
@@ -52,12 +51,12 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 
   public Optional<E> sync() {
 
-    return Executioner.INSTANCE.<Optional<E>>sync(sessionOps, options(buildStatement()),
-            traceContext, this, showValues);
+    return Executioner.INSTANCE.<Optional<E>>sync(
+        sessionOps, options(buildStatement()), traceContext, this, showValues);
   }
 
   public CompletableFuture<Optional<E>> async() {
-    return Executioner.INSTANCE.<Optional<E>>async(sessionOps, options(buildStatement()),
-            traceContext, this, showValues);
+    return Executioner.INSTANCE.<Optional<E>>async(
+        sessionOps, options(buildStatement()), traceContext, this, showValues);
   }
 }

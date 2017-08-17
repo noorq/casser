@@ -21,10 +21,9 @@ import net.helenus.mapping.annotation.Tuple;
 @Tuple
 public interface Author {
 
-	@Column(ordinal=0)
-	String name();
+  @Column(ordinal = 0)
+  String name();
 
-	@Column(ordinal=1)
-	String city();
-
+  @Column(ordinal = 1)
+  String city();
 }

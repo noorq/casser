@@ -15,7 +15,6 @@
  */
 package net.helenus.test.integration.core.prepared;
 
-
 import com.datastax.driver.core.ResultSet;
 import java.math.BigDecimal;
 import net.helenus.core.Helenus;
