@@ -20,28 +20,28 @@ import com.datastax.driver.core.PreparedStatement;
 
 public final class PreparedOptionalOperation<E> {
 
-	private final PreparedStatement preparedStatement;
-	private final AbstractOptionalOperation<E, ?> operation;
+  private final PreparedStatement preparedStatement;
+  private final AbstractOptionalOperation<E, ?> operation;
 
-	public PreparedOptionalOperation(PreparedStatement statement, AbstractOptionalOperation<E, ?> operation) {
-		this.preparedStatement = statement;
-		this.operation = operation;
-	}
+  public PreparedOptionalOperation(
+      PreparedStatement statement, AbstractOptionalOperation<E, ?> operation) {
+    this.preparedStatement = statement;
+    this.operation = operation;
+  }
 
-	public PreparedStatement getPreparedStatement() {
-		return preparedStatement;
-	}
+  public PreparedStatement getPreparedStatement() {
+    return preparedStatement;
+  }
 
-	public BoundOptionalOperation<E> bind(Object... params) {
+  public BoundOptionalOperation<E> bind(Object... params) {
 
-		BoundStatement boundStatement = preparedStatement.bind(params);
+    BoundStatement boundStatement = preparedStatement.bind(params);
 
-		return new BoundOptionalOperation<E>(boundStatement, operation);
-	}
+    return new BoundOptionalOperation<E>(boundStatement, operation);
+  }
 
-	@Override
-	public String toString() {
-		return preparedStatement.getQueryString();
-	}
-
+  @Override
+  public String toString() {
+    return preparedStatement.getQueryString();
+  }
 }

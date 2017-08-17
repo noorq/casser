@@ -19,16 +19,15 @@ import java.util.Collection;
 
 public interface HelenusEntity {
 
-	HelenusEntityType getType();
+  HelenusEntityType getType();
 
-	boolean isCacheable();
+  boolean isCacheable();
 
-	Class<?> getMappingInterface();
+  Class<?> getMappingInterface();
 
-	IdentityName getName();
+  IdentityName getName();
 
-	Collection<HelenusProperty> getOrderedProperties();
+  Collection<HelenusProperty> getOrderedProperties();
 
-	HelenusProperty getProperty(String name);
-
+  HelenusProperty getProperty(String name);
 }

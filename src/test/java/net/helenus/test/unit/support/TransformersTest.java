@@ -19,72 +19,66 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-
+import net.helenus.support.Transformers;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.helenus.support.Transformers;
-
 public class TransformersTest {
 
-	@Test
-	public void testList() {
+  @Test
+  public void testList() {
 
-		List<Integer> source = new ArrayList<Integer>();
-		source.add(555);
-		source.add(777);
-		source.add(999);
+    List<Integer> source = new ArrayList<Integer>();
+    source.add(555);
+    source.add(777);
+    source.add(999);
 
-		List<String> out = Transformers.transformList(source, x -> "_" + x);
+    List<String> out = Transformers.transformList(source, x -> "_" + x);
 
-		Assert.assertEquals(3, out.size());
-		Assert.assertEquals(false, out.isEmpty());
-		Assert.assertEquals("_555", out.get(0));
-		Assert.assertEquals("_777", out.get(1));
-		Assert.assertEquals("_999", out.get(2));
+    Assert.assertEquals(3, out.size());
+    Assert.assertEquals(false, out.isEmpty());
+    Assert.assertEquals("_555", out.get(0));
+    Assert.assertEquals("_777", out.get(1));
+    Assert.assertEquals("_999", out.get(2));
 
-		Iterator<String> i = out.iterator();
-		Assert.assertTrue(i.hasNext());
-		Assert.assertEquals("_555", i.next());
-		Assert.assertTrue(i.hasNext());
-		Assert.assertEquals("_777", i.next());
-		Assert.assertTrue(i.hasNext());
-		Assert.assertEquals("_999", i.next());
-		Assert.assertFalse(i.hasNext());
+    Iterator<String> i = out.iterator();
+    Assert.assertTrue(i.hasNext());
+    Assert.assertEquals("_555", i.next());
+    Assert.assertTrue(i.hasNext());
+    Assert.assertEquals("_777", i.next());
+    Assert.assertTrue(i.hasNext());
+    Assert.assertEquals("_999", i.next());
+    Assert.assertFalse(i.hasNext());
 
-		ListIterator<String> li = out.listIterator();
-		Assert.assertTrue(li.hasNext());
-		Assert.assertEquals(0, li.nextIndex());
-		Assert.assertEquals(-1, li.previousIndex());
-		Assert.assertEquals("_555", li.next());
-		Assert.assertTrue(li.hasNext());
-		Assert.assertEquals(1, li.nextIndex());
-		Assert.assertEquals(0, li.previousIndex());
-		Assert.assertEquals("_777", li.next());
-		Assert.assertTrue(li.hasNext());
-		Assert.assertEquals(2, li.nextIndex());
-		Assert.assertEquals(1, li.previousIndex());
-		Assert.assertEquals("_999", li.next());
-		Assert.assertFalse(li.hasNext());
-		Assert.assertEquals(3, li.nextIndex());
-		Assert.assertEquals(2, li.previousIndex());
+    ListIterator<String> li = out.listIterator();
+    Assert.assertTrue(li.hasNext());
+    Assert.assertEquals(0, li.nextIndex());
+    Assert.assertEquals(-1, li.previousIndex());
+    Assert.assertEquals("_555", li.next());
+    Assert.assertTrue(li.hasNext());
+    Assert.assertEquals(1, li.nextIndex());
+    Assert.assertEquals(0, li.previousIndex());
+    Assert.assertEquals("_777", li.next());
+    Assert.assertTrue(li.hasNext());
+    Assert.assertEquals(2, li.nextIndex());
+    Assert.assertEquals(1, li.previousIndex());
+    Assert.assertEquals("_999", li.next());
+    Assert.assertFalse(li.hasNext());
+    Assert.assertEquals(3, li.nextIndex());
+    Assert.assertEquals(2, li.previousIndex());
+  }
 
+  @Test
+  public void testNullsInList() {
 
-	}
+    List<Integer> source = new ArrayList<Integer>();
+    source.add(555);
+    source.add(null);
+    source.add(999);
 
-	@Test
-	public void testNullsInList() {
+    List<String> out = Transformers.transformList(source, x -> "_" + x);
 
-		List<Integer> source = new ArrayList<Integer>();
-		source.add(555);
-		source.add(null);
-		source.add(999);
-
-		List<String> out = Transformers.transformList(source, x -> "_" + x);
-
-		Assert.assertEquals(3, out.size());
-		Assert.assertEquals("_null", out.get(1));
-
-	}
-
+    Assert.assertEquals(3, out.size());
+    Assert.assertEquals("_null", out.get(1));
+  }
 }

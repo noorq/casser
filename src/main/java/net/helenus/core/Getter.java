@@ -17,6 +17,5 @@ package net.helenus.core;
 
 public interface Getter<V> {
 
-	V get();
-
+  V get();
 }

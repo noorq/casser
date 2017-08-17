@@ -15,70 +15,66 @@
  */
 package net.helenus.support;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.function.Function;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
 public final class Transformers {
 
-	private Transformers() {
-	}
+  private Transformers() {}
 
-	public static <I, O> Set<O> transformSet(Set<I> inputSet, Function<I, O> func) {
-		Set<O> set = Sets.newHashSet();
-		for (I in : inputSet) {
-			set.add(func.apply(in));
-		}
-		return set;
-	}
+  public static <I, O> Set<O> transformSet(Set<I> inputSet, Function<I, O> func) {
+    Set<O> set = Sets.newHashSet();
+    for (I in : inputSet) {
+      set.add(func.apply(in));
+    }
+    return set;
+  }
 
-	public static <I, O> List<O> transformList(List<I> inputList, Function<I, O> func) {
-		return new TransformedImmutableList<I, O>(inputList, func);
-	}
+  public static <I, O> List<O> transformList(List<I> inputList, Function<I, O> func) {
+    return new TransformedImmutableList<I, O>(inputList, func);
+  }
 
-	public static <I, O, V> Map<O, V> transformMapKey(Map<I, V> inputMap, Function<I, O> func) {
-		Map<O, V> map = Maps.newHashMap();
-		for (Map.Entry<I, V> e : inputMap.entrySet()) {
-			map.put(func.apply(e.getKey()), e.getValue());
-		}
-		return map;
-	}
+  public static <I, O, V> Map<O, V> transformMapKey(Map<I, V> inputMap, Function<I, O> func) {
+    Map<O, V> map = Maps.newHashMap();
+    for (Map.Entry<I, V> e : inputMap.entrySet()) {
+      map.put(func.apply(e.getKey()), e.getValue());
+    }
+    return map;
+  }
 
-	public static <I, O, K> Map<K, O> transformMapValue(Map<K, I> inputMap, Function<I, O> func) {
-		return Maps.transformValues(inputMap, func::apply);
-	}
+  public static <I, O, K> Map<K, O> transformMapValue(Map<K, I> inputMap, Function<I, O> func) {
+    return Maps.transformValues(inputMap, func::apply);
+  }
 
-	public static <X, Y, K, V> Map<X, Y> transformMap(Map<K, V> inputMap, Function<K, X> funcKey,
-			Function<V, Y> funcValue) {
-		Map<X, Y> map = Maps.newHashMap();
-		for (Map.Entry<K, V> e : inputMap.entrySet()) {
-			map.put(funcKey.apply(e.getKey()), funcValue.apply(e.getValue()));
-		}
-		return map;
-	}
+  public static <X, Y, K, V> Map<X, Y> transformMap(
+      Map<K, V> inputMap, Function<K, X> funcKey, Function<V, Y> funcValue) {
+    Map<X, Y> map = Maps.newHashMap();
+    for (Map.Entry<K, V> e : inputMap.entrySet()) {
+      map.put(funcKey.apply(e.getKey()), funcValue.apply(e.getValue()));
+    }
+    return map;
+  }
 
-	static final class TransformedImmutableList<I, O> extends AbstractList<O> implements List<O> {
+  static final class TransformedImmutableList<I, O> extends AbstractList<O> implements List<O> {
 
-		final List<I> inputList;
-		final Function<I, O> func;
+    final List<I> inputList;
+    final Function<I, O> func;
 
-		TransformedImmutableList(List<I> inputList, Function<I, O> func) {
-			this.inputList = Objects.requireNonNull(inputList, "inputList is null");
-			this.func = Objects.requireNonNull(func, "func is null");
-		}
+    TransformedImmutableList(List<I> inputList, Function<I, O> func) {
+      this.inputList = Objects.requireNonNull(inputList, "inputList is null");
+      this.func = Objects.requireNonNull(func, "func is null");
+    }
 
-		@Override
-		public O get(int index) {
-			return func.apply(inputList.get(index));
-		}
+    @Override
+    public O get(int index) {
+      return func.apply(inputList.get(index));
+    }
 
-		@Override
-		public int size() {
-			return inputList.size();
-		}
-
-	}
-
+    @Override
+    public int size() {
+      return inputList.size();
+    }
+  }
 }

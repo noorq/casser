@@ -17,6 +17,5 @@ package net.helenus.test.unit.core.dsl;
 
 public interface WrongAccount {
 
-	void id();
-
+  void id();
 }

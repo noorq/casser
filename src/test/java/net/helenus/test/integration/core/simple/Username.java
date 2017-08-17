@@ -20,13 +20,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
 import net.helenus.mapping.annotation.Constraints;
 
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target(value = { ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+@Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Constraints.LowerCase
-public @interface Username {
-
-}
+public @interface Username {}

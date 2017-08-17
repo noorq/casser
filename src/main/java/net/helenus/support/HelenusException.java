@@ -17,18 +17,17 @@ package net.helenus.support;
 
 public class HelenusException extends RuntimeException {
 
-	private static final long serialVersionUID = 7711799134283942588L;
+  private static final long serialVersionUID = 7711799134283942588L;
 
-	public HelenusException(String msg) {
-		super(msg);
-	}
+  public HelenusException(String msg) {
+    super(msg);
+  }
 
-	public HelenusException(Throwable t) {
-		super(t);
-	}
+  public HelenusException(Throwable t) {
+    super(t);
+  }
 
-	public HelenusException(String msg, Throwable t) {
-		super(msg, t);
-	}
-
+  public HelenusException(String msg, Throwable t) {
+    super(msg, t);
+  }
 }

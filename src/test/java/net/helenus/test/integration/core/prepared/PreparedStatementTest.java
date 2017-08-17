@@ -15,121 +15,125 @@
  */
 package net.helenus.test.integration.core.prepared;
 
-import static net.helenus.core.Query.marker;
 
+import com.datastax.driver.core.ResultSet;
 import java.math.BigDecimal;
-import java.util.Optional;
-
+import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.core.Query;
 import net.helenus.core.operation.PreparedOperation;
 import net.helenus.core.operation.PreparedStreamOperation;
 import net.helenus.support.Fun;
+import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.datastax.driver.core.ResultSet;
-import net.helenus.core.Helenus;
-import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
-
 public class PreparedStatementTest extends AbstractEmbeddedCassandraTest {
 
-	static Car car;
+  static Car car;
 
-	static HelenusSession session;
+  static HelenusSession session;
 
-	static PreparedOperation<ResultSet> insertOp;
+  static PreparedOperation<ResultSet> insertOp;
 
-	static PreparedOperation<ResultSet> updateOp;
+  static PreparedOperation<ResultSet> updateOp;
 
-	static PreparedStreamOperation<Car> selectOp;
+  static PreparedStreamOperation<Car> selectOp;
 
-	static PreparedStreamOperation<Fun.Tuple1<BigDecimal>> selectPriceOp;
+  static PreparedStreamOperation<Fun.Tuple1<BigDecimal>> selectPriceOp;
 
-	static PreparedOperation<ResultSet> deleteOp;
+  static PreparedOperation<ResultSet> deleteOp;
 
-	static PreparedOperation<Long> countOp;
+  static PreparedOperation<Long> countOp;
 
+  @BeforeClass
+  public static void beforeTest() {
 
-	@BeforeClass
-	public static void beforeTest() {
+    session = Helenus.init(getSession()).showCql().add(Car.class).autoCreateDrop().get();
+    car = Helenus.dsl(Car.class, session.getMetadata());
 
-		session = Helenus.init(getSession()).showCql().add(Car.class).autoCreateDrop().get();
-		car = Helenus.dsl(Car.class, session.getMetadata());
+    insertOp =
+        session
+            .<ResultSet>insert()
+            .value(car::make, Query.marker())
+            .value(car::model, Query.marker())
+            .value(car::year, 2004)
+            .prepare();
 
-		insertOp = session.<ResultSet>insert()
-		  .value(car::make, Query.marker())
-		  .value(car::model, Query.marker())
-		  .value(car::year, 2004)
-		  .prepare();
+    updateOp =
+        session
+            .update()
+            .set(car::price, Query.marker())
+            .where(car::make, Query.eq(Query.marker()))
+            .and(car::model, Query.eq(Query.marker()))
+            .prepare();
 
-		updateOp = session.update()
-				.set(car::price, Query.marker())
-				.where(car::make, Query.eq(Query.marker()))
-				.and(car::model, Query.eq(Query.marker()))
-				.prepare();
+    selectOp =
+        session
+            .select(Car.class)
+            .where(car::make, Query.eq(Query.marker()))
+            .and(car::model, Query.eq(Query.marker()))
+            .prepare();
 
-		selectOp = session.select(Car.class)
-				.where(car::make, Query.eq(Query.marker()))
-				.and(car::model, Query.eq(Query.marker()))
-				.prepare();
+    selectPriceOp =
+        session
+            .select(car::price)
+            .where(car::make, Query.eq(Query.marker()))
+            .and(car::model, Query.eq(Query.marker()))
+            .prepare();
 
-		selectPriceOp = session.select(car::price)
-				.where(car::make, Query.eq(Query.marker()))
-				.and(car::model, Query.eq(Query.marker()))
-				.prepare();
+    deleteOp =
+        session
+            .delete()
+            .where(car::make, Query.eq(Query.marker()))
+            .and(car::model, Query.eq(Query.marker()))
+            .prepare();
 
-		deleteOp = session.delete()
-				.where(car::make, Query.eq(Query.marker()))
-				.and(car::model, Query.eq(Query.marker()))
-				.prepare();
+    countOp =
+        session
+            .count()
+            .where(car::make, Query.eq(Query.marker()))
+            .and(car::model, Query.eq(Query.marker()))
+            .prepare();
+  }
 
-		countOp = session.count()
-				.where(car::make, Query.eq(Query.marker()))
-				.and(car::model, Query.eq(Query.marker()))
-				.prepare();
+  @Test
+  public void testPrint() {
+    System.out.println(car);
+  }
 
-	}
+  @Test
+  public void testCRUID() throws Exception {
 
-	@Test
-	public void testPrint() {
-		System.out.println(car);
-	}
+    // INSERT
 
-	@Test
-	public void testCRUID() throws Exception {
+    insertOp.bind("Nissan", "350Z").sync();
 
-		// INSERT
+    // SELECT
 
-		insertOp.bind("Nissan", "350Z").sync();
+    Car actual = selectOp.bind("Nissan", "350Z").sync().findFirst().get();
+    Assert.assertEquals("Nissan", actual.make());
+    Assert.assertEquals("350Z", actual.model());
+    Assert.assertEquals(2004, actual.year());
+    Assert.assertNull(actual.price());
 
-		// SELECT
+    // UPDATE
 
-		Car actual = selectOp.bind("Nissan", "350Z").sync().findFirst().get();
-		Assert.assertEquals("Nissan", actual.make());
-		Assert.assertEquals("350Z", actual.model());
-		Assert.assertEquals(2004, actual.year());
-		Assert.assertNull(actual.price());
+    updateOp.bind(BigDecimal.valueOf(10000.0), "Nissan", "350Z").sync();
 
-		// UPDATE
+    BigDecimal price = selectPriceOp.bind("Nissan", "350Z").sync().findFirst().get()._1;
 
-		updateOp.bind(BigDecimal.valueOf(10000.0), "Nissan", "350Z").sync();
+    Assert.assertEquals(BigDecimal.valueOf(10000.0), price);
 
-		BigDecimal price = selectPriceOp.bind("Nissan", "350Z").sync().findFirst().get()._1;
+    // DELETE
 
-		Assert.assertEquals(BigDecimal.valueOf(10000.0), price);
+    Long cnt = countOp.bind("Nissan", "350Z").sync();
+    Assert.assertEquals(Long.valueOf(1), cnt);
 
-		// DELETE
+    deleteOp.bind("Nissan", "350Z").sync();
 
-		Long cnt = countOp.bind("Nissan", "350Z").sync();
-		Assert.assertEquals(Long.valueOf(1), cnt);
-
-		deleteOp.bind("Nissan", "350Z").sync();
-
-		cnt = countOp.bind("Nissan", "350Z").sync();
-		Assert.assertEquals(Long.valueOf(0), cnt);
-
-	}
-
+    cnt = countOp.bind("Nissan", "350Z").sync();
+    Assert.assertEquals(Long.valueOf(0), cnt);
+  }
 }

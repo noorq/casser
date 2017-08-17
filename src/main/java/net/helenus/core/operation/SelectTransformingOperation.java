@@ -15,36 +15,33 @@
  */
 package net.helenus.core.operation;
 
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.querybuilder.BuiltStatement;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.querybuilder.BuiltStatement;
-
 public final class SelectTransformingOperation<R, E>
-		extends
-			AbstractFilterStreamOperation<R, SelectTransformingOperation<R, E>> {
+    extends AbstractFilterStreamOperation<R, SelectTransformingOperation<R, E>> {
 
-	private final SelectOperation<E> src;
-	private final Function<E, R> fn;
+  private final SelectOperation<E> src;
+  private final Function<E, R> fn;
 
-	public SelectTransformingOperation(SelectOperation<E> src, Function<E, R> fn) {
-		super(src.sessionOps);
+  public SelectTransformingOperation(SelectOperation<E> src, Function<E, R> fn) {
+    super(src.sessionOps);
 
-		this.src = src;
-		this.fn = fn;
-		this.filters = src.filters;
-		this.ifFilters = src.ifFilters;
-	}
+    this.src = src;
+    this.fn = fn;
+    this.filters = src.filters;
+    this.ifFilters = src.ifFilters;
+  }
 
-	@Override
-	public BuiltStatement buildStatement() {
-		return src.buildStatement();
-	}
+  @Override
+  public BuiltStatement buildStatement() {
+    return src.buildStatement();
+  }
 
-	@Override
-	public Stream<R> transform(ResultSet resultSet) {
-		return src.transform(resultSet).map(fn);
-	}
-
+  @Override
+  public Stream<R> transform(ResultSet resultSet) {
+    return src.transform(resultSet).map(fn);
+  }
 }

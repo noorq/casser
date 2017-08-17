@@ -15,11 +15,9 @@
  */
 package net.helenus.mapping.convert.tuple;
 
+import com.datastax.driver.core.TupleValue;
 import java.util.Set;
 import java.util.function.Function;
-
-import com.datastax.driver.core.TupleValue;
-
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.convert.ProxyValueReader;
 import net.helenus.mapping.value.TupleColumnValueProvider;
@@ -27,15 +25,14 @@ import net.helenus.support.Transformers;
 
 public final class TupleSetToSetConverter implements Function<Object, Object> {
 
-	final ProxyValueReader<TupleValue> reader;
+  final ProxyValueReader<TupleValue> reader;
 
-	public TupleSetToSetConverter(Class<?> iface, SessionRepository repository) {
-		this.reader = new ProxyValueReader<TupleValue>(iface, new TupleColumnValueProvider(repository));
-	}
+  public TupleSetToSetConverter(Class<?> iface, SessionRepository repository) {
+    this.reader = new ProxyValueReader<TupleValue>(iface, new TupleColumnValueProvider(repository));
+  }
 
-	@Override
-	public Object apply(Object t) {
-		return Transformers.transformSet((Set<TupleValue>) t, reader);
-	}
-
+  @Override
+  public Object apply(Object t) {
+    return Transformers.transformSet((Set<TupleValue>) t, reader);
+  }
 }

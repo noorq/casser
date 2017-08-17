@@ -20,8 +20,7 @@ import net.helenus.mapping.annotation.UDT;
 @UDT
 public interface Author {
 
-	String name();
+  String name();
 
-	String city();
-
+  String city();
 }

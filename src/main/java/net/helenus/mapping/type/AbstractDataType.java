@@ -19,41 +19,39 @@ import com.datastax.driver.core.schemabuilder.Alter;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.CreateType;
 import com.datastax.driver.core.schemabuilder.SchemaStatement;
-
 import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.IdentityName;
 import net.helenus.support.HelenusMappingException;
 
 public abstract class AbstractDataType {
 
-	public abstract void addColumn(Create create, IdentityName columnName);
+  public abstract void addColumn(Create create, IdentityName columnName);
 
-	public abstract void addColumn(CreateType create, IdentityName columnName);
+  public abstract void addColumn(CreateType create, IdentityName columnName);
 
-	public abstract SchemaStatement alterColumn(Alter alter, IdentityName columnName,
-			OptionalColumnMetadata columnInformation);
+  public abstract SchemaStatement alterColumn(
+      Alter alter, IdentityName columnName, OptionalColumnMetadata columnInformation);
 
-	public abstract Class<?>[] getTypeArguments();
+  public abstract Class<?>[] getTypeArguments();
 
-	final ColumnType columnType;
+  final ColumnType columnType;
 
-	public AbstractDataType(ColumnType columnType) {
-		this.columnType = columnType;
-	}
+  public AbstractDataType(ColumnType columnType) {
+    this.columnType = columnType;
+  }
 
-	public ColumnType getColumnType() {
-		return columnType;
-	}
+  public ColumnType getColumnType() {
+    return columnType;
+  }
 
-	void ensureSimpleColumn(IdentityName columnName) {
-		if (columnType != ColumnType.COLUMN) {
-			throwWrongColumnType(columnName);
-		}
-	}
+  void ensureSimpleColumn(IdentityName columnName) {
+    if (columnType != ColumnType.COLUMN) {
+      throwWrongColumnType(columnName);
+    }
+  }
 
-	void throwWrongColumnType(IdentityName columnName) {
-		throw new HelenusMappingException(
-				"wrong column type " + columnType + " for UserDefinedType in columnName " + columnName);
-	}
-
+  void throwWrongColumnType(IdentityName columnName) {
+    throw new HelenusMappingException(
+        "wrong column type " + columnType + " for UserDefinedType in columnName " + columnName);
+  }
 }

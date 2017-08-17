@@ -16,7 +16,6 @@
 package net.helenus.mapping.convert;
 
 import java.util.Map;
-
 import net.helenus.core.Helenus;
 import net.helenus.core.reflect.MapExportable;
 import net.helenus.mapping.HelenusEntity;
@@ -25,54 +24,48 @@ import net.helenus.mapping.value.BeanColumnValueProvider;
 
 public abstract class AbstractEntityValueWriter<V> {
 
-	abstract void writeColumn(V outValue, Object value, HelenusProperty prop);
+  abstract void writeColumn(V outValue, Object value, HelenusProperty prop);
 
-	final HelenusEntity entity;
+  final HelenusEntity entity;
 
-	public AbstractEntityValueWriter(Class<?> iface) {
-		this.entity = Helenus.entity(iface);
-	}
+  public AbstractEntityValueWriter(Class<?> iface) {
+    this.entity = Helenus.entity(iface);
+  }
 
-	public void write(V outValue, Object source) {
+  public void write(V outValue, Object source) {
 
-		if (source instanceof MapExportable) {
+    if (source instanceof MapExportable) {
 
-			MapExportable exportable = (MapExportable) source;
+      MapExportable exportable = (MapExportable) source;
 
-			Map<String, Object> propertyToValueMap = exportable.toMap();
+      Map<String, Object> propertyToValueMap = exportable.toMap();
 
-			for (Map.Entry<String, Object> entry : propertyToValueMap.entrySet()) {
+      for (Map.Entry<String, Object> entry : propertyToValueMap.entrySet()) {
 
-				Object value = entry.getValue();
+        Object value = entry.getValue();
 
-				if (value == null) {
-					continue;
-				}
+        if (value == null) {
+          continue;
+        }
 
-				HelenusProperty prop = entity.getProperty(entry.getKey());
+        HelenusProperty prop = entity.getProperty(entry.getKey());
 
-				if (prop != null) {
+        if (prop != null) {
 
-					writeColumn(outValue, value, prop);
+          writeColumn(outValue, value, prop);
+        }
+      }
 
-				}
+    } else {
 
-			}
+      for (HelenusProperty prop : entity.getOrderedProperties()) {
 
-		} else {
+        Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(source, -1, prop);
 
-			for (HelenusProperty prop : entity.getOrderedProperties()) {
-
-				Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(source, -1, prop);
-
-				if (value != null) {
-					writeColumn(outValue, value, prop);
-				}
-
-			}
-
-		}
-
-	}
-
+        if (value != null) {
+          writeColumn(outValue, value, prop);
+        }
+      }
+    }
+  }
 }

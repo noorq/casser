@@ -24,14 +24,13 @@ import net.helenus.mapping.annotation.Types;
 @Table
 public interface Account {
 
-	@PartitionKey(ordinal=0)
-	long id();
+  @PartitionKey(ordinal = 0)
+  long id();
 
-	@Column
-	Address address();
+  @Column
+  Address address();
 
-	@Types.UDT("address")
-	@Column
-	UDTValue addressNoMapping();
-
+  @Types.UDT("address")
+  @Column
+  UDTValue addressNoMapping();
 }

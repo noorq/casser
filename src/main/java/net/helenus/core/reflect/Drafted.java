@@ -4,8 +4,7 @@ import java.util.Set;
 
 public interface Drafted<T> extends MapExportable {
 
-    Set<String> mutated();
+  Set<String> mutated();
 
-    T build();
-
+  T build();
 }

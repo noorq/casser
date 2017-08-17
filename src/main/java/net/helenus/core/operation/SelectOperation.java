@@ -15,11 +15,6 @@
  */
 package net.helenus.core.operation;
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
@@ -28,7 +23,10 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Selection;
 import com.datastax.driver.core.querybuilder.Select.Where;
-
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import net.helenus.core.*;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
@@ -41,210 +39,223 @@ import net.helenus.support.HelenusMappingException;
 
 public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectOperation<E>> {
 
-	protected Function<Row, E> rowMapper = null;
-	protected final List<HelenusPropertyNode> props = new ArrayList<HelenusPropertyNode>();
+  protected Function<Row, E> rowMapper = null;
+  protected final List<HelenusPropertyNode> props = new ArrayList<HelenusPropertyNode>();
 
-	protected List<Ordering> ordering = null;
-	protected Integer limit = null;
-	protected boolean allowFiltering = false;
+  protected List<Ordering> ordering = null;
+  protected Integer limit = null;
+  protected boolean allowFiltering = false;
 
-	public SelectOperation(AbstractSessionOperations sessionOperations) {
-		super(sessionOperations);
+  public SelectOperation(AbstractSessionOperations sessionOperations) {
+    super(sessionOperations);
 
-		this.rowMapper = new Function<Row, E>() {
+    this.rowMapper =
+        new Function<Row, E>() {
 
-			@Override
-			public E apply(Row source) {
+          @Override
+          public E apply(Row source) {
 
-				ColumnValueProvider valueProvider = sessionOps.getValueProvider();
-				Object[] arr = new Object[props.size()];
+            ColumnValueProvider valueProvider = sessionOps.getValueProvider();
+            Object[] arr = new Object[props.size()];
 
-				int i = 0;
-				for (HelenusPropertyNode p : props) {
-					Object value = valueProvider.getColumnValue(source, -1, p.getProperty());
-					arr[i++] = value;
-				}
+            int i = 0;
+            for (HelenusPropertyNode p : props) {
+              Object value = valueProvider.getColumnValue(source, -1, p.getProperty());
+              arr[i++] = value;
+            }
 
-				return (E) Fun.ArrayTuple.of(arr);
-			}
+            return (E) Fun.ArrayTuple.of(arr);
+          }
+        };
+  }
 
-		};
-	}
+  public SelectOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity) {
 
-	public SelectOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity) {
+    super(sessionOperations);
 
-		super(sessionOperations);
+    entity
+        .getOrderedProperties()
+        .stream()
+        .map(p -> new HelenusPropertyNode(p, Optional.empty()))
+        .forEach(p -> this.props.add(p));
+  }
 
-		entity.getOrderedProperties().stream().map(p -> new HelenusPropertyNode(p, Optional.empty()))
-				.forEach(p -> this.props.add(p));
+  public SelectOperation(
+      AbstractSessionOperations sessionOperations,
+      HelenusEntity entity,
+      Function<Row, E> rowMapper) {
 
-	}
+    super(sessionOperations);
+    this.rowMapper = rowMapper;
 
-	public SelectOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity,
-			Function<Row, E> rowMapper) {
+    entity
+        .getOrderedProperties()
+        .stream()
+        .map(p -> new HelenusPropertyNode(p, Optional.empty()))
+        .forEach(p -> this.props.add(p));
+  }
 
-		super(sessionOperations);
-		this.rowMapper = rowMapper;
+  public SelectOperation(
+      AbstractSessionOperations sessionOperations,
+      Function<Row, E> rowMapper,
+      HelenusPropertyNode... props) {
 
-		entity.getOrderedProperties().stream().map(p -> new HelenusPropertyNode(p, Optional.empty()))
-				.forEach(p -> this.props.add(p));
+    super(sessionOperations);
+    this.rowMapper = rowMapper;
+    Collections.addAll(this.props, props);
+  }
 
-	}
+  public CountOperation count() {
 
-	public SelectOperation(AbstractSessionOperations sessionOperations, Function<Row, E> rowMapper,
-			HelenusPropertyNode... props) {
+    HelenusEntity entity = null;
+    for (HelenusPropertyNode prop : props) {
 
-		super(sessionOperations);
-		this.rowMapper = rowMapper;
-		Collections.addAll(this.props, props);
-	}
+      if (entity == null) {
+        entity = prop.getEntity();
+      } else if (entity != prop.getEntity()) {
+        throw new HelenusMappingException(
+            "you can count records only from a single entity "
+                + entity.getMappingInterface()
+                + " or "
+                + prop.getEntity().getMappingInterface());
+      }
+    }
 
-	public CountOperation count() {
+    return new CountOperation(sessionOps, entity);
+  }
 
-		HelenusEntity entity = null;
-		for (HelenusPropertyNode prop : props) {
+  public SelectFirstOperation<E> single() {
+    limit(1);
+    return new SelectFirstOperation<E>(this);
+  }
 
-			if (entity == null) {
-				entity = prop.getEntity();
-			} else if (entity != prop.getEntity()) {
-				throw new HelenusMappingException("you can count records only from a single entity "
-						+ entity.getMappingInterface() + " or " + prop.getEntity().getMappingInterface());
-			}
-		}
+  public <R> SelectTransformingOperation<R, E> mapTo(Class<R> entityClass) {
 
-		return new CountOperation(sessionOps, entity);
-	}
+    Objects.requireNonNull(entityClass, "entityClass is null");
 
-	public SelectFirstOperation<E> single() {
-		limit(1);
-		return new SelectFirstOperation<E>(this);
-	}
+    HelenusEntity entity = Helenus.entity(entityClass);
 
-	public <R> SelectTransformingOperation<R, E> mapTo(Class<R> entityClass) {
+    this.rowMapper = null;
 
-		Objects.requireNonNull(entityClass, "entityClass is null");
+    return new SelectTransformingOperation<R, E>(
+        this,
+        (r) -> {
+          Map<String, Object> map = new ValueProviderMap(r, sessionOps.getValueProvider(), entity);
+          return (R) Helenus.map(entityClass, map);
+        });
+  }
 
-		HelenusEntity entity = Helenus.entity(entityClass);
+  public <R> SelectTransformingOperation<R, E> map(Function<E, R> fn) {
+    return new SelectTransformingOperation<R, E>(this, fn);
+  }
 
-		this.rowMapper = null;
+  public SelectOperation<E> column(Getter<?> getter) {
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(getter);
+    this.props.add(p);
+    return this;
+  }
 
-		return new SelectTransformingOperation<R, E>(this, (r) -> {
+  public SelectOperation<E> orderBy(Getter<?> getter, OrderingDirection direction) {
+    getOrCreateOrdering().add(new Ordered(getter, direction).getOrdering());
+    return this;
+  }
 
-			Map<String, Object> map = new ValueProviderMap(r, sessionOps.getValueProvider(), entity);
-			return (R) Helenus.map(entityClass, map);
+  public SelectOperation<E> orderBy(Ordered ordered) {
+    getOrCreateOrdering().add(ordered.getOrdering());
+    return this;
+  }
 
-		});
-	}
+  public SelectOperation<E> limit(Integer limit) {
+    this.limit = limit;
+    return this;
+  }
 
-	public <R> SelectTransformingOperation<R, E> map(Function<E, R> fn) {
-		return new SelectTransformingOperation<R, E>(this, fn);
-	}
+  public SelectOperation<E> allowFiltering() {
+    this.allowFiltering = true;
+    return this;
+  }
 
-	public SelectOperation<E> column(Getter<?> getter) {
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(getter);
-		this.props.add(p);
-		return this;
-	}
+  @Override
+  public BuiltStatement buildStatement() {
 
-	public SelectOperation<E> orderBy(Getter<?> getter, OrderingDirection direction) {
-		getOrCreateOrdering().add(new Ordered(getter, direction).getOrdering());
-		return this;
-	}
+    HelenusEntity entity = null;
+    Selection selection = QueryBuilder.select();
 
-	public SelectOperation<E> orderBy(Ordered ordered) {
-		getOrCreateOrdering().add(ordered.getOrdering());
-		return this;
-	}
+    for (HelenusPropertyNode prop : props) {
+      selection = selection.column(prop.getColumnName());
 
-	public SelectOperation<E> limit(Integer limit) {
-		this.limit = limit;
-		return this;
-	}
+      if (prop.getProperty().caseSensitiveIndex()) {
+        allowFiltering = true;
+      }
 
-	public SelectOperation<E> allowFiltering() {
-		this.allowFiltering = true;
-		return this;
-	}
+      if (entity == null) {
+        entity = prop.getEntity();
+      } else if (entity != prop.getEntity()) {
+        throw new HelenusMappingException(
+            "you can select columns only from a single entity "
+                + entity.getMappingInterface()
+                + " or "
+                + prop.getEntity().getMappingInterface());
+      }
+    }
 
-    @Override
-	public BuiltStatement buildStatement() {
+    if (entity == null) {
+      throw new HelenusMappingException("no entity or table to select data");
+    }
 
-		HelenusEntity entity = null;
-		Selection selection = QueryBuilder.select();
+    Select select = selection.from(entity.getName().toCql());
 
-		for (HelenusPropertyNode prop : props) {
-			selection = selection.column(prop.getColumnName());
+    if (ordering != null && !ordering.isEmpty()) {
+      select.orderBy(ordering.toArray(new Ordering[ordering.size()]));
+    }
 
-			if (prop.getProperty().caseSensitiveIndex()) {
-				allowFiltering = true;
-			}
+    if (limit != null) {
+      select.limit(limit);
+    }
 
-			if (entity == null) {
-				entity = prop.getEntity();
-			} else if (entity != prop.getEntity()) {
-				throw new HelenusMappingException("you can select columns only from a single entity "
-						+ entity.getMappingInterface() + " or " + prop.getEntity().getMappingInterface());
-			}
-		}
+    if (filters != null && !filters.isEmpty()) {
 
-		if (entity == null) {
-			throw new HelenusMappingException("no entity or table to select data");
-		}
+      Where where = select.where();
 
-		Select select = selection.from(entity.getName().toCql());
+      for (Filter<?> filter : filters) {
+        where.and(filter.getClause(sessionOps.getValuePreparer()));
+      }
+    }
 
-		if (ordering != null && !ordering.isEmpty()) {
-			select.orderBy(ordering.toArray(new Ordering[ordering.size()]));
-		}
+    if (ifFilters != null && !ifFilters.isEmpty()) {
+      logger.error(
+          "onlyIf conditions " + ifFilters + " would be ignored in the statement " + select);
+    }
 
-		if (limit != null) {
-			select.limit(limit);
-		}
+    if (allowFiltering) {
+      select.allowFiltering();
+    }
 
-		if (filters != null && !filters.isEmpty()) {
+    return select;
+  }
 
-			Where where = select.where();
+  @SuppressWarnings("unchecked")
+  @Override
+  public Stream<E> transform(ResultSet resultSet) {
 
-			for (Filter<?> filter : filters) {
-				where.and(filter.getClause(sessionOps.getValuePreparer()));
-			}
-		}
+    if (rowMapper != null) {
 
-		if (ifFilters != null && !ifFilters.isEmpty()) {
-			logger.error("onlyIf conditions " + ifFilters + " would be ignored in the statement " + select);
-		}
+      return StreamSupport.stream(
+              Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED), false)
+          .map(rowMapper);
+    } else {
 
-		if (allowFiltering) {
-			select.allowFiltering();
-		}
+      return (Stream<E>)
+          StreamSupport.stream(
+              Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED),
+              false);
+    }
+  }
 
-		return select;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public Stream<E> transform(ResultSet resultSet) {
-
-		if (rowMapper != null) {
-
-			return StreamSupport
-					.stream(Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED), false)
-					.map(rowMapper);
-		}
-
-		else {
-
-			return (Stream<E>) StreamSupport
-					.stream(Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED), false);
-
-		}
-	}
-
-	private List<Ordering> getOrCreateOrdering() {
-		if (ordering == null) {
-			ordering = new ArrayList<Ordering>();
-		}
-		return ordering;
-	}
-
+  private List<Ordering> getOrCreateOrdering() {
+    if (ordering == null) {
+      ordering = new ArrayList<Ordering>();
+    }
+    return ordering;
+  }
 }

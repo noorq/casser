@@ -21,7 +21,6 @@ import net.helenus.mapping.annotation.Table;
 @Table("pigs")
 public interface Pig extends Animal {
 
-    @Column(ordinal=0)
-    String nickname();
-
+  @Column(ordinal = 0)
+  String nickname();
 }

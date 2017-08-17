@@ -15,26 +15,23 @@
  */
 package net.helenus.mapping.convert.tuple;
 
+import com.datastax.driver.core.TupleType;
 import java.util.Set;
 import java.util.function.Function;
-
-import com.datastax.driver.core.TupleType;
-
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.convert.TupleValueWriter;
 import net.helenus.support.Transformers;
 
 public final class SetToTupleSetConverter implements Function<Object, Object> {
 
-	final TupleValueWriter writer;
+  final TupleValueWriter writer;
 
-	public SetToTupleSetConverter(Class<?> iface, TupleType tupleType, SessionRepository repository) {
-		this.writer = new TupleValueWriter(iface, tupleType, repository);
-	}
+  public SetToTupleSetConverter(Class<?> iface, TupleType tupleType, SessionRepository repository) {
+    this.writer = new TupleValueWriter(iface, tupleType, repository);
+  }
 
-	@Override
-	public Object apply(Object t) {
-		return Transformers.transformSet((Set<Object>) t, writer);
-	}
-
+  @Override
+  public Object apply(Object t) {
+    return Transformers.transformSet((Set<Object>) t, writer);
+  }
 }

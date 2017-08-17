@@ -20,7 +20,6 @@ import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Where;
-
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.Filter;
 import net.helenus.core.reflect.HelenusPropertyNode;
@@ -29,54 +28,56 @@ import net.helenus.support.HelenusMappingException;
 
 public final class CountOperation extends AbstractFilterOperation<Long, CountOperation> {
 
-	private HelenusEntity entity;
+  private HelenusEntity entity;
 
-	public CountOperation(AbstractSessionOperations sessionOperations) {
-		super(sessionOperations);
-	}
+  public CountOperation(AbstractSessionOperations sessionOperations) {
+    super(sessionOperations);
+  }
 
-	public CountOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity) {
-		super(sessionOperations);
-		this.entity = entity;
-	}
+  public CountOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity) {
+    super(sessionOperations);
+    this.entity = entity;
+  }
 
-	@Override
-	public BuiltStatement buildStatement() {
+  @Override
+  public BuiltStatement buildStatement() {
 
-		if (filters != null && !filters.isEmpty()) {
-			filters.forEach(f -> addPropertyNode(f.getNode()));
-		}
+    if (filters != null && !filters.isEmpty()) {
+      filters.forEach(f -> addPropertyNode(f.getNode()));
+    }
 
-		if (entity == null) {
-			throw new HelenusMappingException("unknown entity");
-		}
+    if (entity == null) {
+      throw new HelenusMappingException("unknown entity");
+    }
 
-		Select select = QueryBuilder.select().countAll().from(entity.getName().toCql());
+    Select select = QueryBuilder.select().countAll().from(entity.getName().toCql());
 
-		if (filters != null && !filters.isEmpty()) {
+    if (filters != null && !filters.isEmpty()) {
 
-			Where where = select.where();
+      Where where = select.where();
 
-			for (Filter<?> filter : filters) {
-				where.and(filter.getClause(sessionOps.getValuePreparer()));
-			}
-		}
+      for (Filter<?> filter : filters) {
+        where.and(filter.getClause(sessionOps.getValuePreparer()));
+      }
+    }
 
-		return select;
-	}
+    return select;
+  }
 
-	@Override
-	public Long transform(ResultSet resultSet) {
-		return resultSet.one().getLong(0);
-	}
+  @Override
+  public Long transform(ResultSet resultSet) {
+    return resultSet.one().getLong(0);
+  }
 
-	private void addPropertyNode(HelenusPropertyNode p) {
-		if (entity == null) {
-			entity = p.getEntity();
-		} else if (entity != p.getEntity()) {
-			throw new HelenusMappingException("you can count columns only in single entity "
-					+ entity.getMappingInterface() + " or " + p.getEntity().getMappingInterface());
-		}
-	}
-
+  private void addPropertyNode(HelenusPropertyNode p) {
+    if (entity == null) {
+      entity = p.getEntity();
+    } else if (entity != p.getEntity()) {
+      throw new HelenusMappingException(
+          "you can count columns only in single entity "
+              + entity.getMappingInterface()
+              + " or "
+              + p.getEntity().getMappingInterface());
+    }
+  }
 }

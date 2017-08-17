@@ -16,40 +16,41 @@
 package net.helenus.core.operation;
 
 import com.datastax.driver.core.ResultSet;
+import java.util.concurrent.CompletableFuture;
 import net.helenus.core.AbstractSessionOperations;
 
-import java.util.concurrent.CompletableFuture;
+public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
+    extends AbstractStatementOperation<E, O> {
 
+  public abstract E transform(ResultSet resultSet);
 
-public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> extends AbstractStatementOperation<E, O> {
+  public boolean cacheable() {
+    return false;
+  }
 
-	public abstract E transform(ResultSet resultSet);
+  public String getCacheKey() {
+    return "";
+  }
 
-	public boolean cacheable() {
-		return false;
-	}
+  public AbstractOperation(AbstractSessionOperations sessionOperations) {
+    super(sessionOperations);
+  }
 
-	public String getCacheKey() {
-		return "";
-	}
+  public PreparedOperation<E> prepare() {
+    return new PreparedOperation<E>(prepareStatement(), this);
+  }
 
-	public AbstractOperation(AbstractSessionOperations sessionOperations) {
-		super(sessionOperations);
-	}
+  public E sync() {
+    ResultSet resultSet =
+        sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
+    E result = transform(resultSet);
+    if (cacheable()) {
+      sessionOps.cache(getCacheKey(), result);
+    }
+    return result;
+  }
 
-	public PreparedOperation<E> prepare() {
-		return new PreparedOperation<E>(prepareStatement(), this);
-	}
-
-	public E sync() {
-		ResultSet resultSet = sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
-		E result = transform(resultSet);
-		if (cacheable()) {
-			sessionOps.cache(getCacheKey(), result);
-		}
-		return result;
-	}
-
-	public CompletableFuture<E> async() { return CompletableFuture.supplyAsync(this::sync); }
-
+  public CompletableFuture<E> async() {
+    return CompletableFuture.supplyAsync(this::sync);
+  }
 }

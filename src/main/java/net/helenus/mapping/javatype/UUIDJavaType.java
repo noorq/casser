@@ -15,13 +15,11 @@
  */
 package net.helenus.mapping.javatype;
 
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.Metadata;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.UUID;
-
-import com.datastax.driver.core.DataType;
-
-import com.datastax.driver.core.Metadata;
 import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.annotation.Types;
 import net.helenus.mapping.type.AbstractDataType;
@@ -29,23 +27,23 @@ import net.helenus.mapping.type.DTDataType;
 
 public final class UUIDJavaType extends AbstractJavaType {
 
-	@Override
-	public Class<?> getJavaClass() {
-		return UUID.class;
-	}
+  @Override
+  public Class<?> getJavaClass() {
+    return UUID.class;
+  }
 
-	@Override
-	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+  @Override
+  public AbstractDataType resolveDataType(
+      Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
 
-		if (null != getter.getDeclaredAnnotation(Types.Uuid.class)) {
-			return new DTDataType(columnType, DataType.uuid());
-		}
+    if (null != getter.getDeclaredAnnotation(Types.Uuid.class)) {
+      return new DTDataType(columnType, DataType.uuid());
+    }
 
-		if (null != getter.getDeclaredAnnotation(Types.Timeuuid.class)) {
-			return new DTDataType(columnType, DataType.timeuuid());
-		}
+    if (null != getter.getDeclaredAnnotation(Types.Timeuuid.class)) {
+      return new DTDataType(columnType, DataType.timeuuid());
+    }
 
-		return new DTDataType(columnType, DataType.uuid());
-	}
-
+    return new DTDataType(columnType, DataType.uuid());
+  }
 }

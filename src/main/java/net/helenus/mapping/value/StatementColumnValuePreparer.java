@@ -15,46 +15,41 @@
  */
 package net.helenus.mapping.value;
 
+import com.datastax.driver.core.querybuilder.BindMarker;
 import java.util.Optional;
 import java.util.function.Function;
-
-import com.datastax.driver.core.querybuilder.BindMarker;
-
 import net.helenus.core.HelenusValidator;
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.HelenusProperty;
 
 public final class StatementColumnValuePreparer implements ColumnValuePreparer {
 
-	private final SessionRepository repository;
+  private final SessionRepository repository;
 
-	public StatementColumnValuePreparer(SessionRepository repository) {
-		this.repository = repository;
-	}
+  public StatementColumnValuePreparer(SessionRepository repository) {
+    this.repository = repository;
+  }
 
-	@Override
-	public Object prepareColumnValue(Object value, HelenusProperty prop) {
+  @Override
+  public Object prepareColumnValue(Object value, HelenusProperty prop) {
 
-		if (value == null)
-			return null;
+    if (value == null) return null;
 
-		if (value instanceof BindMarker) {
-			return value;
-		}
+    if (value instanceof BindMarker) {
+      return value;
+    }
 
-		HelenusValidator.INSTANCE.validate(prop, value);
+    HelenusValidator.INSTANCE.validate(prop, value);
 
-		if (value != null) {
+    if (value != null) {
 
-			Optional<Function<Object, Object>> converter = prop.getWriteConverter(repository);
+      Optional<Function<Object, Object>> converter = prop.getWriteConverter(repository);
 
-			if (converter.isPresent()) {
-				value = converter.get().apply(value);
-			}
+      if (converter.isPresent()) {
+        value = converter.get().apply(value);
+      }
+    }
 
-		}
-
-		return value;
-	}
-
+    return value;
+  }
 }

@@ -15,14 +15,12 @@
  */
 package net.helenus.mapping.javatype;
 
+import com.datastax.driver.core.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-
-import com.datastax.driver.core.*;
-
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.IdentityName;
@@ -39,117 +37,112 @@ import net.helenus.support.HelenusMappingException;
 
 public final class SetJavaType extends AbstractJavaType {
 
-	@Override
-	public Class<?> getJavaClass() {
-		return Set.class;
-	}
+  @Override
+  public Class<?> getJavaClass() {
+    return Set.class;
+  }
 
-	@Override
-	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+  @Override
+  public AbstractDataType resolveDataType(
+      Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
 
-		Types.Set cset = getter.getDeclaredAnnotation(Types.Set.class);
-		if (cset != null) {
-			return new DTDataType(columnType, DataType.set(resolveSimpleType(getter, cset.value())));
-		}
+    Types.Set cset = getter.getDeclaredAnnotation(Types.Set.class);
+    if (cset != null) {
+      return new DTDataType(columnType, DataType.set(resolveSimpleType(getter, cset.value())));
+    }
 
-		Types.UDTSet udtSet = getter.getDeclaredAnnotation(Types.UDTSet.class);
-		if (udtSet != null) {
-			return new UDTSetDataType(columnType, resolveUDT(udtSet.value()), UDTValue.class);
-		}
+    Types.UDTSet udtSet = getter.getDeclaredAnnotation(Types.UDTSet.class);
+    if (udtSet != null) {
+      return new UDTSetDataType(columnType, resolveUDT(udtSet.value()), UDTValue.class);
+    }
 
-		Type[] args = getTypeParameters(genericJavaType);
-		ensureTypeArguments(getter, args.length, 1);
+    Type[] args = getTypeParameters(genericJavaType);
+    ensureTypeArguments(getter, args.length, 1);
 
-		Either<DataType, IdentityName> parameterType = autodetectParameterType(getter, args[0], metadata);
+    Either<DataType, IdentityName> parameterType =
+        autodetectParameterType(getter, args[0], metadata);
 
-		if (parameterType.isLeft()) {
-			return DTDataType.set(columnType, parameterType.getLeft(), args[0]);
-		} else {
-			return new UDTSetDataType(columnType, parameterType.getRight(), (Class<?>) args[0]);
-		}
+    if (parameterType.isLeft()) {
+      return DTDataType.set(columnType, parameterType.getLeft(), args[0]);
+    } else {
+      return new UDTSetDataType(columnType, parameterType.getRight(), (Class<?>) args[0]);
+    }
+  }
 
-	}
+  @Override
+  public Optional<Function<Object, Object>> resolveReadConverter(
+      AbstractDataType abstractDataType, SessionRepository repository) {
 
-	@Override
-	public Optional<Function<Object, Object>> resolveReadConverter(AbstractDataType abstractDataType,
-			SessionRepository repository) {
+    if (abstractDataType instanceof DTDataType) {
 
-		if (abstractDataType instanceof DTDataType) {
+      DTDataType dt = (DTDataType) abstractDataType;
+      DataType elementType = dt.getDataType().getTypeArguments().get(0);
+      if (elementType instanceof TupleType) {
 
-			DTDataType dt = (DTDataType) abstractDataType;
-			DataType elementType = dt.getDataType().getTypeArguments().get(0);
-			if (elementType instanceof TupleType) {
+        Class<?> tupleClass = dt.getTypeArguments()[0];
 
-				Class<?> tupleClass = dt.getTypeArguments()[0];
+        if (TupleValue.class.isAssignableFrom(tupleClass)) {
+          return Optional.empty();
+        }
 
-				if (TupleValue.class.isAssignableFrom(tupleClass)) {
-					return Optional.empty();
-				}
+        return Optional.of(new TupleSetToSetConverter(tupleClass, repository));
+      }
+    } else if (abstractDataType instanceof UDTSetDataType) {
 
-				return Optional.of(new TupleSetToSetConverter(tupleClass, repository));
-			}
-		}
+      UDTSetDataType dt = (UDTSetDataType) abstractDataType;
 
-		else if (abstractDataType instanceof UDTSetDataType) {
+      Class<Object> udtClass = (Class<Object>) dt.getTypeArguments()[0];
 
-			UDTSetDataType dt = (UDTSetDataType) abstractDataType;
+      if (UDTValue.class.isAssignableFrom(udtClass)) {
+        return Optional.empty();
+      }
 
-			Class<Object> udtClass = (Class<Object>) dt.getTypeArguments()[0];
+      return Optional.of(new UDTSetToSetConverter(udtClass, repository));
+    }
 
-			if (UDTValue.class.isAssignableFrom(udtClass)) {
-				return Optional.empty();
-			}
+    return Optional.empty();
+  }
 
-			return Optional.of(new UDTSetToSetConverter(udtClass, repository));
+  @Override
+  public Optional<Function<Object, Object>> resolveWriteConverter(
+      AbstractDataType abstractDataType, SessionRepository repository) {
 
-		}
+    if (abstractDataType instanceof DTDataType) {
 
-		return Optional.empty();
-	}
+      DTDataType dt = (DTDataType) abstractDataType;
+      DataType elementType = dt.getDataType().getTypeArguments().get(0);
 
-	@Override
-	public Optional<Function<Object, Object>> resolveWriteConverter(AbstractDataType abstractDataType,
-			SessionRepository repository) {
+      if (elementType instanceof TupleType) {
 
-		if (abstractDataType instanceof DTDataType) {
+        Class<?> tupleClass = dt.getTypeArguments()[0];
 
-			DTDataType dt = (DTDataType) abstractDataType;
-			DataType elementType = dt.getDataType().getTypeArguments().get(0);
+        if (TupleValue.class.isAssignableFrom(tupleClass)) {
+          return Optional.empty();
+        }
 
-			if (elementType instanceof TupleType) {
+        return Optional.of(
+            new SetToTupleSetConverter(tupleClass, (TupleType) elementType, repository));
+      }
 
-				Class<?> tupleClass = dt.getTypeArguments()[0];
+    } else if (abstractDataType instanceof UDTSetDataType) {
 
-				if (TupleValue.class.isAssignableFrom(tupleClass)) {
-					return Optional.empty();
-				}
+      UDTSetDataType dt = (UDTSetDataType) abstractDataType;
 
-				return Optional.of(new SetToTupleSetConverter(tupleClass, (TupleType) elementType, repository));
-			}
+      Class<Object> udtClass = (Class<Object>) dt.getTypeArguments()[0];
 
-		}
+      if (UDTValue.class.isAssignableFrom(udtClass)) {
+        return Optional.empty();
+      }
 
-		else if (abstractDataType instanceof UDTSetDataType) {
+      UserType userType = repository.findUserType(dt.getUdtName().getName());
+      if (userType == null) {
+        throw new HelenusMappingException(
+            "UserType not found for " + dt.getUdtName() + " with type " + udtClass);
+      }
 
-			UDTSetDataType dt = (UDTSetDataType) abstractDataType;
+      return Optional.of(new SetToUDTSetConverter(udtClass, userType, repository));
+    }
 
-			Class<Object> udtClass = (Class<Object>) dt.getTypeArguments()[0];
-
-			if (UDTValue.class.isAssignableFrom(udtClass)) {
-				return Optional.empty();
-			}
-
-			UserType userType = repository.findUserType(dt.getUdtName().getName());
-			if (userType == null) {
-				throw new HelenusMappingException(
-						"UserType not found for " + dt.getUdtName() + " with type " + udtClass);
-			}
-
-			return Optional.of(new SetToUDTSetConverter(udtClass, userType, repository));
-
-		}
-
-		return Optional.empty();
-	}
-
+    return Optional.empty();
+  }
 }

@@ -15,18 +15,17 @@
  */
 package net.helenus.mapping.convert.tuple;
 
-import java.util.function.Function;
-
 import com.datastax.driver.core.TupleType;
 import com.datastax.driver.core.TupleValue;
-
+import java.util.function.Function;
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.convert.TupleValueWriter;
 
-public final class EntityToTupleValueConverter extends TupleValueWriter implements Function<Object, TupleValue> {
+public final class EntityToTupleValueConverter extends TupleValueWriter
+    implements Function<Object, TupleValue> {
 
-	public EntityToTupleValueConverter(Class<?> iface, TupleType tupleType, SessionRepository repository) {
-		super(iface, tupleType, repository);
-	}
-
+  public EntityToTupleValueConverter(
+      Class<?> iface, TupleType tupleType, SessionRepository repository) {
+    super(iface, tupleType, repository);
+  }
 }

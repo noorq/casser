@@ -15,18 +15,16 @@
  */
 package net.helenus.mapping.convert.udt;
 
-import java.util.function.Function;
-
 import com.datastax.driver.core.UDTValue;
-
+import java.util.function.Function;
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.convert.ProxyValueReader;
 import net.helenus.mapping.value.UDTColumnValueProvider;
 
-public final class UDTValueToEntityConverter extends ProxyValueReader<UDTValue> implements Function<UDTValue, Object> {
+public final class UDTValueToEntityConverter extends ProxyValueReader<UDTValue>
+    implements Function<UDTValue, Object> {
 
-	public UDTValueToEntityConverter(Class<?> iface, SessionRepository repository) {
-		super(iface, new UDTColumnValueProvider(repository));
-	}
-
+  public UDTValueToEntityConverter(Class<?> iface, SessionRepository repository) {
+    super(iface, new UDTColumnValueProvider(repository));
+  }
 }

@@ -17,17 +17,17 @@ package net.helenus.support;
 
 public final class Mutable<T> {
 
-	private volatile T value;
+  private volatile T value;
 
-	public Mutable(T initialValue) {
-		this.value = initialValue;
-	}
+  public Mutable(T initialValue) {
+    this.value = initialValue;
+  }
 
-	public T get() {
-		return value;
-	}
+  public T get() {
+    return value;
+  }
 
-	public void set(T value) {
-		this.value = value;
-	}
+  public void set(T value) {
+    this.value = value;
+  }
 }

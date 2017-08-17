@@ -17,19 +17,17 @@ package net.helenus.support;
 
 public final class CqlUtil {
 
-	private CqlUtil() {
-	}
+  private CqlUtil() {}
 
-	public static String forceQuote(String identity) {
+  public static String forceQuote(String identity) {
 
-		if (identity == null) {
-			return null;
-		}
+    if (identity == null) {
+      return null;
+    }
 
-		if (identity.startsWith("\"")) {
-			return identity;
-		}
-		return "\"" + identity + "\"";
-	}
-
+    if (identity.startsWith("\"")) {
+      return identity;
+    }
+    return "\"" + identity + "\"";
+  }
 }

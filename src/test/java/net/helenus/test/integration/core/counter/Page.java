@@ -22,10 +22,9 @@ import net.helenus.mapping.annotation.Types;
 @Table
 public interface Page {
 
-	@PartitionKey
-	String alias();
+  @PartitionKey
+  String alias();
 
-	@Types.Counter
-	long hits();
-
+  @Types.Counter
+  long hits();
 }

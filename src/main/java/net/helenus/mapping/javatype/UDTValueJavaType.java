@@ -15,15 +15,13 @@
  */
 package net.helenus.mapping.javatype;
 
+import com.datastax.driver.core.Metadata;
+import com.datastax.driver.core.UDTValue;
+import com.datastax.driver.core.UserType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Optional;
 import java.util.function.Function;
-
-import com.datastax.driver.core.Metadata;
-import com.datastax.driver.core.UDTValue;
-import com.datastax.driver.core.UserType;
-
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.IdentityName;
@@ -38,78 +36,82 @@ import net.helenus.support.HelenusMappingException;
 
 public final class UDTValueJavaType extends AbstractJavaType {
 
-	@Override
-	public Class<?> getJavaClass() {
-		return UDTValue.class;
-	}
+  @Override
+  public Class<?> getJavaClass() {
+    return UDTValue.class;
+  }
 
-	@Override
-	public boolean isApplicable(Class<?> javaClass) {
-		return MappingUtil.isUDT(javaClass);
-	}
+  @Override
+  public boolean isApplicable(Class<?> javaClass) {
+    return MappingUtil.isUDT(javaClass);
+  }
 
-	@Override
-	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+  @Override
+  public AbstractDataType resolveDataType(
+      Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
 
-		Class<?> javaType = (Class<?>) genericJavaType;
+    Class<?> javaType = (Class<?>) genericJavaType;
 
-		IdentityName udtName = null;
+    IdentityName udtName = null;
 
-		if (UDTValue.class.isAssignableFrom(javaType)) {
+    if (UDTValue.class.isAssignableFrom(javaType)) {
 
-			Types.UDT userTypeName = getter.getDeclaredAnnotation(Types.UDT.class);
-			if (userTypeName == null) {
-				throw new HelenusMappingException("absent UserTypeName annotation for " + getter);
-			}
+      Types.UDT userTypeName = getter.getDeclaredAnnotation(Types.UDT.class);
+      if (userTypeName == null) {
+        throw new HelenusMappingException("absent UserTypeName annotation for " + getter);
+      }
 
-			udtName = new IdentityName(userTypeName.value(), userTypeName.forceQuote());
-		} else {
-			udtName = MappingUtil.getUserDefinedTypeName(javaType, false);
-		}
+      udtName = new IdentityName(userTypeName.value(), userTypeName.forceQuote());
+    } else {
+      udtName = MappingUtil.getUserDefinedTypeName(javaType, false);
+    }
 
-		if (udtName != null) {
-			return new UDTDataType(columnType, udtName, javaType);
-		}
+    if (udtName != null) {
+      return new UDTDataType(columnType, udtName, javaType);
+    }
 
-		throw new HelenusMappingException("unknown type " + javaType + " in " + getter);
-	}
+    throw new HelenusMappingException("unknown type " + javaType + " in " + getter);
+  }
 
-	@Override
-	public Optional<Function<Object, Object>> resolveReadConverter(AbstractDataType dataType,
-			SessionRepository repository) {
+  @Override
+  public Optional<Function<Object, Object>> resolveReadConverter(
+      AbstractDataType dataType, SessionRepository repository) {
 
-		UDTDataType dt = (UDTDataType) dataType;
+    UDTDataType dt = (UDTDataType) dataType;
 
-		Class<Object> javaClass = (Class<Object>) dt.getTypeArguments()[0];
+    Class<Object> javaClass = (Class<Object>) dt.getTypeArguments()[0];
 
-		if (UDTValue.class.isAssignableFrom(javaClass)) {
-			return Optional.empty();
-		}
+    if (UDTValue.class.isAssignableFrom(javaClass)) {
+      return Optional.empty();
+    }
 
-		return Optional.of(
-				TypedConverter.create(UDTValue.class, javaClass, new UDTValueToEntityConverter(javaClass, repository)));
-	}
+    return Optional.of(
+        TypedConverter.create(
+            UDTValue.class, javaClass, new UDTValueToEntityConverter(javaClass, repository)));
+  }
 
-	@Override
-	public Optional<Function<Object, Object>> resolveWriteConverter(AbstractDataType dataType,
-			SessionRepository repository) {
+  @Override
+  public Optional<Function<Object, Object>> resolveWriteConverter(
+      AbstractDataType dataType, SessionRepository repository) {
 
-		UDTDataType dt = (UDTDataType) dataType;
+    UDTDataType dt = (UDTDataType) dataType;
 
-		Class<Object> javaClass = (Class<Object>) dt.getTypeArguments()[0];
+    Class<Object> javaClass = (Class<Object>) dt.getTypeArguments()[0];
 
-		if (UDTValue.class.isAssignableFrom(javaClass)) {
-			return Optional.empty();
-		}
+    if (UDTValue.class.isAssignableFrom(javaClass)) {
+      return Optional.empty();
+    }
 
-		UserType userType = repository.findUserType(dt.getUdtName().getName());
-		if (userType == null) {
-			throw new HelenusMappingException("UserType not found for " + dt.getUdtName() + " with type " + javaClass);
-		}
+    UserType userType = repository.findUserType(dt.getUdtName().getName());
+    if (userType == null) {
+      throw new HelenusMappingException(
+          "UserType not found for " + dt.getUdtName() + " with type " + javaClass);
+    }
 
-		return Optional.of(TypedConverter.create(javaClass, UDTValue.class,
-				new EntityToUDTValueConverter(javaClass, userType, repository)));
-
-	}
-
+    return Optional.of(
+        TypedConverter.create(
+            javaClass,
+            UDTValue.class,
+            new EntityToUDTValueConverter(javaClass, userType, repository)));
+  }
 }

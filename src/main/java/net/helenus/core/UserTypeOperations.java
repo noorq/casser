@@ -15,69 +15,65 @@
  */
 package net.helenus.core;
 
-import java.util.List;
-
 import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.schemabuilder.SchemaStatement;
-
+import java.util.List;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.support.HelenusException;
 
 public final class UserTypeOperations {
 
-	private final AbstractSessionOperations sessionOps;
-	private final boolean dropUnusedColumns;
+  private final AbstractSessionOperations sessionOps;
+  private final boolean dropUnusedColumns;
 
-	public UserTypeOperations(AbstractSessionOperations sessionOps, boolean dropUnusedColumns) {
-		this.sessionOps = sessionOps;
-		this.dropUnusedColumns = dropUnusedColumns;
-	}
+  public UserTypeOperations(AbstractSessionOperations sessionOps, boolean dropUnusedColumns) {
+    this.sessionOps = sessionOps;
+    this.dropUnusedColumns = dropUnusedColumns;
+  }
 
-	public void createUserType(HelenusEntity entity) {
+  public void createUserType(HelenusEntity entity) {
 
-		sessionOps.execute(SchemaUtil.createUserType(entity), true);
+    sessionOps.execute(SchemaUtil.createUserType(entity), true);
+  }
 
-	}
+  public void dropUserType(HelenusEntity entity) {
 
-	public void dropUserType(HelenusEntity entity) {
+    sessionOps.execute(SchemaUtil.dropUserType(entity), true);
+  }
 
-        sessionOps.execute(SchemaUtil.dropUserType(entity), true);
+  public void validateUserType(UserType userType, HelenusEntity entity) {
 
+    if (userType == null) {
+      throw new HelenusException(
+          "userType not exists " + entity.getName() + "for entity " + entity.getMappingInterface());
     }
 
-	public void validateUserType(UserType userType, HelenusEntity entity) {
+    List<SchemaStatement> list = SchemaUtil.alterUserType(userType, entity, dropUnusedColumns);
 
-		if (userType == null) {
-			throw new HelenusException(
-					"userType not exists " + entity.getName() + "for entity " + entity.getMappingInterface());
-		}
+    if (!list.isEmpty()) {
+      throw new HelenusException(
+          "schema changed for entity "
+              + entity.getMappingInterface()
+              + ", apply this command: "
+              + list);
+    }
+  }
 
-		List<SchemaStatement> list = SchemaUtil.alterUserType(userType, entity, dropUnusedColumns);
+  public void updateUserType(UserType userType, HelenusEntity entity) {
 
-		if (!list.isEmpty()) {
-			throw new HelenusException(
-					"schema changed for entity " + entity.getMappingInterface() + ", apply this command: " + list);
-		}
+    if (userType == null) {
+      createUserType(entity);
+      return;
+    }
 
-	}
+    executeBatch(SchemaUtil.alterUserType(userType, entity, dropUnusedColumns));
+  }
 
-	public void updateUserType(UserType userType, HelenusEntity entity) {
+  private void executeBatch(List<SchemaStatement> list) {
 
-		if (userType == null) {
-			createUserType(entity);
-			return;
-		}
-
-		executeBatch(SchemaUtil.alterUserType(userType, entity, dropUnusedColumns));
-
-	}
-
-	private void executeBatch(List<SchemaStatement> list) {
-
-		list.forEach(s -> {
-			sessionOps.execute(s, true);
-		});
-
-	}
-
+    list.forEach(
+        s -> {
+          sessionOps.execute(s, true);
+        });
+  }
 }

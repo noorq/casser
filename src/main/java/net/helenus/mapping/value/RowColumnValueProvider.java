@@ -15,111 +15,109 @@
  */
 package net.helenus.mapping.value;
 
+import com.datastax.driver.core.*;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-
-import com.datastax.driver.core.*;
-
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.HelenusProperty;
 
 public final class RowColumnValueProvider implements ColumnValueProvider {
 
-	private final SessionRepository repository;
+  private final SessionRepository repository;
 
-	public RowColumnValueProvider(SessionRepository repository) {
-		this.repository = repository;
-	}
+  public RowColumnValueProvider(SessionRepository repository) {
+    this.repository = repository;
+  }
 
-	@Override
-	public <V> V getColumnValue(Object sourceObj, int columnIndex, HelenusProperty property) {
+  @Override
+  public <V> V getColumnValue(Object sourceObj, int columnIndex, HelenusProperty property) {
 
-		Row source = (Row) sourceObj;
+    Row source = (Row) sourceObj;
 
-		Object value = null;
-		if (columnIndex != -1) {
-			value = readValueByIndex(source, columnIndex);
-		} else {
-			value = readValueByName(source, property.getColumnName().getName());
-		}
+    Object value = null;
+    if (columnIndex != -1) {
+      value = readValueByIndex(source, columnIndex);
+    } else {
+      value = readValueByName(source, property.getColumnName().getName());
+    }
 
-		if (value != null) {
+    if (value != null) {
 
-			Optional<Function<Object, Object>> converter = property.getReadConverter(repository);
+      Optional<Function<Object, Object>> converter = property.getReadConverter(repository);
 
-			if (converter.isPresent()) {
-				value = converter.get().apply(value);
-			}
+      if (converter.isPresent()) {
+        value = converter.get().apply(value);
+      }
+    }
 
-		}
+    return (V) value;
+  }
 
-		return (V) value;
-	}
+  private Object readValueByIndex(Row source, int columnIndex) {
 
-	private Object readValueByIndex(Row source, int columnIndex) {
+    if (source.isNull(columnIndex)) {
+      return null;
+    }
 
-		if (source.isNull(columnIndex)) {
-			return null;
-		}
+    ColumnDefinitions columnDefinitions = source.getColumnDefinitions();
 
-		ColumnDefinitions columnDefinitions = source.getColumnDefinitions();
+    DataType columnType = columnDefinitions.getType(columnIndex);
 
-		DataType columnType = columnDefinitions.getType(columnIndex);
+    if (columnType.isCollection()) {
 
-		if (columnType.isCollection()) {
+      List<DataType> typeArguments = columnType.getTypeArguments();
 
-			List<DataType> typeArguments = columnType.getTypeArguments();
+      switch (columnType.getName()) {
+        case SET:
+          return source.getSet(columnIndex, codecFor(typeArguments.get(0)).getJavaType());
+        case MAP:
+          return source.getMap(
+              columnIndex,
+              codecFor(typeArguments.get(0)).getJavaType(),
+              codecFor(typeArguments.get(1)).getJavaType());
+        case LIST:
+          return source.getList(columnIndex, codecFor(typeArguments.get(0)).getJavaType());
+      }
+    }
 
-			switch (columnType.getName()) {
-				case SET :
-					return source.getSet(columnIndex, codecFor(typeArguments.get(0)).getJavaType());
-				case MAP :
-					return source.getMap(columnIndex, codecFor(typeArguments.get(0)).getJavaType(),
-                            codecFor(typeArguments.get(1)).getJavaType());
-				case LIST :
-					return source.getList(columnIndex, codecFor(typeArguments.get(0)).getJavaType());
-			}
+    ByteBuffer bytes = source.getBytesUnsafe(columnIndex);
+    Object value = codecFor(columnType).deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);
 
-		}
+    return value;
+  }
 
-		ByteBuffer bytes = source.getBytesUnsafe(columnIndex);
-		Object value = codecFor(columnType).deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);
+  private Object readValueByName(Row source, String columnName) {
 
-		return value;
-	}
+    if (source.isNull(columnName)) {
+      return null;
+    }
 
-	private Object readValueByName(Row source, String columnName) {
+    ColumnDefinitions columnDefinitions = source.getColumnDefinitions();
 
-		if (source.isNull(columnName)) {
-			return null;
-		}
+    DataType columnType = columnDefinitions.getType(columnName);
 
-		ColumnDefinitions columnDefinitions = source.getColumnDefinitions();
+    if (columnType.isCollection()) {
 
-		DataType columnType = columnDefinitions.getType(columnName);
+      List<DataType> typeArguments = columnType.getTypeArguments();
 
-		if (columnType.isCollection()) {
+      switch (columnType.getName()) {
+        case SET:
+          return source.getSet(columnName, codecFor(typeArguments.get(0)).getJavaType());
+        case MAP:
+          return source.getMap(
+              columnName,
+              codecFor(typeArguments.get(0)).getJavaType(),
+              codecFor(typeArguments.get(1)).getJavaType());
+        case LIST:
+          return source.getList(columnName, codecFor(typeArguments.get(0)).getJavaType());
+      }
+    }
 
-			List<DataType> typeArguments = columnType.getTypeArguments();
+    ByteBuffer bytes = source.getBytesUnsafe(columnName);
+    Object value = codecFor(columnType).deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);
 
-			switch (columnType.getName()) {
-				case SET :
-					return source.getSet(columnName, codecFor(typeArguments.get(0)).getJavaType());
-				case MAP :
-					return source.getMap(columnName, codecFor(typeArguments.get(0)).getJavaType(),
-                            codecFor(typeArguments.get(1)).getJavaType());
-				case LIST :
-					return source.getList(columnName, codecFor(typeArguments.get(0)).getJavaType());
-			}
-
-		}
-
-		ByteBuffer bytes = source.getBytesUnsafe(columnName);
-		Object value = codecFor(columnType).deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);
-
-		return value;
-	}
-
+    return value;
+  }
 }

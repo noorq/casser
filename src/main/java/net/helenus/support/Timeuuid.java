@@ -21,55 +21,66 @@ import java.util.UUID;
 
 public final class Timeuuid {
 
-	private static class Holder {
-		static final SecureRandom numberGenerator = new SecureRandom();
-	}
+  private static class Holder {
+    static final SecureRandom numberGenerator = new SecureRandom();
+  }
 
-	private Timeuuid() {
-	}
+  private Timeuuid() {}
 
-	public static UUID of(long timestampMillis, int clockSequence, long node) {
-		return new UuidBuilder().addVersion(1).addTimestampMillis(timestampMillis).addClockSequence(clockSequence)
-				.addNode(node).build();
-	}
+  public static UUID of(long timestampMillis, int clockSequence, long node) {
+    return new UuidBuilder()
+        .addVersion(1)
+        .addTimestampMillis(timestampMillis)
+        .addClockSequence(clockSequence)
+        .addNode(node)
+        .build();
+  }
 
-	public static UUID of(Date date, int clockSequence, long node) {
-		return of(date.getTime(), clockSequence, node);
-	}
+  public static UUID of(Date date, int clockSequence, long node) {
+    return of(date.getTime(), clockSequence, node);
+  }
 
-	public static UUID of(long timestampMillis) {
-		return of(timestampMillis, randomClockSequence(), randomNode());
-	}
+  public static UUID of(long timestampMillis) {
+    return of(timestampMillis, randomClockSequence(), randomNode());
+  }
 
-	public static UUID of(Date date) {
-		return of(date.getTime());
-	}
+  public static UUID of(Date date) {
+    return of(date.getTime());
+  }
 
-	public static UUID minOf(long timestampMillis) {
-		return new UuidBuilder().addVersion(1).addTimestampMillis(timestampMillis).setMinClockSeqAndNode().build();
-	}
+  public static UUID minOf(long timestampMillis) {
+    return new UuidBuilder()
+        .addVersion(1)
+        .addTimestampMillis(timestampMillis)
+        .setMinClockSeqAndNode()
+        .build();
+  }
 
-	public static UUID minOf(Date date) {
-		return minOf(date.getTime());
-	}
+  public static UUID minOf(Date date) {
+    return minOf(date.getTime());
+  }
 
-	public static UUID maxOf(long timestampMillis) {
-		return new UuidBuilder().addVersion(1).addTimestampMillis(timestampMillis).setMaxClockSeqAndNode().build();
-	}
+  public static UUID maxOf(long timestampMillis) {
+    return new UuidBuilder()
+        .addVersion(1)
+        .addTimestampMillis(timestampMillis)
+        .setMaxClockSeqAndNode()
+        .build();
+  }
 
-	public static UUID maxOf(Date date) {
-		return maxOf(date.getTime());
-	}
+  public static UUID maxOf(Date date) {
+    return maxOf(date.getTime());
+  }
 
-	public static int randomClockSequence() {
-		return Holder.numberGenerator.nextInt(0x3fff);
-	}
+  public static int randomClockSequence() {
+    return Holder.numberGenerator.nextInt(0x3fff);
+  }
 
-	public static long randomNode() {
-		return Holder.numberGenerator.nextLong() & 0xFFFFFFFFFFFFL;
-	}
+  public static long randomNode() {
+    return Holder.numberGenerator.nextLong() & 0xFFFFFFFFFFFFL;
+  }
 
-	public static long getTimestampMillis(UUID uuid) {
-		return UuidBuilder.getTimestampMillis(uuid);
-	}
+  public static long getTimestampMillis(UUID uuid) {
+    return UuidBuilder.getTimestampMillis(uuid);
+  }
 }

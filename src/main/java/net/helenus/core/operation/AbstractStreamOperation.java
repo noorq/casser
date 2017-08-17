@@ -15,8 +15,6 @@
  */
 package net.helenus.core.operation;
 
-import java.util.stream.Stream;
-
 import brave.Span;
 import brave.Tracer;
 import com.datastax.driver.core.PreparedStatement;
@@ -25,72 +23,79 @@ import com.datastax.driver.core.ResultSetFuture;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
+import java.util.stream.Stream;
 import net.helenus.core.AbstractSessionOperations;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>>
-		extends AbstractStatementOperation<E, O> {
+    extends AbstractStatementOperation<E, O> {
 
-	public AbstractStreamOperation(AbstractSessionOperations sessionOperations) {
-		super(sessionOperations);
-	}
+  public AbstractStreamOperation(AbstractSessionOperations sessionOperations) {
+    super(sessionOperations);
+  }
 
-	public abstract Stream<E> transform(ResultSet resultSet);
+  public abstract Stream<E> transform(ResultSet resultSet);
 
-	public PreparedStreamOperation<E> prepare() {
-		return new PreparedStreamOperation<E>(prepareStatement(), this);
-	}
+  public PreparedStreamOperation<E> prepare() {
+    return new PreparedStreamOperation<E>(prepareStatement(), this);
+  }
 
-	public ListenableFuture<PreparedStreamOperation<E>> prepareAsync() {
-		final O _this = (O) this;
-		return Futures.transform(prepareStatementAsync(),
-				new Function<PreparedStatement, PreparedStreamOperation<E>>() {
-					@Override
-					public PreparedStreamOperation<E> apply(PreparedStatement preparedStatement) {
-						return new PreparedStreamOperation<E>(preparedStatement, _this);
-					}
-				});
-	}
+  public ListenableFuture<PreparedStreamOperation<E>> prepareAsync() {
+    final O _this = (O) this;
+    return Futures.transform(
+        prepareStatementAsync(),
+        new Function<PreparedStatement, PreparedStreamOperation<E>>() {
+          @Override
+          public PreparedStreamOperation<E> apply(PreparedStatement preparedStatement) {
+            return new PreparedStreamOperation<E>(preparedStatement, _this);
+          }
+        });
+  }
 
-    public Stream<E> sync() {
-        Tracer tracer = this.sessionOps.getZipkinTracer();
-        final Span cassandraSpan = (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
-        if (cassandraSpan != null) {
-            cassandraSpan.name("cassandra");
-            cassandraSpan.start();
-        }
+  public Stream<E> sync() {
+    Tracer tracer = this.sessionOps.getZipkinTracer();
+    final Span cassandraSpan =
+        (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
+    if (cassandraSpan != null) {
+      cassandraSpan.name("cassandra");
+      cassandraSpan.start();
+    }
 
-        ResultSet resultSet = sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
-		Stream<E> result = transform(resultSet);
+    ResultSet resultSet =
+        sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
+    Stream<E> result = transform(resultSet);
 
-        if (cassandraSpan != null) {
-            cassandraSpan.finish();
-        }
+    if (cassandraSpan != null) {
+      cassandraSpan.finish();
+    }
 
-        return result;
-	}
+    return result;
+  }
 
-	public ListenableFuture<Stream<E>> async() {
-        Tracer tracer = this.sessionOps.getZipkinTracer();
-        final Span cassandraSpan = (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
-        if (cassandraSpan != null) {
-            cassandraSpan.name("cassandra");
-            cassandraSpan.start();
-        }
+  public ListenableFuture<Stream<E>> async() {
+    Tracer tracer = this.sessionOps.getZipkinTracer();
+    final Span cassandraSpan =
+        (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
+    if (cassandraSpan != null) {
+      cassandraSpan.name("cassandra");
+      cassandraSpan.start();
+    }
 
-		ResultSetFuture resultSetFuture = sessionOps.executeAsync(options(buildStatement()), showValues);
-		ListenableFuture<Stream<E>> future = Futures.transform(resultSetFuture,
-                new Function<ResultSet, Stream<E>>() {
-                    @Override
-                    public Stream<E> apply(ResultSet resultSet) {
-                        Stream<E> result = transform(resultSet);
-                        if (cassandraSpan != null) {
-                            cassandraSpan.finish();
-                        }
-                        return result;
-                    }
-                }, sessionOps.getExecutor());
-		return future;
-	}
-
+    ResultSetFuture resultSetFuture =
+        sessionOps.executeAsync(options(buildStatement()), showValues);
+    ListenableFuture<Stream<E>> future =
+        Futures.transform(
+            resultSetFuture,
+            new Function<ResultSet, Stream<E>>() {
+              @Override
+              public Stream<E> apply(ResultSet resultSet) {
+                Stream<E> result = transform(resultSet);
+                if (cassandraSpan != null) {
+                  cassandraSpan.finish();
+                }
+                return result;
+              }
+            },
+            sessionOps.getExecutor());
+    return future;
+  }
 }

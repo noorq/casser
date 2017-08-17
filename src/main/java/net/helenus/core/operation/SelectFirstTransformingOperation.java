@@ -15,36 +15,33 @@
  */
 package net.helenus.core.operation;
 
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.querybuilder.BuiltStatement;
 import java.util.Optional;
 import java.util.function.Function;
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.querybuilder.BuiltStatement;
-
 public final class SelectFirstTransformingOperation<R, E>
-		extends
-			AbstractFilterOptionalOperation<R, SelectFirstTransformingOperation<R, E>> {
+    extends AbstractFilterOptionalOperation<R, SelectFirstTransformingOperation<R, E>> {
 
-	private final SelectOperation<E> src;
-	private final Function<E, R> fn;
+  private final SelectOperation<E> src;
+  private final Function<E, R> fn;
 
-	public SelectFirstTransformingOperation(SelectOperation<E> src, Function<E, R> fn) {
-		super(src.sessionOps);
+  public SelectFirstTransformingOperation(SelectOperation<E> src, Function<E, R> fn) {
+    super(src.sessionOps);
 
-		this.src = src;
-		this.fn = fn;
-		this.filters = src.filters;
-		this.ifFilters = src.ifFilters;
-	}
+    this.src = src;
+    this.fn = fn;
+    this.filters = src.filters;
+    this.ifFilters = src.ifFilters;
+  }
 
-	@Override
-	public BuiltStatement buildStatement() {
-		return src.buildStatement();
-	}
+  @Override
+  public BuiltStatement buildStatement() {
+    return src.buildStatement();
+  }
 
-	@Override
-	public Optional<R> transform(ResultSet resultSet) {
-		return src.transform(resultSet).findFirst().map(fn);
-	}
-
+  @Override
+  public Optional<R> transform(ResultSet resultSet) {
+    return src.transform(resultSet).findFirst().map(fn);
+  }
 }

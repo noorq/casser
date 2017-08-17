@@ -15,118 +15,113 @@
  */
 package net.helenus.core;
 
-import java.io.PrintStream;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-
 import brave.Tracer;
 import com.codahale.metrics.MetricRegistry;
-import com.datastax.driver.core.schemabuilder.SchemaStatement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.google.common.util.concurrent.ListenableFuture;
-
+import java.io.PrintStream;
+import java.util.concurrent.Executor;
 import net.helenus.mapping.value.ColumnValuePreparer;
 import net.helenus.mapping.value.ColumnValueProvider;
 import net.helenus.support.HelenusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.xml.validation.Schema;
 
 public abstract class AbstractSessionOperations {
 
-	final Logger logger = LoggerFactory.getLogger(getClass());
+  final Logger logger = LoggerFactory.getLogger(getClass());
 
-	abstract public Session currentSession();
+  public abstract Session currentSession();
 
-	abstract public String usingKeyspace();
+  public abstract String usingKeyspace();
 
-	abstract public boolean isShowCql();
+  public abstract boolean isShowCql();
 
-	abstract public PrintStream getPrintStream();
+  public abstract PrintStream getPrintStream();
 
-	abstract public Executor getExecutor();
+  public abstract Executor getExecutor();
 
-	abstract public SessionRepository getSessionRepository();
+  public abstract SessionRepository getSessionRepository();
 
-	abstract public ColumnValueProvider getValueProvider();
+  public abstract ColumnValueProvider getValueProvider();
 
-	abstract public ColumnValuePreparer getValuePreparer();
+  public abstract ColumnValuePreparer getValuePreparer();
 
-	abstract public ConsistencyLevel getDefaultConsistencyLevel();
+  public abstract ConsistencyLevel getDefaultConsistencyLevel();
 
+  public PreparedStatement prepare(RegularStatement statement) {
+    try {
+      log(statement, false);
+      return currentSession().prepare(statement);
+    } catch (RuntimeException e) {
+      throw translateException(e);
+    }
+  }
 
-	public PreparedStatement prepare(RegularStatement statement) {
-		try {
-			log(statement, false);
-			return currentSession().prepare(statement);
-		} catch (RuntimeException e) {
-			throw translateException(e);
-		}
-	}
+  public ListenableFuture<PreparedStatement> prepareAsync(RegularStatement statement) {
+    try {
+      log(statement, false);
+      return currentSession().prepareAsync(statement);
+    } catch (RuntimeException e) {
+      throw translateException(e);
+    }
+  }
 
-    public ListenableFuture<PreparedStatement> prepareAsync(RegularStatement statement) {
-		try {
-			log(statement, false);
-			return currentSession().prepareAsync(statement);
-		} catch (RuntimeException e) {
-			throw translateException(e);
-		}
-	}
+  public ResultSet execute(Statement statement, boolean showValues) {
+    return executeAsync(statement, showValues).getUninterruptibly();
+  }
 
-	public ResultSet execute(Statement statement, boolean showValues) {
-		return executeAsync(statement, showValues).getUninterruptibly();
-	}
+  public ResultSetFuture executeAsync(Statement statement, boolean showValues) {
+    try {
+      log(statement, showValues);
+      return currentSession().executeAsync(statement);
+    } catch (RuntimeException e) {
+      throw translateException(e);
+    }
+  }
 
-	public ResultSetFuture executeAsync(Statement statement, boolean showValues) {
-		try {
-			log(statement, showValues);
-			return currentSession().executeAsync(statement);
-		} catch (RuntimeException e) {
-			throw translateException(e);
-		}
-	}
+  void log(Statement statement, boolean showValues) {
+    if (logger.isInfoEnabled()) {
+      logger.info("Execute statement " + statement);
+    }
+    if (isShowCql()) {
+      if (statement instanceof BuiltStatement) {
+        BuiltStatement builtStatement = (BuiltStatement) statement;
+        if (showValues) {
+          RegularStatement regularStatement = builtStatement.setForceNoValues(true);
+          printCql(regularStatement.getQueryString());
+        } else {
+          printCql(builtStatement.getQueryString());
+        }
+      } else if (statement instanceof RegularStatement) {
+        RegularStatement regularStatement = (RegularStatement) statement;
+        printCql(regularStatement.getQueryString());
+      } else {
+        printCql(statement.toString());
+      }
+    }
+  }
 
-	void log(Statement statement, boolean showValues) {
-		if (logger.isInfoEnabled()) {
-			logger.info("Execute statement " + statement);
-		}
-		if (isShowCql()) {
-			if (statement instanceof BuiltStatement) {
-                BuiltStatement builtStatement = (BuiltStatement) statement;
-                if (showValues) {
-                    RegularStatement regularStatement = builtStatement.setForceNoValues(true);
-                    printCql(regularStatement.getQueryString());
-                } else {
-                    printCql(builtStatement.getQueryString());
-                }
-			} else if (statement instanceof RegularStatement) {
-				RegularStatement regularStatement = (RegularStatement) statement;
-				printCql(regularStatement.getQueryString());
-			} else {
-				printCql(statement.toString());
-			}
-		}
-	}
+  public Tracer getZipkinTracer() {
+    return null;
+  }
 
-    public Tracer getZipkinTracer() { return null; }
+  public MetricRegistry getMetricRegistry() {
+    return null;
+  }
 
-    public MetricRegistry getMetricRegistry() { return null; }
+  public void cache(String key, Object value) {}
 
-	public void cache(String key, Object value) {
-	}
+  RuntimeException translateException(RuntimeException e) {
+    if (e instanceof HelenusException) {
+      return e;
+    }
+    throw new HelenusException(e);
+  }
 
-	RuntimeException translateException(RuntimeException e) {
-		if (e instanceof HelenusException) {
-			return e;
-		}
-		throw new HelenusException(e);
-	}
-
-	void printCql(String cql) {
-		getPrintStream().println(cql);
-	}
-
+  void printCql(String cql) {
+    getPrintStream().println(cql);
+  }
 }

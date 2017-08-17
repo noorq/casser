@@ -19,11 +19,10 @@ import net.helenus.mapping.HelenusEntity;
 
 public interface DslExportable {
 
-	public static final String GET_ENTITY_METHOD = "getHelenusMappingEntity";
-	public static final String GET_PARENT_METHOD = "getParentDslHelenusPropertyNode";
+  public static final String GET_ENTITY_METHOD = "getHelenusMappingEntity";
+  public static final String GET_PARENT_METHOD = "getParentDslHelenusPropertyNode";
 
-	HelenusEntity getHelenusMappingEntity();
+  HelenusEntity getHelenusMappingEntity();
 
-	HelenusPropertyNode getParentDslHelenusPropertyNode();
-
+  HelenusPropertyNode getParentDslHelenusPropertyNode();
 }

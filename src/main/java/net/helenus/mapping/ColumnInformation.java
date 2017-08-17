@@ -16,7 +16,6 @@
 package net.helenus.mapping;
 
 import java.lang.reflect.Method;
-
 import net.helenus.mapping.annotation.ClusteringColumn;
 import net.helenus.mapping.annotation.Column;
 import net.helenus.mapping.annotation.PartitionKey;
@@ -25,93 +24,99 @@ import net.helenus.support.HelenusMappingException;
 
 public final class ColumnInformation {
 
-	private final IdentityName columnName;
-	private final ColumnType columnType;
-	private final int ordinal;
-	private final OrderingDirection ordering;
+  private final IdentityName columnName;
+  private final ColumnType columnType;
+  private final int ordinal;
+  private final OrderingDirection ordering;
 
-	public ColumnInformation(Method getter) {
+  public ColumnInformation(Method getter) {
 
-		String columnName = null;
-		boolean forceQuote = false;
-		ColumnType columnTypeLocal = ColumnType.COLUMN;
-		int ordinalLocal = 0;
-		OrderingDirection orderingLocal = OrderingDirection.ASC;
+    String columnName = null;
+    boolean forceQuote = false;
+    ColumnType columnTypeLocal = ColumnType.COLUMN;
+    int ordinalLocal = 0;
+    OrderingDirection orderingLocal = OrderingDirection.ASC;
 
-		PartitionKey partitionKey = getter.getDeclaredAnnotation(PartitionKey.class);
-		if (partitionKey != null) {
-			columnName = partitionKey.value();
-			forceQuote = partitionKey.forceQuote();
-			columnTypeLocal = ColumnType.PARTITION_KEY;
-			ordinalLocal = partitionKey.ordinal();
-		}
+    PartitionKey partitionKey = getter.getDeclaredAnnotation(PartitionKey.class);
+    if (partitionKey != null) {
+      columnName = partitionKey.value();
+      forceQuote = partitionKey.forceQuote();
+      columnTypeLocal = ColumnType.PARTITION_KEY;
+      ordinalLocal = partitionKey.ordinal();
+    }
 
-		ClusteringColumn clusteringColumn = getter.getDeclaredAnnotation(ClusteringColumn.class);
-		if (clusteringColumn != null) {
-			ensureSingleColumnType(columnTypeLocal, getter);
-			columnName = clusteringColumn.value();
-			forceQuote = clusteringColumn.forceQuote();
-			columnTypeLocal = ColumnType.CLUSTERING_COLUMN;
-			ordinalLocal = clusteringColumn.ordinal();
-			orderingLocal = clusteringColumn.ordering();
-		}
+    ClusteringColumn clusteringColumn = getter.getDeclaredAnnotation(ClusteringColumn.class);
+    if (clusteringColumn != null) {
+      ensureSingleColumnType(columnTypeLocal, getter);
+      columnName = clusteringColumn.value();
+      forceQuote = clusteringColumn.forceQuote();
+      columnTypeLocal = ColumnType.CLUSTERING_COLUMN;
+      ordinalLocal = clusteringColumn.ordinal();
+      orderingLocal = clusteringColumn.ordering();
+    }
 
-		StaticColumn staticColumn = getter.getDeclaredAnnotation(StaticColumn.class);
-		if (staticColumn != null) {
-			ensureSingleColumnType(columnTypeLocal, getter);
-			columnName = staticColumn.value();
-			forceQuote = staticColumn.forceQuote();
-			columnTypeLocal = ColumnType.STATIC_COLUMN;
-			ordinalLocal = staticColumn.ordinal();
-		}
+    StaticColumn staticColumn = getter.getDeclaredAnnotation(StaticColumn.class);
+    if (staticColumn != null) {
+      ensureSingleColumnType(columnTypeLocal, getter);
+      columnName = staticColumn.value();
+      forceQuote = staticColumn.forceQuote();
+      columnTypeLocal = ColumnType.STATIC_COLUMN;
+      ordinalLocal = staticColumn.ordinal();
+    }
 
-		Column column = getter.getDeclaredAnnotation(Column.class);
-		if (column != null) {
-			ensureSingleColumnType(columnTypeLocal, getter);
-			columnName = column.value();
-			forceQuote = column.forceQuote();
-			columnTypeLocal = ColumnType.COLUMN;
-			ordinalLocal = column.ordinal();
-		}
+    Column column = getter.getDeclaredAnnotation(Column.class);
+    if (column != null) {
+      ensureSingleColumnType(columnTypeLocal, getter);
+      columnName = column.value();
+      forceQuote = column.forceQuote();
+      columnTypeLocal = ColumnType.COLUMN;
+      ordinalLocal = column.ordinal();
+    }
 
-		if (columnName == null || columnName.isEmpty()) {
-			columnName = MappingUtil.getDefaultColumnName(getter);
-		}
+    if (columnName == null || columnName.isEmpty()) {
+      columnName = MappingUtil.getDefaultColumnName(getter);
+    }
 
-		this.columnName = new IdentityName(columnName, forceQuote);
-		this.columnType = columnTypeLocal;
-		this.ordinal = ordinalLocal;
-		this.ordering = orderingLocal;
-	}
+    this.columnName = new IdentityName(columnName, forceQuote);
+    this.columnType = columnTypeLocal;
+    this.ordinal = ordinalLocal;
+    this.ordering = orderingLocal;
+  }
 
-	public IdentityName getColumnName() {
-		return columnName;
-	}
+  public IdentityName getColumnName() {
+    return columnName;
+  }
 
-	public ColumnType getColumnType() {
-		return columnType;
-	}
+  public ColumnType getColumnType() {
+    return columnType;
+  }
 
-	public int getOrdinal() {
-		return ordinal;
-	}
+  public int getOrdinal() {
+    return ordinal;
+  }
 
-	public OrderingDirection getOrdering() {
-		return ordering;
-	}
+  public OrderingDirection getOrdering() {
+    return ordering;
+  }
 
-	private void ensureSingleColumnType(ColumnType columnTypeLocal, Method getter) {
+  private void ensureSingleColumnType(ColumnType columnTypeLocal, Method getter) {
 
-		if (columnTypeLocal != ColumnType.COLUMN) {
-			throw new HelenusMappingException("property can be annotated only by a single column type " + getter);
-		}
+    if (columnTypeLocal != ColumnType.COLUMN) {
+      throw new HelenusMappingException(
+          "property can be annotated only by a single column type " + getter);
+    }
+  }
 
-	}
-
-	@Override
-	public String toString() {
-		return "ColumnInformation [columnName=" + columnName + ", columnType=" + columnType + ", ordinal=" + ordinal
-				+ ", ordering=" + ordering + "]";
-	}
-
+  @Override
+  public String toString() {
+    return "ColumnInformation [columnName="
+        + columnName
+        + ", columnType="
+        + columnType
+        + ", ordinal="
+        + ordinal
+        + ", ordering="
+        + ordering
+        + "]";
+  }
 }

@@ -23,74 +23,80 @@ import com.datastax.driver.core.ResultSetFuture;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.util.Optional;
 import net.helenus.core.AbstractSessionOperations;
 
-import java.util.Optional;
-
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
-		extends AbstractStatementOperation<E, O> {
+    extends AbstractStatementOperation<E, O> {
 
-	public AbstractOptionalOperation(AbstractSessionOperations sessionOperations) {
-		super(sessionOperations);
-	}
+  public AbstractOptionalOperation(AbstractSessionOperations sessionOperations) {
+    super(sessionOperations);
+  }
 
-	public abstract Optional<E> transform(ResultSet resultSet);
+  public abstract Optional<E> transform(ResultSet resultSet);
 
-	public PreparedOptionalOperation<E> prepare() {
-		return new PreparedOptionalOperation<E>(prepareStatement(), this);
-	}
+  public PreparedOptionalOperation<E> prepare() {
+    return new PreparedOptionalOperation<E>(prepareStatement(), this);
+  }
 
-	public ListenableFuture<PreparedOptionalOperation<E>> prepareAsync() {
-		final O _this = (O) this;
-		return Futures.transform(prepareStatementAsync(),
-				new Function<PreparedStatement, PreparedOptionalOperation<E>>() {
-					@Override
-					public PreparedOptionalOperation<E> apply(PreparedStatement preparedStatement) {
-						return new PreparedOptionalOperation<E>(preparedStatement, _this);
-					}
-				});
-	}
+  public ListenableFuture<PreparedOptionalOperation<E>> prepareAsync() {
+    final O _this = (O) this;
+    return Futures.transform(
+        prepareStatementAsync(),
+        new Function<PreparedStatement, PreparedOptionalOperation<E>>() {
+          @Override
+          public PreparedOptionalOperation<E> apply(PreparedStatement preparedStatement) {
+            return new PreparedOptionalOperation<E>(preparedStatement, _this);
+          }
+        });
+  }
 
-	public Optional<E> sync() {
-        Tracer tracer = this.sessionOps.getZipkinTracer();
-        final Span cassandraSpan = (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
-        if (cassandraSpan != null) {
-            cassandraSpan.name("cassandra");
-            cassandraSpan.start();
-        }
+  public Optional<E> sync() {
+    Tracer tracer = this.sessionOps.getZipkinTracer();
+    final Span cassandraSpan =
+        (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
+    if (cassandraSpan != null) {
+      cassandraSpan.name("cassandra");
+      cassandraSpan.start();
+    }
 
-        ResultSet resultSet = sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
-        Optional<E> result = transform(resultSet);
+    ResultSet resultSet =
+        sessionOps.executeAsync(options(buildStatement()), showValues).getUninterruptibly();
+    Optional<E> result = transform(resultSet);
 
-        if (cassandraSpan != null) {
-            cassandraSpan.finish();
-        }
+    if (cassandraSpan != null) {
+      cassandraSpan.finish();
+    }
 
-        return result;
-	}
+    return result;
+  }
 
-	public ListenableFuture<Optional<E>> async() {
-        final Tracer tracer = this.sessionOps.getZipkinTracer();
-        final Span cassandraSpan = (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
-        if (cassandraSpan != null) {
-            cassandraSpan.name("cassandra");
-            cassandraSpan.start();
-        }
+  public ListenableFuture<Optional<E>> async() {
+    final Tracer tracer = this.sessionOps.getZipkinTracer();
+    final Span cassandraSpan =
+        (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
+    if (cassandraSpan != null) {
+      cassandraSpan.name("cassandra");
+      cassandraSpan.start();
+    }
 
-        ResultSetFuture resultSetFuture = sessionOps.executeAsync(options(buildStatement()), showValues);
-		ListenableFuture<Optional<E>> future = Futures.transform(resultSetFuture,
-				new Function<ResultSet, Optional<E>>() {
-					@Override
-					public Optional<E> apply(ResultSet resultSet) {
-                        Optional<E> result = transform(resultSet);
-                        if (cassandraSpan != null) {
-                            cassandraSpan.finish();
-                        }
-                        return result;
-					}
-				}, sessionOps.getExecutor());
+    ResultSetFuture resultSetFuture =
+        sessionOps.executeAsync(options(buildStatement()), showValues);
+    ListenableFuture<Optional<E>> future =
+        Futures.transform(
+            resultSetFuture,
+            new Function<ResultSet, Optional<E>>() {
+              @Override
+              public Optional<E> apply(ResultSet resultSet) {
+                Optional<E> result = transform(resultSet);
+                if (cassandraSpan != null) {
+                  cassandraSpan.finish();
+                }
+                return result;
+              }
+            },
+            sessionOps.getExecutor());
 
-		return future;
-	}
-
+    return future;
+  }
 }

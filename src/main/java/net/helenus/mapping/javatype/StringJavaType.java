@@ -15,12 +15,10 @@
  */
 package net.helenus.mapping.javatype;
 
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.Metadata;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-
-import com.datastax.driver.core.DataType;
-
-import com.datastax.driver.core.Metadata;
 import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.annotation.Types;
 import net.helenus.mapping.type.AbstractDataType;
@@ -28,27 +26,27 @@ import net.helenus.mapping.type.DTDataType;
 
 public final class StringJavaType extends AbstractJavaType {
 
-	@Override
-	public Class<?> getJavaClass() {
-		return String.class;
-	}
+  @Override
+  public Class<?> getJavaClass() {
+    return String.class;
+  }
 
-	@Override
-	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+  @Override
+  public AbstractDataType resolveDataType(
+      Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
 
-		if (null != getter.getDeclaredAnnotation(Types.Ascii.class)) {
-			return new DTDataType(columnType, DataType.ascii());
-		}
+    if (null != getter.getDeclaredAnnotation(Types.Ascii.class)) {
+      return new DTDataType(columnType, DataType.ascii());
+    }
 
-		if (null != getter.getDeclaredAnnotation(Types.Text.class)) {
-			return new DTDataType(columnType, DataType.text());
-		}
+    if (null != getter.getDeclaredAnnotation(Types.Text.class)) {
+      return new DTDataType(columnType, DataType.text());
+    }
 
-		if (null != getter.getDeclaredAnnotation(Types.Varchar.class)) {
-			return new DTDataType(columnType, DataType.varchar());
-		}
+    if (null != getter.getDeclaredAnnotation(Types.Varchar.class)) {
+      return new DTDataType(columnType, DataType.varchar());
+    }
 
-		return new DTDataType(columnType, DataType.text());
-	}
-
+    return new DTDataType(columnType, DataType.text());
+  }
 }

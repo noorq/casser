@@ -15,15 +15,11 @@
  */
 package net.helenus.mapping;
 
-import java.lang.reflect.Method;
-import java.util.*;
-
 import com.datastax.driver.core.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import com.google.common.collect.ImmutableSet;
-import com.google.common.reflect.TypeToken;
+import java.lang.reflect.Method;
+import java.util.*;
 import net.helenus.config.HelenusSettings;
 import net.helenus.core.Helenus;
 import net.helenus.core.annotation.Cacheable;
@@ -32,239 +28,241 @@ import net.helenus.support.HelenusMappingException;
 
 public final class HelenusMappingEntity implements HelenusEntity {
 
-	private final Class<?> iface;
-	private final HelenusEntityType type;
-	private final IdentityName name;
-	private final boolean cacheable;
-	private final ImmutableMap<String, Method> methods;
-	private final ImmutableMap<String, HelenusProperty> props;
-	private final ImmutableList<HelenusProperty> orderedProps;
+  private final Class<?> iface;
+  private final HelenusEntityType type;
+  private final IdentityName name;
+  private final boolean cacheable;
+  private final ImmutableMap<String, Method> methods;
+  private final ImmutableMap<String, HelenusProperty> props;
+  private final ImmutableList<HelenusProperty> orderedProps;
 
-	public HelenusMappingEntity(Class<?> iface, Metadata metadata) {
-		this(iface, autoDetectType(iface), metadata);
-	}
+  public HelenusMappingEntity(Class<?> iface, Metadata metadata) {
+    this(iface, autoDetectType(iface), metadata);
+  }
 
-	public HelenusMappingEntity(Class<?> iface, HelenusEntityType type, Metadata metadata) {
+  public HelenusMappingEntity(Class<?> iface, HelenusEntityType type, Metadata metadata) {
 
-		if (iface == null || !iface.isInterface()) {
-			throw new IllegalArgumentException("invalid parameter " + iface);
-		}
+    if (iface == null || !iface.isInterface()) {
+      throw new IllegalArgumentException("invalid parameter " + iface);
+    }
 
-		this.iface = iface;
-		this.type = Objects.requireNonNull(type, "type is empty");
-		this.name = resolveName(iface, type);
+    this.iface = iface;
+    this.type = Objects.requireNonNull(type, "type is empty");
+    this.name = resolveName(iface, type);
 
-		HelenusSettings settings = Helenus.settings();
+    HelenusSettings settings = Helenus.settings();
 
+    List<Method> methods = new ArrayList<Method>();
 
-		List<Method> methods = new ArrayList<Method>();
+    methods.addAll(Arrays.asList(iface.getDeclaredMethods()));
+    for (Class<?> c : iface.getInterfaces()) {
+      methods.addAll(Arrays.asList(c.getDeclaredMethods()));
+    }
 
-        methods.addAll(Arrays.asList(iface.getDeclaredMethods()));
-		for (Class<?> c : iface.getInterfaces()) {
-            methods.addAll(Arrays.asList(c.getDeclaredMethods()));
+    List<HelenusProperty> propsLocal = new ArrayList<HelenusProperty>();
+    ImmutableMap.Builder<String, HelenusProperty> propsBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, Method> methodsBuilder = ImmutableMap.builder();
+
+    for (Method method : methods) {
+
+      if (settings.getGetterMethodDetector().apply(method)) {
+
+        methodsBuilder.put(method.getName(), method);
+
+        if (metadata != null) {
+          HelenusProperty prop = new HelenusMappingProperty(this, method, metadata);
+
+          propsBuilder.put(prop.getPropertyName(), prop);
+          propsLocal.add(prop);
         }
+      }
+    }
 
-		List<HelenusProperty> propsLocal = new ArrayList<HelenusProperty>();
-		ImmutableMap.Builder<String, HelenusProperty> propsBuilder = ImmutableMap.builder();
-		ImmutableMap.Builder<String, Method> methodsBuilder = ImmutableMap.builder();
+    this.methods = methodsBuilder.build();
+    this.props = propsBuilder.build();
 
-		for (Method method : methods) {
+    Collections.sort(propsLocal, TypeAndOrdinalColumnComparator.INSTANCE);
+    this.orderedProps = ImmutableList.copyOf(propsLocal);
 
-			if (settings.getGetterMethodDetector().apply(method)) {
+    validateOrdinals();
 
-				methodsBuilder.put(method.getName(), method);
+    cacheable = (null != iface.getDeclaredAnnotation(Cacheable.class));
+  }
 
-				if (metadata != null) {
-					HelenusProperty prop = new HelenusMappingProperty(this, method, metadata);
+  @Override
+  public HelenusEntityType getType() {
+    return type;
+  }
 
-					propsBuilder.put(prop.getPropertyName(), prop);
-					propsLocal.add(prop);
-				}
+  @Override
+  public boolean isCacheable() {
+    return cacheable;
+  }
 
-			}
+  @Override
+  public Class<?> getMappingInterface() {
+    return iface;
+  }
 
-		}
+  @Override
+  public Collection<HelenusProperty> getOrderedProperties() {
+    return orderedProps;
+  }
 
-		this.methods = methodsBuilder.build();
-		this.props = propsBuilder.build();
+  @Override
+  public HelenusProperty getProperty(String name) {
+    HelenusProperty property = props.get(name);
+    if (property == null && methods.containsKey(name)) {
+      property = new HelenusMappingProperty(this, methods.get(name), new DefaultMetadata());
+      return property; //TODO(gburd): review adding these into the props map...
+    }
+    return props.get(name);
+  }
 
-		Collections.sort(propsLocal, TypeAndOrdinalColumnComparator.INSTANCE);
-		this.orderedProps = ImmutableList.copyOf(propsLocal);
+  @Override
+  public IdentityName getName() {
+    return name;
+  }
 
-		validateOrdinals();
+  private static IdentityName resolveName(Class<?> iface, HelenusEntityType type) {
 
-		cacheable = (null != iface.getDeclaredAnnotation(Cacheable.class));
-	}
+    switch (type) {
+      case TABLE:
+        return MappingUtil.getTableName(iface, true);
 
-	@Override
-	public HelenusEntityType getType() {
-		return type;
-	}
+      case TUPLE:
+        return IdentityName.of(MappingUtil.getDefaultEntityName(iface), false);
 
-	@Override
-	public boolean isCacheable() {
-		return cacheable;
-	}
+      case UDT:
+        return MappingUtil.getUserDefinedTypeName(iface, true);
+    }
 
-	@Override
-	public Class<?> getMappingInterface() {
-		return iface;
-	}
+    throw new HelenusMappingException("invalid entity type " + type + " in " + type);
+  }
 
-	@Override
-	public Collection<HelenusProperty> getOrderedProperties() {
-		return orderedProps;
-	}
+  private static HelenusEntityType autoDetectType(Class<?> iface) {
 
-	@Override
-	public HelenusProperty getProperty(String name) {
-	    HelenusProperty property = props.get(name);
-	    if (property == null && methods.containsKey(name)) {
-            property = new HelenusMappingProperty(this, methods.get(name), new DefaultMetadata());
-            return property; //TODO(gburd): review adding these into the props map...
-        }
-		return props.get(name);
-	}
+    Objects.requireNonNull(iface, "empty iface");
 
-	@Override
-	public IdentityName getName() {
-		return name;
-	}
+    if (null != iface.getDeclaredAnnotation(Table.class)) {
+      return HelenusEntityType.TABLE;
+    } else if (null != iface.getDeclaredAnnotation(Tuple.class)) {
+      return HelenusEntityType.TUPLE;
+    } else if (null != iface.getDeclaredAnnotation(UDT.class)) {
+      return HelenusEntityType.UDT;
+    }
 
-	private static IdentityName resolveName(Class<?> iface, HelenusEntityType type) {
+    throw new HelenusMappingException(
+        "entity must be annotated by @Table or @Tuple or @UserDefinedType " + iface);
+  }
 
-		switch (type) {
+  private void validateOrdinals() {
 
-			case TABLE :
-				return MappingUtil.getTableName(iface, true);
+    switch (getType()) {
+      case TABLE:
+        validateOrdinalsForTable();
+        break;
 
-			case TUPLE :
-				return IdentityName.of(MappingUtil.getDefaultEntityName(iface), false);
+      case TUPLE:
+        validateOrdinalsInTuple();
+        break;
 
-			case UDT :
-				return MappingUtil.getUserDefinedTypeName(iface, true);
-		}
+      default:
+        break;
+    }
+  }
 
-		throw new HelenusMappingException("invalid entity type " + type + " in " + type);
+  private void validateOrdinalsForTable() {
 
-	}
+    BitSet partitionKeys = new BitSet();
+    BitSet clusteringColumns = new BitSet();
 
-	private static HelenusEntityType autoDetectType(Class<?> iface) {
+    for (HelenusProperty prop : getOrderedProperties()) {
 
-		Objects.requireNonNull(iface, "empty iface");
+      ColumnType type = prop.getColumnType();
 
-		if (null != iface.getDeclaredAnnotation(Table.class)) {
-			return HelenusEntityType.TABLE;
-		}
+      int ordinal = prop.getOrdinal();
 
-		else if (null != iface.getDeclaredAnnotation(Tuple.class)) {
-			return HelenusEntityType.TUPLE;
-		}
+      switch (type) {
+        case PARTITION_KEY:
+          if (partitionKeys.get(ordinal)) {
+            throw new HelenusMappingException(
+                "detected two or more partition key columns with the same ordinal "
+                    + ordinal
+                    + " in "
+                    + prop.getEntity());
+          }
+          partitionKeys.set(ordinal);
+          break;
 
-		else if (null != iface.getDeclaredAnnotation(UDT.class)) {
-			return HelenusEntityType.UDT;
-		}
+        case CLUSTERING_COLUMN:
+          if (clusteringColumns.get(ordinal)) {
+            throw new HelenusMappingException(
+                "detected two or clustering columns with the same ordinal "
+                    + ordinal
+                    + " in "
+                    + prop.getEntity());
+          }
+          clusteringColumns.set(ordinal);
+          break;
 
-		throw new HelenusMappingException("entity must be annotated by @Table or @Tuple or @UserDefinedType " + iface);
-	}
+        default:
+          break;
+      }
+    }
+  }
 
-	private void validateOrdinals() {
+  private void validateOrdinalsInTuple() {
+    boolean[] ordinals = new boolean[props.size()];
 
-		switch (getType()) {
+    getOrderedProperties()
+        .forEach(
+            p -> {
+              int ordinal = p.getOrdinal();
 
-			case TABLE :
-				validateOrdinalsForTable();
-				break;
+              if (ordinal < 0 || ordinal >= ordinals.length) {
+                throw new HelenusMappingException(
+                    "invalid ordinal "
+                        + ordinal
+                        + " found for property "
+                        + p.getPropertyName()
+                        + " in "
+                        + p.getEntity());
+              }
 
-			case TUPLE :
-				validateOrdinalsInTuple();
-				break;
+              if (ordinals[ordinal]) {
+                throw new HelenusMappingException(
+                    "detected two or more properties with the same ordinal "
+                        + ordinal
+                        + " in "
+                        + p.getEntity());
+              }
 
-			default :
-				break;
-		}
+              ordinals[ordinal] = true;
+            });
 
-	}
+    for (int i = 0; i != ordinals.length; ++i) {
+      if (!ordinals[i]) {
+        throw new HelenusMappingException("detected absent ordinal " + i + " in " + this);
+      }
+    }
+  }
 
-	private void validateOrdinalsForTable() {
+  @Override
+  public String toString() {
 
-		BitSet partitionKeys = new BitSet();
-		BitSet clusteringColumns = new BitSet();
+    StringBuilder str = new StringBuilder();
+    str.append(iface.getSimpleName())
+        .append("(")
+        .append(name.getName())
+        .append(") ")
+        .append(type.name().toLowerCase())
+        .append(":\n");
 
-		for (HelenusProperty prop : getOrderedProperties()) {
-
-			ColumnType type = prop.getColumnType();
-
-			int ordinal = prop.getOrdinal();
-
-			switch (type) {
-
-				case PARTITION_KEY :
-					if (partitionKeys.get(ordinal)) {
-						throw new HelenusMappingException(
-								"detected two or more partition key columns with the same ordinal " + ordinal + " in "
-										+ prop.getEntity());
-					}
-					partitionKeys.set(ordinal);
-					break;
-
-				case CLUSTERING_COLUMN :
-					if (clusteringColumns.get(ordinal)) {
-						throw new HelenusMappingException("detected two or clustering columns with the same ordinal "
-								+ ordinal + " in " + prop.getEntity());
-					}
-					clusteringColumns.set(ordinal);
-					break;
-
-				default :
-					break;
-			}
-
-		}
-
-	}
-
-	private void validateOrdinalsInTuple() {
-		boolean[] ordinals = new boolean[props.size()];
-
-		getOrderedProperties().forEach(p -> {
-
-			int ordinal = p.getOrdinal();
-
-			if (ordinal < 0 || ordinal >= ordinals.length) {
-				throw new HelenusMappingException("invalid ordinal " + ordinal + " found for property "
-						+ p.getPropertyName() + " in " + p.getEntity());
-			}
-
-			if (ordinals[ordinal]) {
-				throw new HelenusMappingException(
-						"detected two or more properties with the same ordinal " + ordinal + " in " + p.getEntity());
-			}
-
-			ordinals[ordinal] = true;
-
-		});
-
-		for (int i = 0; i != ordinals.length; ++i) {
-			if (!ordinals[i]) {
-				throw new HelenusMappingException("detected absent ordinal " + i + " in " + this);
-			}
-		}
-
-	}
-
-	@Override
-	public String toString() {
-
-		StringBuilder str = new StringBuilder();
-		str.append(iface.getSimpleName()).append("(").append(name.getName()).append(") ")
-				.append(type.name().toLowerCase()).append(":\n");
-
-		for (HelenusProperty prop : getOrderedProperties()) {
-			str.append(prop.toString());
-			str.append("\n");
-		}
-		return str.toString();
-	}
-
+    for (HelenusProperty prop : getOrderedProperties()) {
+      str.append(prop.toString());
+      str.append("\n");
+    }
+    return str.toString();
+  }
 }

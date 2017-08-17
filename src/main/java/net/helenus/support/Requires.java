@@ -20,15 +20,13 @@ import java.util.Objects;
 
 public final class Requires {
 
-	private Requires() {
-	}
+  private Requires() {}
 
-	public static <T> void nonNullArray(T[] arr) {
-		Objects.requireNonNull(arr, "array is null");
-		int len = Array.getLength(arr);
-		for (int i = 0; i != len; ++i) {
-			Objects.requireNonNull(Array.get(arr, i), "element " + i + " is empty in array");
-		}
-	}
-
+  public static <T> void nonNullArray(T[] arr) {
+    Objects.requireNonNull(arr, "array is null");
+    int len = Array.getLength(arr);
+    for (int i = 0; i != len; ++i) {
+      Objects.requireNonNull(Array.get(arr, i), "element " + i + " is empty in array");
+    }
+  }
 }

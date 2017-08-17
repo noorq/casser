@@ -19,6 +19,5 @@ import java.util.Map;
 
 public interface MapperInstantiator {
 
-	<E> E instantiate(Class<E> iface, Map<String, Object> src, ClassLoader classLoader);
-
+  <E> E instantiate(Class<E> iface, Map<String, Object> src, ClassLoader classLoader);
 }

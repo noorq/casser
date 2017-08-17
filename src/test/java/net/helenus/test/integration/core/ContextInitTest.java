@@ -15,21 +15,18 @@
  */
 package net.helenus.test.integration.core;
 
-import net.helenus.core.HelenusSession;
-import org.junit.Test;
-
 import net.helenus.core.Helenus;
+import net.helenus.core.HelenusSession;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+import org.junit.Test;
 
 public class ContextInitTest extends AbstractEmbeddedCassandraTest {
 
-	@Test
-	public void test() {
+  @Test
+  public void test() {
 
-		HelenusSession session = Helenus.init(getSession()).get();
+    HelenusSession session = Helenus.init(getSession()).get();
 
-		System.out.println("Works! " + session);
-
-	}
-
+    System.out.println("Works! " + session);
+  }
 }

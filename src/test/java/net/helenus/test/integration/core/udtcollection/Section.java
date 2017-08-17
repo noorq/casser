@@ -20,8 +20,7 @@ import net.helenus.mapping.annotation.UDT;
 @UDT
 public interface Section {
 
-	String title();
+  String title();
 
-	int page();
-
+  int page();
 }

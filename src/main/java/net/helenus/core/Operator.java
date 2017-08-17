@@ -19,39 +19,37 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum Operator {
+  EQ("=="),
 
-	EQ("=="),
+  IN("in"),
 
-	IN("in"),
+  GT(">"),
 
-	GT(">"),
+  LT("<"),
 
-	LT("<"),
+  GTE(">="),
 
-	GTE(">="),
+  LTE("<=");
 
-	LTE("<=");
+  private final String name;
 
-	private final String name;
+  private static final Map<String, Operator> indexByName = new HashMap<String, Operator>();
 
-	private final static Map<String, Operator> indexByName = new HashMap<String, Operator>();
+  static {
+    for (Operator fo : Operator.values()) {
+      indexByName.put(fo.getName(), fo);
+    }
+  }
 
-	static {
-		for (Operator fo : Operator.values()) {
-			indexByName.put(fo.getName(), fo);
-		}
-	}
+  private Operator(String name) {
+    this.name = name;
+  }
 
-	private Operator(String name) {
-		this.name = name;
-	}
+  public String getName() {
+    return name;
+  }
 
-	public String getName() {
-		return name;
-	}
-
-	public static Operator findByOperator(String name) {
-		return indexByName.get(name);
-	}
-
+  public static Operator findByOperator(String name) {
+    return indexByName.get(name);
+  }
 }

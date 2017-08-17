@@ -17,18 +17,16 @@ package net.helenus.config;
 
 import java.lang.reflect.Method;
 import java.util.function.Function;
-
 import net.helenus.core.DslInstantiator;
 import net.helenus.core.MapperInstantiator;
 
 public interface HelenusSettings {
 
-	Function<String, String> getPropertyToColumnConverter();
+  Function<String, String> getPropertyToColumnConverter();
 
-	Function<Method, Boolean> getGetterMethodDetector();
+  Function<Method, Boolean> getGetterMethodDetector();
 
-	DslInstantiator getDslInstantiator();
+  DslInstantiator getDslInstantiator();
 
-	MapperInstantiator getMapperInstantiator();
-
+  MapperInstantiator getMapperInstantiator();
 }

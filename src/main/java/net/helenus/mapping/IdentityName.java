@@ -19,42 +19,41 @@ import net.helenus.support.CqlUtil;
 
 public final class IdentityName {
 
-	private final String name;
+  private final String name;
 
-	private final boolean forceQuote;
+  private final boolean forceQuote;
 
-	public IdentityName(String name, boolean forceQuote) {
-		this.name = name.toLowerCase();
-		this.forceQuote = forceQuote;
-	}
+  public IdentityName(String name, boolean forceQuote) {
+    this.name = name.toLowerCase();
+    this.forceQuote = forceQuote;
+  }
 
-	public static IdentityName of(String name, boolean forceQuote) {
-		return new IdentityName(name, forceQuote);
-	}
+  public static IdentityName of(String name, boolean forceQuote) {
+    return new IdentityName(name, forceQuote);
+  }
 
-	public String getName() {
-		return name;
-	}
+  public String getName() {
+    return name;
+  }
 
-	public boolean isForceQuote() {
-		return forceQuote;
-	}
+  public boolean isForceQuote() {
+    return forceQuote;
+  }
 
-	public String toCql(boolean overrideForceQuote) {
-		if (overrideForceQuote) {
-			return CqlUtil.forceQuote(name);
-		} else {
-			return name;
-		}
-	}
+  public String toCql(boolean overrideForceQuote) {
+    if (overrideForceQuote) {
+      return CqlUtil.forceQuote(name);
+    } else {
+      return name;
+    }
+  }
 
-	public String toCql() {
-		return toCql(forceQuote);
-	}
+  public String toCql() {
+    return toCql(forceQuote);
+  }
 
-	@Override
-	public String toString() {
-		return toCql();
-	}
-
+  @Override
+  public String toString() {
+    return toCql();
+  }
 }

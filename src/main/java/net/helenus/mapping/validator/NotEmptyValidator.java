@@ -17,30 +17,28 @@ package net.helenus.mapping.validator;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-
 import net.helenus.mapping.annotation.Constraints;
 import net.helenus.mapping.annotation.Constraints.NotEmpty;
 
-public final class NotEmptyValidator implements ConstraintValidator<Constraints.NotEmpty, Object>, SizeConstraint {
+public final class NotEmptyValidator
+    implements ConstraintValidator<Constraints.NotEmpty, Object>, SizeConstraint {
 
-	@Override
-	public void initialize(NotEmpty constraintAnnotation) {
-	}
+  @Override
+  public void initialize(NotEmpty constraintAnnotation) {}
 
-	@Override
-	public boolean isValid(Object value, ConstraintValidatorContext context) {
+  @Override
+  public boolean isValid(Object value, ConstraintValidatorContext context) {
 
-		int[] size = getSize(value);
+    int[] size = getSize(value);
 
-		if (size == null) {
-			return false;
-		}
+    if (size == null) {
+      return false;
+    }
 
-		if (size.length == 0) {
-			return true;
-		}
+    if (size.length == 0) {
+      return true;
+    }
 
-		return size[0] > 0;
-	}
-
+    return size[0] > 0;
+  }
 }

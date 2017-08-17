@@ -15,11 +15,9 @@
  */
 package net.helenus.mapping.convert.udt;
 
+import com.datastax.driver.core.UDTValue;
 import java.util.Map;
 import java.util.function.Function;
-
-import com.datastax.driver.core.UDTValue;
-
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.convert.ProxyValueReader;
 import net.helenus.mapping.value.UDTColumnValueProvider;
@@ -27,17 +25,19 @@ import net.helenus.support.Transformers;
 
 public final class UDTMapToMapConverter implements Function<Object, Object> {
 
-	final ProxyValueReader<UDTValue> keyReader;
-	final ProxyValueReader<UDTValue> valueReader;
+  final ProxyValueReader<UDTValue> keyReader;
+  final ProxyValueReader<UDTValue> valueReader;
 
-	public UDTMapToMapConverter(Class<?> keyClass, Class<?> valueClass, SessionRepository repository) {
-		this.keyReader = new ProxyValueReader<UDTValue>(keyClass, new UDTColumnValueProvider(repository));
-		this.valueReader = new ProxyValueReader<UDTValue>(valueClass, new UDTColumnValueProvider(repository));
-	}
+  public UDTMapToMapConverter(
+      Class<?> keyClass, Class<?> valueClass, SessionRepository repository) {
+    this.keyReader =
+        new ProxyValueReader<UDTValue>(keyClass, new UDTColumnValueProvider(repository));
+    this.valueReader =
+        new ProxyValueReader<UDTValue>(valueClass, new UDTColumnValueProvider(repository));
+  }
 
-	@Override
-	public Object apply(Object t) {
-		return Transformers.transformMap((Map<UDTValue, UDTValue>) t, keyReader, valueReader);
-	}
-
+  @Override
+  public Object apply(Object t) {
+    return Transformers.transformMap((Map<UDTValue, UDTValue>) t, keyReader, valueReader);
+  }
 }

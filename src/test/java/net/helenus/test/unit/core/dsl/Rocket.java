@@ -5,8 +5,7 @@ import net.helenus.mapping.annotation.UDT;
 @UDT
 public interface Rocket {
 
-	int length();
+  int length();
 
-	double price();
-
+  double price();
 }

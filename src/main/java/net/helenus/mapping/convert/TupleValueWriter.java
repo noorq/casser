@@ -15,46 +15,44 @@
  */
 package net.helenus.mapping.convert;
 
-import java.nio.ByteBuffer;
-import java.util.function.Function;
-
 import com.datastax.driver.core.TupleType;
 import com.datastax.driver.core.TupleValue;
-
+import java.nio.ByteBuffer;
+import java.util.function.Function;
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.value.TupleColumnValuePreparer;
 
-public class TupleValueWriter extends AbstractEntityValueWriter<TupleValue> implements Function<Object, TupleValue> {
+public class TupleValueWriter extends AbstractEntityValueWriter<TupleValue>
+    implements Function<Object, TupleValue> {
 
-	private final TupleType tupleType;
-	private final TupleColumnValuePreparer valuePreparer;
+  private final TupleType tupleType;
+  private final TupleColumnValuePreparer valuePreparer;
 
-	public TupleValueWriter(Class<?> iface, TupleType tupleType, SessionRepository repository) {
-		super(iface);
+  public TupleValueWriter(Class<?> iface, TupleType tupleType, SessionRepository repository) {
+    super(iface);
 
-		this.tupleType = tupleType;
-		this.valuePreparer = new TupleColumnValuePreparer(tupleType, repository);
-	}
+    this.tupleType = tupleType;
+    this.valuePreparer = new TupleColumnValuePreparer(tupleType, repository);
+  }
 
-	@Override
-	void writeColumn(TupleValue udtValue, Object value, HelenusProperty prop) {
+  @Override
+  void writeColumn(TupleValue udtValue, Object value, HelenusProperty prop) {
 
-		ByteBuffer bytes = (ByteBuffer) valuePreparer.prepareColumnValue(value, prop);
+    ByteBuffer bytes = (ByteBuffer) valuePreparer.prepareColumnValue(value, prop);
 
-		if (bytes != null) {
-			udtValue.setBytesUnsafe(prop.getOrdinal(), bytes);
-		}
-	}
+    if (bytes != null) {
+      udtValue.setBytesUnsafe(prop.getOrdinal(), bytes);
+    }
+  }
 
-	@Override
-	public TupleValue apply(Object source) {
-		if (source != null) {
-			TupleValue outValue = tupleType.newValue();
-			write(outValue, source);
-			return outValue;
-		}
-		return null;
-	}
-
+  @Override
+  public TupleValue apply(Object source) {
+    if (source != null) {
+      TupleValue outValue = tupleType.newValue();
+      write(outValue, source);
+      return outValue;
+    }
+    return null;
+  }
 }

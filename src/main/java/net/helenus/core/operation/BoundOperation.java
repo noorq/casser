@@ -21,23 +21,22 @@ import com.datastax.driver.core.Statement;
 
 public final class BoundOperation<E> extends AbstractOperation<E, BoundOperation<E>> {
 
-	private final BoundStatement boundStatement;
-	private final AbstractOperation<E, ?> delegate;
+  private final BoundStatement boundStatement;
+  private final AbstractOperation<E, ?> delegate;
 
-	public BoundOperation(BoundStatement boundStatement, AbstractOperation<E, ?> operation) {
-		super(operation.sessionOps);
-		this.boundStatement = boundStatement;
-		this.delegate = operation;
-	}
+  public BoundOperation(BoundStatement boundStatement, AbstractOperation<E, ?> operation) {
+    super(operation.sessionOps);
+    this.boundStatement = boundStatement;
+    this.delegate = operation;
+  }
 
-	@Override
-	public E transform(ResultSet resultSet) {
-		return delegate.transform(resultSet);
-	}
+  @Override
+  public E transform(ResultSet resultSet) {
+    return delegate.transform(resultSet);
+  }
 
-	@Override
-	public Statement buildStatement() {
-		return boundStatement;
-	}
-
+  @Override
+  public Statement buildStatement() {
+    return boundStatement;
+  }
 }

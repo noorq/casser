@@ -20,129 +20,120 @@ import static net.helenus.core.Query.get;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.junit.Assert;
 import org.junit.Test;
 
 public class UDTValueMapTest extends UDTCollectionTest {
 
-	@Test
-	public void testValueMapCRUID() {
+  @Test
+  public void testValueMapCRUID() {
 
-		int id = 999;
+    int id = 999;
 
-		Map<Integer, Section> contents = new HashMap<Integer, Section>();
-		contents.put(1, new SectionImpl("first", 1));
-		contents.put(2, new SectionImpl("second", 2));
+    Map<Integer, Section> contents = new HashMap<Integer, Section>();
+    contents.put(1, new SectionImpl("first", 1));
+    contents.put(2, new SectionImpl("second", 2));
 
-		// CREATE
+    // CREATE
 
-		session.insert()
-		.value(book::id, id)
-		.value(book::contents, contents)
-		.sync();
+    session.insert().value(book::id, id).value(book::contents, contents).sync();
 
-		// READ
+    // READ
 
-		// read full object
+    // read full object
 
-		Book actual = session.select(Book.class).where(book::id, eq(id)).sync().findFirst().get();
-		Assert.assertEquals(id, actual.id());
-		assertEqualMaps(contents, actual.contents());
-		Assert.assertNull(actual.reviewers());
-		Assert.assertNull(actual.writers());
-		Assert.assertNull(actual.notes());
+    Book actual = session.select(Book.class).where(book::id, eq(id)).sync().findFirst().get();
+    Assert.assertEquals(id, actual.id());
+    assertEqualMaps(contents, actual.contents());
+    Assert.assertNull(actual.reviewers());
+    Assert.assertNull(actual.writers());
+    Assert.assertNull(actual.notes());
 
-		// read full map
+    // read full map
 
-		Map<Integer, Section> actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
-		assertEqualMaps(contents, actualMap);
+    Map<Integer, Section> actualMap =
+        session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
+    assertEqualMaps(contents, actualMap);
 
-		// read single key-value in map
+    // read single key-value in map
 
-		String cql = session.select(get(book::contents, 1))
-				.where(book::id, eq(id)).cql();
+    String cql = session.select(get(book::contents, 1)).where(book::id, eq(id)).cql();
 
-		System.out.println("Still not supporting cql = " + cql);
+    System.out.println("Still not supporting cql = " + cql);
 
-		// UPDATE
+    // UPDATE
 
-		Map<Integer, Section> expected = new HashMap<Integer, Section>();
-		expected.put(4, new SectionImpl("4", 4));
-		expected.put(5, new SectionImpl("5", 5));
+    Map<Integer, Section> expected = new HashMap<Integer, Section>();
+    expected.put(4, new SectionImpl("4", 4));
+    expected.put(5, new SectionImpl("5", 5));
 
-		session.update().set(book::contents, expected).where(book::id, eq(id)).sync();
+    session.update().set(book::contents, expected).where(book::id, eq(id)).sync();
 
-		actual = session.select(Book.class).where(book::id, eq(id)).sync().findFirst().get();
-		Assert.assertEquals(id, actual.id());
-		assertEqualMaps(expected, actual.contents());
+    actual = session.select(Book.class).where(book::id, eq(id)).sync().findFirst().get();
+    Assert.assertEquals(id, actual.id());
+    assertEqualMaps(expected, actual.contents());
 
-		// INSERT
+    // INSERT
 
-		// put operation
+    // put operation
 
-		Section third = new SectionImpl("t", 3);
+    Section third = new SectionImpl("t", 3);
 
-		expected.put(3, third);
-		session.update().put(book::contents, 3, third).where(book::id, eq(id)).sync();
+    expected.put(3, third);
+    session.update().put(book::contents, 3, third).where(book::id, eq(id)).sync();
 
-		actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
-		assertEqualMaps(expected, actualMap);
+    actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
+    assertEqualMaps(expected, actualMap);
 
-		// putAll operation
-		expected.putAll(contents);
-		session.update().putAll(book::contents, contents).where(book::id, eq(id)).sync();
+    // putAll operation
+    expected.putAll(contents);
+    session.update().putAll(book::contents, contents).where(book::id, eq(id)).sync();
 
-		actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
-		assertEqualMaps(expected, actualMap);
+    actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
+    assertEqualMaps(expected, actualMap);
 
-		// put existing
+    // put existing
 
-		third = new SectionImpl("t-replace", 3);
-		expected.put(3, third);
-		session.update().put(book::contents, 3, third).where(book::id, eq(id)).sync();
+    third = new SectionImpl("t-replace", 3);
+    expected.put(3, third);
+    session.update().put(book::contents, 3, third).where(book::id, eq(id)).sync();
 
-		actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
-		assertEqualMaps(expected, actualMap);
+    actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
+    assertEqualMaps(expected, actualMap);
 
-		// DELETE
+    // DELETE
 
-		// remove single key
+    // remove single key
 
-		expected.remove(3);
-		session.update().put(book::contents, 3, null).where(book::id, eq(id)).sync();
+    expected.remove(3);
+    session.update().put(book::contents, 3, null).where(book::id, eq(id)).sync();
 
-		actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
-		assertEqualMaps(expected, actualMap);
+    actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
+    assertEqualMaps(expected, actualMap);
 
-		// remove full map
+    // remove full map
 
-		session.update().set(book::contents, null).where(book::id, eq(id)).sync();
+    session.update().set(book::contents, null).where(book::id, eq(id)).sync();
 
-		actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
-		Assert.assertNull(actualMap);
+    actualMap = session.select(book::contents).where(book::id, eq(id)).sync().findFirst().get()._1;
+    Assert.assertNull(actualMap);
 
-		// remove object
+    // remove object
 
-		session.delete().where(book::id, eq(id)).sync();
-		Long cnt = session.count().where(book::id, eq(id)).sync();
-		Assert.assertEquals(Long.valueOf(0), cnt);
+    session.delete().where(book::id, eq(id)).sync();
+    Long cnt = session.count().where(book::id, eq(id)).sync();
+    Assert.assertEquals(Long.valueOf(0), cnt);
+  }
 
-	}
+  private void assertEqualMaps(Map<Integer, Section> expected, Map<Integer, Section> actual) {
 
-	private void assertEqualMaps(Map<Integer, Section> expected, Map<Integer, Section> actual) {
+    Assert.assertEquals(expected.size(), actual.size());
 
-		Assert.assertEquals(expected.size(), actual.size());
-
-		for (Integer i : expected.keySet()) {
-			Section e = expected.get(i);
-			Section a = actual.get(i);
-			Assert.assertEquals(e.title(), a.title());
-			Assert.assertEquals(e.page(), a.page());
-		}
-
-	}
-
+    for (Integer i : expected.keySet()) {
+      Section e = expected.get(i);
+      Section a = actual.get(i);
+      Assert.assertEquals(e.title(), a.title());
+      Assert.assertEquals(e.page(), a.page());
+    }
+  }
 }
-
-

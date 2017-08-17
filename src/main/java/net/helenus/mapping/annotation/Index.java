@@ -18,52 +18,45 @@ package net.helenus.mapping.annotation;
 import java.lang.annotation.*;
 
 /**
- * Index annotation is using under the specific column or method in entity
- * interface with @Table annotation.
+ * Index annotation is using under the specific column or method in entity interface with @Table
+ * annotation.
  *
- * The corresponding secondary index will be created in the underline @Table for
- * the specific column.
+ * <p>The corresponding secondary index will be created in the underline @Table for the specific
+ * column.
  *
- * Currently Cassandra supports only single column index, so this index works
- * only for single column.
+ * <p>Currently Cassandra supports only single column index, so this index works only for single
+ * column.
  *
- * Make sure that you are using low cardinality columns for this index, that is
- * the requirement of the Cassandra. Low cardinality fields examples: gender,
- * country, age, status and etc High cardinality fields examples: id, email,
- * timestamp, UUID and etc
- *
- *
+ * <p>Make sure that you are using low cardinality columns for this index, that is the requirement
+ * of the Cassandra. Low cardinality fields examples: gender, country, age, status and etc High
+ * cardinality fields examples: id, email, timestamp, UUID and etc
  */
-
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 public @interface Index {
 
-	/**
-	 * Defined the name of the index. By default will be used the column name.
-	 *
-	 * @return name of the index
-	 */
+  /**
+   * Defined the name of the index. By default will be used the column name.
+   *
+   * @return name of the index
+   */
+  String value() default "";
 
-	String value() default "";
+  /**
+   * For reserved words in Cassandra we need quotation in CQL queries. This property marks that the
+   * name of the UDT type needs to be quoted.
+   *
+   * <p>Default value is false, we are quoting only selected names.
+   *
+   * @return true if name have to be quoted
+   */
+  boolean forceQuote() default false;
 
-	/**
-	 * For reserved words in Cassandra we need quotation in CQL queries. This
-	 * property marks that the name of the UDT type needs to be quoted.
-	 *
-	 * Default value is false, we are quoting only selected names.
-	 *
-	 * @return true if name have to be quoted
-	 */
-
-	boolean forceQuote() default false;
-
-	/**
-	 * Create a case-insensitive index using Cassandra 3.x+ support for SASI indexing.
-     *
-     * @return true if the index should ignore case when comparing
-	 */
-
-	boolean caseSensitive() default true;
+  /**
+   * Create a case-insensitive index using Cassandra 3.x+ support for SASI indexing.
+   *
+   * @return true if the index should ignore case when comparing
+   */
+  boolean caseSensitive() default true;
 }

@@ -15,55 +15,53 @@
  */
 package net.helenus.mapping.javatype;
 
+import com.datastax.driver.core.CodecRegistry;
+import com.datastax.driver.core.DataType;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.datastax.driver.core.CodecRegistry;
-import com.datastax.driver.core.DataType;
-
 public final class SimpleJavaTypes {
 
-	private static final Map<Class<?>, DataType> javaClassToDataTypeMap = new HashMap<Class<?>, DataType>();
+  private static final Map<Class<?>, DataType> javaClassToDataTypeMap =
+      new HashMap<Class<?>, DataType>();
 
-	private static final Map<DataType.Name, DataType> nameToDataTypeMap = new HashMap<DataType.Name, DataType>();
+  private static final Map<DataType.Name, DataType> nameToDataTypeMap =
+      new HashMap<DataType.Name, DataType>();
 
-	static {
+  static {
+    for (DataType dataType : DataType.allPrimitiveTypes()) {
 
-		for (DataType dataType : DataType.allPrimitiveTypes()) {
+      nameToDataTypeMap.put(dataType.getName(), dataType);
 
-			nameToDataTypeMap.put(dataType.getName(), dataType);
+      if (dataType.equals(DataType.counter())
+          || dataType.equals(DataType.ascii())
+          || dataType.equals(DataType.timeuuid())
+          || dataType.equals(DataType.time())) {
+        continue;
+      }
 
-			if (dataType.equals(DataType.counter())
-                    || dataType.equals(DataType.ascii())
-					|| dataType.equals(DataType.timeuuid())
-                    || dataType.equals(DataType.time())) {
-				continue;
-			}
+      Class<?> javaClass =
+          CodecRegistry.DEFAULT_INSTANCE.codecFor(dataType).getJavaType().getRawType();
 
-			Class<?> javaClass = CodecRegistry.DEFAULT_INSTANCE.codecFor(dataType).getJavaType().getRawType();
+      DataType dt = javaClassToDataTypeMap.putIfAbsent(javaClass, dataType);
+      if (dt != null) {
+        throw new IllegalStateException(
+            "java type " + javaClass + " is has two datatypes " + dt + " and " + dataType);
+      }
+    }
 
-			DataType dt = javaClassToDataTypeMap.putIfAbsent(javaClass, dataType);
-			if (dt != null) {
-				throw new IllegalStateException(
-						"java type " + javaClass + " is has two datatypes " + dt + " and " + dataType);
-			}
+    javaClassToDataTypeMap.put(String.class, DataType.text());
+    javaClassToDataTypeMap.put(LocalTime.class, DataType.time());
+  }
 
-		}
+  private SimpleJavaTypes() {}
 
-		javaClassToDataTypeMap.put(String.class, DataType.text());
-		javaClassToDataTypeMap.put(LocalTime.class, DataType.time());
-	}
+  public static DataType getDataTypeByName(DataType.Name name) {
+    return nameToDataTypeMap.get(name);
+  }
 
-	private SimpleJavaTypes() {
-	}
-
-	public static DataType getDataTypeByName(DataType.Name name) {
-		return nameToDataTypeMap.get(name);
-	}
-
-	public static DataType getDataTypeByJavaClass(Class<?> javaType) {
-		return javaClassToDataTypeMap.get(javaType);
-	}
-
+  public static DataType getDataTypeByJavaClass(Class<?> javaType) {
+    return javaClassToDataTypeMap.get(javaType);
+  }
 }

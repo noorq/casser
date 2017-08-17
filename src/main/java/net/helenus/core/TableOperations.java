@@ -15,74 +15,73 @@
  */
 package net.helenus.core;
 
-import java.util.List;
-
 import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.schemabuilder.SchemaStatement;
-
+import java.util.List;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.support.HelenusException;
 
 public final class TableOperations {
 
-	private final AbstractSessionOperations sessionOps;
-	private final boolean dropUnusedColumns;
-	private final boolean dropUnusedIndexes;
+  private final AbstractSessionOperations sessionOps;
+  private final boolean dropUnusedColumns;
+  private final boolean dropUnusedIndexes;
 
-	public TableOperations(AbstractSessionOperations sessionOps, boolean dropUnusedColumns, boolean dropUnusedIndexes) {
-		this.sessionOps = sessionOps;
-		this.dropUnusedColumns = dropUnusedColumns;
-		this.dropUnusedIndexes = dropUnusedIndexes;
-	}
+  public TableOperations(
+      AbstractSessionOperations sessionOps, boolean dropUnusedColumns, boolean dropUnusedIndexes) {
+    this.sessionOps = sessionOps;
+    this.dropUnusedColumns = dropUnusedColumns;
+    this.dropUnusedIndexes = dropUnusedIndexes;
+  }
 
-	public void createTable(HelenusEntity entity) {
+  public void createTable(HelenusEntity entity) {
 
-		sessionOps.execute(SchemaUtil.createTable(entity), true);
+    sessionOps.execute(SchemaUtil.createTable(entity), true);
 
-		executeBatch(SchemaUtil.createIndexes(entity));
+    executeBatch(SchemaUtil.createIndexes(entity));
+  }
 
-	}
+  public void dropTable(HelenusEntity entity) {
 
-	public void dropTable(HelenusEntity entity) {
+    sessionOps.execute(SchemaUtil.dropTable(entity), true);
+  }
 
-	    sessionOps.execute(SchemaUtil.dropTable(entity), true);
+  public void validateTable(TableMetadata tmd, HelenusEntity entity) {
 
+    if (tmd == null) {
+      throw new HelenusException(
+          "table not exists " + entity.getName() + "for entity " + entity.getMappingInterface());
     }
 
-	public void validateTable(TableMetadata tmd, HelenusEntity entity) {
+    List<SchemaStatement> list = SchemaUtil.alterTable(tmd, entity, dropUnusedColumns);
 
-		if (tmd == null) {
-			throw new HelenusException(
-					"table not exists " + entity.getName() + "for entity " + entity.getMappingInterface());
-		}
+    list.addAll(SchemaUtil.alterIndexes(tmd, entity, dropUnusedIndexes));
 
-		List<SchemaStatement> list = SchemaUtil.alterTable(tmd, entity, dropUnusedColumns);
+    if (!list.isEmpty()) {
+      throw new HelenusException(
+          "schema changed for entity "
+              + entity.getMappingInterface()
+              + ", apply this command: "
+              + list);
+    }
+  }
 
-		list.addAll(SchemaUtil.alterIndexes(tmd, entity, dropUnusedIndexes));
+  public void updateTable(TableMetadata tmd, HelenusEntity entity) {
 
-		if (!list.isEmpty()) {
-			throw new HelenusException(
-					"schema changed for entity " + entity.getMappingInterface() + ", apply this command: " + list);
-		}
-	}
+    if (tmd == null) {
+      createTable(entity);
+      return;
+    }
 
-	public void updateTable(TableMetadata tmd, HelenusEntity entity) {
+    executeBatch(SchemaUtil.alterTable(tmd, entity, dropUnusedColumns));
+    executeBatch(SchemaUtil.alterIndexes(tmd, entity, dropUnusedIndexes));
+  }
 
-		if (tmd == null) {
-			createTable(entity);
-			return;
-		}
+  private void executeBatch(List<SchemaStatement> list) {
 
-		executeBatch(SchemaUtil.alterTable(tmd, entity, dropUnusedColumns));
-		executeBatch(SchemaUtil.alterIndexes(tmd, entity, dropUnusedIndexes));
-	}
-
-	private void executeBatch(List<SchemaStatement> list) {
-
-		list.forEach(s -> {
-			sessionOps.execute(s, true);
-		});
-
-	}
-
+    list.forEach(
+        s -> {
+          sessionOps.execute(s, true);
+        });
+  }
 }

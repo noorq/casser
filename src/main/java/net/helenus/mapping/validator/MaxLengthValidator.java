@@ -17,28 +17,27 @@ package net.helenus.mapping.validator;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-
 import net.helenus.mapping.annotation.Constraints;
 
-public final class MaxLengthValidator implements ConstraintValidator<Constraints.MaxLength, Object>, SizeConstraint {
+public final class MaxLengthValidator
+    implements ConstraintValidator<Constraints.MaxLength, Object>, SizeConstraint {
 
-	int maxLength;
+  int maxLength;
 
-	@Override
-	public void initialize(Constraints.MaxLength constraintAnnotation) {
-		this.maxLength = constraintAnnotation.value();
-	}
+  @Override
+  public void initialize(Constraints.MaxLength constraintAnnotation) {
+    this.maxLength = constraintAnnotation.value();
+  }
 
-	@Override
-	public boolean isValid(Object value, ConstraintValidatorContext context) {
+  @Override
+  public boolean isValid(Object value, ConstraintValidatorContext context) {
 
-		int[] size = getSize(value);
+    int[] size = getSize(value);
 
-		if (size == null || size.length == 0) {
-			return true;
-		}
+    if (size == null || size.length == 0) {
+      return true;
+    }
 
-		return size[0] <= maxLength;
-	}
-
+    return size[0] <= maxLength;
+  }
 }

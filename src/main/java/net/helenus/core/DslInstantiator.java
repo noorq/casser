@@ -15,13 +15,15 @@
  */
 package net.helenus.core;
 
-import java.util.Optional;
-
 import com.datastax.driver.core.Metadata;
+import java.util.Optional;
 import net.helenus.core.reflect.HelenusPropertyNode;
 
 public interface DslInstantiator {
 
-	<E> E instantiate(Class<E> iface, ClassLoader classLoader, Optional<HelenusPropertyNode> parent, Metadata metadata);
-
+  <E> E instantiate(
+      Class<E> iface,
+      ClassLoader classLoader,
+      Optional<HelenusPropertyNode> parent,
+      Metadata metadata);
 }

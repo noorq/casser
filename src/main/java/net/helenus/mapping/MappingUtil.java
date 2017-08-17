@@ -20,10 +20,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
-
 import net.helenus.core.Getter;
 import net.helenus.core.Helenus;
 import net.helenus.core.reflect.*;
@@ -36,252 +34,232 @@ import net.helenus.support.HelenusMappingException;
 
 public final class MappingUtil {
 
-	@SuppressWarnings("unchecked")
-	public static final ConstraintValidator<? extends Annotation, ?>[] EMPTY_VALIDATORS = new ConstraintValidator[0];
+  @SuppressWarnings("unchecked")
+  public static final ConstraintValidator<? extends Annotation, ?>[] EMPTY_VALIDATORS =
+      new ConstraintValidator[0];
 
-	private MappingUtil() {
-	}
+  private MappingUtil() {}
 
-	public static ConstraintValidator<? extends Annotation, ?>[] getValidators(Method getterMethod) {
+  public static ConstraintValidator<? extends Annotation, ?>[] getValidators(Method getterMethod) {
 
-		List<ConstraintValidator<? extends Annotation, ?>> list = null;
+    List<ConstraintValidator<? extends Annotation, ?>> list = null;
 
-		for (Annotation constraintAnnotation : getterMethod.getDeclaredAnnotations()) {
+    for (Annotation constraintAnnotation : getterMethod.getDeclaredAnnotations()) {
 
-			list = addValidators(constraintAnnotation, list);
+      list = addValidators(constraintAnnotation, list);
 
-			Class<? extends Annotation> annotationType = constraintAnnotation.annotationType();
+      Class<? extends Annotation> annotationType = constraintAnnotation.annotationType();
 
-			for (Annotation possibleConstraint : annotationType.getDeclaredAnnotations()) {
+      for (Annotation possibleConstraint : annotationType.getDeclaredAnnotations()) {
 
-				list = addValidators(possibleConstraint, list);
+        list = addValidators(possibleConstraint, list);
+      }
+    }
 
-			}
+    if (list == null) {
+      return EMPTY_VALIDATORS;
+    } else {
+      return list.toArray(EMPTY_VALIDATORS);
+    }
+  }
 
-		}
+  private static List<ConstraintValidator<? extends Annotation, ?>> addValidators(
+      Annotation constraintAnnotation, List<ConstraintValidator<? extends Annotation, ?>> list) {
 
-		if (list == null) {
-			return EMPTY_VALIDATORS;
-		} else {
-			return list.toArray(EMPTY_VALIDATORS);
-		}
-	}
+    Class<? extends Annotation> annotationType = constraintAnnotation.annotationType();
 
-	private static List<ConstraintValidator<? extends Annotation, ?>> addValidators(Annotation constraintAnnotation,
-			List<ConstraintValidator<? extends Annotation, ?>> list) {
+    for (Annotation possibleConstraint : annotationType.getDeclaredAnnotations()) {
 
-		Class<? extends Annotation> annotationType = constraintAnnotation.annotationType();
+      if (possibleConstraint instanceof Constraint) {
 
-		for (Annotation possibleConstraint : annotationType.getDeclaredAnnotations()) {
+        Constraint constraint = (Constraint) possibleConstraint;
 
-			if (possibleConstraint instanceof Constraint) {
+        for (Class<? extends ConstraintValidator<?, ?>> clazz : constraint.validatedBy()) {
 
-				Constraint constraint = (Constraint) possibleConstraint;
+          ConstraintValidator<? extends Annotation, ?> validator =
+              ReflectionInstantiator.instantiateClass(clazz);
 
-				for (Class<? extends ConstraintValidator<?, ?>> clazz : constraint.validatedBy()) {
+          ((ConstraintValidator) validator).initialize(constraintAnnotation);
 
-					ConstraintValidator<? extends Annotation, ?> validator = ReflectionInstantiator
-							.instantiateClass(clazz);
+          if (list == null) {
+            list = new ArrayList<ConstraintValidator<? extends Annotation, ?>>();
+          }
 
-					((ConstraintValidator) validator).initialize(constraintAnnotation);
+          list.add(validator);
+        }
+      }
+    }
 
-					if (list == null) {
-						list = new ArrayList<ConstraintValidator<? extends Annotation, ?>>();
-					}
+    return list;
+  }
 
-					list.add(validator);
+  public static Optional<IdentityName> getIndexName(Method getterMethod) {
 
-				}
+    String indexName = null;
+    boolean forceQuote = false;
 
-			}
+    Index index = getterMethod.getDeclaredAnnotation(Index.class);
 
-		}
+    if (index != null) {
+      indexName = index.value();
+      forceQuote = index.forceQuote();
 
-		return list;
+      if (indexName == null || indexName.isEmpty()) {
+        indexName = getDefaultColumnName(getterMethod);
+      }
+    }
 
-	}
+    return indexName != null
+        ? Optional.of(new IdentityName(indexName, forceQuote))
+        : Optional.empty();
+  }
 
-	public static Optional<IdentityName> getIndexName(Method getterMethod) {
+  public static boolean caseSensitiveIndex(Method getterMethod) {
+    Index index = getterMethod.getDeclaredAnnotation(Index.class);
 
-		String indexName = null;
-		boolean forceQuote = false;
+    if (index != null) {
+      return index.caseSensitive();
+    }
 
-		Index index = getterMethod.getDeclaredAnnotation(Index.class);
+    return false;
+  }
 
-		if (index != null) {
-			indexName = index.value();
-			forceQuote = index.forceQuote();
+  public static String getPropertyName(Method getter) {
+    return getter.getName();
+  }
 
-			if (indexName == null || indexName.isEmpty()) {
-				indexName = getDefaultColumnName(getterMethod);
-			}
+  public static String getDefaultColumnName(Method getter) {
+    return Helenus.settings().getPropertyToColumnConverter().apply(getPropertyName(getter));
+  }
 
-		}
+  public static IdentityName getUserDefinedTypeName(Class<?> iface, boolean required) {
 
-		return indexName != null ? Optional.of(new IdentityName(indexName, forceQuote)) : Optional.empty();
-	}
+    String userTypeName = null;
+    boolean forceQuote = false;
 
-	public static boolean caseSensitiveIndex(Method getterMethod) {
-		Index index = getterMethod.getDeclaredAnnotation(Index.class);
+    UDT userDefinedType = iface.getDeclaredAnnotation(UDT.class);
 
-		if (index != null) {
-			return index.caseSensitive();
-		}
+    if (userDefinedType != null) {
 
-		return false;
-	}
+      userTypeName = userDefinedType.value();
+      forceQuote = userDefinedType.forceQuote();
 
-	public static String getPropertyName(Method getter) {
-		return getter.getName();
-	}
+      if (userTypeName == null || userTypeName.isEmpty()) {
+        userTypeName = getDefaultEntityName(iface);
+      }
 
-	public static String getDefaultColumnName(Method getter) {
-		return Helenus.settings().getPropertyToColumnConverter().apply(getPropertyName(getter));
-	}
+      return new IdentityName(userTypeName, forceQuote);
+    }
 
-	public static IdentityName getUserDefinedTypeName(Class<?> iface, boolean required) {
+    if (required) {
+      throw new HelenusMappingException("entity must have annotation @UserDefinedType " + iface);
+    }
 
-		String userTypeName = null;
-		boolean forceQuote = false;
+    return null;
+  }
 
-		UDT userDefinedType = iface.getDeclaredAnnotation(UDT.class);
+  public static boolean isTuple(Class<?> iface) {
 
-		if (userDefinedType != null) {
+    Tuple tuple = iface.getDeclaredAnnotation(Tuple.class);
 
-			userTypeName = userDefinedType.value();
-			forceQuote = userDefinedType.forceQuote();
+    return tuple != null;
+  }
 
-			if (userTypeName == null || userTypeName.isEmpty()) {
-				userTypeName = getDefaultEntityName(iface);
-			}
+  public static boolean isUDT(Class<?> iface) {
 
-			return new IdentityName(userTypeName, forceQuote);
+    UDT udt = iface.getDeclaredAnnotation(UDT.class);
 
-		}
+    return udt != null;
+  }
 
-		if (required) {
-			throw new HelenusMappingException("entity must have annotation @UserDefinedType " + iface);
-		}
+  public static IdentityName getTableName(Class<?> iface, boolean required) {
 
-		return null;
+    String tableName = null;
+    boolean forceQuote = false;
 
-	}
+    Table table = iface.getDeclaredAnnotation(Table.class);
 
-	public static boolean isTuple(Class<?> iface) {
+    if (table != null) {
+      tableName = table.value();
+      forceQuote = table.forceQuote();
 
-		Tuple tuple = iface.getDeclaredAnnotation(Tuple.class);
+    } else if (required) {
+      throw new HelenusMappingException("entity must have annotation @Table " + iface);
+    }
 
-		return tuple != null;
+    if (tableName == null || tableName.isEmpty()) {
+      tableName = getDefaultEntityName(iface);
+    }
 
-	}
+    return new IdentityName(tableName, forceQuote);
+  }
 
-	public static boolean isUDT(Class<?> iface) {
+  public static String getDefaultEntityName(Class<?> iface) {
+    return Helenus.settings().getPropertyToColumnConverter().apply(iface.getSimpleName());
+  }
 
-		UDT udt = iface.getDeclaredAnnotation(UDT.class);
+  public static Class<?> getMappingInterface(Object pojo) {
 
-		return udt != null;
+    Class<?> iface = null;
 
-	}
+    if (pojo instanceof Class) {
+      iface = (Class<?>) pojo;
 
-	public static IdentityName getTableName(Class<?> iface, boolean required) {
+      if (!iface.isInterface()) {
+        throw new HelenusMappingException("expected interface " + iface);
+      }
 
-		String tableName = null;
-		boolean forceQuote = false;
+    } else {
+      Class<?>[] ifaces = pojo.getClass().getInterfaces();
 
-		Table table = iface.getDeclaredAnnotation(Table.class);
+      int len = ifaces.length;
+      for (int i = 0; i != len; ++i) {
 
-		if (table != null) {
-			tableName = table.value();
-			forceQuote = table.forceQuote();
+        iface = ifaces[0];
 
-		} else if (required) {
-			throw new HelenusMappingException("entity must have annotation @Table " + iface);
-		}
+        if (MapExportable.class.isAssignableFrom(iface)) {
+          continue;
+        }
 
-		if (tableName == null || tableName.isEmpty()) {
-			tableName = getDefaultEntityName(iface);
-		}
+        if (iface.getDeclaredAnnotation(Table.class) != null
+            || iface.getDeclaredAnnotation(UDT.class) != null
+            || iface.getDeclaredAnnotation(Tuple.class) != null) {
 
-		return new IdentityName(tableName, forceQuote);
-	}
+          break;
+        }
+      }
+    }
 
-	public static String getDefaultEntityName(Class<?> iface) {
-		return Helenus.settings().getPropertyToColumnConverter().apply(iface.getSimpleName());
-	}
+    if (iface == null) {
+      throw new HelenusMappingException("dsl interface not found for " + pojo);
+    }
 
-	public static Class<?> getMappingInterface(Object pojo) {
+    return iface;
+  }
 
-		Class<?> iface = null;
+  public static HelenusPropertyNode resolveMappingProperty(Getter<?> getter) {
 
-		if (pojo instanceof Class) {
-			iface = (Class<?>) pojo;
+    try {
+      Object childDsl = getter.get();
 
-			if (!iface.isInterface()) {
-				throw new HelenusMappingException("expected interface " + iface);
-			}
+      if (childDsl instanceof DslExportable) {
+        DslExportable e = (DslExportable) childDsl;
+        return e.getParentDslHelenusPropertyNode();
+      } else if (childDsl instanceof MapDsl) {
+        MapDsl mapDsl = (MapDsl) childDsl;
+        return mapDsl.getParent();
+      } else if (childDsl instanceof ListDsl) {
+        ListDsl listDsl = (ListDsl) childDsl;
+        return listDsl.getParent();
+      } else if (childDsl instanceof SetDsl) {
+        SetDsl setDsl = (SetDsl) childDsl;
+        return setDsl.getParent();
+      }
 
-		} else {
-			Class<?>[] ifaces = pojo.getClass().getInterfaces();
+      throw new HelenusMappingException("getter must reference to the dsl object " + getter);
 
-			int len = ifaces.length;
-			for (int i = 0; i != len; ++i) {
-
-				iface = ifaces[0];
-
-				if (MapExportable.class.isAssignableFrom(iface)) {
-					continue;
-				}
-
-				if (iface.getDeclaredAnnotation(Table.class) != null || iface.getDeclaredAnnotation(UDT.class) != null
-						|| iface.getDeclaredAnnotation(Tuple.class) != null) {
-
-					break;
-
-				}
-
-			}
-
-		}
-
-		if (iface == null) {
-			throw new HelenusMappingException("dsl interface not found for " + pojo);
-		}
-
-		return iface;
-
-	}
-
-	public static HelenusPropertyNode resolveMappingProperty(Getter<?> getter) {
-
-		try {
-			Object childDsl = getter.get();
-
-			if (childDsl instanceof DslExportable) {
-				DslExportable e = (DslExportable) childDsl;
-				return e.getParentDslHelenusPropertyNode();
-			}
-
-			else if (childDsl instanceof MapDsl) {
-				MapDsl mapDsl = (MapDsl) childDsl;
-				return mapDsl.getParent();
-			}
-
-			else if (childDsl instanceof ListDsl) {
-				ListDsl listDsl = (ListDsl) childDsl;
-				return listDsl.getParent();
-			}
-
-			else if (childDsl instanceof SetDsl) {
-				SetDsl setDsl = (SetDsl) childDsl;
-				return setDsl.getParent();
-			}
-
-			throw new HelenusMappingException("getter must reference to the dsl object " + getter);
-
-		} catch (DslPropertyException e) {
-			return e.getPropertyNode();
-		}
-
-	}
-
+    } catch (DslPropertyException e) {
+      return e.getPropertyNode();
+    }
+  }
 }

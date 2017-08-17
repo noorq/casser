@@ -15,14 +15,12 @@
  */
 package net.helenus.mapping.javatype;
 
+import com.datastax.driver.core.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-
-import com.datastax.driver.core.*;
-
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.IdentityName;
@@ -39,117 +37,112 @@ import net.helenus.support.HelenusMappingException;
 
 public final class ListJavaType extends AbstractJavaType {
 
-	@Override
-	public Class<?> getJavaClass() {
-		return List.class;
-	}
+  @Override
+  public Class<?> getJavaClass() {
+    return List.class;
+  }
 
-	@Override
-	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+  @Override
+  public AbstractDataType resolveDataType(
+      Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
 
-		Types.List clist = getter.getDeclaredAnnotation(Types.List.class);
-		if (clist != null) {
-			return new DTDataType(columnType, DataType.list(resolveSimpleType(getter, clist.value())));
-		}
+    Types.List clist = getter.getDeclaredAnnotation(Types.List.class);
+    if (clist != null) {
+      return new DTDataType(columnType, DataType.list(resolveSimpleType(getter, clist.value())));
+    }
 
-		Types.UDTList udtList = getter.getDeclaredAnnotation(Types.UDTList.class);
-		if (udtList != null) {
-			return new UDTListDataType(columnType, resolveUDT(udtList.value()), UDTValue.class);
-		}
+    Types.UDTList udtList = getter.getDeclaredAnnotation(Types.UDTList.class);
+    if (udtList != null) {
+      return new UDTListDataType(columnType, resolveUDT(udtList.value()), UDTValue.class);
+    }
 
-		Type[] args = getTypeParameters(genericJavaType);
-		ensureTypeArguments(getter, args.length, 1);
+    Type[] args = getTypeParameters(genericJavaType);
+    ensureTypeArguments(getter, args.length, 1);
 
-		Either<DataType, IdentityName> parameterType = autodetectParameterType(getter, args[0], metadata);
+    Either<DataType, IdentityName> parameterType =
+        autodetectParameterType(getter, args[0], metadata);
 
-		if (parameterType.isLeft()) {
-			return DTDataType.list(columnType, parameterType.getLeft(), args[0]);
-		} else {
-			return new UDTListDataType(columnType, parameterType.getRight(), (Class<?>) args[0]);
-		}
+    if (parameterType.isLeft()) {
+      return DTDataType.list(columnType, parameterType.getLeft(), args[0]);
+    } else {
+      return new UDTListDataType(columnType, parameterType.getRight(), (Class<?>) args[0]);
+    }
+  }
 
-	}
+  @Override
+  public Optional<Function<Object, Object>> resolveReadConverter(
+      AbstractDataType abstractDataType, SessionRepository repository) {
 
-	@Override
-	public Optional<Function<Object, Object>> resolveReadConverter(AbstractDataType abstractDataType,
-			SessionRepository repository) {
+    if (abstractDataType instanceof DTDataType) {
 
-		if (abstractDataType instanceof DTDataType) {
+      DTDataType dt = (DTDataType) abstractDataType;
+      DataType elementType = dt.getDataType().getTypeArguments().get(0);
+      if (elementType instanceof TupleType) {
 
-			DTDataType dt = (DTDataType) abstractDataType;
-			DataType elementType = dt.getDataType().getTypeArguments().get(0);
-			if (elementType instanceof TupleType) {
+        Class<?> tupleClass = dt.getTypeArguments()[0];
 
-				Class<?> tupleClass = dt.getTypeArguments()[0];
+        if (TupleValue.class.isAssignableFrom(tupleClass)) {
+          return Optional.empty();
+        }
 
-				if (TupleValue.class.isAssignableFrom(tupleClass)) {
-					return Optional.empty();
-				}
+        return Optional.of(new TupleListToListConverter(tupleClass, repository));
+      }
+    } else if (abstractDataType instanceof UDTListDataType) {
 
-				return Optional.of(new TupleListToListConverter(tupleClass, repository));
-			}
-		}
+      UDTListDataType dt = (UDTListDataType) abstractDataType;
 
-		else if (abstractDataType instanceof UDTListDataType) {
+      Class<Object> javaClass = (Class<Object>) dt.getTypeArguments()[0];
 
-			UDTListDataType dt = (UDTListDataType) abstractDataType;
+      if (UDTValue.class.isAssignableFrom(javaClass)) {
+        return Optional.empty();
+      }
 
-			Class<Object> javaClass = (Class<Object>) dt.getTypeArguments()[0];
+      return Optional.of(new UDTListToListConverter(javaClass, repository));
+    }
 
-			if (UDTValue.class.isAssignableFrom(javaClass)) {
-				return Optional.empty();
-			}
+    return Optional.empty();
+  }
 
-			return Optional.of(new UDTListToListConverter(javaClass, repository));
+  @Override
+  public Optional<Function<Object, Object>> resolveWriteConverter(
+      AbstractDataType abstractDataType, SessionRepository repository) {
 
-		}
+    if (abstractDataType instanceof DTDataType) {
 
-		return Optional.empty();
-	}
+      DTDataType dt = (DTDataType) abstractDataType;
+      DataType elementType = dt.getDataType().getTypeArguments().get(0);
 
-	@Override
-	public Optional<Function<Object, Object>> resolveWriteConverter(AbstractDataType abstractDataType,
-			SessionRepository repository) {
+      if (elementType instanceof TupleType) {
 
-		if (abstractDataType instanceof DTDataType) {
+        Class<?> tupleClass = dt.getTypeArguments()[0];
 
-			DTDataType dt = (DTDataType) abstractDataType;
-			DataType elementType = dt.getDataType().getTypeArguments().get(0);
+        if (TupleValue.class.isAssignableFrom(tupleClass)) {
+          return Optional.empty();
+        }
 
-			if (elementType instanceof TupleType) {
+        return Optional.of(
+            new ListToTupleListConverter(tupleClass, (TupleType) elementType, repository));
+      }
 
-				Class<?> tupleClass = dt.getTypeArguments()[0];
+    } else if (abstractDataType instanceof UDTListDataType) {
 
-				if (TupleValue.class.isAssignableFrom(tupleClass)) {
-					return Optional.empty();
-				}
+      UDTListDataType dt = (UDTListDataType) abstractDataType;
 
-				return Optional.of(new ListToTupleListConverter(tupleClass, (TupleType) elementType, repository));
-			}
+      Class<Object> javaClass = (Class<Object>) dt.getTypeArguments()[0];
 
-		}
+      if (UDTValue.class.isAssignableFrom(javaClass)) {
+        return Optional.empty();
+      }
 
-		else if (abstractDataType instanceof UDTListDataType) {
+      UserType userType = repository.findUserType(dt.getUdtName().getName());
+      if (userType == null) {
+        throw new HelenusMappingException(
+            "UserType not found for " + dt.getUdtName() + " with type " + javaClass);
+      }
 
-			UDTListDataType dt = (UDTListDataType) abstractDataType;
+      return Optional.of(new ListToUDTListConverter(javaClass, userType, repository));
+    }
 
-			Class<Object> javaClass = (Class<Object>) dt.getTypeArguments()[0];
-
-			if (UDTValue.class.isAssignableFrom(javaClass)) {
-				return Optional.empty();
-			}
-
-			UserType userType = repository.findUserType(dt.getUdtName().getName());
-			if (userType == null) {
-				throw new HelenusMappingException(
-						"UserType not found for " + dt.getUdtName() + " with type " + javaClass);
-			}
-
-			return Optional.of(new ListToUDTListConverter(javaClass, userType, repository));
-
-		}
-
-		return Optional.empty();
-	}
-
+    return Optional.empty();
+  }
 }

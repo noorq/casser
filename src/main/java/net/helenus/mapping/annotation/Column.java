@@ -18,53 +18,45 @@ package net.helenus.mapping.annotation;
 import java.lang.annotation.*;
 
 /**
- * Column annotation is used to define additional properties of the column in
- * entity mapping interfaces: @Table, @UDT, @Tuple
+ * Column annotation is used to define additional properties of the column in entity mapping
+ * interfaces: @Table, @UDT, @Tuple
  *
- * Column annotation can be used to override default name of the column or to
- * setup order of the columns in the mapping
+ * <p>Column annotation can be used to override default name of the column or to setup order of the
+ * columns in the mapping
  *
- * Usually for @Table and @UDT types it is not important to define order of the
- * columns, but in @Tuple mapping it is required, because tuple itself
- * represents the sequence of the types with particular order in the table's
- * column
- *
- *
+ * <p>Usually for @Table and @UDT types it is not important to define order of the columns, but
+ * in @Tuple mapping it is required, because tuple itself represents the sequence of the types with
+ * particular order in the table's column
  */
-
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 public @interface Column {
 
-	/**
-	 * Default value is the name of the method normalized to underscore
-	 *
-	 * @return name of the column
-	 */
+  /**
+   * Default value is the name of the method normalized to underscore
+   *
+   * @return name of the column
+   */
+  String value() default "";
 
-	String value() default "";
+  /**
+   * Ordinal will be used for ascending sorting of columns
+   *
+   * <p>Default value is 0, because not all mapping entities require all fields to have unique
+   * ordinals, only @Tuple mapping entity requires all of them to be unique.
+   *
+   * @return number that used to sort columns, usually for @Tuple only
+   */
+  int ordinal() default 0;
 
-	/**
-	 * Ordinal will be used for ascending sorting of columns
-	 *
-	 * Default value is 0, because not all mapping entities require all fields to
-	 * have unique ordinals, only @Tuple mapping entity requires all of them to be
-	 * unique.
-	 *
-	 * @return number that used to sort columns, usually for @Tuple only
-	 */
-
-	int ordinal() default 0;
-
-	/**
-	 * For reserved words in Cassandra we need quotation in CQL queries. This
-	 * property marks that the name of the UDT type needs to be quoted.
-	 *
-	 * Default value is false, we are quoting only selected names.
-	 *
-	 * @return true if name have to be quoted
-	 */
-
-	boolean forceQuote() default false;
+  /**
+   * For reserved words in Cassandra we need quotation in CQL queries. This property marks that the
+   * name of the UDT type needs to be quoted.
+   *
+   * <p>Default value is false, we are quoting only selected names.
+   *
+   * @return true if name have to be quoted
+   */
+  boolean forceQuote() default false;
 }

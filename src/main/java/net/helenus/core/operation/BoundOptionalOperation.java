@@ -15,31 +15,31 @@
  */
 package net.helenus.core.operation;
 
-import java.util.Optional;
-
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Statement;
+import java.util.Optional;
 
-public final class BoundOptionalOperation<E> extends AbstractOptionalOperation<E, BoundOptionalOperation<E>> {
+public final class BoundOptionalOperation<E>
+    extends AbstractOptionalOperation<E, BoundOptionalOperation<E>> {
 
-	private final BoundStatement boundStatement;
-	private final AbstractOptionalOperation<E, ?> delegate;
+  private final BoundStatement boundStatement;
+  private final AbstractOptionalOperation<E, ?> delegate;
 
-	public BoundOptionalOperation(BoundStatement boundStatement, AbstractOptionalOperation<E, ?> operation) {
-		super(operation.sessionOps);
-		this.boundStatement = boundStatement;
-		this.delegate = operation;
-	}
+  public BoundOptionalOperation(
+      BoundStatement boundStatement, AbstractOptionalOperation<E, ?> operation) {
+    super(operation.sessionOps);
+    this.boundStatement = boundStatement;
+    this.delegate = operation;
+  }
 
-	@Override
-	public Optional<E> transform(ResultSet resultSet) {
-		return delegate.transform(resultSet);
-	}
+  @Override
+  public Optional<E> transform(ResultSet resultSet) {
+    return delegate.transform(resultSet);
+  }
 
-	@Override
-	public Statement buildStatement() {
-		return boundStatement;
-	}
-
+  @Override
+  public Statement buildStatement() {
+    return boundStatement;
+  }
 }
