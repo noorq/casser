@@ -20,17 +20,17 @@ import java.util.concurrent.CompletableFuture;
 import net.helenus.core.AbstractSessionOperations;
 
 public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
-    extends AbstractStatementOperation<E, O> implements Transformational<E> {
+    extends AbstractStatementOperation<E, O> implements OperationsDelegate<E> {
 
   public abstract E transform(ResultSet resultSet);
+
+  protected CacheManager getCacheManager() { return null; }
 
   public boolean cacheable() {
     return false;
   }
 
-  public String getCacheKey() {
-    return "";
-  }
+  public CacheKey getCacheKey() { return null; }
 
   public AbstractOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);

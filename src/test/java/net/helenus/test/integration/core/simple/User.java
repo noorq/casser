@@ -15,11 +15,13 @@
  */
 package net.helenus.test.integration.core.simple;
 
+import net.helenus.core.annotation.Cacheable;
 import net.helenus.mapping.annotation.Column;
 import net.helenus.mapping.annotation.PartitionKey;
 import net.helenus.mapping.annotation.Table;
 
 @Table("simple_users")
+@Cacheable
 public interface User {
 
   @PartitionKey

@@ -18,6 +18,8 @@ package net.helenus.core.operation;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 
+import java.util.regex.Pattern;
+
 public final class PreparedStreamOperation<E> {
 
   private final PreparedStatement preparedStatement;
@@ -37,7 +39,10 @@ public final class PreparedStreamOperation<E> {
 
     BoundStatement boundStatement = preparedStatement.bind(params);
 
-    return new BoundStreamOperation<E>(boundStatement, operation);
+    String key = "use " + preparedStatement.getQueryKeyspace() + "; " + preparedStatement.getQueryString();
+    for (Object param : params) { key = key.replaceFirst(Pattern.quote("?"), param.toString()); }
+
+    return new BoundStreamOperation<E>(boundStatement, new CacheKey(key), operation);
   }
 
   @Override

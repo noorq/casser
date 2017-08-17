@@ -25,13 +25,17 @@ import java.util.concurrent.CompletableFuture;
 import net.helenus.core.AbstractSessionOperations;
 
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
-    extends AbstractStatementOperation<E, O> implements Transformational<Optional<E>> {
+    extends AbstractStatementOperation<E, O> implements OperationsDelegate<Optional<E>> {
 
   public AbstractOptionalOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
   }
 
   public abstract Optional<E> transform(ResultSet resultSet);
+
+  protected CacheManager getCacheManager() { return null; }
+
+  public CacheKey getCacheKey() { return null; }
 
   public PreparedOptionalOperation<E> prepare() {
     return new PreparedOptionalOperation<E>(prepareStatement(), this);

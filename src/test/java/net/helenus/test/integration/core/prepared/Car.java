@@ -16,10 +16,13 @@
 package net.helenus.test.integration.core.prepared;
 
 import java.math.BigDecimal;
+
+import net.helenus.core.annotation.Cacheable;
 import net.helenus.mapping.annotation.PartitionKey;
 import net.helenus.mapping.annotation.Table;
 
 @Table("cars")
+@Cacheable
 public interface Car {
 
   @PartitionKey(ordinal = 0)

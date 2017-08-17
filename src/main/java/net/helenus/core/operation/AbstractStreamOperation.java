@@ -25,13 +25,17 @@ import java.util.stream.Stream;
 import net.helenus.core.AbstractSessionOperations;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>>
-    extends AbstractStatementOperation<E, O> implements Transformational<Stream<E>> {
+    extends AbstractStatementOperation<E, O> implements OperationsDelegate<Stream<E>> {
 
   public AbstractStreamOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
   }
 
   public abstract Stream<E> transform(ResultSet resultSet);
+
+  protected CacheManager getCacheManager() { return null; }
+
+  public CacheKey getCacheKey() { return null; }
 
   public PreparedStreamOperation<E> prepare() {
     return new PreparedStreamOperation<E>(prepareStatement(), this);
@@ -51,11 +55,11 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
   public Stream<E> sync() {
     return Executioner.INSTANCE.<Stream<E>>sync(
-        sessionOps, options(buildStatement()), traceContext, this, showValues);
+        sessionOps, options(buildStatement()), getCacheManager(), traceContext, this, showValues);
   }
 
   public CompletableFuture<Stream<E>> async() {
     return Executioner.INSTANCE.<Stream<E>>async(
-        sessionOps, options(buildStatement()), traceContext, this, showValues);
+        sessionOps, options(buildStatement()), getCacheManager(), traceContext, this, showValues);
   }
 }

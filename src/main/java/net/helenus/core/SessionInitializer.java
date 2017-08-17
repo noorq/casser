@@ -220,7 +220,6 @@ public final class SessionInitializer extends AbstractSessionOperations {
   }
 
   public void singleton() {
-
     Helenus.setSession(get());
   }
 

@@ -44,4 +44,5 @@ public final class SelectTransformingOperation<R, E>
   public Stream<R> transform(ResultSet resultSet) {
     return src.transform(resultSet).map(fn);
   }
+
 }

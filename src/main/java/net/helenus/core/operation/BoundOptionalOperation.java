@@ -39,6 +39,9 @@ public final class BoundOptionalOperation<E>
   }
 
   @Override
+  public CacheKey getCacheKey() { return delegate.getCacheKey(); }
+
+  @Override
   public Statement buildStatement() {
     return boundStatement;
   }
