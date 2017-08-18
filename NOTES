@@ -1,3 +1,13 @@
+--- Cache
+
+cache entites (2 methods) marked @Cacheable
+cache entites in txn context
+cache results when .cache() chained before .{a}sync() call, return a EvictableCacheItem<E> that has an .evict() method
+fix txn .andThen() chains
+
+
+
+
 primitive types have default values, (e.g. boolean, int, ...) but primative wrapper classes do not and can be null (e.g. Boolean, Integer, ...)
 
 create table wal {

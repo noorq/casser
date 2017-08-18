@@ -3,47 +3,52 @@ package net.helenus.core.operation;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Statement;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import net.helenus.core.HelenusSession;
 import net.helenus.mapping.HelenusEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
-
-public abstract class CacheManager {
+public class CacheManager {
     public enum Type { FETCH, MUTATE }
 
-    private static CacheManager sessionFetch = new SessionCacheManager(Type.FETCH);
+    final Logger logger = LoggerFactory.getLogger(getClass());
+    final HelenusSession session;
 
-    protected CacheManager.Type type;
+    private AbstractCache sessionFetch;
 
+    public CacheManager(HelenusSession session) {
+        this.session = session;
 
-    public static CacheManager of(Type type, HelenusEntity entity) {
-        if (entity != null && entity.isCacheable()) {
-            return sessionFetch;
-        }
-        return null;
+        RemovalListener<String, ResultSet> listener = new RemovalListener<String, ResultSet>() {
+            @Override
+            public void onRemoval(RemovalNotification<String, ResultSet> n){
+                if (n.wasEvicted()) {
+                    String cause = n.getCause().name();
+                    logger.info(cause);
+                }
+            }
+        };
+
+        Cache<String, ResultSet> cache = CacheBuilder.newBuilder()
+                .maximumSize(10_000)
+                .expireAfterAccess(20, TimeUnit.MINUTES)
+                .weakKeys()
+                .softValues()
+                .removalListener(listener)
+                .build();
+
+        sessionFetch = new SessionCache(Type.FETCH, this, cache);
     }
 
-    public CacheManager(Type type) {
-        this.type = type;
-    }
-
-    protected abstract ResultSet fetch(Statement statement, OperationsDelegate delegate, ResultSetFuture resultSetFuture)
-            throws InterruptedException, ExecutionException;
-    protected abstract ResultSet mutate(Statement statement, OperationsDelegate delegate, ResultSetFuture resultSetFuture)
-            throws InterruptedException, ExecutionException;
-
-    public ResultSet apply(Statement statement, OperationsDelegate delegate, ResultSetFuture futureResultSet)
-            throws InterruptedException, ExecutionException {
-        ResultSet resultSet = null;
-        switch (type) {
-            case FETCH:
-                 resultSet = fetch(statement, delegate, futureResultSet);
-                break;
-            case MUTATE:
-                resultSet = mutate(statement, delegate, futureResultSet);
-                break;
-        }
-        return resultSet;
+    public AbstractCache of(CacheManager.Type type) {
+        return sessionFetch;
     }
 
 }

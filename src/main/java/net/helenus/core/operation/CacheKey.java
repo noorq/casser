@@ -1,8 +1,14 @@
 package net.helenus.core.operation;
 
+import com.datastax.driver.core.Statement;
+
 public class CacheKey {
 
     private String key;
+
+    static String of(Statement statement) {
+      return "use " + statement.getKeyspace() + "; " + statement.toString();
+    }
 
     CacheKey() {}
 

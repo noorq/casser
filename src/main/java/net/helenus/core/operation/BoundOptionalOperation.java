@@ -39,6 +39,9 @@ public final class BoundOptionalOperation<E>
   }
 
   @Override
+  protected AbstractCache getCache() { return delegate.getCache(); }
+
+  @Override
   public CacheKey getCacheKey() { return delegate.getCacheKey(); }
 
   @Override

@@ -33,7 +33,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
   public abstract Stream<E> transform(ResultSet resultSet);
 
-  protected CacheManager getCacheManager() { return null; }
+  protected AbstractCache getCache() { return null; }
 
   public CacheKey getCacheKey() { return null; }
 
@@ -55,11 +55,11 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
   public Stream<E> sync() {
     return Executioner.INSTANCE.<Stream<E>>sync(
-        sessionOps, options(buildStatement()), getCacheManager(), traceContext, this, showValues);
+        sessionOps, options(buildStatement()), getCache(), traceContext, this, showValues);
   }
 
   public CompletableFuture<Stream<E>> async() {
     return Executioner.INSTANCE.<Stream<E>>async(
-        sessionOps, options(buildStatement()), getCacheManager(), traceContext, this, showValues);
+        sessionOps, options(buildStatement()), getCache(), traceContext, this, showValues);
   }
 }

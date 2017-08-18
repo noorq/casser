@@ -36,7 +36,7 @@ public final class BoundStreamOperation<E>
   }
 
   @Override
-  protected CacheManager getCacheManager() { return delegate.getCacheManager(); }
+  protected AbstractCache getCache() { return delegate.getCache(); }
 
   @Override
   public Stream<E> transform(ResultSet resultSet) {

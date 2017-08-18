@@ -27,15 +27,12 @@ public enum Executioner {
     <E> E sync(
             AbstractSessionOperations session,
             Statement statement,
-            CacheManager cacheManager,
+            AbstractCache cache,
             TraceContext traceContext,
             OperationsDelegate<E> delegate,
             boolean showValues) {
-    try {
-      return this.<E>async(session, statement, cacheManager, traceContext, delegate, showValues).get();
-    } catch (InterruptedException | ExecutionException e) {
-        throw new HelenusException(e);
-    }
+    ResultSetFuture futureResultSet = session.executeAsync(statement, showValues);
+    return this.<E>execute(futureResultSet, session, statement, cache, traceContext, delegate, showValues);
   }
 
   public <E> CompletableFuture<E> async(
@@ -48,36 +45,55 @@ public enum Executioner {
   }
 
   public <E> CompletableFuture<E> async(
-            AbstractSessionOperations session,
-            Statement statement,
-            CacheManager cacheManager,
-            TraceContext traceContext,
-            OperationsDelegate<E> delegate,
-            boolean showValues) {
-    ResultSetFuture futureResultSet = session.executeAsync(statement, showValues);
+          AbstractSessionOperations session,
+          Statement statement,
+          AbstractCache cache,
+          TraceContext traceContext,
+          OperationsDelegate<E> delegate,
+          boolean showValues) {
 
-    return CompletableFuture.<E>supplyAsync(
-        () -> {
-          Tracer tracer = session.getZipkinTracer();
-          final Span span =
-              (tracer != null && traceContext != null) ? tracer.newChild(traceContext) : null;
-          try {
-            if (span != null) {
+    ResultSetFuture futureResultSet = session.executeAsync(statement, showValues);
+    return CompletableFuture.<E>supplyAsync(() ->
+            execute(futureResultSet, session, statement, cache, traceContext, delegate, showValues));
+  }
+
+  public <E> E execute(ResultSetFuture futureResultSet,
+          AbstractSessionOperations session,
+          Statement statement,
+          AbstractCache cache,
+          TraceContext traceContext,
+          OperationsDelegate<E> delegate,
+          boolean showValues) {
+
+      Tracer tracer = session.getZipkinTracer();
+      Span span = null;
+      if (tracer != null && traceContext != null) {
+          span = tracer.newChild(traceContext);
+      }
+
+      try {
+          if (span != null) {
               span.name("cassandra");
               span.start();
-            }
-            ResultSet resultSet = cacheManager != null ? cacheManager.apply(statement, delegate, futureResultSet) :
-                    futureResultSet.get();
-            E result = delegate.transform(resultSet);
-
-            return result;
-          } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-          } finally {
-            if (span != null) {
-              span.finish();
-            }
           }
-        });
+
+          ResultSet resultSet;
+          if (cache != null) {
+              resultSet = cache.apply(statement, delegate, futureResultSet);
+          } else {
+              resultSet = futureResultSet.get();
+          }
+
+          E result = delegate.transform(resultSet);
+
+          return result;
+      } catch (InterruptedException | ExecutionException e) {
+          throw new RuntimeException(e);
+      } finally {
+          if (span != null) {
+              span.finish();
+          }
+      }
   }
+
 }

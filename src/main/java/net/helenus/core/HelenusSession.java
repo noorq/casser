@@ -60,7 +60,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
   private final RowColumnValueProvider valueProvider;
   private final StatementColumnValuePreparer valuePreparer;
   private final Metadata metadata;
-  private final Cache<String, Object> sessionCache;
+  private final CacheManager cacheManager;
   private UnitOfWork currentUnitOfWork;
 
   HelenusSession(
@@ -92,13 +92,8 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     this.valueProvider = new RowColumnValueProvider(this.sessionRepository);
     this.valuePreparer = new StatementColumnValuePreparer(this.sessionRepository);
     this.metadata = session.getCluster().getMetadata();
-    this.sessionCache =
-        CacheBuilder.newBuilder()
-            .maximumSize(MAX_CACHE_SIZE)
-            .expireAfterAccess(MAX_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS)
-            .recordStats()
-            .build();
     this.currentUnitOfWork = null;
+    this.cacheManager = new CacheManager(this);
   }
 
   @Override
@@ -200,16 +195,13 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     }
   }
 
-  public void cache(String key, Object value) {
-    sessionCache.put(key, value); // ttl
-  }
-
   public <E> SelectOperation<E> select(Class<E> entityClass) {
 
     Objects.requireNonNull(entityClass, "entityClass is empty");
     ColumnValueProvider valueProvider = getValueProvider();
     HelenusEntity entity = Helenus.entity(entityClass);
 
+      //TODO cache entity
     return new SelectOperation<E>(
         this,
         entity,
@@ -451,6 +443,11 @@ public final class HelenusSession extends AbstractSessionOperations implements C
   public DeleteOperation delete(Object dsl) {
     Objects.requireNonNull(dsl, "dsl is empty");
     return new DeleteOperation(this, Helenus.resolve(dsl));
+  }
+
+  @Override
+  public AbstractCache cacheFor(CacheManager.Type type) {
+      return cacheManager.of(type);
   }
 
   public Session getSession() {

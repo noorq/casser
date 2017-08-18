@@ -33,7 +33,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 
   public abstract Optional<E> transform(ResultSet resultSet);
 
-  protected CacheManager getCacheManager() { return null; }
+  protected AbstractCache getCache() { return null; }
 
   public CacheKey getCacheKey() { return null; }
 
@@ -56,11 +56,11 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
   public Optional<E> sync() {
 
     return Executioner.INSTANCE.<Optional<E>>sync(
-        sessionOps, options(buildStatement()), traceContext, this, showValues);
+        sessionOps, options(buildStatement()), getCache(), traceContext, this, showValues);
   }
 
   public CompletableFuture<Optional<E>> async() {
     return Executioner.INSTANCE.<Optional<E>>async(
-        sessionOps, options(buildStatement()), traceContext, this, showValues);
+        sessionOps, options(buildStatement()), getCache(), traceContext, this, showValues);
   }
 }

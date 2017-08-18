@@ -24,7 +24,7 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
 
   public abstract E transform(ResultSet resultSet);
 
-  protected CacheManager getCacheManager() { return null; }
+  protected AbstractCache getCache() { return null; }
 
   public boolean cacheable() {
     return false;
@@ -42,11 +42,11 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
 
   public E sync() {
     return Executioner.INSTANCE.<E>sync(
-        sessionOps, options(buildStatement()), traceContext, this, showValues);
+        sessionOps, options(buildStatement()), getCache(), traceContext, this, showValues);
   }
 
   public CompletableFuture<E> async() {
     return Executioner.INSTANCE.<E>async(
-        sessionOps, options(buildStatement()), traceContext, this, showValues);
+        sessionOps, options(buildStatement()), getCache(), traceContext, this, showValues);
   }
 }

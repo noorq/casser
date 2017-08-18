@@ -46,7 +46,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   protected Integer limit = null;
   protected boolean allowFiltering = false;
 
-  protected CacheManager cacheManager;
 
   public SelectOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
@@ -70,7 +69,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
               }
             };
 
-    this.cacheManager = CacheManager.of(CacheManager.Type.FETCH, null) ;
   }
 
   public SelectOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity) {
@@ -83,7 +81,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
             .map(p -> new HelenusPropertyNode(p, Optional.empty()))
             .forEach(p -> this.props.add(p));
 
-    this.cacheManager = CacheManager.of(CacheManager.Type.FETCH, entity) ;
   }
 
   public SelectOperation(
@@ -100,7 +97,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
             .map(p -> new HelenusPropertyNode(p, Optional.empty()))
             .forEach(p -> this.props.add(p));
 
-    this.cacheManager = CacheManager.of(CacheManager.Type.FETCH, entity) ;
   }
 
   public SelectOperation(
@@ -112,7 +108,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
     this.rowMapper = rowMapper;
     Collections.addAll(this.props, props);
 
-    this.cacheManager = CacheManager.of(CacheManager.Type.FETCH, null) ;
   }
 
   public CountOperation count() {
@@ -260,10 +255,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
                       Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED),
                       false);
     }
-  }
-
-  protected CacheManager getCacheManager() {
-    return cacheManager;
   }
 
   private List<Ordering> getOrCreateOrdering() {

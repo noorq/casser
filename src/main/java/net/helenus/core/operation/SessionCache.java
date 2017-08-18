@@ -1,48 +1,27 @@
 package net.helenus.core.operation;
 
+import java.util.concurrent.ExecutionException;
+
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Statement;
-import com.google.common.cache.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import com.datastax.driver.core.querybuilder.Select;
+import com.google.common.cache.Cache;
 
 
-public class SessionCacheManager extends CacheManager {
-    final Logger logger = LoggerFactory.getLogger(getClass());
+public class SessionCache extends AbstractCache {
 
-    private Cache<String, ResultSet> cache;
+    private final CacheManager manager;
 
-    SessionCacheManager(CacheManager.Type type) {
-        super(type);
-
-        RemovalListener<String, ResultSet> listener;
-        listener = new RemovalListener<String, ResultSet>() {
-            @Override
-            public void onRemoval(RemovalNotification<String, ResultSet> n){
-                if (n.wasEvicted()) {
-                    String cause = n.getCause().name();
-                    logger.info(cause);
-                }
-            }
-        };
-
-        cache = CacheBuilder.newBuilder()
-                .maximumSize(10_000)
-                .expireAfterAccess(20, TimeUnit.MINUTES)
-                .weakKeys()
-                .softValues()
-                .removalListener(listener)
-                .build();
+    SessionCache(CacheManager.Type type, CacheManager manager, Cache<String, ResultSet> cache) {
+        super(type, cache);
+        this.manager = manager;
     }
 
     protected ResultSet fetch(Statement statement, OperationsDelegate delegate, ResultSetFuture resultSetFuture)
             throws InterruptedException, ExecutionException {
-        CacheKey key = delegate.getCacheKey();
-        final String cacheKey = key == null ? statement.toString() : key.toString();
+        final CacheKey key = delegate.getCacheKey();
+        final String cacheKey = (key == null) ? CacheKey.of(statement) : key.toString();
         ResultSet resultSet = null;
         if (cacheKey == null) {
             resultSet = resultSetFuture.get();
@@ -51,6 +30,7 @@ public class SessionCacheManager extends CacheManager {
             if (resultSet == null) {
                 resultSet = resultSetFuture.get();
                 if (resultSet != null) {
+                    planEvictionFor(statement);
                     cache.put(cacheKey, resultSet);
                 }
             }
@@ -64,9 +44,22 @@ public class SessionCacheManager extends CacheManager {
         final String cacheKey = key == null ? statement.toString() : key.toString();
         ResultSet resultSet = resultSetFuture.get();
         if (cacheKey != null && resultSet != null) {
+            planEvictionFor(statement);
+            //manager.evictIfNecessary(statement, delegate);
             cache.put(cacheKey, resultSet);
         }
         return resultSet;
+    }
+
+    private void planEvictionFor(Statement statement) {
+        //((Select)statement).table + statement.where.clauses.length == 0
+        //TTL for rows read
+    }
+
+    public ResultSet get(Statement statement, OperationsDelegate delegate) {
+        final CacheKey key = delegate.getCacheKey();
+        final String cacheKey = (key == null) ? CacheKey.of(statement) : key.toString();
+        return cache.getIfPresent(cacheKey);
     }
 
 }
