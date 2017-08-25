@@ -92,13 +92,13 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
     // select row and map to entity
 
     User actual =
-            session
-                    .selectAll(User.class)
-                    .mapTo(User.class)
-                    .where(user::id, eq(100L))
-                    .sync()
-                    .findFirst()
-                    .get();
+        session
+            .selectAll(User.class)
+            .mapTo(User.class)
+            .where(user::id, eq(100L))
+            .sync()
+            .findFirst()
+            .get();
     assertUsers(newUser, actual);
 
     // select as object
@@ -157,7 +157,7 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
     name =
         (String)
             session
-                .<Fun.ArrayTuple>select()
+                .select()
                 .column(user::name)
                 .where(user::id, eq(100L))
                 .sync()
@@ -198,10 +198,10 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
     }).sync();
 
     session
-            .update(user::name, "albert")
-            .set(user::age, 35)
-            .where(user::id, Operator.EQ, 100L)
-            .sync();
+        .update(user::name, "albert")
+        .set(user::age, 35)
+        .where(user::id, Operator.EQ, 100L)
+        .sync();
 
     long cnt = session.count(user).where(user::id, Operator.EQ, 100L).sync();
     Assert.assertEquals(1L, cnt);

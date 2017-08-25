@@ -18,19 +18,24 @@ package net.helenus.core.operation;
 import com.datastax.driver.core.ResultSet;
 import java.util.concurrent.CompletableFuture;
 import net.helenus.core.AbstractSessionOperations;
+import net.helenus.core.UnitOfWork;
 
 public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
     extends AbstractStatementOperation<E, O> implements OperationsDelegate<E> {
 
   public abstract E transform(ResultSet resultSet);
 
-  protected AbstractCache getCache() { return null; }
+  protected AbstractCache getCache() {
+    return null;
+  }
 
   public boolean cacheable() {
     return false;
   }
 
-  public CacheKey getCacheKey() { return null; }
+  public CacheKey getCacheKey() {
+    return null;
+  }
 
   public AbstractOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
@@ -42,11 +47,20 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
 
   public E sync() {
     return Executioner.INSTANCE.<E>sync(
-        sessionOps, options(buildStatement()), getCache(), traceContext, this, showValues);
+            sessionOps, null, options(buildStatement()), getCache(), traceContext, this, showValues);
+  }
+  public E sync(UnitOfWork uow) {
+    return Executioner.INSTANCE.<E>sync(
+            sessionOps, uow, options(buildStatement()), getCache(), traceContext, this, showValues);
   }
 
   public CompletableFuture<E> async() {
     return Executioner.INSTANCE.<E>async(
-        sessionOps, options(buildStatement()), getCache(), traceContext, this, showValues);
+            sessionOps, null, options(buildStatement()), getCache(), traceContext, this, showValues);
+  }
+
+  public CompletableFuture<E> async(UnitOfWork uow) {
+    return Executioner.INSTANCE.<E>async(
+            sessionOps, uow, options(buildStatement()), getCache(), traceContext, this, showValues);
   }
 }

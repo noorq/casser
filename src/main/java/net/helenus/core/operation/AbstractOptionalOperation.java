@@ -23,6 +23,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import net.helenus.core.AbstractSessionOperations;
+import net.helenus.core.UnitOfWork;
 
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
     extends AbstractStatementOperation<E, O> implements OperationsDelegate<Optional<E>> {
@@ -33,9 +34,13 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 
   public abstract Optional<E> transform(ResultSet resultSet);
 
-  protected AbstractCache getCache() { return null; }
+  protected AbstractCache getCache() {
+    return null;
+  }
 
-  public CacheKey getCacheKey() { return null; }
+  public CacheKey getCacheKey() {
+    return null;
+  }
 
   public PreparedOptionalOperation<E> prepare() {
     return new PreparedOptionalOperation<E>(prepareStatement(), this);
@@ -54,13 +59,23 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
   }
 
   public Optional<E> sync() {
-
     return Executioner.INSTANCE.<Optional<E>>sync(
-        sessionOps, options(buildStatement()), getCache(), traceContext, this, showValues);
+            sessionOps, null, options(buildStatement()), getCache(), traceContext, this, showValues);
+  }
+
+  public Optional<E> sync(UnitOfWork uow) {
+      return Executioner.INSTANCE.<Optional<E>>sync(
+              sessionOps, uow, options(buildStatement()), getCache(), traceContext, this, showValues);
   }
 
   public CompletableFuture<Optional<E>> async() {
     return Executioner.INSTANCE.<Optional<E>>async(
-        sessionOps, options(buildStatement()), getCache(), traceContext, this, showValues);
+            sessionOps, null, options(buildStatement()), getCache(), traceContext, this, showValues);
   }
+
+  public CompletableFuture<Optional<E>> async(UnitOfWork uow) {
+      return Executioner.INSTANCE.<Optional<E>>async(
+              sessionOps, uow, options(buildStatement()), getCache(), traceContext, this, showValues);
+  }
+
 }

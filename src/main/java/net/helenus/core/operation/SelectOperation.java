@@ -46,29 +46,27 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   protected Integer limit = null;
   protected boolean allowFiltering = false;
 
-
   public SelectOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
 
     this.rowMapper =
-            new Function<Row, E>() {
+        new Function<Row, E>() {
 
-              @Override
-              public E apply(Row source) {
+          @Override
+          public E apply(Row source) {
 
-                ColumnValueProvider valueProvider = sessionOps.getValueProvider();
-                Object[] arr = new Object[props.size()];
+            ColumnValueProvider valueProvider = sessionOps.getValueProvider();
+            Object[] arr = new Object[props.size()];
 
-                int i = 0;
-                for (HelenusPropertyNode p : props) {
-                  Object value = valueProvider.getColumnValue(source, -1, p.getProperty());
-                  arr[i++] = value;
-                }
+            int i = 0;
+            for (HelenusPropertyNode p : props) {
+              Object value = valueProvider.getColumnValue(source, -1, p.getProperty());
+              arr[i++] = value;
+            }
 
-                return (E) Fun.ArrayTuple.of(arr);
-              }
-            };
-
+            return (E) Fun.ArrayTuple.of(arr);
+          }
+        };
   }
 
   public SelectOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity) {
@@ -76,38 +74,35 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
     super(sessionOperations);
 
     entity
-            .getOrderedProperties()
-            .stream()
-            .map(p -> new HelenusPropertyNode(p, Optional.empty()))
-            .forEach(p -> this.props.add(p));
-
+        .getOrderedProperties()
+        .stream()
+        .map(p -> new HelenusPropertyNode(p, Optional.empty()))
+        .forEach(p -> this.props.add(p));
   }
 
   public SelectOperation(
-          AbstractSessionOperations sessionOperations,
-          HelenusEntity entity,
-          Function<Row, E> rowMapper) {
+      AbstractSessionOperations sessionOperations,
+      HelenusEntity entity,
+      Function<Row, E> rowMapper) {
 
     super(sessionOperations);
     this.rowMapper = rowMapper;
 
     entity
-            .getOrderedProperties()
-            .stream()
-            .map(p -> new HelenusPropertyNode(p, Optional.empty()))
-            .forEach(p -> this.props.add(p));
-
+        .getOrderedProperties()
+        .stream()
+        .map(p -> new HelenusPropertyNode(p, Optional.empty()))
+        .forEach(p -> this.props.add(p));
   }
 
   public SelectOperation(
-          AbstractSessionOperations sessionOperations,
-          Function<Row, E> rowMapper,
-          HelenusPropertyNode... props) {
+      AbstractSessionOperations sessionOperations,
+      Function<Row, E> rowMapper,
+      HelenusPropertyNode... props) {
 
     super(sessionOperations);
     this.rowMapper = rowMapper;
     Collections.addAll(this.props, props);
-
   }
 
   public CountOperation count() {
@@ -119,10 +114,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
         entity = prop.getEntity();
       } else if (entity != prop.getEntity()) {
         throw new HelenusMappingException(
-                "you can count records only from a single entity "
-                        + entity.getMappingInterface()
-                        + " or "
-                        + prop.getEntity().getMappingInterface());
+            "you can count records only from a single entity "
+                + entity.getMappingInterface()
+                + " or "
+                + prop.getEntity().getMappingInterface());
       }
     }
 
@@ -143,11 +138,11 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
     this.rowMapper = null;
 
     return new SelectTransformingOperation<R, E>(
-            this,
-            (r) -> {
-              Map<String, Object> map = new ValueProviderMap(r, sessionOps.getValueProvider(), entity);
-              return (R) Helenus.map(entityClass, map);
-            });
+        this,
+        (r) -> {
+          Map<String, Object> map = new ValueProviderMap(r, sessionOps.getValueProvider(), entity);
+          return (R) Helenus.map(entityClass, map);
+        });
   }
 
   public <R> SelectTransformingOperation<R, E> map(Function<E, R> fn) {
@@ -197,10 +192,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
         entity = prop.getEntity();
       } else if (entity != prop.getEntity()) {
         throw new HelenusMappingException(
-                "you can select columns only from a single entity "
-                        + entity.getMappingInterface()
-                        + " or "
-                        + prop.getEntity().getMappingInterface());
+            "you can select columns only from a single entity "
+                + entity.getMappingInterface()
+                + " or "
+                + prop.getEntity().getMappingInterface());
       }
     }
 
@@ -229,7 +224,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
     if (ifFilters != null && !ifFilters.isEmpty()) {
       logger.error(
-              "onlyIf conditions " + ifFilters + " would be ignored in the statement " + select);
+          "onlyIf conditions " + ifFilters + " would be ignored in the statement " + select);
     }
 
     if (allowFiltering) {
@@ -247,13 +242,13 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
       return StreamSupport.stream(
               Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED), false)
-              .map(rowMapper);
+          .map(rowMapper);
     } else {
 
       return (Stream<E>)
-              StreamSupport.stream(
-                      Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED),
-                      false);
+          StreamSupport.stream(
+              Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED),
+              false);
     }
   }
 

@@ -46,5 +46,4 @@ public final class SelectFirstOperation<E>
   public Optional<E> transform(ResultSet resultSet) {
     return src.transform(resultSet).findFirst();
   }
-
 }

@@ -36,7 +36,9 @@ public final class BoundStreamOperation<E>
   }
 
   @Override
-  protected AbstractCache getCache() { return delegate.getCache(); }
+  protected AbstractCache getCache() {
+    return delegate.getCache();
+  }
 
   @Override
   public Stream<E> transform(ResultSet resultSet) {
@@ -44,7 +46,9 @@ public final class BoundStreamOperation<E>
   }
 
   @Override
-  public CacheKey getCacheKey() { return cacheKey; }
+  public CacheKey getCacheKey() {
+    return cacheKey;
+  }
 
   @Override
   public Statement buildStatement() {

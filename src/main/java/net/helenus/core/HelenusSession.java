@@ -42,6 +42,14 @@ import net.helenus.support.Fun.Tuple1;
 import net.helenus.support.Fun.Tuple2;
 import net.helenus.support.Fun.Tuple6;
 
+import java.io.Closeable;
+import java.io.PrintStream;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.function.Function;
+
 import static net.helenus.core.Query.eq;
 
 public final class HelenusSession extends AbstractSessionOperations implements Closeable {
@@ -65,7 +73,6 @@ public final class HelenusSession extends AbstractSessionOperations implements C
   private final StatementColumnValuePreparer valuePreparer;
   private final Metadata metadata;
   private final CacheManager cacheManager;
-  private UnitOfWork currentUnitOfWork;
 
   HelenusSession(
       Session session,
@@ -96,7 +103,6 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     this.valueProvider = new RowColumnValueProvider(this.sessionRepository);
     this.valuePreparer = new StatementColumnValuePreparer(this.sessionRepository);
     this.metadata = session.getCluster().getMetadata();
-    this.currentUnitOfWork = null;
     this.cacheManager = new CacheManager(this);
   }
 
@@ -205,7 +211,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     ColumnValueProvider valueProvider = getValueProvider();
     HelenusEntity entity = Helenus.entity(entityClass);
 
-      //TODO cache entity
+    //TODO cache entity
     return new SelectOperation<E>(
         this,
         entity,
@@ -498,7 +504,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 
   @Override
   public AbstractCache cacheFor(CacheManager.Type type) {
-      return cacheManager.of(type);
+    return cacheManager.of(type);
   }
 
   public Session getSession() {

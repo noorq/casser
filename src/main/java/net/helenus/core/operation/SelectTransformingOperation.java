@@ -41,11 +41,12 @@ public final class SelectTransformingOperation<R, E>
   }
 
   @Override
-  protected AbstractCache getCache() { return src.getCache(); }
+  protected AbstractCache getCache() {
+    return src.getCache();
+  }
 
   @Override
   public Stream<R> transform(ResultSet resultSet) {
     return src.transform(resultSet).map(fn);
   }
-
 }

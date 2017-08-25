@@ -39,10 +39,14 @@ public final class BoundOptionalOperation<E>
   }
 
   @Override
-  protected AbstractCache getCache() { return delegate.getCache(); }
+  protected AbstractCache getCache() {
+    return delegate.getCache();
+  }
 
   @Override
-  public CacheKey getCacheKey() { return delegate.getCacheKey(); }
+  public CacheKey getCacheKey() {
+    return delegate.getCacheKey();
+  }
 
   @Override
   public Statement buildStatement() {

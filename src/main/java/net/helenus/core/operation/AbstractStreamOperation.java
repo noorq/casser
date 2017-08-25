@@ -23,6 +23,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import net.helenus.core.AbstractSessionOperations;
+import net.helenus.core.UnitOfWork;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>>
     extends AbstractStatementOperation<E, O> implements OperationsDelegate<Stream<E>> {
@@ -33,9 +34,13 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
   public abstract Stream<E> transform(ResultSet resultSet);
 
-  protected AbstractCache getCache() { return null; }
+  protected AbstractCache getCache() {
+    return null;
+  }
 
-  public CacheKey getCacheKey() { return null; }
+  public CacheKey getCacheKey() {
+    return null;
+  }
 
   public PreparedStreamOperation<E> prepare() {
     return new PreparedStreamOperation<E>(prepareStatement(), this);
@@ -55,11 +60,21 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
   public Stream<E> sync() {
     return Executioner.INSTANCE.<Stream<E>>sync(
-        sessionOps, options(buildStatement()), getCache(), traceContext, this, showValues);
+            sessionOps, null, options(buildStatement()), getCache(), traceContext, this, showValues);
+  }
+
+  public Stream<E> sync(UnitOfWork uow) {
+    return Executioner.INSTANCE.<Stream<E>>sync(
+            sessionOps, uow, options(buildStatement()), getCache(), traceContext, this, showValues);
   }
 
   public CompletableFuture<Stream<E>> async() {
     return Executioner.INSTANCE.<Stream<E>>async(
-        sessionOps, options(buildStatement()), getCache(), traceContext, this, showValues);
+            sessionOps, null, options(buildStatement()), getCache(), traceContext, this, showValues);
+  }
+
+  public CompletableFuture<Stream<E>> async(UnitOfWork uow) {
+    return Executioner.INSTANCE.<Stream<E>>async(
+            sessionOps, uow, options(buildStatement()), getCache(), traceContext, this, showValues);
   }
 }
