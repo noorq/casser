@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import net.helenus.core.reflect.Drafted;
+import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.annotation.*;
 
 @Table
@@ -40,6 +41,10 @@ public interface Account {
   }
 
   class Draft implements Drafted { //TODO
+
+    @Override
+    public HelenusEntity getEntity() { return null; }
+
     @Override
     public Set<String> mutated() {
       return null;

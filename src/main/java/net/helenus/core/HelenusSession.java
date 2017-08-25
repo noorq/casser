@@ -23,22 +23,26 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import java.io.Closeable;
 import java.io.PrintStream;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.lang.reflect.Method;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import net.helenus.core.operation.*;
 import net.helenus.core.reflect.Drafted;
+import net.helenus.core.reflect.DslExportable;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
+import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.mapping.value.*;
+import net.helenus.support.DslPropertyException;
 import net.helenus.support.Fun;
 import net.helenus.support.Fun.Tuple1;
 import net.helenus.support.Fun.Tuple2;
 import net.helenus.support.Fun.Tuple6;
+
+import static net.helenus.core.Query.eq;
 
 public final class HelenusSession extends AbstractSessionOperations implements Closeable {
 
@@ -383,6 +387,53 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 
   public <V> UpdateOperation update() {
     return new UpdateOperation(this);
+  }
+
+  public <T> UpdateOperation update(Drafted<T> draft) {
+    UpdateOperation update = new UpdateOperation(this);
+    Map<String, Object> map = draft.toMap();
+    HelenusEntity entity = draft.getEntity();
+    Set<String> mutatedProperties = draft.mutated();
+
+    // Add all the mutated values contained in the draft.
+    entity.getOrderedProperties().forEach(property -> {
+      switch (property.getColumnType()) {
+        case PARTITION_KEY:
+        case CLUSTERING_COLUMN:
+          break;
+        default:
+          String propertyName = property.getPropertyName();
+          if (mutatedProperties.contains(propertyName)) {
+            Object value = map.get(propertyName);
+            Getter<Object> getter = new Getter<Object>() {
+              @Override
+              public Object get() {
+                throw new DslPropertyException(new HelenusPropertyNode(property, Optional.empty()));
+              }
+            };
+            update.set(getter, value);
+          }
+      }
+    });
+
+    // Add the partition and clustering keys if they were in the draft (normally the case).
+    entity.getOrderedProperties().forEach(property -> {
+      switch (property.getColumnType()) {
+        case PARTITION_KEY:
+        case CLUSTERING_COLUMN:
+          String propertyName = property.getPropertyName();
+          Object value = map.get(propertyName);
+          Getter<Object> getter = new Getter<Object>() {
+            @Override
+            public Object get() {
+              throw new DslPropertyException(new HelenusPropertyNode(property, Optional.empty()));
+            }
+          };
+          update.where(getter, eq(value));
+      }
+    });
+
+    return update;
   }
 
   public <V> UpdateOperation update(Getter<V> getter, V v) {
