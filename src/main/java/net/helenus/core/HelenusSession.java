@@ -75,22 +75,22 @@ public final class HelenusSession extends AbstractSessionOperations implements C
   private final CacheManager cacheManager;
 
   HelenusSession(
-      Session session,
-      String usingKeyspace,
-      CodecRegistry registry,
-      boolean showCql,
-      PrintStream printStream,
-      SessionRepositoryBuilder sessionRepositoryBuilder,
-      Executor executor,
-      boolean dropSchemaOnClose,
-      ConsistencyLevel consistencyLevel,
-      MetricRegistry metricRegistry,
-      Tracer tracer) {
+          Session session,
+          String usingKeyspace,
+          CodecRegistry registry,
+          boolean showCql,
+          PrintStream printStream,
+          SessionRepositoryBuilder sessionRepositoryBuilder,
+          Executor executor,
+          boolean dropSchemaOnClose,
+          ConsistencyLevel consistencyLevel,
+          MetricRegistry metricRegistry,
+          Tracer tracer) {
     this.session = session;
     this.registry = registry == null ? CodecRegistry.DEFAULT_INSTANCE : registry;
     this.usingKeyspace =
-        Objects.requireNonNull(
-            usingKeyspace, "keyspace needs to be selected before creating session");
+            Objects.requireNonNull(
+                    usingKeyspace, "keyspace needs to be selected before creating session");
     this.showCql = showCql;
     this.printStream = printStream;
     this.sessionRepository = sessionRepositoryBuilder.build();
@@ -181,28 +181,13 @@ public final class HelenusSession extends AbstractSessionOperations implements C
   }
 
   public synchronized UnitOfWork begin() {
-    if (currentUnitOfWork == null) {
-      currentUnitOfWork = new UnitOfWork(this);
-      return currentUnitOfWork;
-    } else {
-      return currentUnitOfWork.begin();
-    }
+    return new UnitOfWork(this, null).begin();
   }
 
-  public synchronized Function<Void, Void> commit() throws ConflictingUnitOfWorkException {
-    Function<Void, Void> f = Function.<Void>identity();
-    if (currentUnitOfWork != null) {
-      f = Errors.rethrow().<Function<Void, Void>>wrap(currentUnitOfWork::commit).get();
-      currentUnitOfWork = null;
-    }
-    return f;
-  }
-
-  public synchronized void abort() {
-    if (currentUnitOfWork != null) {
-      currentUnitOfWork.abort();
-      currentUnitOfWork = null;
-    }
+  public synchronized UnitOfWork begin(UnitOfWork parent) {
+    UnitOfWork child = new UnitOfWork(this, parent);
+    parent.addNestedUnitOfWork(child);
+    return child.begin();
   }
 
   public <E> SelectOperation<E> select(Class<E> entityClass) {
