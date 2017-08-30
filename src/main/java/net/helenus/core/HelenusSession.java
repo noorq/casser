@@ -18,22 +18,10 @@ package net.helenus.core;
 import brave.Tracer;
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.*;
-import com.diffplug.common.base.Errors;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import java.io.Closeable;
-import java.io.PrintStream;
-import java.lang.reflect.Method;
-import java.util.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import net.helenus.core.operation.*;
 import net.helenus.core.reflect.Drafted;
-import net.helenus.core.reflect.DslExportable;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
-import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.mapping.value.*;
 import net.helenus.support.DslPropertyException;
@@ -41,11 +29,13 @@ import net.helenus.support.Fun;
 import net.helenus.support.Fun.Tuple1;
 import net.helenus.support.Fun.Tuple2;
 import net.helenus.support.Fun.Tuple6;
+import net.helenus.support.HelenusMappingException;
 
 import java.io.Closeable;
 import java.io.PrintStream;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -72,7 +62,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
   private final RowColumnValueProvider valueProvider;
   private final StatementColumnValuePreparer valuePreparer;
   private final Metadata metadata;
-  private final CacheManager cacheManager;
+  private final SessionCache sessionCache;
 
   HelenusSession(
           Session session,
@@ -103,7 +93,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     this.valueProvider = new RowColumnValueProvider(this.sessionRepository);
     this.valuePreparer = new StatementColumnValuePreparer(this.sessionRepository);
     this.metadata = session.getCluster().getMetadata();
-    this.cacheManager = new CacheManager(this);
+    this.sessionCache = new SessionCache();
   }
 
   @Override
@@ -190,20 +180,33 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     return child.begin();
   }
 
-  public <E> SelectOperation<E> select(Class<E> entityClass) {
+  public <E> SelectOperation<E> select(E pojo) {
+    Objects.requireNonNull(pojo, "supplied object must be a dsl for a registered entity but cannot be null");
+    ColumnValueProvider valueProvider = getValueProvider();
+    HelenusEntity entity = Helenus.resolve(pojo);
+    Class<?> entityClass = entity.getMappingInterface();
 
+    return new SelectOperation<E>(
+            this,
+            entity,
+            (r) -> {
+              Map<String, Object> map = new ValueProviderMap(r, valueProvider, entity);
+              return (E) Helenus.map(entityClass, map);
+            });
+  }
+
+  public <E> SelectOperation<E> select(Class<E> entityClass) {
     Objects.requireNonNull(entityClass, "entityClass is empty");
     ColumnValueProvider valueProvider = getValueProvider();
     HelenusEntity entity = Helenus.entity(entityClass);
 
-    //TODO cache entity
     return new SelectOperation<E>(
-        this,
-        entity,
-        (r) -> {
-          Map<String, Object> map = new ValueProviderMap(r, valueProvider, entity);
-          return (E) Helenus.map(entityClass, map);
-        });
+            this,
+            entity,
+            (r) -> {
+              Map<String, Object> map = new ValueProviderMap(r, valueProvider, entity);
+              return (E) Helenus.map(entityClass, map);
+            });
   }
 
   public SelectOperation<Fun.ArrayTuple> select() {
@@ -213,6 +216,12 @@ public final class HelenusSession extends AbstractSessionOperations implements C
   public SelectOperation<Row> selectAll(Class<?> entityClass) {
     Objects.requireNonNull(entityClass, "entityClass is empty");
     return new SelectOperation<Row>(this, Helenus.entity(entityClass));
+  }
+
+  public <E> SelectOperation<Row> selectAll(E pojo) {
+    Objects.requireNonNull(pojo, "supplied object must be a dsl for a registered entity but cannot be null");
+    HelenusEntity entity = Helenus.resolve(pojo);
+    return new SelectOperation<Row>(this, entity);
   }
 
   public <E> SelectOperation<E> selectAll(Class<E> entityClass, Function<Row, E> rowMapper) {
@@ -376,12 +385,12 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     return new CountOperation(this, Helenus.resolve(dsl));
   }
 
-  public <V> UpdateOperation update() {
-    return new UpdateOperation(this);
+  public UpdateOperation<ResultSet> update() {
+    return new UpdateOperation<ResultSet>(this);
   }
 
-  public <T> UpdateOperation update(Drafted<T> draft) {
-    UpdateOperation update = new UpdateOperation(this);
+  public <T> UpdateOperation<T> update(Drafted<T> draft) {
+    UpdateOperation update = new UpdateOperation<T>(this, draft.build());
     Map<String, Object> map = draft.toMap();
     HelenusEntity entity = draft.getEntity();
     Set<String> mutatedProperties = draft.mutated();
@@ -427,28 +436,39 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     return update;
   }
 
-  public <V> UpdateOperation update(Getter<V> getter, V v) {
+  public <V> UpdateOperation<ResultSet> update(Getter<V> getter, V v) {
     Objects.requireNonNull(getter, "field is empty");
     Objects.requireNonNull(v, "value is empty");
 
     HelenusPropertyNode p = MappingUtil.resolveMappingProperty(getter);
 
-    return new UpdateOperation(this, p, v);
+    return new UpdateOperation<ResultSet>(this, p, v);
   }
 
-  public <T> InsertOperation<T> insert() {
-    return new InsertOperation<T>(this, true);
+  public InsertOperation<ResultSet> insert() {
+    return new InsertOperation<ResultSet>(this, true);
   }
 
-  public <T> InsertOperation<T> insert(Object pojo) {
-    return this.<T>insert(pojo, null);
+  public <T> InsertOperation<T> insert(Class<?> resultType) {
+    return new InsertOperation<T>(this, resultType, true);
+  }
+
+  public <T> InsertOperation<T> insert(T pojo) {
+    Objects.requireNonNull(pojo, "supplied object must be either an instance of the entity class or a dsl for it, but cannot be null");
+    HelenusEntity entity = null;
+    try { entity = Helenus.resolve(pojo); } catch (HelenusMappingException e) {}
+    if (entity != null) {
+      return new InsertOperation<T>(this, entity.getMappingInterface(), true);
+    } else {
+      return this.<T>insert(pojo, null);
+    }
   }
 
   public <T> InsertOperation<T> insert(Drafted draft) {
-    return this.<T>insert(draft.build(), draft.mutated());
+    return this.<T>insert((T) draft.build(), draft.mutated());
   }
 
-  public <T> InsertOperation<T> insert(Object pojo, Set<String> mutations) {
+  public <T> InsertOperation<T> insert(T pojo, Set<String> mutations) {
     Objects.requireNonNull(pojo, "pojo is empty");
 
     Class<?> iface = MappingUtil.getMappingInterface(pojo);
@@ -457,19 +477,30 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     return new InsertOperation<T>(this, entity, pojo, mutations, true);
   }
 
-  public <T> InsertOperation<T> upsert() {
-    return new InsertOperation<T>(this, false);
+  public InsertOperation<ResultSet> upsert() {
+    return new InsertOperation<ResultSet>(this, false);
+  }
+
+  public <T> InsertOperation<T> upsert(Class<?> resultType) {
+    return new InsertOperation<T>(this, resultType, false);
   }
 
   public <T> InsertOperation<T> upsert(Drafted draft) {
-    return this.<T>upsert(draft.build(), draft.mutated());
+    return this.<T>upsert((T) draft.build(), draft.mutated());
   }
 
-  public <T> InsertOperation<T> upsert(Object pojo) {
-    return this.<T>upsert(pojo, null);
+  public <T> InsertOperation<T> upsert(T pojo) {
+    Objects.requireNonNull(pojo, "supplied object must be either an instance of the entity class or a dsl for it, but cannot be null");
+    HelenusEntity entity = null;
+    try { entity = Helenus.resolve(pojo); } catch (HelenusMappingException e) {}
+    if (entity != null) {
+      return new InsertOperation<T>(this, entity.getMappingInterface(), false);
+    } else {
+      return this.<T>upsert(pojo, null);
+    }
   }
 
-  public <T> InsertOperation<T> upsert(Object pojo, Set<String> mutations) {
+  public <T> InsertOperation<T> upsert(T pojo, Set<String> mutations) {
     Objects.requireNonNull(pojo, "pojo is empty");
 
     Class<?> iface = MappingUtil.getMappingInterface(pojo);
@@ -485,11 +516,6 @@ public final class HelenusSession extends AbstractSessionOperations implements C
   public DeleteOperation delete(Object dsl) {
     Objects.requireNonNull(dsl, "dsl is empty");
     return new DeleteOperation(this, Helenus.resolve(dsl));
-  }
-
-  @Override
-  public AbstractCache cacheFor(CacheManager.Type type) {
-    return cacheManager.of(type);
   }
 
   public Session getSession() {
@@ -539,4 +565,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
         break;
     }
   }
+
+  public SessionCache getSessionCache() { return sessionCache; }
+
 }

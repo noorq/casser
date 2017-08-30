@@ -40,7 +40,7 @@ public class UDTMapTest extends UDTCollectionTest {
 
     // read full object
 
-    Book actual = session.select(Book.class).where(book::id, Query.eq(id)).sync().findFirst().get();
+    Book actual = session.<Book>select(book).where(book::id, Query.eq(id)).sync().findFirst().get();
     Assert.assertEquals(id, actual.id());
     assertEqualMaps(writers, actual.writers());
     Assert.assertNull(actual.reviewers());
@@ -71,7 +71,7 @@ public class UDTMapTest extends UDTCollectionTest {
 
     session.update().set(book::writers, expected).where(book::id, Query.eq(id)).sync();
 
-    actual = session.select(Book.class).where(book::id, Query.eq(id)).sync().findFirst().get();
+    actual = session.<Book>select(book).where(book::id, Query.eq(id)).sync().findFirst().get();
     Assert.assertEquals(id, actual.id());
     assertEqualMaps(expected, actual.writers());
 

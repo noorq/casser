@@ -59,6 +59,10 @@ public enum Executioner {
       span = tracer.newChild(traceContext);
     }
 
+    if (uow != null) {
+      cache = uow.getCacheEnclosing(cache);
+    }
+
     try {
       if (span != null) {
         span.name("cassandra");

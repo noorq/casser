@@ -45,6 +45,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   protected List<Ordering> ordering = null;
   protected Integer limit = null;
   protected boolean allowFiltering = false;
+  protected boolean ignoreSessionCache = false;
 
   public SelectOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
@@ -162,6 +163,18 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
   public SelectOperation<E> orderBy(Ordered ordered) {
     getOrCreateOrdering().add(ordered.getOrdering());
+    return this;
+  }
+
+  protected AbstractCache getCache() {
+    if (!ignoreSessionCache) {
+      return sessionOps.getSessionCache();
+    }
+    return null;
+  }
+
+  public SelectOperation<E> ignoreCache() {
+    ignoreSessionCache = true;
     return this;
   }
 

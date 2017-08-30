@@ -2,14 +2,16 @@ package net.helenus.core;
 
 import com.diffplug.common.base.Errors;
 import com.google.common.collect.TreeTraverser;
+import net.helenus.core.operation.AbstractCache;
+import net.helenus.core.operation.UnitOfWorkCache;
+import net.helenus.support.HelenusException;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.*;
 
 
 /** Encapsulates the concept of a "transaction" as a unit-of-work. */
-public final class UnitOfWork implements Closeable {
+public final class UnitOfWork implements AutoCloseable {
   private final List<UnitOfWork> nested = new ArrayList<>();
   private final HelenusSession session;
   private final UnitOfWork parent;
@@ -19,6 +21,7 @@ public final class UnitOfWork implements Closeable {
 
   protected UnitOfWork(HelenusSession session, UnitOfWork parent) {
     Objects.requireNonNull(session, "containing session cannot be null");
+
     this.session = session;
     this.parent = parent;
   }
@@ -39,6 +42,10 @@ public final class UnitOfWork implements Closeable {
       nested.add(uow);
     }
     return this;
+  }
+
+  public UnitOfWorkCache getCacheEnclosing(AbstractCache cache) {
+    return new UnitOfWorkCache(this, cache);
   }
 
   private void applyPostCommitFunctions() {
@@ -111,7 +118,7 @@ public final class UnitOfWork implements Closeable {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() throws HelenusException {
     // Closing a UnitOfWork will abort iff we've not already aborted or committed this unit of work.
     if (aborted == false && committed == false) {
       abort();

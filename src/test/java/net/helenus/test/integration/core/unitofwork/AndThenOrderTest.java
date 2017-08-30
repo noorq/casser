@@ -15,14 +15,9 @@
  */
 package net.helenus.test.integration.core.unitofwork;
 
-import com.datastax.driver.core.utils.UUIDs;
-import net.bytebuddy.utility.RandomString;
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.core.UnitOfWork;
-import net.helenus.mapping.annotation.Column;
-import net.helenus.mapping.annotation.PartitionKey;
-import net.helenus.mapping.annotation.Table;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -31,19 +26,9 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
-
-
-@Table
-interface Widget {
-    @PartitionKey UUID id();
-    @Column String name();
-}
 
 
 public class AndThenOrderTest extends AbstractEmbeddedCassandraTest {
-
-    static Widget widgets;
 
     static HelenusSession session;
 
@@ -51,10 +36,8 @@ public class AndThenOrderTest extends AbstractEmbeddedCassandraTest {
     public static void beforeTest() {
         session = Helenus.init(getSession())
                 .showCql()
-                .add(Widget.class)
                 .autoCreateDrop()
                 .get();
-        widgets = session.dsl(Widget.class);
     }
 
     @Test

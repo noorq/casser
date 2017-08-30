@@ -32,22 +32,29 @@ import net.helenus.mapping.MappingUtil;
 import net.helenus.support.HelenusMappingException;
 import net.helenus.support.Immutables;
 
-public final class UpdateOperation extends AbstractFilterOperation<ResultSet, UpdateOperation> {
+public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateOperation<T>> {
 
   private HelenusEntity entity = null;
 
   private final List<Assignment> assignments = new ArrayList<Assignment>();
+  private final T pojo;
 
   private int[] ttl;
   private long[] timestamp;
 
-  public UpdateOperation(AbstractSessionOperations sessionOperations) {
+  public UpdateOperation(AbstractSessionOperations sessionOperations){
     super(sessionOperations);
+    this.pojo = null;
   }
 
-  public UpdateOperation(
-      AbstractSessionOperations sessionOperations, HelenusPropertyNode p, Object v) {
+  public UpdateOperation(AbstractSessionOperations sessionOperations, T pojo) {
     super(sessionOperations);
+    this.pojo = pojo;
+  }
+
+  public UpdateOperation(AbstractSessionOperations sessionOperations, HelenusPropertyNode p, Object v) {
+    super(sessionOperations);
+    this.pojo = null;
 
     Object value = sessionOps.getValuePreparer().prepareColumnValue(v, p.getProperty());
     assignments.add(QueryBuilder.set(p.getColumnName(), value));
@@ -55,7 +62,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
     addPropertyNode(p);
   }
 
-  public <V> UpdateOperation set(Getter<V> getter, V v) {
+  public <V> UpdateOperation<T> set(Getter<V> getter, V v) {
     Objects.requireNonNull(getter, "getter is empty");
 
     HelenusPropertyNode p = MappingUtil.resolveMappingProperty(getter);
@@ -76,11 +83,11 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
    *
    */
 
-  public <V> UpdateOperation increment(Getter<V> counterGetter) {
+  public <V> UpdateOperation<T> increment(Getter<V> counterGetter) {
     return increment(counterGetter, 1L);
   }
 
-  public <V> UpdateOperation increment(Getter<V> counterGetter, long delta) {
+  public <V> UpdateOperation<T> increment(Getter<V> counterGetter, long delta) {
 
     Objects.requireNonNull(counterGetter, "counterGetter is empty");
 
@@ -92,11 +99,11 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
     return this;
   }
 
-  public <V> UpdateOperation decrement(Getter<V> counterGetter) {
+  public <V> UpdateOperation<T> decrement(Getter<V> counterGetter) {
     return decrement(counterGetter, 1L);
   }
 
-  public <V> UpdateOperation decrement(Getter<V> counterGetter, long delta) {
+  public <V> UpdateOperation<T> decrement(Getter<V> counterGetter, long delta) {
 
     Objects.requireNonNull(counterGetter, "counterGetter is empty");
 
@@ -115,7 +122,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
    *
    */
 
-  public <V> UpdateOperation prepend(Getter<List<V>> listGetter, V value) {
+  public <V> UpdateOperation<T> prepend(Getter<List<V>> listGetter, V value) {
 
     Objects.requireNonNull(listGetter, "listGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -129,7 +136,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
     return this;
   }
 
-  public <V> UpdateOperation prependAll(Getter<List<V>> listGetter, List<V> value) {
+  public <V> UpdateOperation<T> prependAll(Getter<List<V>> listGetter, List<V> value) {
 
     Objects.requireNonNull(listGetter, "listGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -143,7 +150,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
     return this;
   }
 
-  public <V> UpdateOperation setIdx(Getter<List<V>> listGetter, int idx, V value) {
+  public <V> UpdateOperation<T> setIdx(Getter<List<V>> listGetter, int idx, V value) {
 
     Objects.requireNonNull(listGetter, "listGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -157,7 +164,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
     return this;
   }
 
-  public <V> UpdateOperation append(Getter<List<V>> listGetter, V value) {
+  public <V> UpdateOperation<T> append(Getter<List<V>> listGetter, V value) {
 
     Objects.requireNonNull(listGetter, "listGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -171,7 +178,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
     return this;
   }
 
-  public <V> UpdateOperation appendAll(Getter<List<V>> listGetter, List<V> value) {
+  public <V> UpdateOperation<T> appendAll(Getter<List<V>> listGetter, List<V> value) {
 
     Objects.requireNonNull(listGetter, "listGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -185,7 +192,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
     return this;
   }
 
-  public <V> UpdateOperation discard(Getter<List<V>> listGetter, V value) {
+  public <V> UpdateOperation<T> discard(Getter<List<V>> listGetter, V value) {
 
     Objects.requireNonNull(listGetter, "listGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -199,7 +206,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
     return this;
   }
 
-  public <V> UpdateOperation discardAll(Getter<List<V>> listGetter, List<V> value) {
+  public <V> UpdateOperation<T> discardAll(Getter<List<V>> listGetter, List<V> value) {
 
     Objects.requireNonNull(listGetter, "listGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -251,7 +258,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
    *
    */
 
-  public <V> UpdateOperation add(Getter<Set<V>> setGetter, V value) {
+  public <V> UpdateOperation<T> add(Getter<Set<V>> setGetter, V value) {
 
     Objects.requireNonNull(setGetter, "setGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -265,7 +272,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
     return this;
   }
 
-  public <V> UpdateOperation addAll(Getter<Set<V>> setGetter, Set<V> value) {
+  public <V> UpdateOperation<T> addAll(Getter<Set<V>> setGetter, Set<V> value) {
 
     Objects.requireNonNull(setGetter, "setGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -279,7 +286,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
     return this;
   }
 
-  public <V> UpdateOperation remove(Getter<Set<V>> setGetter, V value) {
+  public <V> UpdateOperation<T> remove(Getter<Set<V>> setGetter, V value) {
 
     Objects.requireNonNull(setGetter, "setGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -293,7 +300,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
     return this;
   }
 
-  public <V> UpdateOperation removeAll(Getter<Set<V>> setGetter, Set<V> value) {
+  public <V> UpdateOperation<T> removeAll(Getter<Set<V>> setGetter, Set<V> value) {
 
     Objects.requireNonNull(setGetter, "setGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -344,7 +351,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
    *
    */
 
-  public <K, V> UpdateOperation put(Getter<Map<K, V>> mapGetter, K key, V value) {
+  public <K, V> UpdateOperation<T> put(Getter<Map<K, V>> mapGetter, K key, V value) {
 
     Objects.requireNonNull(mapGetter, "mapGetter is empty");
     Objects.requireNonNull(key, "key is empty");
@@ -368,7 +375,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
     return this;
   }
 
-  public <K, V> UpdateOperation putAll(Getter<Map<K, V>> mapGetter, Map<K, V> map) {
+  public <K, V> UpdateOperation<T> putAll(Getter<Map<K, V>> mapGetter, Map<K, V> map) {
 
     Objects.requireNonNull(mapGetter, "mapGetter is empty");
     Objects.requireNonNull(map, "map is empty");
@@ -419,6 +426,7 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
     if (this.ttl != null) {
       update.using(QueryBuilder.ttl(this.ttl[0]));
     }
+
     if (this.timestamp != null) {
       update.using(QueryBuilder.timestamp(this.timestamp[0]));
     }
@@ -427,17 +435,17 @@ public final class UpdateOperation extends AbstractFilterOperation<ResultSet, Up
   }
 
   @Override
-  public ResultSet transform(ResultSet resultSet) {
-    return resultSet;
+  public T transform(ResultSet resultSet) {
+    return (T) resultSet;
   }
 
-  public UpdateOperation usingTtl(int ttl) {
+  public UpdateOperation<T> usingTtl(int ttl) {
     this.ttl = new int[1];
     this.ttl[0] = ttl;
     return this;
   }
 
-  public UpdateOperation usingTimestamp(long timestamp) {
+  public UpdateOperation<T> usingTimestamp(long timestamp) {
     this.timestamp = new long[1];
     this.timestamp[0] = timestamp;
     return this;

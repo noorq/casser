@@ -70,7 +70,7 @@ public class PreparedStatementTest extends AbstractEmbeddedCassandraTest {
 
     selectOp =
         session
-            .select(Car.class)
+            .<Car>select(car)
             .where(car::make, Query.eq(Query.marker()))
             .and(car::model, Query.eq(Query.marker()))
             .prepare();

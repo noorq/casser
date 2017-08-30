@@ -51,7 +51,7 @@ public class HierarchyTest extends AbstractEmbeddedCassandraTest {
         .sync();
 
     Optional<Cat> animal =
-        session.select(Cat.class).where(cat::nickname, eq("garfield")).sync().findFirst();
+        session.<Cat>select(Cat.class).where(cat::nickname, eq("garfield")).sync().findFirst();
     Assert.assertTrue(animal.isPresent());
     Assert.assertFalse(animal.get().eatable());
   }
@@ -64,8 +64,7 @@ public class HierarchyTest extends AbstractEmbeddedCassandraTest {
         .value(cat::nickname, "garfield")
         .value(cat::eatable, false)
         .sync();
-    Optional<Cat> animal =
-        session.select(Cat.class).where(cat::nickname, eq("garfield")).sync().findFirst();
+    Optional<Cat> animal = session.select(Cat.class).where(cat::nickname, eq("garfield")).single().sync();
     Assert.assertTrue(animal.isPresent());
 
     Cat cat = animal.get();

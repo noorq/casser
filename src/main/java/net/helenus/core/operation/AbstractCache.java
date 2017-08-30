@@ -4,37 +4,42 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Statement;
 import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
-public abstract class AbstractCache {
-  protected CacheManager.Type type;
-  protected Cache<String, ResultSet> cache;
+public abstract class AbstractCache<K, V> {
+  final Logger logger = LoggerFactory.getLogger(getClass());
+  protected Cache<K, V> cache;
 
-  public AbstractCache(CacheManager.Type type, Cache<String, ResultSet> cache) {
-    this.type = type;
-    this.cache = cache;
+  public AbstractCache() {
+    RemovalListener<K, V> listener =
+            new RemovalListener<K, V>() {
+              @Override
+              public void onRemoval(RemovalNotification<K, V> n) {
+                if (n.wasEvicted()) {
+                  String cause = n.getCause().name();
+                  logger.info(cause);
+                }
+              }
+            };
+
+      cache = CacheBuilder.newBuilder()
+                      .maximumSize(10_000)
+                      .expireAfterAccess(20, TimeUnit.MINUTES)
+                      .weakKeys()
+                      .softValues()
+                      .removalListener(listener)
+                      .build();
   }
 
-  protected abstract ResultSet fetch(
+  protected abstract ResultSet apply(
       Statement statement, OperationsDelegate delegate, ResultSetFuture resultSetFuture)
       throws InterruptedException, ExecutionException;
 
-  protected abstract ResultSet mutate(
-      Statement statement, OperationsDelegate delegate, ResultSetFuture resultSetFuture)
-      throws InterruptedException, ExecutionException;
-
-  public ResultSet apply(
-      Statement statement, OperationsDelegate delegate, ResultSetFuture futureResultSet)
-      throws InterruptedException, ExecutionException {
-    ResultSet resultSet = null;
-    switch (type) {
-      case FETCH:
-        resultSet = fetch(statement, delegate, futureResultSet);
-        break;
-      case MUTATE:
-        resultSet = mutate(statement, delegate, futureResultSet);
-        break;
-    }
-    return resultSet;
-  }
 }

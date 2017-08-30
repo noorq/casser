@@ -40,7 +40,7 @@ public class UDTListTest extends UDTCollectionTest {
 
     // read full object
 
-    Book actual = session.select(Book.class).where(book::id, Query.eq(id)).sync().findFirst().get();
+    Book actual = session.<Book>select(book).where(book::id, Query.eq(id)).sync().findFirst().get();
     Assert.assertEquals(id, actual.id());
     assertEqualLists(authors, actual.authors());
     Assert.assertNull(actual.reviewers());
@@ -65,7 +65,7 @@ public class UDTListTest extends UDTCollectionTest {
 
     session.update().set(book::authors, expected).where(book::id, Query.eq(id)).sync();
 
-    actual = session.select(Book.class).where(book::id, Query.eq(id)).sync().findFirst().get();
+    actual = session.<Book>select(book).where(book::id, Query.eq(id)).sync().findFirst().get();
     Assert.assertEquals(id, actual.id());
     assertEqualLists(expected, actual.authors());
 

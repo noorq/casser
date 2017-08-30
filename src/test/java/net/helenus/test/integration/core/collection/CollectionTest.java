@@ -67,8 +67,11 @@ public class CollectionTest extends AbstractEmbeddedCassandraTest {
 
     // read full object
 
-    Customer actual =
-        session.select(Customer.class).where(customer::id, eq(id)).sync().findFirst().get();
+    Customer actual = session.<Customer>select(customer)
+            .where(customer::id, eq(id))
+            .single()
+            .sync()
+            .orElse(null);
     Assert.assertEquals(id, actual.id());
     Assert.assertEquals(aliases, actual.aliases());
     Assert.assertNull(actual.names());
@@ -87,7 +90,12 @@ public class CollectionTest extends AbstractEmbeddedCassandraTest {
 
     session.update().set(customer::aliases, expected).where(customer::id, eq(id)).sync();
 
-    actual = session.select(Customer.class).where(customer::id, eq(id)).sync().findFirst().get();
+    actual = session.<Customer>select(customer)
+            .where(customer::id, eq(id))
+            .single()
+            .sync()
+            .orElse(null);
+
     Assert.assertEquals(id, actual.id());
     Assert.assertEquals(expected, actual.aliases());
 
@@ -162,8 +170,12 @@ public class CollectionTest extends AbstractEmbeddedCassandraTest {
 
     // read full object
 
-    Customer actual =
-        session.select(Customer.class).where(customer::id, eq(id)).sync().findFirst().get();
+    Customer actual = session.<Customer>select(customer)
+            .where(customer::id, eq(id))
+            .single()
+            .sync()
+            .orElse(null);
+
     Assert.assertEquals(id, actual.id());
     Assert.assertEquals(names, actual.names());
     Assert.assertNull(actual.aliases());
@@ -188,7 +200,12 @@ public class CollectionTest extends AbstractEmbeddedCassandraTest {
 
     session.update().set(customer::names, expected).where(customer::id, eq(id)).sync();
 
-    actual = session.select(Customer.class).where(customer::id, eq(id)).sync().findFirst().get();
+    actual = session.<Customer>select(customer)
+            .where(customer::id, eq(id))
+            .single()
+            .sync()
+            .orElse(null);
+
     Assert.assertEquals(id, actual.id());
     Assert.assertEquals(expected, actual.names());
 
@@ -289,8 +306,11 @@ public class CollectionTest extends AbstractEmbeddedCassandraTest {
 
     // read full object
 
-    Customer actual =
-        session.select(Customer.class).where(customer::id, eq(id)).sync().findFirst().get();
+    Customer actual = session.<Customer>select(customer)
+            .where(customer::id, eq(id)).single()
+            .sync()
+            .orElse(null);
+
     Assert.assertEquals(id, actual.id());
     Assert.assertEquals(props, actual.properties());
     Assert.assertNull(actual.aliases());
@@ -323,7 +343,11 @@ public class CollectionTest extends AbstractEmbeddedCassandraTest {
 
     session.update().set(customer::properties, expected).where(customer::id, eq(id)).sync();
 
-    actual = session.select(Customer.class).where(customer::id, eq(id)).sync().findFirst().get();
+    actual = session.<Customer>select(customer)
+            .where(customer::id, eq(id))
+            .single()
+            .sync()
+            .orElse(null);
     Assert.assertEquals(id, actual.id());
     Assert.assertEquals(expected, actual.properties());
 

@@ -34,9 +34,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 
   public abstract Optional<E> transform(ResultSet resultSet);
 
-  protected AbstractCache getCache() {
-    return null;
-  }
+  protected AbstractCache getCache() { return null; }
 
   public CacheKey getCacheKey() {
     return null;

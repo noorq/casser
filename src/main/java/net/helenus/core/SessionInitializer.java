@@ -328,19 +328,6 @@ public final class SessionInitializer extends AbstractSessionOperations {
             e -> {
               action.accept(e);
             });
-    /*
-            Set<HelenusEntity> processedSet = new HashSet<HelenusEntity>();
-            Set<HelenusEntity> stack = new HashSet<HelenusEntity>();
-
-            sessionRepository.entities().stream()
-                    .filter(e -> e.getType() == HelenusEntityType.UDT)
-                    .collect(Collectors.toCollection(ArrayDeque::new))
-                    .descendingIterator()
-                    .forEachRemaining(e -> {
-                        stack.clear();
-                        eachUserTypeInRecursion(e, processedSet, stack, userTypeOps, action);
-                    });
-    */
   }
 
   private void eachUserTypeInRecursion(

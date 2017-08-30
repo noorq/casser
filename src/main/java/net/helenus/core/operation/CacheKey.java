@@ -2,7 +2,9 @@ package net.helenus.core.operation;
 
 import com.datastax.driver.core.Statement;
 
-public class CacheKey {
+import java.io.Serializable;
+
+public class CacheKey implements Serializable {
 
   private String key;
 
@@ -38,4 +40,5 @@ public class CacheKey {
   public int hashCode() {
     return key.hashCode();
   }
+
 }

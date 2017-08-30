@@ -38,10 +38,10 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 
   private HelenusEntity entity;
 
-  private final List<Fun.Tuple2<HelenusPropertyNode, Object>> values =
-      new ArrayList<Fun.Tuple2<HelenusPropertyNode, Object>>();
+  private final List<Fun.Tuple2<HelenusPropertyNode, Object>> values = new ArrayList<Fun.Tuple2<HelenusPropertyNode, Object>>();
+  private final T pojo;
+  private final Class<?> resultType;
   private boolean ifNotExists;
-  private Object pojo;
 
   private int[] ttl;
   private long[] timestamp;
@@ -50,12 +50,22 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     super(sessionOperations);
 
     this.ifNotExists = ifNotExists;
+    this.pojo = null;
+    this.resultType = ResultSet.class;
+  }
+
+  public InsertOperation(AbstractSessionOperations sessionOperations, Class<?> resultType, boolean ifNotExists) {
+    super(sessionOperations);
+
+    this.ifNotExists = ifNotExists;
+    this.pojo = null;
+    this.resultType = resultType;
   }
 
   public InsertOperation(
       AbstractSessionOperations sessionOperations,
       HelenusEntity entity,
-      Object pojo,
+      T pojo,
       Set<String> mutations,
       boolean ifNotExists) {
     super(sessionOperations);
@@ -63,6 +73,8 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     this.entity = entity;
     this.pojo = pojo;
     this.ifNotExists = ifNotExists;
+    this.resultType = pojo.getClass() == null ? ResultSet.class : pojo.getClass();
+
     Collection<HelenusProperty> properties = entity.getOrderedProperties();
     Set<String> keys = (mutations == null) ? null : mutations;
 
@@ -141,51 +153,11 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 
   @Override
   public T transform(ResultSet resultSet) {
-    if (pojo != null && ((T) pojo).getClass().isAssignableFrom(ResultSet.class)) {
-      return (T) pojo;
-    } else {
-      if (values.size() > 0) {
-        Collection<HelenusProperty> properties = entity.getOrderedProperties();
-        Map<String, Object> backingMap = new HashMap<String, Object>(properties.size());
-
-        // First, add all the inserted values into our new map.
-        values.forEach(t -> backingMap.put(t._1.getProperty().getPropertyName(), t._2));
-
-        // Then, fill in all the rest of the properties.
-        for (HelenusProperty prop : properties) {
-          String key = prop.getPropertyName();
-          if (backingMap.containsKey(key)) {
-            // Some values man need to be converted (e.g. from String to Enum).  This is done
-            // within the BeanColumnValueProvider below.
-            Optional<Function<Object, Object>> converter =
-                prop.getReadConverter(sessionOps.getSessionRepository());
-            if (converter.isPresent()) {
-              backingMap.put(key, converter.get().apply(backingMap.get(key)));
-            }
-          } else {
-            // If we started this operation with an instance of this type, use values from that.
-            if (pojo != null) {
-              backingMap.put(key, BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-            } else {
-              // Otherwise we'll use default values for the property type if available.
-              Class<?> propType = prop.getJavaType();
-              if (propType.isPrimitive()) {
-                DefaultPrimitiveTypes type = DefaultPrimitiveTypes.lookup(propType);
-                if (type == null) {
-                  throw new HelenusException("unknown primitive type " + propType);
-                }
-                backingMap.put(key, type.getDefaultValue());
-              }
-            }
-          }
-        }
-
-        // Lastly, create a new proxy object for the entity and return the new instance.
-        Class<?> iface = entity.getMappingInterface();
-        pojo = Helenus.map(iface, backingMap);
-      }
+    Class<?> iface = entity.getMappingInterface();
+    if (resultType.isAssignableFrom(iface)) {
+      return TransformGeneric.INSTANCE.<T>transform(sessionOps, pojo, iface, values, entity.getOrderedProperties());
     }
-    return (T) pojo;
+    return pojo;
   }
 
   public InsertOperation<T> usingTtl(int ttl) {

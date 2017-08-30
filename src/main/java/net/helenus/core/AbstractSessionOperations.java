@@ -22,8 +22,8 @@ import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.PrintStream;
 import java.util.concurrent.Executor;
-import net.helenus.core.operation.AbstractCache;
-import net.helenus.core.operation.CacheManager;
+
+import net.helenus.core.operation.SessionCache;
 import net.helenus.mapping.value.ColumnValuePreparer;
 import net.helenus.mapping.value.ColumnValueProvider;
 import net.helenus.support.HelenusException;
@@ -113,10 +113,6 @@ public abstract class AbstractSessionOperations {
     return null;
   }
 
-  public AbstractCache cacheFor(CacheManager.Type type) {
-    return null;
-  }
-
   RuntimeException translateException(RuntimeException e) {
     if (e instanceof HelenusException) {
       return e;
@@ -127,4 +123,7 @@ public abstract class AbstractSessionOperations {
   void printCql(String cql) {
     getPrintStream().println(cql);
   }
+
+  public SessionCache getSessionCache() { return null; }
+
 }

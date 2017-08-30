@@ -28,10 +28,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
@@ -103,7 +100,11 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
     // select as object
 
-    actual = session.select(User.class).where(user::id, eq(100L)).sync().findFirst().get();
+    actual = session.<User>select(user)
+            .where(user::id, eq(100L))
+            .single()
+            .sync()
+            .orElse(null);
     assertUsers(newUser, actual);
 
     // select by columns
@@ -217,21 +218,34 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
     Assert.assertEquals("_albert", name);
 
-    User u = session.select(User.class).where(user::id, eq(100L)).sync().findFirst().get();
+    User u = session.<User>select(user)
+            .where(user::id, eq(100L))
+            .single()
+            .sync()
+            .orElse(null);
 
     Assert.assertEquals(Long.valueOf(100L), u.id());
     Assert.assertEquals("albert", u.name());
     Assert.assertEquals(Integer.valueOf(35), u.age());
 
-    // INSERT
+    //
     User greg =
-        session
-            .<User>insert()
-            .value(user::name, "greg")
-            .value(user::age, 44)
-            .value(user::type, UserType.USER)
-            .value(user::id, 1234L)
-            .sync();
+            session
+                    .<User>insert(user)
+                    .value(user::name, "greg")
+                    .value(user::age, 44)
+                    .value(user::type, UserType.USER)
+                    .value(user::id, 1234L)
+                    .sync();
+
+    Optional<User> maybeGreg =
+            session
+                    .<User>select(user)
+                    .where(user::id, eq(1234L))
+                    .single()
+                    .sync();
+
+    // INSERT
 
     session
         .update()

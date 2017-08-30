@@ -15,38 +15,96 @@
  */
 package net.helenus.test.integration.core.unitofwork;
 
+import com.datastax.driver.core.utils.UUIDs;
+import net.bytebuddy.utility.RandomString;
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
+import net.helenus.core.UnitOfWork;
+import net.helenus.core.annotation.Cacheable;
+import net.helenus.mapping.annotation.Column;
+import net.helenus.mapping.annotation.PartitionKey;
+import net.helenus.mapping.annotation.Table;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
-import net.helenus.test.integration.core.unitofwork.FilesystemNode;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.UUID;
+
+import static net.helenus.core.Query.eq;
+
+
+@Table
+@Cacheable
+interface Widget {
+    @PartitionKey
+    UUID id();
+    @Column
+    String name();
+}
 
 
 public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 
-    static FilesystemNode node;
-
+    static Widget widget;
     static HelenusSession session;
+
 
     @BeforeClass
     public static void beforeTest() {
         session = Helenus.init(getSession())
                 .showCql()
-                .add(FilesystemNode.class)
+                .add(Widget.class)
                 .autoCreateDrop()
                 .get();
-        node = session.dsl(FilesystemNode.class);
+        widget = session.dsl(Widget.class);
     }
 
-
-/*
     @Test
-    public void testCruid() throws Exception {
-        session.insert()
-                .value(widgets::id, UUIDs.timeBased())
-                .value(widgets::name, RandomString.make(20))
-                .sync(uow5);
+    public void testSelectAfterInsertProperlyCachesEntity() throws Exception {
+        Widget w1, w2, w3, w4;
+        UUID key = UUIDs.timeBased();
+
+        try (UnitOfWork uow = session.begin()) {
+
+            // This should cache the inserted Widget.
+            w1 = session.<Widget>upsert(widget)
+                    .value(widget::id, key)
+                    .value(widget::name, RandomString.make(20))
+                    .sync(uow);
+
+            // This should read from the cache and get the same instance of a Widget.
+            w2 = session.<Widget>select(widget)
+                    .where(widget::id, eq(key))
+                    .single()
+                    .sync(uow)
+                    .orElse(null);
+
+            uow.commit()
+                    .andThen(() -> {
+                        Assert.assertEquals(w1, w2);
+                    });
+        }
+
+        // This should read the widget from the session cache and maintain object identity.
+        w3 = session.<Widget>select(widget)
+                .where(widget::id, eq(key))
+                .single()
+                .sync()
+                .orElse(null);
+
+        Assert.assertEquals(w1, w3);
+
+        // This should read the widget from the database, no object identity but values should match.
+        w4 = session.<Widget>select(widget)
+                .where(widget::id, eq(key))
+                .ignoreCache()
+                .single()
+                .sync()
+                .orElse(null);
+
+        Assert.assertNotEquals(w1, w4);
+        Assert.assertTrue(w1.equals(w4));
     }
-*/
+
 }

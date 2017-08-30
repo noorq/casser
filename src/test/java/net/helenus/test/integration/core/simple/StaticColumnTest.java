@@ -104,7 +104,7 @@ public class StaticColumnTest extends AbstractEmbeddedCassandraTest {
 
     List<Message> actual =
         session
-            .select(Message.class)
+            .<Message>select(message)
             .where(message::id, Query.eq(123))
             .sync()
             .collect(Collectors.toList());
