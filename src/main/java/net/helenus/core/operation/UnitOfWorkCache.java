@@ -24,7 +24,8 @@ public class UnitOfWorkCache extends AbstractCache<String, ResultSet> {
     @Override
     protected ResultSet apply(Statement statement, OperationsDelegate delegate, ResultSetFuture resultSetFuture)
             throws InterruptedException, ExecutionException {
-
+        return resultSetFuture.get();
+        /*
         final CacheKey key = delegate.getCacheKey();
         final String cacheKey = (key == null) ? CacheKey.of(statement) : key.toString();
         ResultSet resultSet = null;
@@ -46,6 +47,7 @@ public class UnitOfWorkCache extends AbstractCache<String, ResultSet> {
             cache.put(cacheKey, resultSet);
         }
         return resultSet;
+        */
     }
 
 }
