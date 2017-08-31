@@ -43,9 +43,6 @@ public interface Account {
   class Draft implements Drafted { //TODO
 
     @Override
-    public HelenusEntity getEntity() { return null; }
-
-    @Override
     public Set<String> mutated() {
       return null;
     }

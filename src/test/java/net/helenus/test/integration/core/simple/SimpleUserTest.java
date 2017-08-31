@@ -170,34 +170,6 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
     // UPDATE
 
-    session.update(new Drafted<User>() {
-
-      @Override
-      public HelenusEntity getEntity() { return Helenus.entity(User.class); }
-
-      @Override
-      public Map<String, Object> toMap() {
-        HashMap<String, Object> map = new HashMap<String, Object>();
-        map.put("name", "joeseph");
-        map.put("age", Integer.valueOf(45));
-        map.put("id", 100L);
-        return map;
-      }
-
-      @Override
-      public Set<String> mutated() {
-        Set<String> set = new HashSet<String>();
-        set.add("name");
-        set.add("age");
-        return set;
-      }
-
-      @Override
-      public User build() {
-        return null;
-      }
-    }).sync();
-
     session
         .update(user::name, "albert")
         .set(user::age, 35)
@@ -218,15 +190,15 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
     Assert.assertEquals("_albert", name);
 
-    User u = session.<User>select(user)
+    User u2 = session.<User>select(user)
             .where(user::id, eq(100L))
             .single()
             .sync()
             .orElse(null);
 
-    Assert.assertEquals(Long.valueOf(100L), u.id());
-    Assert.assertEquals("albert", u.name());
-    Assert.assertEquals(Integer.valueOf(35), u.age());
+    Assert.assertEquals(Long.valueOf(100L), u2.id());
+    Assert.assertEquals("albert", u2.name());
+    Assert.assertEquals(Integer.valueOf(35), u2.age());
 
     //
     User greg =
@@ -253,6 +225,7 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
         .set(user::age, null)
         .set(user::type, null)
         .where(user::id, eq(100L))
+        .zipkinContext(null)
         .sync();
 
     Fun.Tuple3<String, Integer, UserType> tuple =

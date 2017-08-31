@@ -15,8 +15,10 @@
  */
 package net.helenus.mapping.value;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import net.helenus.mapping.HelenusProperty;
+import net.helenus.support.HelenusException;
 import net.helenus.support.HelenusMappingException;
 
 public enum BeanColumnValueProvider implements ColumnValueProvider {
@@ -30,6 +32,10 @@ public enum BeanColumnValueProvider implements ColumnValueProvider {
     Object value = null;
     try {
       value = getter.invoke(bean, new Object[] {});
+    } catch (InvocationTargetException e) {
+      if (e.getCause() != null ) {
+        throw new HelenusException("getter threw an exception", e.getCause());
+      }
     } catch (ReflectiveOperationException e) {
       throw new HelenusMappingException("fail to call getter " + getter, e);
     } catch (IllegalArgumentException e) {

@@ -389,11 +389,15 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     return new UpdateOperation<ResultSet>(this);
   }
 
-  public <T> UpdateOperation<T> update(Drafted<T> draft) {
-    UpdateOperation update = new UpdateOperation<T>(this, draft.build());
+  public <E> UpdateOperation<E> update(Drafted<E> drafted) {
+    if (drafted instanceof AbstractEntityDraft == false) {
+      throw new HelenusMappingException("update of draft objects that don't inherit from AbstractEntityDraft is not yet supported");
+    }
+    AbstractEntityDraft<E> draft = (AbstractEntityDraft<E>)drafted;
+    UpdateOperation update = new UpdateOperation<E>(this, draft);
     Map<String, Object> map = draft.toMap();
-    HelenusEntity entity = draft.getEntity();
     Set<String> mutatedProperties = draft.mutated();
+    HelenusEntity entity = Helenus.entity(draft.getEntityClass());
 
     // Add all the mutated values contained in the draft.
     entity.getOrderedProperties().forEach(property -> {
@@ -464,11 +468,9 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     }
   }
 
-  public <T> InsertOperation<T> insert(Drafted draft) {
-    return this.<T>insert((T) draft.build(), draft.mutated());
-  }
+  public <T> InsertOperation<T> insert(Drafted draft) { return insert(draft.build(), draft.mutated()); }
 
-  public <T> InsertOperation<T> insert(T pojo, Set<String> mutations) {
+  private <T> InsertOperation<T> insert(T pojo, Set<String> mutations) {
     Objects.requireNonNull(pojo, "pojo is empty");
 
     Class<?> iface = MappingUtil.getMappingInterface(pojo);
@@ -500,7 +502,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     }
   }
 
-  public <T> InsertOperation<T> upsert(T pojo, Set<String> mutations) {
+  private <T> InsertOperation<T> upsert(T pojo, Set<String> mutations) {
     Objects.requireNonNull(pojo, "pojo is empty");
 
     Class<?> iface = MappingUtil.getMappingInterface(pojo);

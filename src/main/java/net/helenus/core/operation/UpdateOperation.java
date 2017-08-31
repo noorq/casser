@@ -15,16 +15,16 @@
  */
 package net.helenus.core.operation;
 
+import java.util.*;
+import java.util.function.Function;
+
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.Assignment;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
-import java.util.*;
-import java.util.function.Function;
-import net.helenus.core.AbstractSessionOperations;
-import net.helenus.core.Filter;
-import net.helenus.core.Getter;
+
+import net.helenus.core.*;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusProperty;
@@ -32,29 +32,33 @@ import net.helenus.mapping.MappingUtil;
 import net.helenus.support.HelenusMappingException;
 import net.helenus.support.Immutables;
 
-public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateOperation<T>> {
+public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateOperation<E>> {
 
   private HelenusEntity entity = null;
 
   private final List<Assignment> assignments = new ArrayList<Assignment>();
-  private final T pojo;
+  private final AbstractEntityDraft<E> draft;
+  private final Map<String, Object> draftMap;
 
   private int[] ttl;
   private long[] timestamp;
 
   public UpdateOperation(AbstractSessionOperations sessionOperations){
     super(sessionOperations);
-    this.pojo = null;
+    this.draft = null;
+    this.draftMap = null;
   }
 
-  public UpdateOperation(AbstractSessionOperations sessionOperations, T pojo) {
+  public UpdateOperation(AbstractSessionOperations sessionOperations, AbstractEntityDraft<E> draft) {
     super(sessionOperations);
-    this.pojo = pojo;
+    this.draft = draft;
+    this.draftMap = draft.toMap();
   }
 
   public UpdateOperation(AbstractSessionOperations sessionOperations, HelenusPropertyNode p, Object v) {
     super(sessionOperations);
-    this.pojo = null;
+    this.draft = null;
+    this.draftMap = null;
 
     Object value = sessionOps.getValuePreparer().prepareColumnValue(v, p.getProperty());
     assignments.add(QueryBuilder.set(p.getColumnName(), value));
@@ -62,7 +66,7 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     addPropertyNode(p);
   }
 
-  public <V> UpdateOperation<T> set(Getter<V> getter, V v) {
+  public <V> UpdateOperation<E> set(Getter<V> getter, V v) {
     Objects.requireNonNull(getter, "getter is empty");
 
     HelenusPropertyNode p = MappingUtil.resolveMappingProperty(getter);
@@ -83,11 +87,11 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
    *
    */
 
-  public <V> UpdateOperation<T> increment(Getter<V> counterGetter) {
+  public <V> UpdateOperation<E> increment(Getter<V> counterGetter) {
     return increment(counterGetter, 1L);
   }
 
-  public <V> UpdateOperation<T> increment(Getter<V> counterGetter, long delta) {
+  public <V> UpdateOperation<E> increment(Getter<V> counterGetter, long delta) {
 
     Objects.requireNonNull(counterGetter, "counterGetter is empty");
 
@@ -96,14 +100,20 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     assignments.add(QueryBuilder.incr(p.getColumnName(), delta));
 
     addPropertyNode(p);
+
+    if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      draftMap.put(key, (Long) draftMap.get(key) + delta);
+    }
+
     return this;
   }
 
-  public <V> UpdateOperation<T> decrement(Getter<V> counterGetter) {
+  public <V> UpdateOperation<E> decrement(Getter<V> counterGetter) {
     return decrement(counterGetter, 1L);
   }
 
-  public <V> UpdateOperation<T> decrement(Getter<V> counterGetter, long delta) {
+  public <V> UpdateOperation<E> decrement(Getter<V> counterGetter, long delta) {
 
     Objects.requireNonNull(counterGetter, "counterGetter is empty");
 
@@ -112,6 +122,12 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     assignments.add(QueryBuilder.decr(p.getColumnName(), delta));
 
     addPropertyNode(p);
+
+    if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      draftMap.put(key, (Long) draftMap.get(key) - delta);
+    }
+
     return this;
   }
 
@@ -122,7 +138,7 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
    *
    */
 
-  public <V> UpdateOperation<T> prepend(Getter<List<V>> listGetter, V value) {
+  public <V> UpdateOperation<E> prepend(Getter<List<V>> listGetter, V value) {
 
     Objects.requireNonNull(listGetter, "listGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -133,10 +149,17 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     assignments.add(QueryBuilder.prepend(p.getColumnName(), valueObj));
 
     addPropertyNode(p);
+
+    if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      List<V> list = (List<V>)draftMap.get(key);
+      list.add(0, value);
+    }
+
     return this;
   }
 
-  public <V> UpdateOperation<T> prependAll(Getter<List<V>> listGetter, List<V> value) {
+  public <V> UpdateOperation<E> prependAll(Getter<List<V>> listGetter, List<V> value) {
 
     Objects.requireNonNull(listGetter, "listGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -147,10 +170,17 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     assignments.add(QueryBuilder.prependAll(p.getColumnName(), valueObj));
 
     addPropertyNode(p);
+
+    if (draft != null && value.size() > 0) {
+      String key = p.getProperty().getPropertyName();
+      List<V> list = (List<V>) draftMap.get(key);
+      list.addAll(0, value);
+    }
+
     return this;
   }
 
-  public <V> UpdateOperation<T> setIdx(Getter<List<V>> listGetter, int idx, V value) {
+  public <V> UpdateOperation<E> setIdx(Getter<List<V>> listGetter, int idx, V value) {
 
     Objects.requireNonNull(listGetter, "listGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -161,10 +191,24 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     assignments.add(QueryBuilder.setIdx(p.getColumnName(), idx, valueObj));
 
     addPropertyNode(p);
+
+    if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      List<V> list = (List<V>)draftMap.get(key);
+      if (idx < 0) {
+        list.add(0, value);
+      } else if (idx > list.size()) {
+        list.add(list.size(), value);
+      } else {
+        list.add(idx, value);
+      }
+      list.add(0, value);
+    }
+
     return this;
   }
 
-  public <V> UpdateOperation<T> append(Getter<List<V>> listGetter, V value) {
+  public <V> UpdateOperation<E> append(Getter<List<V>> listGetter, V value) {
 
     Objects.requireNonNull(listGetter, "listGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -175,10 +219,17 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     assignments.add(QueryBuilder.append(p.getColumnName(), valueObj));
 
     addPropertyNode(p);
+
+    if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      List<V> list = (List<V>)draftMap.get(key);
+      list.add(value);
+    }
+
     return this;
   }
 
-  public <V> UpdateOperation<T> appendAll(Getter<List<V>> listGetter, List<V> value) {
+  public <V> UpdateOperation<E> appendAll(Getter<List<V>> listGetter, List<V> value) {
 
     Objects.requireNonNull(listGetter, "listGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -189,10 +240,17 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     assignments.add(QueryBuilder.appendAll(p.getColumnName(), valueObj));
 
     addPropertyNode(p);
+
+    if (draft != null && value.size() > 0) {
+      String key = p.getProperty().getPropertyName();
+      List<V> list = (List<V>) draftMap.get(key);
+      list.addAll(value);
+    }
+
     return this;
   }
 
-  public <V> UpdateOperation<T> discard(Getter<List<V>> listGetter, V value) {
+  public <V> UpdateOperation<E> discard(Getter<List<V>> listGetter, V value) {
 
     Objects.requireNonNull(listGetter, "listGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -203,10 +261,17 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     assignments.add(QueryBuilder.discard(p.getColumnName(), valueObj));
 
     addPropertyNode(p);
+
+    if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      List<V> list = (List<V>) draftMap.get(key);
+      list.remove(value);
+    }
+
     return this;
   }
 
-  public <V> UpdateOperation<T> discardAll(Getter<List<V>> listGetter, List<V> value) {
+  public <V> UpdateOperation<E> discardAll(Getter<List<V>> listGetter, List<V> value) {
 
     Objects.requireNonNull(listGetter, "listGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -217,6 +282,13 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     assignments.add(QueryBuilder.discardAll(p.getColumnName(), valueObj));
 
     addPropertyNode(p);
+
+    if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      List<V> list = (List<V>) draftMap.get(key);
+      list.removeAll(value);
+    }
+
     return this;
   }
 
@@ -258,7 +330,7 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
    *
    */
 
-  public <V> UpdateOperation<T> add(Getter<Set<V>> setGetter, V value) {
+  public <V> UpdateOperation<E> add(Getter<Set<V>> setGetter, V value) {
 
     Objects.requireNonNull(setGetter, "setGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -269,10 +341,17 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     assignments.add(QueryBuilder.add(p.getColumnName(), valueObj));
 
     addPropertyNode(p);
+
+    if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      Set<V> set = (Set<V>) draftMap.get(key);
+      set.add(value);
+    }
+
     return this;
   }
 
-  public <V> UpdateOperation<T> addAll(Getter<Set<V>> setGetter, Set<V> value) {
+  public <V> UpdateOperation<E> addAll(Getter<Set<V>> setGetter, Set<V> value) {
 
     Objects.requireNonNull(setGetter, "setGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -283,10 +362,17 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     assignments.add(QueryBuilder.addAll(p.getColumnName(), valueObj));
 
     addPropertyNode(p);
+
+    if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      Set<V> set = (Set<V>) draftMap.get(key);
+      set.addAll(value);
+    }
+
     return this;
   }
 
-  public <V> UpdateOperation<T> remove(Getter<Set<V>> setGetter, V value) {
+  public <V> UpdateOperation<E> remove(Getter<Set<V>> setGetter, V value) {
 
     Objects.requireNonNull(setGetter, "setGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -297,10 +383,17 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     assignments.add(QueryBuilder.remove(p.getColumnName(), valueObj));
 
     addPropertyNode(p);
+
+    if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      Set<V> set = (Set<V>) draftMap.get(key);
+      set.remove(value);
+    }
+
     return this;
   }
 
-  public <V> UpdateOperation<T> removeAll(Getter<Set<V>> setGetter, Set<V> value) {
+  public <V> UpdateOperation<E> removeAll(Getter<Set<V>> setGetter, Set<V> value) {
 
     Objects.requireNonNull(setGetter, "setGetter is empty");
     Objects.requireNonNull(value, "value is empty");
@@ -311,6 +404,13 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     assignments.add(QueryBuilder.removeAll(p.getColumnName(), valueObj));
 
     addPropertyNode(p);
+
+    if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      Set<V> set = (Set<V>) draftMap.get(key);
+      set.removeAll(value);
+    }
+
     return this;
   }
 
@@ -351,7 +451,7 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
    *
    */
 
-  public <K, V> UpdateOperation<T> put(Getter<Map<K, V>> mapGetter, K key, V value) {
+  public <K, V> UpdateOperation<E> put(Getter<Map<K, V>> mapGetter, K key, V value) {
 
     Objects.requireNonNull(mapGetter, "mapGetter is empty");
     Objects.requireNonNull(key, "key is empty");
@@ -372,10 +472,15 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     }
 
     addPropertyNode(p);
+
+    if (draft != null) {
+      ((Map<K, V>) draftMap.get(prop.getPropertyName())).put(key, value);
+    }
+
     return this;
   }
 
-  public <K, V> UpdateOperation<T> putAll(Getter<Map<K, V>> mapGetter, Map<K, V> map) {
+  public <K, V> UpdateOperation<E> putAll(Getter<Map<K, V>> mapGetter, Map<K, V> map) {
 
     Objects.requireNonNull(mapGetter, "mapGetter is empty");
     Objects.requireNonNull(map, "map is empty");
@@ -393,6 +498,11 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
     }
 
     addPropertyNode(p);
+
+    if (draft != null) {
+      ((Map<K, V>) draftMap.get(prop.getPropertyName())).putAll(map);
+    }
+
     return this;
   }
 
@@ -435,17 +545,21 @@ public final class UpdateOperation<T> extends AbstractFilterOperation<T, UpdateO
   }
 
   @Override
-  public T transform(ResultSet resultSet) {
-    return (T) resultSet;
+  public E transform(ResultSet resultSet) {
+    if (draft != null) {
+      return Helenus.map(draft.getEntityClass(), draft.toMap(draftMap));
+    } else {
+      return (E) resultSet;
+    }
   }
 
-  public UpdateOperation<T> usingTtl(int ttl) {
+  public UpdateOperation<E> usingTtl(int ttl) {
     this.ttl = new int[1];
     this.ttl[0] = ttl;
     return this;
   }
 
-  public UpdateOperation<T> usingTimestamp(long timestamp) {
+  public UpdateOperation<E> usingTimestamp(long timestamp) {
     this.timestamp = new long[1];
     this.timestamp[0] = timestamp;
     return this;

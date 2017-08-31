@@ -194,6 +194,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
     HelenusEntity entity = null;
     Selection selection = QueryBuilder.select();
 
+    // iff in txn or cacheable add ttl and timestamp to result set for each col selected
+    // construct set of primary keys (partition and col)
+    // construct cache key
+
     for (HelenusPropertyNode prop : props) {
       selection = selection.column(prop.getColumnName());
 

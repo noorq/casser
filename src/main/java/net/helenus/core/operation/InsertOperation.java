@@ -73,7 +73,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     this.entity = entity;
     this.pojo = pojo;
     this.ifNotExists = ifNotExists;
-    this.resultType = pojo.getClass() == null ? ResultSet.class : pojo.getClass();
+    this.resultType = entity.getMappingInterface();
 
     Collection<HelenusProperty> properties = entity.getOrderedProperties();
     Set<String> keys = (mutations == null) ? null : mutations;
@@ -154,10 +154,51 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
   @Override
   public T transform(ResultSet resultSet) {
     Class<?> iface = entity.getMappingInterface();
-    if (resultType.isAssignableFrom(iface)) {
-      return TransformGeneric.INSTANCE.<T>transform(sessionOps, pojo, iface, values, entity.getOrderedProperties());
+    if (resultType == iface) {
+      if (values.size() > 0) {
+        Collection<HelenusProperty> properties = entity.getOrderedProperties();
+        Map<String, Object> backingMap = new HashMap<String, Object>(properties.size());
+
+        // First, add all the inserted values into our new map.
+        values.forEach(t -> backingMap.put(t._1.getProperty().getPropertyName(), t._2));
+
+        // Then, fill in all the rest of the properties.
+        for (HelenusProperty prop : properties) {
+          String key = prop.getPropertyName();
+          if (backingMap.containsKey(key)) {
+            // Some values man need to be converted (e.g. from String to Enum).  This is done
+            // within the BeanColumnValueProvider below.
+            Optional<Function<Object, Object>> converter =
+                    prop.getReadConverter(sessionOps.getSessionRepository());
+            if (converter.isPresent()) {
+              backingMap.put(key, converter.get().apply(backingMap.get(key)));
+            }
+          } else {
+            // If we started this operation with an instance of this type, use values from that.
+            if (pojo != null) {
+              backingMap.put(key, BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+            } else {
+              // Otherwise we'll use default values for the property type if available.
+              Class<?> propType = prop.getJavaType();
+              if (propType.isPrimitive()) {
+                DefaultPrimitiveTypes type = DefaultPrimitiveTypes.lookup(propType);
+                if (type == null) {
+                  throw new HelenusException("unknown primitive type " + propType);
+                }
+                backingMap.put(key, type.getDefaultValue());
+              }
+            }
+          }
+        }
+
+        // Lastly, create a new proxy object for the entity and return the new instance.
+        return (T) Helenus.map(iface, backingMap);
+      }
+      // Oddly, this insert didn't change any value so simply return the pojo.
+      // TODO(gburd): this pojo is the result of a Draft.build() call which will not preserve object identity (o1 == o2), ... fix me.
+      return (T) pojo;
     }
-    return pojo;
+    return (T) resultSet;
   }
 
   public InsertOperation<T> usingTtl(int ttl) {
