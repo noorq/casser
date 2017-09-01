@@ -15,15 +15,19 @@
  */
 package net.helenus.core.operation;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
 import net.helenus.core.*;
+import net.helenus.mapping.HelenusProperty;
 
 public abstract class AbstractFilterStreamOperation<
         E, O extends AbstractFilterStreamOperation<E, O>>
     extends AbstractStreamOperation<E, O> {
 
-  protected List<Filter<?>> filters = null;
+  protected Map<HelenusProperty, Filter<?>> filters = null;
   protected List<Filter<?>> ifFilters = null;
 
   public AbstractFilterStreamOperation(AbstractSessionOperations sessionOperations) {
@@ -95,9 +99,9 @@ public abstract class AbstractFilterStreamOperation<
 
   private void addFilter(Filter<?> filter) {
     if (filters == null) {
-      filters = new LinkedList<Filter<?>>();
+      filters = new LinkedHashMap<HelenusProperty, Filter<?>>();
     }
-    filters.add(filter);
+    filters.put(filter.getNode().getProperty(), filter);
   }
 
   private void addIfFilter(Filter<?> filter) {

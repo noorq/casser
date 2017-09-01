@@ -23,7 +23,7 @@ import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.IdentityName;
 import net.helenus.support.HelenusMappingException;
 
-public final class UDTMapDataType extends AbstractDataType {
+public final class UDTMapDataType extends AbstractCollectionDataType {
 
   private final IdentityName keyType;
   private final Class<?> udtKeyClass;

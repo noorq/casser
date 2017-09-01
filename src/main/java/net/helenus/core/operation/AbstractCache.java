@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractCache<K, V> {
   final Logger logger = LoggerFactory.getLogger(getClass());
-  protected Cache<K, V> cache;
+  public Cache<K, V> cache;
 
   public AbstractCache() {
     RemovalListener<K, V> listener =
@@ -38,8 +38,11 @@ public abstract class AbstractCache<K, V> {
                       .build();
   }
 
-  protected abstract ResultSet apply(
-      Statement statement, OperationsDelegate delegate, ResultSetFuture resultSetFuture)
-      throws InterruptedException, ExecutionException;
+    V get(K key) {
+        return cache.getIfPresent(key);
+    }
 
+    void put(K key, V value) {
+        cache.put(key, value);
+    }
 }

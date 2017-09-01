@@ -1,20 +1,19 @@
 package net.helenus.core.operation;
 
 import com.datastax.driver.core.Statement;
+import net.helenus.mapping.HelenusEntity;
 
 import java.io.Serializable;
 
 public class CacheKey implements Serializable {
 
   private String key;
-
-  static String of(Statement statement) {
-    return "use " + statement.getKeyspace() + "; " + statement.toString();
-  }
+  private HelenusEntity entity;
 
   CacheKey() {}
 
-  CacheKey(String key) {
+  CacheKey(HelenusEntity entity, String key) {
+    this.entity = entity;
     this.key = key;
   }
 
@@ -23,7 +22,7 @@ public class CacheKey implements Serializable {
   }
 
   public String toString() {
-    return key;
+    return entity.getName() + "." + key;
   }
 
   @Override

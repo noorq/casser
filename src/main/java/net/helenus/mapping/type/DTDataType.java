@@ -34,6 +34,7 @@ public final class DTDataType extends AbstractDataType {
   private final DataType dataType;
   private final Class<?> javaClass;
   private final Class<?>[] typeArguments;
+  private final boolean isCollectionType;
 
   public DTDataType(ColumnType columnType, DataType dataType) {
     this(
@@ -53,6 +54,7 @@ public final class DTDataType extends AbstractDataType {
     this.dataType = dataType;
     this.javaClass = javaClass;
     this.typeArguments = typeArguments;
+    this.isCollectionType = dataType.isCollection();
   }
 
   public static DTDataType list(
@@ -191,6 +193,10 @@ public final class DTDataType extends AbstractDataType {
     }
 
     return null;
+  }
+
+  public boolean isCollectionType() {
+    return isCollectionType;
   }
 
   @Override

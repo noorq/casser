@@ -1,19 +1,13 @@
 package net.helenus.core.operation;
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Statement;
+import java.util.Optional;
+
 import net.helenus.core.UnitOfWork;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-
-public class UnitOfWorkCache extends AbstractCache<String, ResultSet> {
+public class UnitOfWorkCache extends AbstractCache<CacheKey, Object> {
 
     private final UnitOfWork uow;
-    private final Map<String, ResultSet> cache = new HashMap<String, ResultSet>();
-    private AbstractCache sessionCache;
+    private AbstractCache<CacheKey, Object> sessionCache;
 
     public UnitOfWorkCache(UnitOfWork uow, AbstractCache sessionCache) {
         super();
@@ -22,32 +16,22 @@ public class UnitOfWorkCache extends AbstractCache<String, ResultSet> {
     }
 
     @Override
-    protected ResultSet apply(Statement statement, OperationsDelegate delegate, ResultSetFuture resultSetFuture)
-            throws InterruptedException, ExecutionException {
-        return resultSetFuture.get();
-        /*
-        final CacheKey key = delegate.getCacheKey();
-        final String cacheKey = (key == null) ? CacheKey.of(statement) : key.toString();
-        ResultSet resultSet = null;
-        if (cacheKey == null) {
-            if (sessionCache != null) {
-                ResultSet rs = sessionCache.apply(statement, delegate, resultSetFuture);
-                if (rs != null) {
-                    return rs;
-                }
-            }
-        } else {
-            resultSet = cache.get(cacheKey);
-            if (resultSet != null) {
-                return resultSet;
-            }
+    Object get(CacheKey key) {
+        Object result = null;
+        UnitOfWork parent = null;
+        do {
+            result = uow.getCache().get(key);
+            parent = uow.getEnclosingUnitOfWork();
+        } while(result == null && parent != null);
+        if (result == null) {
+            result = sessionCache.get(key);
         }
-        resultSet = resultSetFuture.get();
-        if (resultSet != null) {
-            cache.put(cacheKey, resultSet);
-        }
-        return resultSet;
-        */
+        return result;
+    }
+
+    @Override
+    void put(CacheKey key, Object result) {
+        cache.put(key, result);
     }
 
 }

@@ -54,4 +54,7 @@ public abstract class AbstractDataType {
     throw new HelenusMappingException(
         "wrong column type " + columnType + " for UserDefinedType in columnName " + columnName);
   }
+
+  public boolean isCollectionType() { return false; }
+
 }

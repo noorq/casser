@@ -34,7 +34,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
   public abstract Stream<E> transform(ResultSet resultSet);
 
-  protected AbstractCache getCache() {
+  public AbstractCache getCache() {
     return null;
   }
 
@@ -59,22 +59,18 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
   }
 
   public Stream<E> sync() {
-    return Executioner.INSTANCE.<Stream<E>>sync(
-            sessionOps, null, options(buildStatement()), getCache(), traceContext, this, showValues);
+    return Executioner.INSTANCE.<Stream<E>>sync(sessionOps, null, traceContext, this, showValues);
   }
 
   public Stream<E> sync(UnitOfWork uow) {
-    return Executioner.INSTANCE.<Stream<E>>sync(
-            sessionOps, uow, options(buildStatement()), getCache(), traceContext, this, showValues);
+    return Executioner.INSTANCE.<Stream<E>>sync(sessionOps, uow, traceContext, this, showValues);
   }
 
   public CompletableFuture<Stream<E>> async() {
-    return Executioner.INSTANCE.<Stream<E>>async(
-            sessionOps, null, options(buildStatement()), getCache(), traceContext, this, showValues);
+    return Executioner.INSTANCE.<Stream<E>>async(sessionOps, null, traceContext, this, showValues);
   }
 
   public CompletableFuture<Stream<E>> async(UnitOfWork uow) {
-    return Executioner.INSTANCE.<Stream<E>>async(
-            sessionOps, uow, options(buildStatement()), getCache(), traceContext, this, showValues);
+    return Executioner.INSTANCE.<Stream<E>>async(sessionOps, uow, traceContext, this, showValues);
   }
 }

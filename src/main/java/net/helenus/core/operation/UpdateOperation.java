@@ -507,7 +507,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
   }
 
   @Override
-  public BuiltStatement buildStatement() {
+  public BuiltStatement buildStatement(boolean cached) {
 
     if (entity == null) {
       throw new HelenusMappingException("empty update operation");

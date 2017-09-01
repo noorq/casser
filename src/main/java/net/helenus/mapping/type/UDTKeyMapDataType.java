@@ -18,12 +18,14 @@ package net.helenus.mapping.type;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.schemabuilder.*;
+
+import java.util.AbstractCollection;
 import java.util.List;
 import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.IdentityName;
 import net.helenus.support.HelenusMappingException;
 
-public final class UDTKeyMapDataType extends AbstractDataType {
+public final class UDTKeyMapDataType extends AbstractCollectionDataType {
 
   private final IdentityName keyType;
   private final Class<?> udtKeyClass;

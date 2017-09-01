@@ -18,6 +18,7 @@ package net.helenus.mapping.javatype;
 import com.datastax.driver.core.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.AbstractCollection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -31,7 +32,7 @@ import net.helenus.mapping.type.*;
 import net.helenus.support.Either;
 import net.helenus.support.HelenusMappingException;
 
-public final class MapJavaType extends AbstractJavaType {
+public final class MapJavaType extends AbstractCollectionJavaType {
 
   @Override
   public Class<?> getJavaClass() {

@@ -120,7 +120,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
   }
 
   @Override
-  public BuiltStatement buildStatement() {
+  public BuiltStatement buildStatement(boolean cached) {
 
     values.forEach(t -> addPropertyNode(t._1));
 

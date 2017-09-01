@@ -1,9 +1,18 @@
 package net.helenus.core.operation;
 
 import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Statement;
 
-public interface OperationsDelegate<E> {
+
+interface OperationsDelegate<E> {
+
+  Statement buildStatement(boolean cached);
+
+  Statement options(Statement statement);
+
   E transform(ResultSet resultSet);
+
+  AbstractCache getCache();
 
   CacheKey getCacheKey();
 }

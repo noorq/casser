@@ -35,7 +35,7 @@ import net.helenus.mapping.type.UDTListDataType;
 import net.helenus.support.Either;
 import net.helenus.support.HelenusMappingException;
 
-public final class ListJavaType extends AbstractJavaType {
+public final class ListJavaType extends AbstractCollectionJavaType {
 
   @Override
   public Class<?> getJavaClass() {

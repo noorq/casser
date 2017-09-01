@@ -62,14 +62,13 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 
     @Test
     public void testSelectAfterInsertProperlyCachesEntity() throws Exception {
-        /*
         Widget w1, w2, w3, w4;
         UUID key = UUIDs.timeBased();
 
         try (UnitOfWork uow = session.begin()) {
 
             // This should cache the inserted Widget.
-            w1 = session.<Widget>upsert(widget)
+            w1 = session.<Widget>insert(widget)
                     .value(widget::id, key)
                     .value(widget::name, RandomString.make(20))
                     .sync(uow);
@@ -106,7 +105,6 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 
         Assert.assertNotEquals(w1, w4);
         Assert.assertTrue(w1.equals(w4));
-        */
     }
 
 }

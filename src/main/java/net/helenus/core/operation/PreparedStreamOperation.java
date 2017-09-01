@@ -44,7 +44,7 @@ public final class PreparedStreamOperation<E> {
       key = key.replaceFirst(Pattern.quote("?"), param.toString());
     }
 
-    return new BoundStreamOperation<E>(boundStatement, new CacheKey(key), operation);
+    return new BoundStreamOperation<E>(boundStatement, operation.getCacheKey(), operation);
   }
 
   @Override

@@ -17,9 +17,11 @@ package net.helenus.test.integration.core.simple;
 
 import static net.helenus.core.Query.eq;
 
+import com.datastax.driver.core.ResultSet;
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.core.Operator;
+import net.helenus.core.operation.UpdateOperation;
 import net.helenus.core.reflect.Drafted;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.support.Fun;
@@ -220,13 +222,13 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
     // INSERT
 
     session
-        .update()
-        .set(user::name, null)
-        .set(user::age, null)
-        .set(user::type, null)
-        .where(user::id, eq(100L))
-        .zipkinContext(null)
-        .sync();
+            .update()
+            .set(user::name, null)
+            .set(user::age, null)
+            .set(user::type, null)
+            .where(user::id, eq(100L))
+            .zipkinContext(null)
+            .sync();
 
     Fun.Tuple3<String, Integer, UserType> tuple =
         session
@@ -246,6 +248,25 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
     cnt = session.select().count().where(user::id, eq(100L)).sync();
     Assert.assertEquals(0L, cnt);
+  }
+
+  public void testZipkin() throws Exception {
+    session
+            .update()
+            .set(user::name, null)
+            .set(user::age, null)
+            .set(user::type, null)
+            .where(user::id, eq(100L))
+            .zipkinContext(null)
+            .sync();
+
+
+    UpdateOperation<ResultSet> update = session.update();
+    update
+            .set(user::name, null)
+            .zipkinContext(null)
+            .sync();
+
   }
 
   private void assertUsers(User expected, User actual) {

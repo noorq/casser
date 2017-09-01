@@ -35,7 +35,7 @@ import net.helenus.mapping.type.UDTSetDataType;
 import net.helenus.support.Either;
 import net.helenus.support.HelenusMappingException;
 
-public final class SetJavaType extends AbstractJavaType {
+public final class SetJavaType extends AbstractCollectionJavaType {
 
   @Override
   public Class<?> getJavaClass() {

@@ -38,8 +38,18 @@ public final class SelectFirstOperation<E>
   }
 
   @Override
-  public BuiltStatement buildStatement() {
-    return src.buildStatement();
+  public AbstractCache getCache() {
+    return src.getCache();
+  }
+
+  @Override
+  public CacheKey getCacheKey() {
+    return src.getCacheKey();
+  }
+
+  @Override
+  public BuiltStatement buildStatement(boolean cached) {
+    return src.buildStatement(cached);
   }
 
   @Override

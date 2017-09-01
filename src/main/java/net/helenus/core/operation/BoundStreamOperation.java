@@ -36,7 +36,7 @@ public final class BoundStreamOperation<E>
   }
 
   @Override
-  protected AbstractCache getCache() {
+  public AbstractCache getCache() {
     return delegate.getCache();
   }
 
@@ -51,7 +51,7 @@ public final class BoundStreamOperation<E>
   }
 
   @Override
-  public Statement buildStatement() {
+  public Statement buildStatement(boolean cached) {
     return boundStatement;
   }
 }

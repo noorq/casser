@@ -39,7 +39,7 @@ public final class BoundOptionalOperation<E>
   }
 
   @Override
-  protected AbstractCache getCache() {
+  public AbstractCache getCache() {
     return delegate.getCache();
   }
 
@@ -49,7 +49,7 @@ public final class BoundOptionalOperation<E>
   }
 
   @Override
-  public Statement buildStatement() {
+  public Statement buildStatement(boolean cached) {
     return boundStatement;
   }
 }

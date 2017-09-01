@@ -1,8 +1,10 @@
 package net.helenus.core;
 
+import com.datastax.driver.core.ResultSet;
 import com.diffplug.common.base.Errors;
 import com.google.common.collect.TreeTraverser;
 import net.helenus.core.operation.AbstractCache;
+import net.helenus.core.operation.CacheKey;
 import net.helenus.core.operation.UnitOfWorkCache;
 import net.helenus.support.HelenusException;
 
@@ -16,6 +18,7 @@ public final class UnitOfWork implements AutoCloseable {
   private final HelenusSession session;
   private final UnitOfWork parent;
   private List<CommitThunk> postCommit = new ArrayList<CommitThunk>();
+  private final Map<CacheKey, ResultSet> cache = new HashMap<>();
   private boolean aborted = false;
   private boolean committed = false;
 
@@ -56,6 +59,10 @@ public final class UnitOfWork implements AutoCloseable {
     }
   }
 
+  public UnitOfWork getEnclosingUnitOfWork() { return parent; }
+
+  public Map<CacheKey, ResultSet> getCache() { return cache; }
+
   private Iterator<UnitOfWork> getChildNodes() {
     return nested.iterator();
   }
@@ -84,6 +91,8 @@ public final class UnitOfWork implements AutoCloseable {
     if (canCommit) {
       committed = true;
       aborted = false;
+
+      // TODO(gburd): union this cache with parent's (if there is a parent) or with the session cache for all cacheable entities we currently hold
 
       nested.forEach((uow) -> Errors.rethrow().wrap(uow::commit));
 

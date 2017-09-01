@@ -36,12 +36,12 @@ public final class SelectTransformingOperation<R, E>
   }
 
   @Override
-  public BuiltStatement buildStatement() {
-    return src.buildStatement();
+  public BuiltStatement buildStatement(boolean cached) {
+    return src.buildStatement(cached);
   }
 
   @Override
-  protected AbstractCache getCache() {
+  public AbstractCache getCache() {
     return src.getCache();
   }
 

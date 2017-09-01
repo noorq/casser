@@ -38,7 +38,7 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 
   protected final AbstractSessionOperations sessionOps;
 
-  public abstract Statement buildStatement();
+  public abstract Statement buildStatement(boolean cached);
 
   protected boolean showValues = true;
   protected TraceContext traceContext;
@@ -181,7 +181,7 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
     return (O) this;
   }
 
-  protected Statement options(Statement statement) {
+  public Statement options(Statement statement) {
 
     if (defaultTimestamp != null) {
       statement.setDefaultTimestamp(defaultTimestamp[0]);
@@ -224,11 +224,11 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
   }
 
   public Statement statement() {
-    return buildStatement();
+    return buildStatement(false);
   }
 
   public String cql() {
-    Statement statement = buildStatement();
+    Statement statement = buildStatement(false);
     if (statement == null) return "";
     if (statement instanceof BuiltStatement) {
       BuiltStatement buildStatement = (BuiltStatement) statement;
@@ -240,7 +240,7 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 
   public PreparedStatement prepareStatement() {
 
-    Statement statement = buildStatement();
+    Statement statement = buildStatement(true);
 
     if (statement instanceof RegularStatement) {
 
@@ -254,7 +254,7 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 
   public ListenableFuture<PreparedStatement> prepareStatementAsync() {
 
-    Statement statement = buildStatement();
+    Statement statement = buildStatement(true);
 
     if (statement instanceof RegularStatement) {
 

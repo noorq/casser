@@ -36,7 +36,7 @@ public final class BoundOperation<E> extends AbstractOperation<E, BoundOperation
   }
 
   @Override
-  public Statement buildStatement() {
+  public Statement buildStatement(boolean cached) {
     return boundStatement;
   }
 }

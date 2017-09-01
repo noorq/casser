@@ -28,13 +28,22 @@ import net.helenus.core.UnitOfWork;
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
     extends AbstractStatementOperation<E, O> implements OperationsDelegate<Optional<E>> {
 
+  private Function<Optional<E>, E> extractor = new Function<Optional<E>, E>() {
+
+    @Override
+    public E apply(Optional<E> e) {
+      return e.orElse(null);
+    }
+  };
+
+
   public AbstractOptionalOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
   }
 
   public abstract Optional<E> transform(ResultSet resultSet);
 
-  protected AbstractCache getCache() { return null; }
+  public AbstractCache getCache() { return null; }
 
   public CacheKey getCacheKey() {
     return null;
@@ -57,23 +66,19 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
   }
 
   public Optional<E> sync() {
-    return Executioner.INSTANCE.<Optional<E>>sync(
-            sessionOps, null, options(buildStatement()), getCache(), traceContext, this, showValues);
+    return Executioner.INSTANCE.<Optional<E>>sync(sessionOps, null, extractor, traceContext, this, showValues);
   }
 
   public Optional<E> sync(UnitOfWork uow) {
-      return Executioner.INSTANCE.<Optional<E>>sync(
-              sessionOps, uow, options(buildStatement()), getCache(), traceContext, this, showValues);
+      return Executioner.INSTANCE.<Optional<E>>sync(sessionOps, uow, extractor, traceContext, this, showValues);
   }
 
   public CompletableFuture<Optional<E>> async() {
-    return Executioner.INSTANCE.<Optional<E>>async(
-            sessionOps, null, options(buildStatement()), getCache(), traceContext, this, showValues);
+    return Executioner.INSTANCE.<Optional<E>>async(sessionOps, null, extractor, traceContext, this, showValues);
   }
 
   public CompletableFuture<Optional<E>> async(UnitOfWork uow) {
-      return Executioner.INSTANCE.<Optional<E>>async(
-              sessionOps, uow, options(buildStatement()), getCache(), traceContext, this, showValues);
+      return Executioner.INSTANCE.<Optional<E>>async(sessionOps, uow, extractor, traceContext, this, showValues);
   }
 
 }

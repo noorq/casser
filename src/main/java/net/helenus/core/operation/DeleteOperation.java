@@ -46,7 +46,7 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
   }
 
   @Override
-  public BuiltStatement buildStatement() {
+  public BuiltStatement buildStatement(boolean cached) {
 
     if (filters != null && !filters.isEmpty()) {
       filters.forEach(f -> addPropertyNode(f.getNode()));

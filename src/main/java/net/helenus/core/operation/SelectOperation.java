@@ -27,6 +27,9 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 import net.helenus.core.*;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
@@ -166,13 +169,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
     return this;
   }
 
-  protected AbstractCache getCache() {
-    if (!ignoreSessionCache) {
-      return sessionOps.getSessionCache();
-    }
-    return null;
-  }
-
   public SelectOperation<E> ignoreCache() {
     ignoreSessionCache = true;
     return this;
@@ -189,17 +185,53 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   }
 
   @Override
-  public BuiltStatement buildStatement() {
+  public AbstractCache getCache() {// TODO, not really public API...
+    if (!ignoreSessionCache) {
+      return sessionOps.getSessionCache();
+    }
+    return null;
+  }
+
+  @Override
+  public CacheKey getCacheKey() {
+
+    List<String>keys = new ArrayList<>(filters.size());
+    HelenusEntity entity = props.get(0).getEntity();
+
+    for (HelenusPropertyNode prop : props) {
+      switch(prop.getProperty().getColumnType()) {
+        case PARTITION_KEY:
+        case CLUSTERING_COLUMN:
+
+          Filter filter = filters.get(prop.getProperty());
+          if (filter != null) {
+            keys.add(filter.toString());
+          } else {
+            // we're missing a part of the primary key, so we can't create a proper cache key
+            return null;
+          }
+          break;
+        default:
+          // We've past the primary key components in this ordered list, so we're done building
+          // the cache key.
+          if (keys.size() > 0) {
+            return new CacheKey(entity, Joiner.on(",").join(keys));
+          }
+          return null;
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public BuiltStatement buildStatement(boolean cached) {
 
     HelenusEntity entity = null;
     Selection selection = QueryBuilder.select();
 
-    // iff in txn or cacheable add ttl and timestamp to result set for each col selected
-    // construct set of primary keys (partition and col)
-    // construct cache key
-
     for (HelenusPropertyNode prop : props) {
-      selection = selection.column(prop.getColumnName());
+      String columnName = prop.getColumnName();
+      selection = selection.column(columnName);
 
       if (prop.getProperty().caseSensitiveIndex()) {
         allowFiltering = true;
@@ -209,10 +241,29 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
         entity = prop.getEntity();
       } else if (entity != prop.getEntity()) {
         throw new HelenusMappingException(
-            "you can select columns only from a single entity "
-                + entity.getMappingInterface()
-                + " or "
-                + prop.getEntity().getMappingInterface());
+                "you can select columns only from a single entity "
+                        + entity.getMappingInterface()
+                        + " or "
+                        + prop.getEntity().getMappingInterface());
+      }
+
+      if (cached) {
+        switch(prop.getProperty().getColumnType()) {
+          case PARTITION_KEY:
+          case CLUSTERING_COLUMN:
+            break;
+          default:
+            if (entity.equals(prop.getEntity())) {
+              if (prop.getNext().isPresent()) {
+                columnName = Iterables.getLast(prop).getColumnName().toCql(true);
+              }
+              if (!prop.getProperty().getDataType().isCollectionType()) {
+                selection.writeTime(columnName);
+                selection.ttl(columnName);
+              }
+            }
+            break;
+        }
       }
     }
 
@@ -234,7 +285,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
       Where where = select.where();
 
-      for (Filter<?> filter : filters) {
+      for (Filter<?> filter : filters.values()) {
         where.and(filter.getClause(sessionOps.getValuePreparer()));
       }
     }
