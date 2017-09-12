@@ -576,4 +576,19 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
               + p.getEntity().getMappingInterface());
     }
   }
+
+  @Override
+  public E sync(UnitOfWork uow) {
+    E result = super.sync(uow);
+    if (draft != null) {
+      String key = getStatementCacheKey();
+      if (key != null) {
+        Set<Object> set = new HashSet<Object>(1);
+        set.add(result);
+        uow.getCache().put(key, set);
+      }
+    }
+    return result;
+  }
+
 }

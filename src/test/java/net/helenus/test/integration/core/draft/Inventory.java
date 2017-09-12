@@ -24,17 +24,19 @@ public interface Inventory {
 
         // Entity/Draft pattern-enabling methods:
         Draft(UUID id) {
-            super(null, null);
+            super(null);
 
             // Primary Key:
             set("id", id);
         }
 
         Draft(Inventory inventory) {
-            super((MapExportable) inventory, null);
+            super((MapExportable) inventory);
         }
 
         public Class<Inventory> getEntityClass() { return Inventory.class; }
+
+        protected String getCurrentAuditor() { return "unknown"; }
 
         // Immutable properties:
         public UUID id() {

@@ -9,21 +9,29 @@ import java.util.Date;
 
 public abstract class AbstractAuditedEntityDraft<E> extends AbstractEntityDraft<E> {
 
-    public AbstractAuditedEntityDraft(MapExportable entity, AuditProvider auditProvider) {
+    public AbstractAuditedEntityDraft(MapExportable entity) {
         super(entity);
 
         Date in = new Date();
         LocalDateTime ldt = LocalDateTime.ofInstant(in.toInstant(), ZoneId.systemDefault());
         Date now = Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
 
-        String who = auditProvider == null ? "unknown" : auditProvider.operatorName();
+        String who = getCurrentAuditor();
 
         if (entity == null) {
-            set("createdBy", who);
+            if (who != null) {
+                set("createdBy", who);
+            }
             set("createdAt", now);
         }
-        set("modifiedBy", who);
+        if (who != null) {
+            set("modifiedBy", who);
+        }
         set("modifiedAt", now);
+    }
+
+    protected String getCurrentAuditor() {
+        return null;
     }
 
     public Date createdAt() {
