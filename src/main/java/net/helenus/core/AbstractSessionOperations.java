@@ -23,7 +23,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.PrintStream;
 import java.util.concurrent.Executor;
 
-import net.helenus.core.operation.SessionCache;
 import net.helenus.mapping.value.ColumnValuePreparer;
 import net.helenus.mapping.value.ColumnValueProvider;
 import net.helenus.support.HelenusException;
@@ -123,7 +122,5 @@ public abstract class AbstractSessionOperations {
   void printCql(String cql) {
     getPrintStream().println(cql);
   }
-
-  public SessionCache getSessionCache() { return null; }
 
 }

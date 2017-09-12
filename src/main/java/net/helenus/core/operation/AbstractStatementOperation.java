@@ -32,11 +32,9 @@ import net.helenus.support.HelenusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>> {
+public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>> extends Operation<E> {
 
   final Logger logger = LoggerFactory.getLogger(getClass());
-
-  protected final AbstractSessionOperations sessionOps;
 
   public abstract Statement buildStatement(boolean cached);
 
@@ -50,7 +48,7 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
   private int[] fetchSize = null;
 
   public AbstractStatementOperation(AbstractSessionOperations sessionOperations) {
-    this.sessionOps = sessionOperations;
+    super(sessionOperations);
     this.consistencyLevel = sessionOperations.getDefaultConsistencyLevel();
   }
 

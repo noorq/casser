@@ -23,8 +23,7 @@ import java.util.Map;
 import net.helenus.core.*;
 import net.helenus.mapping.HelenusProperty;
 
-public abstract class AbstractFilterOptionalOperation<
-        E, O extends AbstractFilterOptionalOperation<E, O>>
+public abstract class AbstractFilterOptionalOperation<E, O extends AbstractFilterOptionalOperation<E, O>>
     extends AbstractOptionalOperation<E, O> {
 
   protected Map<HelenusProperty, Filter<?>> filters = null;

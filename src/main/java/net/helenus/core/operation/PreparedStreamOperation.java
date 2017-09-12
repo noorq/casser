@@ -35,16 +35,8 @@ public final class PreparedStreamOperation<E> {
   }
 
   public BoundStreamOperation<E> bind(Object... params) {
-
     BoundStatement boundStatement = preparedStatement.bind(params);
-
-    String key =
-        "use " + preparedStatement.getQueryKeyspace() + "; " + preparedStatement.getQueryString();
-    for (Object param : params) {
-      key = key.replaceFirst(Pattern.quote("?"), param.toString());
-    }
-
-    return new BoundStreamOperation<E>(boundStatement, operation.getCacheKey(), operation);
+    return new BoundStreamOperation<E>(boundStatement, operation);
   }
 
   @Override

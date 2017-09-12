@@ -48,16 +48,16 @@ public interface Supply {
 
         // Immutable properties:
         public UUID id() {
-            return this.<UUID>get("id");
+            return this.<UUID>get("id", UUID.class);
         }
 
         public String region() {
-            return this.<String>get("region");
+            return this.<String>get("region", String.class);
         }
 
         // Mutable properties:
         public String code() {
-            return this.<String>get("code");
+            return this.<String>get("code", String.class);
         }
 
         public Draft code(String code) {
@@ -70,7 +70,7 @@ public interface Supply {
         }
 
         public String description() {
-            return this.<String>get("description");
+            return this.<String>get("description", String.class);
         }
 
         public Draft description(String description) {
@@ -83,7 +83,7 @@ public interface Supply {
         }
 
         public Map<String, Long> demand() {
-            return this.<Map<String, Long>>get("demand");
+            return this.<Map<String, Long>>get("demand", Map.class);
         }
 
         public Draft demand(Map<String, Long> demand) {
@@ -96,7 +96,7 @@ public interface Supply {
         }
 
         public List<String> suppliers() {
-            return this.<List<String>>get("suppliers");
+            return this.<List<String>>get("suppliers", List.class);
         }
 
         public Draft suppliers(List<String> suppliers) {
@@ -109,7 +109,7 @@ public interface Supply {
         }
 
         public Set<String> shipments() {
-            return this.<Set<String>>get("shipments");
+            return this.<Set<String>>get("shipments", Set.class);
         }
 
         public Draft shipments(Set<String> shipments) {

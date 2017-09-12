@@ -27,29 +27,6 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
     public E build() { return Helenus.map(getEntityClass(), toMap()); }
 
-    @SuppressWarnings("unchecked")
-    protected <T> T get(String key) {
-        T value = (T) entityMap.get(key);
-
-        if (value == null) {
-            T obj = (T) new Object() {
-            };
-            Class<?> primitiveType = Primitives.unwrap(obj.getClass());
-            if (Primitives.allPrimitiveTypes().contains(primitiveType)) {
-                DefaultPrimitiveTypes type = DefaultPrimitiveTypes.lookup(primitiveType);
-                if (type == null) {
-                    throw new RuntimeException("unknown primitive type " + primitiveType.getTypeName());
-                }
-
-                return (T) type.getDefaultValue();
-            }
-
-        }
-
-        return value;
-    }
-
-    @SuppressWarnings("unchecked")
     protected <T> T get(String key, Class<?> returnType) {
         T value = (T) entityMap.get(key);
 

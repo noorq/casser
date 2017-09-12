@@ -1,14 +1,9 @@
 package net.helenus.core;
 
-import com.datastax.driver.core.ResultSet;
 import com.diffplug.common.base.Errors;
 import com.google.common.collect.TreeTraverser;
-import net.helenus.core.operation.AbstractCache;
-import net.helenus.core.operation.CacheKey;
-import net.helenus.core.operation.UnitOfWorkCache;
 import net.helenus.support.HelenusException;
 
-import java.io.IOException;
 import java.util.*;
 
 
@@ -18,7 +13,7 @@ public final class UnitOfWork implements AutoCloseable {
   private final HelenusSession session;
   private final UnitOfWork parent;
   private List<CommitThunk> postCommit = new ArrayList<CommitThunk>();
-  private final Map<CacheKey, ResultSet> cache = new HashMap<>();
+  private final Map<String, Set<Object>> cache = new HashMap<String, Set<Object>>();
   private boolean aborted = false;
   private boolean committed = false;
 
@@ -47,10 +42,6 @@ public final class UnitOfWork implements AutoCloseable {
     return this;
   }
 
-  public UnitOfWorkCache getCacheEnclosing(AbstractCache cache) {
-    return new UnitOfWorkCache(this, cache);
-  }
-
   private void applyPostCommitFunctions() {
     if (!postCommit.isEmpty()) {
       for (CommitThunk f : postCommit) {
@@ -59,9 +50,19 @@ public final class UnitOfWork implements AutoCloseable {
     }
   }
 
-  public UnitOfWork getEnclosingUnitOfWork() { return parent; }
+  public Set<Object> cacheLookup(String key) {
+    UnitOfWork p = this;
+    do {
+      Set<Object> r = p.getCache().get(key);
+      if (r != null) {
+        return r;
+      }
+      p = parent;
+    } while(p != null);
+    return null;
+  }
 
-  public Map<CacheKey, ResultSet> getCache() { return cache; }
+  public Map<String, Set<Object>> getCache() { return cache; }
 
   private Iterator<UnitOfWork> getChildNodes() {
     return nested.iterator();
@@ -96,6 +97,21 @@ public final class UnitOfWork implements AutoCloseable {
 
       nested.forEach((uow) -> Errors.rethrow().wrap(uow::commit));
 
+      // Merge UOW cache into parent's cache.
+      if (parent != null) {
+        Map<String, Set<Object>> parentCache = parent.getCache();
+        for (String key : cache.keySet()) {
+          if (parentCache.containsKey(key)) {
+            // merge the sets
+            Set<Object> ps = parentCache.get(key);
+            ps.addAll(cache.get(key)); //TODO(gburd): review this, likely not correct in all cases as-is.
+          } else {
+            // add the missing set
+            parentCache.put(key, cache.get(key));
+          }
+        }
+      }
+
       // Apply all post-commit functions for
       if (parent == null) {
         traverser.postOrderTraversal(this).forEach(uow -> {
@@ -111,7 +127,7 @@ public final class UnitOfWork implements AutoCloseable {
     abort();
   }
 
-  /** Explicitly discard the work and mark it as as such in the log. */
+  /* Explicitly discard the work and mark it as as such in the log. */
   public void abort() {
     TreeTraverser<UnitOfWork> traverser = TreeTraverser.using(node -> node::getChildNodes);
     traverser.postOrderTraversal(this).forEach(uow -> {

@@ -25,20 +25,15 @@ public final class BoundStreamOperation<E>
 
   private final BoundStatement boundStatement;
   private final AbstractStreamOperation<E, ?> delegate;
-  private final CacheKey cacheKey;
 
-  public BoundStreamOperation(
-      BoundStatement boundStatement, CacheKey cacheKey, AbstractStreamOperation<E, ?> operation) {
+  public BoundStreamOperation(BoundStatement boundStatement, AbstractStreamOperation<E, ?> operation) {
     super(operation.sessionOps);
     this.boundStatement = boundStatement;
-    this.cacheKey = cacheKey;
     this.delegate = operation;
   }
 
   @Override
-  public AbstractCache getCache() {
-    return delegate.getCache();
-  }
+  public String getStatementCacheKey() { return delegate.getStatementCacheKey(); }
 
   @Override
   public Stream<E> transform(ResultSet resultSet) {
@@ -46,12 +41,5 @@ public final class BoundStreamOperation<E>
   }
 
   @Override
-  public CacheKey getCacheKey() {
-    return cacheKey;
-  }
-
-  @Override
-  public Statement buildStatement(boolean cached) {
-    return boundStatement;
-  }
+  public Statement buildStatement(boolean cached) { return boundStatement; }
 }

@@ -34,19 +34,7 @@ public final class BoundOptionalOperation<E>
   }
 
   @Override
-  public Optional<E> transform(ResultSet resultSet) {
-    return delegate.transform(resultSet);
-  }
-
-  @Override
-  public AbstractCache getCache() {
-    return delegate.getCache();
-  }
-
-  @Override
-  public CacheKey getCacheKey() {
-    return delegate.getCacheKey();
-  }
+  public Optional<E> transform(ResultSet resultSet) { return delegate.transform(resultSet); }
 
   @Override
   public Statement buildStatement(boolean cached) {

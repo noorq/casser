@@ -48,7 +48,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   protected List<Ordering> ordering = null;
   protected Integer limit = null;
   protected boolean allowFiltering = false;
-  protected boolean ignoreSessionCache = false;
+  protected boolean cacheEntity = false;
 
   public SelectOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
@@ -77,6 +77,8 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
     super(sessionOperations);
 
+    cacheEntity = entity.isCacheable();
+
     entity
         .getOrderedProperties()
         .stream()
@@ -92,6 +94,8 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
     super(sessionOperations);
     this.rowMapper = rowMapper;
 
+    cacheEntity = entity.isCacheable();
+
     entity
         .getOrderedProperties()
         .stream()
@@ -105,6 +109,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
       HelenusPropertyNode... props) {
 
     super(sessionOperations);
+
     this.rowMapper = rowMapper;
     Collections.addAll(this.props, props);
   }
@@ -170,7 +175,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   }
 
   public SelectOperation<E> ignoreCache() {
-    ignoreSessionCache = true;
+    cacheEntity = false;
     return this;
   }
 
@@ -185,21 +190,12 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   }
 
   @Override
-  public AbstractCache getCache() {// TODO, not really public API...
-    if (!ignoreSessionCache) {
-      return sessionOps.getSessionCache();
-    }
-    return null;
-  }
-
-  @Override
-  public CacheKey getCacheKey() {
-
-    List<String>keys = new ArrayList<>(filters.size());
+  public String getStatementCacheKey() {
+    List<String> keys = new ArrayList<>(filters.size());
     HelenusEntity entity = props.get(0).getEntity();
 
     for (HelenusPropertyNode prop : props) {
-      switch(prop.getProperty().getColumnType()) {
+      switch (prop.getProperty().getColumnType()) {
         case PARTITION_KEY:
         case CLUSTERING_COLUMN:
 
@@ -207,15 +203,12 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
           if (filter != null) {
             keys.add(filter.toString());
           } else {
-            // we're missing a part of the primary key, so we can't create a proper cache key
-            return null;
+            keys.add(prop.getColumnName() + "==?");
           }
           break;
         default:
-          // We've past the primary key components in this ordered list, so we're done building
-          // the cache key.
           if (keys.size() > 0) {
-            return new CacheKey(entity, Joiner.on(",").join(keys));
+            return entity.getName() + ": " + Joiner.on(",").join(keys);
           }
           return null;
       }
@@ -305,18 +298,11 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   @SuppressWarnings("unchecked")
   @Override
   public Stream<E> transform(ResultSet resultSet) {
-
     if (rowMapper != null) {
-
-      return StreamSupport.stream(
-              Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED), false)
-          .map(rowMapper);
+      return StreamSupport.stream(Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED), false).map(rowMapper);
     } else {
-
       return (Stream<E>)
-          StreamSupport.stream(
-              Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED),
-              false);
+          StreamSupport.stream(Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED),false);
     }
   }
 

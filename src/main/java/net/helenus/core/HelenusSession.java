@@ -16,6 +16,7 @@
 package net.helenus.core;
 
 import brave.Tracer;
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.*;
 import net.helenus.core.operation.*;
@@ -62,7 +63,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
   private final RowColumnValueProvider valueProvider;
   private final StatementColumnValuePreparer valuePreparer;
   private final Metadata metadata;
-  private final SessionCache sessionCache;
+
 
   HelenusSession(
           Session session,
@@ -93,7 +94,6 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     this.valueProvider = new RowColumnValueProvider(this.sessionRepository);
     this.valuePreparer = new StatementColumnValuePreparer(this.sessionRepository);
     this.metadata = session.getCluster().getMetadata();
-    this.sessionCache = new SessionCache();
   }
 
   @Override
@@ -567,7 +567,5 @@ public final class HelenusSession extends AbstractSessionOperations implements C
         break;
     }
   }
-
-  public SessionCache getSessionCache() { return sessionCache; }
 
 }

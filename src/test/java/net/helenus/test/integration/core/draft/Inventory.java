@@ -38,7 +38,7 @@ public interface Inventory {
 
         // Immutable properties:
         public UUID id() {
-            return this.<UUID>get("id");
+            return this.<UUID>get("id", UUID.class);
         }
 
         public long EMEA() {

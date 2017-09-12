@@ -21,9 +21,12 @@ import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import java.util.*;
 import java.util.function.Function;
+
+import com.google.common.base.Joiner;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.Getter;
 import net.helenus.core.Helenus;
+import net.helenus.core.UnitOfWork;
 import net.helenus.core.reflect.DefaultPrimitiveTypes;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
@@ -224,4 +227,38 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
               + p.getEntity().getMappingInterface());
     }
   }
+
+  @Override
+  public String getStatementCacheKey() {
+    List<String> keys = new ArrayList<>(values.size());
+    values.forEach(
+            t -> {
+              HelenusPropertyNode prop = t._1;
+                switch (prop.getProperty().getColumnType()) {
+                  case PARTITION_KEY:
+                  case CLUSTERING_COLUMN:
+                    keys.add(prop.getColumnName() + "==" + t._2.toString());
+                    break;
+                  default:
+                    break;
+                }
+            });
+    return entity.getName() + ": " + Joiner.on(",").join(keys);
+  }
+
+  @Override
+  public T sync(UnitOfWork uow) {
+    T result = super.sync(uow);
+    Class<?> iface = entity.getMappingInterface();
+    if (resultType == iface) {
+      String key = getStatementCacheKey();
+      if (key != null) {
+        Set<Object> set = new HashSet<Object>(1);
+        set.add(result);
+        uow.getCache().put(key, set);
+      }
+    }
+    return result;
+  }
+
 }

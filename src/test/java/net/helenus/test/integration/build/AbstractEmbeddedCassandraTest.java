@@ -77,7 +77,8 @@ public abstract class AbstractEmbeddedCassandraTest {
       String cql =
           "CREATE KEYSPACE "
               + keyspace
-              + " WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};";
+              + " WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}"
+              + " AND DURABLE_WRITES =  false;";
       System.out.println(cql + "\n");
       session.execute(cql);
 

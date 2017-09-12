@@ -15,26 +15,21 @@
  */
 package net.helenus.core.operation;
 
+import com.codahale.metrics.Timer;
 import com.datastax.driver.core.ResultSet;
+
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
 
 public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
-    extends AbstractStatementOperation<E, O> implements OperationsDelegate<E> {
+    extends AbstractStatementOperation<E, O> {
 
   public abstract E transform(ResultSet resultSet);
 
-  public AbstractCache getCache() {
-    return null;
-  }
-
   public boolean cacheable() {
     return false;
-  }
-
-  public CacheKey getCacheKey() {
-    return null;
   }
 
   public AbstractOperation(AbstractSessionOperations sessionOperations) {
@@ -45,20 +40,37 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
     return new PreparedOperation<E>(prepareStatement(), this);
   }
 
+
   public E sync() {
-    return Executioner.INSTANCE.<E>sync(sessionOps, null, traceContext, this, showValues);
+    final Timer.Context context = requestLatency.time();
+    try {
+      ResultSet resultSet = this.execute(sessionOps, null, traceContext, showValues, false);
+      return transform(resultSet);
+    } finally {
+      context.stop();
+    }
   }
+
   public E sync(UnitOfWork uow) {
-    return Executioner.INSTANCE.<E>sync(sessionOps, uow, traceContext, this, showValues);
+    Objects.requireNonNull(uow, "Unit of Work should not be null.");
+
+    final Timer.Context context = requestLatency.time();
+    try {
+      ResultSet resultSet = execute(sessionOps, uow, traceContext, showValues, true);
+      E result = transform(resultSet);
+      return result;
+    } finally {
+      context.stop();
+    }
   }
 
   public CompletableFuture<E> async() {
-    AbstractCache cache = getCache();
-    boolean cacheResult = cache != null;
-    return Executioner.INSTANCE.<E>async(sessionOps, null, traceContext, this, showValues);
+    return CompletableFuture.<E>supplyAsync(() -> sync());
   }
 
   public CompletableFuture<E> async(UnitOfWork uow) {
-    return Executioner.INSTANCE.<E>async(sessionOps, uow, traceContext, this, showValues);
+    Objects.requireNonNull(uow, "Unit of Work should not be null.");
+    return CompletableFuture.<E>supplyAsync(() -> sync(uow));
   }
+
 }

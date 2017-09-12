@@ -61,6 +61,91 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
     }
 
     @Test
+    public void testSelectAfterSelect() throws Exception {
+        Widget w1, w2;
+        UUID key = UUIDs.timeBased();
+
+        // This should inserted Widget, but not cache it.
+        session.<Widget>insert(widget)
+                .value(widget::id, key)
+                .value(widget::name, RandomString.make(20))
+                .sync();
+
+        try (UnitOfWork uow = session.begin()) {
+
+            // This should read from the database and return a Widget.
+            w1 = session.<Widget>select(widget)
+                    .where(widget::id, eq(key))
+                    .single()
+                    .sync(uow)
+                    .orElse(null);
+
+            // This should read from the cache and get the same instance of a Widget.
+            w2 = session.<Widget>select(widget)
+                    .where(widget::id, eq(key))
+                    .single()
+                    .sync(uow)
+                    .orElse(null);
+
+            uow.commit()
+                    .andThen(() -> {
+                        Assert.assertEquals(w1, w2);
+                    });
+        }
+
+    }
+
+    @Test
+    public void testSelectAfterNestedSelect() throws Exception {
+        Widget w1, w2, w3, w4;
+        UUID key1 = UUIDs.timeBased();
+        UUID key2 = UUIDs.timeBased();
+
+        // This should inserted Widget, and not cache it in uow1.
+        try (UnitOfWork uow1 = session.begin()) {
+            w1 = session.<Widget>insert(widget)
+                    .value(widget::id, key1)
+                    .value(widget::name, RandomString.make(20))
+                    .sync(uow1);
+
+            try (UnitOfWork uow2 = session.begin(uow1)) {
+
+                // This should read from uow1's cache and return the same Widget.
+                w2 = session.<Widget>select(widget)
+                        .where(widget::id, eq(key1))
+                        .single()
+                        .sync(uow2)
+                        .orElse(null);
+
+                Assert.assertEquals(w1, w2);
+
+                w3 = session.<Widget>insert(widget)
+                        .value(widget::id, key2)
+                        .value(widget::name, RandomString.make(20))
+                        .sync(uow2);
+
+                uow2.commit()
+                        .andThen(() -> {
+                            Assert.assertEquals(w1, w2);
+                        });
+            }
+
+            // This should read from the cache and get the same instance of a Widget.
+            w4 = session.<Widget>select(widget)
+                    .where(widget::id, eq(key2))
+                    .single()
+                    .sync(uow1)
+                    .orElse(null);
+
+            uow1.commit()
+                    .andThen(() -> {
+                        Assert.assertEquals(w3, w4);
+                    });
+        }
+
+    }
+/*
+    @Test
     public void testSelectAfterInsertProperlyCachesEntity() throws Exception {
         Widget w1, w2, w3, w4;
         UUID key = UUIDs.timeBased();
@@ -106,5 +191,5 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
         Assert.assertNotEquals(w1, w4);
         Assert.assertTrue(w1.equals(w4));
     }
-
+*/
 }

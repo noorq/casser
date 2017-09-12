@@ -23,30 +23,29 @@ import java.util.stream.Stream;
 public final class SelectTransformingOperation<R, E>
     extends AbstractFilterStreamOperation<R, SelectTransformingOperation<R, E>> {
 
-  private final SelectOperation<E> src;
+  private final SelectOperation<E> delegate;
   private final Function<E, R> fn;
 
-  public SelectTransformingOperation(SelectOperation<E> src, Function<E, R> fn) {
-    super(src.sessionOps);
+  public SelectTransformingOperation(SelectOperation<E> delegate, Function<E, R> fn) {
+    super(delegate.sessionOps);
 
-    this.src = src;
+    this.delegate = delegate;
     this.fn = fn;
-    this.filters = src.filters;
-    this.ifFilters = src.ifFilters;
+    this.filters = delegate.filters;
+    this.ifFilters = delegate.ifFilters;
   }
+
+  @Override
+  public String getStatementCacheKey() { return delegate.getStatementCacheKey(); }
 
   @Override
   public BuiltStatement buildStatement(boolean cached) {
-    return src.buildStatement(cached);
-  }
-
-  @Override
-  public AbstractCache getCache() {
-    return src.getCache();
+    return delegate.buildStatement(cached);
   }
 
   @Override
   public Stream<R> transform(ResultSet resultSet) {
-    return src.transform(resultSet).map(fn);
+    return delegate.transform(resultSet).map(fn);
   }
+
 }

@@ -15,39 +15,30 @@
  */
 package net.helenus.core.operation;
 
+import com.codahale.metrics.Timer;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+
+import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
 
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
-    extends AbstractStatementOperation<E, O> implements OperationsDelegate<Optional<E>> {
-
-  private Function<Optional<E>, E> extractor = new Function<Optional<E>, E>() {
-
-    @Override
-    public E apply(Optional<E> e) {
-      return e.orElse(null);
-    }
-  };
-
+    extends AbstractStatementOperation<E, O> {
 
   public AbstractOptionalOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
   }
 
   public abstract Optional<E> transform(ResultSet resultSet);
-
-  public AbstractCache getCache() { return null; }
-
-  public CacheKey getCacheKey() {
-    return null;
-  }
 
   public PreparedOptionalOperation<E> prepare() {
     return new PreparedOptionalOperation<E>(prepareStatement(), this);
@@ -66,19 +57,63 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
   }
 
   public Optional<E> sync() {
-    return Executioner.INSTANCE.<Optional<E>>sync(sessionOps, null, extractor, traceContext, this, showValues);
+    final Timer.Context context = requestLatency.time();
+    try {
+      ResultSet resultSet = this.execute(sessionOps, null, traceContext, showValues, false);
+      return transform(resultSet);
+    } finally {
+      context.stop();
+    }
   }
 
   public Optional<E> sync(UnitOfWork uow) {
-      return Executioner.INSTANCE.<Optional<E>>sync(sessionOps, uow, extractor, traceContext, this, showValues);
+    Objects.requireNonNull(uow, "Unit of Work should not be null.");
+
+    final Timer.Context context = requestLatency.time();
+    try {
+
+      Optional<E> result = null;
+      String key = getStatementCacheKey();
+      if (key != null) {
+        Set<E> cachedResult = (Set<E>) uow.cacheLookup(key);
+        if (cachedResult != null) {
+          //TODO(gburd): what about select ResultSet, Tuple... etc.?
+          uowCacheHits.mark();
+          logger.info("UOW({}) cache hit, {} -> {}", uow.hashCode(), key, cachedResult.toString());
+          result = cachedResult.stream().findFirst();
+        }
+      }
+
+      if (result == null) {
+        uowCacheMiss.mark();
+        ResultSet resultSet = execute(sessionOps, uow, traceContext, showValues, true);
+        result = transform(resultSet);
+
+        if (key != null) {
+          if (result.isPresent()) {
+            Set<Object> set = new HashSet<Object>(1);
+            set.add(result.get());
+            uow.getCache().put(key, set);
+          } else {
+            uow.getCache().put(key, new HashSet<Object>(0));
+          }
+        }
+      }
+
+      return result;
+    } finally {
+      context.stop();
+    }
   }
 
   public CompletableFuture<Optional<E>> async() {
-    return Executioner.INSTANCE.<Optional<E>>async(sessionOps, null, extractor, traceContext, this, showValues);
+    return CompletableFuture.<Optional<E>>supplyAsync(() -> sync());
   }
 
   public CompletableFuture<Optional<E>> async(UnitOfWork uow) {
-      return Executioner.INSTANCE.<Optional<E>>async(sessionOps, uow, extractor, traceContext, this, showValues);
+    Objects.requireNonNull(uow, "Unit of Work should not be null.");
+
+    return CompletableFuture.<Optional<E>>supplyAsync(() -> sync(uow));
   }
 
 }

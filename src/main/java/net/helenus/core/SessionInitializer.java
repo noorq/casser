@@ -39,7 +39,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
   private String usingKeyspace;
   private boolean showCql = false;
   private ConsistencyLevel consistencyLevel;
-  private MetricRegistry metricRegistry;
+  private MetricRegistry metricRegistry = new MetricRegistry();
   private Tracer zipkinTracer;
   private PrintStream printStream = System.out;
   private Executor executor = MoreExecutors.directExecutor();

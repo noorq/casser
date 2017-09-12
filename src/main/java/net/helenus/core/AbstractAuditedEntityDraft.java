@@ -26,8 +26,8 @@ public abstract class AbstractAuditedEntityDraft<E> extends AbstractEntityDraft<
         set("modifiedAt", now);
     }
 
-    Date createdAt() {
-        return (Date) get("createdAt");
+    public Date createdAt() {
+        return (Date) get("createdAt", Date.class);
     }
 
 }

@@ -23,37 +23,30 @@ import java.util.function.Function;
 public final class SelectFirstOperation<E>
     extends AbstractFilterOptionalOperation<E, SelectFirstOperation<E>> {
 
-  private final SelectOperation<E> src;
+  private final SelectOperation<E> delegate;
 
-  public SelectFirstOperation(SelectOperation<E> src) {
-    super(src.sessionOps);
+  public SelectFirstOperation(SelectOperation<E> delegate) {
+    super(delegate.sessionOps);
 
-    this.src = src;
-    this.filters = src.filters;
-    this.ifFilters = src.ifFilters;
+    this.delegate = delegate;
+    this.filters = delegate.filters;
+    this.ifFilters = delegate.ifFilters;
   }
 
   public <R> SelectFirstTransformingOperation<R, E> map(Function<E, R> fn) {
-    return new SelectFirstTransformingOperation<R, E>(src, fn);
+    return new SelectFirstTransformingOperation<R, E>(delegate, fn);
   }
 
   @Override
-  public AbstractCache getCache() {
-    return src.getCache();
-  }
-
-  @Override
-  public CacheKey getCacheKey() {
-    return src.getCacheKey();
-  }
+  public String getStatementCacheKey() { return delegate.getStatementCacheKey(); }
 
   @Override
   public BuiltStatement buildStatement(boolean cached) {
-    return src.buildStatement(cached);
+    return delegate.buildStatement(cached);
   }
 
   @Override
   public Optional<E> transform(ResultSet resultSet) {
-    return src.transform(resultSet).findFirst();
+    return delegate.transform(resultSet).findFirst();
   }
 }
