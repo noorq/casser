@@ -8,7 +8,7 @@ import java.util.*;
 
 
 /** Encapsulates the concept of a "transaction" as a unit-of-work. */
-public class UnitOfWork implements AutoCloseable {
+public class UnitOfWork<T extends Exception> implements AutoCloseable {
   protected static Class<? extends Exception>conflictExceptionClass = ConflictingUnitOfWorkException.class;
   private final List<UnitOfWork> nested = new ArrayList<>();
   private final HelenusSession session;
@@ -52,7 +52,7 @@ public class UnitOfWork implements AutoCloseable {
   }
 
   public Set<Object> cacheLookup(String key) {
-    UnitOfWork p = this;
+    UnitOfWork<T> p = this;
     do {
       Set<Object> r = p.getCache().get(key);
       if (r != null) {
@@ -73,9 +73,9 @@ public class UnitOfWork implements AutoCloseable {
    * Checks to see if the work performed between calling begin and now can be committed or not.
    *
    * @return a function from which to chain work that only happens when commit is successful
-   * @throws ConflictingUnitOfWorkException when the work overlaps with other concurrent writers.
+   * @throws T when the work overlaps with other concurrent writers.
    */
-  public PostCommitFunction<Void, Void> commit() throws Exception {
+  public PostCommitFunction<Void, Void> commit() throws T {
     // All nested UnitOfWork should be committed (not aborted) before calls to commit, check.
     boolean canCommit = true;
     TreeTraverser<UnitOfWork> traverser = TreeTraverser.using(node -> node::getChildNodes);
@@ -122,8 +122,8 @@ public class UnitOfWork implements AutoCloseable {
       }
     }
     // else {
-    // Constructor<?> ctor = clazz.getConstructor(conflictExceptionClass);
-    // Object object = ctor.newInstance(new Object[] { String message });
+    // Constructor<T> ctor = clazz.getConstructor(conflictExceptionClass);
+    // T object = ctor.newInstance(new Object[] { String message });
     // }
     return new PostCommitFunction(this, postCommit);
   }
