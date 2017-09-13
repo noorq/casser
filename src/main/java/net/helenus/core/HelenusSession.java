@@ -172,9 +172,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     return metadata;
   }
 
-  public synchronized UnitOfWork begin() {
-    return new UnitOfWork(this, null).begin();
-  }
+  public synchronized <T extends Exception> UnitOfWork<T> begin() { return new UnitOfWork<T>(this, null).begin(); }
 
   public synchronized UnitOfWork begin(UnitOfWork parent) {
     UnitOfWork child = new UnitOfWork(this, parent);
