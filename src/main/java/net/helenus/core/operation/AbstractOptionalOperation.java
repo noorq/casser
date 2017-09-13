@@ -74,18 +74,19 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 
       Optional<E> result = null;
       String key = getStatementCacheKey();
-      if (key != null) {
+      if (enableCache && key != null) {
         Set<E> cachedResult = (Set<E>) uow.cacheLookup(key);
         if (cachedResult != null) {
           //TODO(gburd): what about select ResultSet, Tuple... etc.?
           uowCacheHits.mark();
           logger.info("UOW({}) cache hit, {} -> {}", uow.hashCode(), key, cachedResult.toString());
           result = cachedResult.stream().findFirst();
+        } else {
+          uowCacheMiss.mark();
         }
       }
 
       if (result == null) {
-        uowCacheMiss.mark();
         ResultSet resultSet = execute(sessionOps, uow, traceContext, showValues, true);
         result = transform(resultSet);
 

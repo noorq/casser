@@ -48,7 +48,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   protected List<Ordering> ordering = null;
   protected Integer limit = null;
   protected boolean allowFiltering = false;
-  protected boolean cacheEntity = false;
 
   public SelectOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
@@ -77,8 +76,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
     super(sessionOperations);
 
-    cacheEntity = entity.isCacheable();
-
     entity
         .getOrderedProperties()
         .stream()
@@ -93,8 +90,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
     super(sessionOperations);
     this.rowMapper = rowMapper;
-
-    cacheEntity = entity.isCacheable();
 
     entity
         .getOrderedProperties()
@@ -171,11 +166,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
   public SelectOperation<E> orderBy(Ordered ordered) {
     getOrCreateOrdering().add(ordered.getOrdering());
-    return this;
-  }
-
-  public SelectOperation<E> ignoreCache() {
-    cacheEntity = false;
     return this;
   }
 

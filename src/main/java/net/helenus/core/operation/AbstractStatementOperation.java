@@ -38,6 +38,7 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 
   public abstract Statement buildStatement(boolean cached);
 
+  protected boolean enableCache = true;
   protected boolean showValues = true;
   protected TraceContext traceContext;
   private ConsistencyLevel consistencyLevel;
@@ -50,6 +51,17 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
   public AbstractStatementOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
     this.consistencyLevel = sessionOperations.getDefaultConsistencyLevel();
+  }
+
+
+  public O ignoreCache(boolean enabled) {
+    enableCache = enabled;
+    return (O) this;
+  }
+
+  public O ignoreCache() {
+    enableCache = true;
+    return (O) this;
   }
 
   public O showValues(boolean enabled) {
