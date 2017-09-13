@@ -9,6 +9,7 @@ import java.util.*;
 
 /** Encapsulates the concept of a "transaction" as a unit-of-work. */
 public class UnitOfWork implements AutoCloseable {
+  protected static Class<? extends Exception>conflictExceptionClass = ConflictingUnitOfWorkException.class;
   private final List<UnitOfWork> nested = new ArrayList<>();
   private final HelenusSession session;
   private final UnitOfWork parent;
@@ -74,7 +75,7 @@ public class UnitOfWork implements AutoCloseable {
    * @return a function from which to chain work that only happens when commit is successful
    * @throws ConflictingUnitOfWorkException when the work overlaps with other concurrent writers.
    */
-  public PostCommitFunction<Void, Void> commit() throws ConflictingUnitOfWorkException {
+  public PostCommitFunction<Void, Void> commit() throws Exception {
     // All nested UnitOfWork should be committed (not aborted) before calls to commit, check.
     boolean canCommit = true;
     TreeTraverser<UnitOfWork> traverser = TreeTraverser.using(node -> node::getChildNodes);
@@ -120,6 +121,10 @@ public class UnitOfWork implements AutoCloseable {
         return new PostCommitFunction(this, null);
       }
     }
+    // else {
+    // Constructor<?> ctor = clazz.getConstructor(conflictExceptionClass);
+    // Object object = ctor.newInstance(new Object[] { String message });
+    // }
     return new PostCommitFunction(this, postCommit);
   }
 

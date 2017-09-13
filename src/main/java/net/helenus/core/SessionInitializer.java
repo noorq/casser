@@ -43,6 +43,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
   private Tracer zipkinTracer;
   private PrintStream printStream = System.out;
   private Executor executor = MoreExecutors.directExecutor();
+  private Class<? extends Exception> conflictingUnitOfWorkClass = ConflictingUnitOfWorkException.class;
 
   private SessionRepositoryBuilder sessionRepository;
 
@@ -107,6 +108,11 @@ public final class SessionInitializer extends AbstractSessionOperations {
 
   public SessionInitializer zipkinTracer(Tracer tracer) {
     this.zipkinTracer = tracer;
+    return this;
+  }
+
+  public SessionInitializer setConflictingUnitOfWorkException(Class<? extends Exception> e) {
+    this.conflictingUnitOfWorkClass = e;
     return this;
   }
 
@@ -235,6 +241,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
         executor,
         autoDdl == AutoDdl.CREATE_DROP,
         consistencyLevel,
+        conflictingUnitOfWorkClass,
         metricRegistry,
         zipkinTracer);
   }

@@ -75,6 +75,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
           Executor executor,
           boolean dropSchemaOnClose,
           ConsistencyLevel consistencyLevel,
+          Class<? extends Exception> conflictExceptionClass,
           MetricRegistry metricRegistry,
           Tracer tracer) {
     this.session = session;
@@ -88,6 +89,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     this.executor = executor;
     this.dropSchemaOnClose = dropSchemaOnClose;
     this.defaultConsistencyLevel = consistencyLevel;
+    UnitOfWork.conflictExceptionClass = conflictExceptionClass;
     this.metricRegistry = metricRegistry;
     this.zipkinTracer = tracer;
 
