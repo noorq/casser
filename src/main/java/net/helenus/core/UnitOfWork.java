@@ -8,7 +8,7 @@ import java.util.*;
 
 
 /** Encapsulates the concept of a "transaction" as a unit-of-work. */
-public final class UnitOfWork implements AutoCloseable {
+public class UnitOfWork implements AutoCloseable {
   private final List<UnitOfWork> nested = new ArrayList<>();
   private final HelenusSession session;
   private final UnitOfWork parent;
