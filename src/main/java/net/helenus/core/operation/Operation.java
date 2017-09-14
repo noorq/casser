@@ -26,9 +26,9 @@ public abstract class Operation<E> {
     Operation(AbstractSessionOperations sessionOperations) {
         this.sessionOps = sessionOperations;
         MetricRegistry metrics = sessionOperations.getMetricRegistry();
-        this.uowCacheHits = metrics.meter("helenus.UOW-cache-hits");
-        this.uowCacheMiss = metrics.meter("helenus.UOW-cache-miss");
-        this.requestLatency = metrics.timer("helenus.request-latency");
+        this.uowCacheHits = metrics.meter("net.helenus.UOW-cache-hits");
+        this.uowCacheMiss = metrics.meter("net.helenus.UOW-cache-miss");
+        this.requestLatency = metrics.timer("net.helenus.request-latency");
     }
 
     public ResultSet execute(AbstractSessionOperations session, UnitOfWork uow, TraceContext traceContext, boolean showValues, boolean cached) {

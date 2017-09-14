@@ -52,7 +52,7 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
   }
 
   public E sync(UnitOfWork uow) {
-    Objects.requireNonNull(uow, "Unit of Work should not be null.");
+    if (uow == null) return sync();
 
     final Timer.Context context = requestLatency.time();
     try {
@@ -69,7 +69,7 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
   }
 
   public CompletableFuture<E> async(UnitOfWork uow) {
-    Objects.requireNonNull(uow, "Unit of Work should not be null.");
+    if (uow == null) return async();
     return CompletableFuture.<E>supplyAsync(() -> sync(uow));
   }
 
