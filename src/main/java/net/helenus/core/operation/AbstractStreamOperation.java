@@ -72,7 +72,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
   }
 
   public Stream<E> sync(UnitOfWork uow) {
-    Objects.requireNonNull(uow, "Unit of Work should not be null.");
+    if (uow == null) return sync();
 
     final Timer.Context context = requestLatency.time();
     try {
@@ -110,8 +110,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
   }
 
   public CompletableFuture<Stream<E>> async(UnitOfWork uow) {
-    Objects.requireNonNull(uow, "Unit of Work should not be null.");
-
+    if (uow == null) return async();
     return CompletableFuture.<Stream<E>>supplyAsync(() -> sync(uow));
   }
 

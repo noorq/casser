@@ -67,7 +67,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
   }
 
   public Optional<E> sync(UnitOfWork uow) {
-    Objects.requireNonNull(uow, "Unit of Work should not be null.");
+    if (uow == null) return sync();
 
     final Timer.Context context = requestLatency.time();
     try {
@@ -112,8 +112,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
   }
 
   public CompletableFuture<Optional<E>> async(UnitOfWork uow) {
-    Objects.requireNonNull(uow, "Unit of Work should not be null.");
-
+    if (uow == null) return async();
     return CompletableFuture.<Optional<E>>supplyAsync(() -> sync(uow));
   }
 
