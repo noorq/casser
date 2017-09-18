@@ -52,14 +52,14 @@ public class UnitOfWork<T extends Exception> implements AutoCloseable {
   }
 
   public Set<Object> cacheLookup(String key) {
-    UnitOfWork<T> p = this;
-    do {
-      Set<Object> r = p.getCache().get(key);
-      if (r != null) {
-        return r;
+    Set<Object> r = getCache().get(key);
+    if (r != null) {
+      return r;
+    } else {
+      if (parent != null) {
+        return parent.cacheLookup(key);
       }
-      p = parent;
-    } while(p != null);
+    }
     return null;
   }
 
