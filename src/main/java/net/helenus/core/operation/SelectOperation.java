@@ -193,7 +193,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
           if (filter != null) {
             keys.add(filter.toString());
           } else {
-            keys.add(prop.getColumnName() + "==?");
+            return null;
           }
           break;
         default:
