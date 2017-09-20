@@ -78,7 +78,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
         if (cachedResult != null) {
           //TODO(gburd): what about select ResultSet, Tuple... etc.?
           uowCacheHits.mark();
-          logger.info("UOW({}) cache hit, {} -> {}", uow.hashCode(), key, cachedResult.toString());
+          logger.info("UOW({}) cache hit, {}", uow.hashCode(), key);
           result = cachedResult.stream().findFirst();
         } else {
           uowCacheMiss.mark();

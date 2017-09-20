@@ -241,8 +241,8 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
                 columnName = Iterables.getLast(prop).getColumnName().toCql(true);
               }
               if (!prop.getProperty().getDataType().isCollectionType()) {
-                selection.writeTime(columnName);
-                selection.ttl(columnName);
+                selection.writeTime(columnName).as(columnName + "_writeTime");
+                selection.ttl(columnName).as(columnName + "_ttl");
               }
             }
             break;

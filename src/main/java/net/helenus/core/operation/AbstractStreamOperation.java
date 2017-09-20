@@ -83,7 +83,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
         if (cachedResult != null) {
           //TODO(gburd): what about select ResultSet, Tuple... etc.?
           uowCacheHits.mark();
-          logger.info("UOW({}) cache hit, {} -> {}", uow.hashCode(), key, cachedResult.toString());
+          logger.info("UOW({}) cache hit, {}", uow.hashCode());
           result = cachedResult.stream();
         } else {
           uowCacheMiss.mark();
