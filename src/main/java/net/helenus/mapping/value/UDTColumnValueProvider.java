@@ -34,6 +34,7 @@ public final class UDTColumnValueProvider implements ColumnValueProvider {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public <V> V getColumnValue(Object sourceObj, int columnIndexUnused, HelenusProperty property) {
 
     UDTValue source = (UDTValue) sourceObj;

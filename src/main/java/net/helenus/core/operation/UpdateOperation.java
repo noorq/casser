@@ -579,6 +579,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 
   @Override
   public E sync(UnitOfWork uow) {
+    if (uow == null) { return sync(); }
     E result = super.sync(uow);
     if (draft != null) {
       String key = getStatementCacheKey();

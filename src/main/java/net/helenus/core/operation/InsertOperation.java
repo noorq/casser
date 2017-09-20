@@ -248,6 +248,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 
   @Override
   public T sync(UnitOfWork uow) {
+    if (uow == null) { return sync(); }
     T result = super.sync(uow);
     Class<?> iface = entity.getMappingInterface();
     if (resultType == iface) {

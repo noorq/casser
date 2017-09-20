@@ -49,11 +49,12 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   protected Integer limit = null;
   protected boolean allowFiltering = false;
 
+  @SuppressWarnings("unchecked")
   public SelectOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
 
     this.rowMapper =
-        new Function<Row, E>() {
+      new Function<Row, E>() {
 
           @Override
           public E apply(Row source) {

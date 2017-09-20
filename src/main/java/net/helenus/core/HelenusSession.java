@@ -30,10 +30,13 @@ import net.helenus.support.Fun;
 import net.helenus.support.Fun.Tuple1;
 import net.helenus.support.Fun.Tuple2;
 import net.helenus.support.Fun.Tuple6;
+import net.helenus.support.HelenusException;
 import net.helenus.support.HelenusMappingException;
 
 import java.io.Closeable;
 import java.io.PrintStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -56,6 +59,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
   private final MetricRegistry metricRegistry;
   private final Tracer zipkinTracer;
   private final PrintStream printStream;
+  private final Class<? extends UnitOfWork> unitOfWorkClass;
   private final SessionRepository sessionRepository;
   private final Executor executor;
   private final boolean dropSchemaOnClose;
@@ -75,7 +79,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
           Executor executor,
           boolean dropSchemaOnClose,
           ConsistencyLevel consistencyLevel,
-          Class<? extends Exception> conflictExceptionClass,
+          Class<? extends UnitOfWork> unitOfWorkClass,
           MetricRegistry metricRegistry,
           Tracer tracer) {
     this.session = session;
@@ -89,7 +93,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     this.executor = executor;
     this.dropSchemaOnClose = dropSchemaOnClose;
     this.defaultConsistencyLevel = consistencyLevel;
-    UnitOfWork.conflictExceptionClass = conflictExceptionClass;
+    this.unitOfWorkClass = unitOfWorkClass;
     this.metricRegistry = metricRegistry;
     this.zipkinTracer = tracer;
 
@@ -172,12 +176,23 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     return metadata;
   }
 
-  public synchronized <T extends Exception> UnitOfWork<T> begin() { return new UnitOfWork<T>(this, null).begin(); }
+  public synchronized UnitOfWork begin() {
+      return begin(null);
+  }
 
-  public synchronized <T extends Exception> UnitOfWork<T> begin(UnitOfWork<T> parent) {
-    UnitOfWork child = new UnitOfWork(this, parent);
-    parent.addNestedUnitOfWork(child);
-    return child.begin();
+  public synchronized UnitOfWork begin(UnitOfWork parent) {
+    try {
+      Class<? extends UnitOfWork> clazz = unitOfWorkClass;
+      Constructor<? extends UnitOfWork> ctor = clazz.getConstructor(HelenusSession.class, UnitOfWork.class);
+      UnitOfWork uow = ctor.newInstance(this, parent);
+      if (parent != null) {
+        parent.addNestedUnitOfWork(uow);
+      }
+      return uow.begin();
+    }
+    catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+      throw new HelenusException(String.format("Unable to instantiate {} as a UnitOfWork.", unitOfWorkClass.getSimpleName()), e);
+    }
   }
 
   public <E> SelectOperation<E> select(E pojo) {
