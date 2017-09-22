@@ -51,6 +51,8 @@ public abstract class AbstractSessionOperations {
 
   public abstract ConsistencyLevel getDefaultConsistencyLevel();
 
+  public abstract boolean getDefaultQueryIdempotency();
+
   public PreparedStatement prepare(RegularStatement statement) {
     try {
       log(statement, false);

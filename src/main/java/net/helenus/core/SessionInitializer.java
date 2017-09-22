@@ -39,6 +39,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
   private String usingKeyspace;
   private boolean showCql = false;
   private ConsistencyLevel consistencyLevel;
+  private boolean idempotent = true;
   private MetricRegistry metricRegistry = new MetricRegistry();
   private Tracer zipkinTracer;
   private PrintStream printStream = System.out;
@@ -123,6 +124,15 @@ public final class SessionInitializer extends AbstractSessionOperations {
 
   public ConsistencyLevel getDefaultConsistencyLevel() {
     return consistencyLevel;
+  }
+
+  public SessionInitializer idempotentQueryExecution(boolean idempotent) {
+      this.idempotent = idempotent;
+      return this;
+  }
+
+  public boolean getDefaultQueryIdempotency() {
+      return idempotent;
   }
 
   @Override
@@ -241,6 +251,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
         executor,
         autoDdl == AutoDdl.CREATE_DROP,
         consistencyLevel,
+        idempotent,
         unitOfWorkClass,
         metricRegistry,
         zipkinTracer);

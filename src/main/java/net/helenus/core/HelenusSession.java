@@ -56,6 +56,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
   private volatile String usingKeyspace;
   private volatile boolean showCql;
   private final ConsistencyLevel defaultConsistencyLevel;
+  private final boolean defaultQueryIdempotency;
   private final MetricRegistry metricRegistry;
   private final Tracer zipkinTracer;
   private final PrintStream printStream;
@@ -79,6 +80,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
           Executor executor,
           boolean dropSchemaOnClose,
           ConsistencyLevel consistencyLevel,
+          boolean defaultQueryIdempotency,
           Class<? extends UnitOfWork> unitOfWorkClass,
           MetricRegistry metricRegistry,
           Tracer tracer) {
@@ -93,6 +95,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     this.executor = executor;
     this.dropSchemaOnClose = dropSchemaOnClose;
     this.defaultConsistencyLevel = consistencyLevel;
+    this.defaultQueryIdempotency = defaultQueryIdempotency;
     this.unitOfWorkClass = unitOfWorkClass;
     this.metricRegistry = metricRegistry;
     this.zipkinTracer = tracer;
@@ -168,13 +171,15 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     return metricRegistry;
   }
 
+  @Override
   public ConsistencyLevel getDefaultConsistencyLevel() {
     return defaultConsistencyLevel;
   }
 
-  public Metadata getMetadata() {
-    return metadata;
-  }
+  @Override
+  public boolean getDefaultQueryIdempotency() { return defaultQueryIdempotency; }
+
+  public Metadata getMetadata() { return metadata; }
 
   public synchronized UnitOfWork begin() {
       return begin(null);
