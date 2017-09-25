@@ -29,6 +29,9 @@ public interface Animal {
   @Column(ordinal = 1)
   boolean eatable();
 
+  @Column
+  boolean warmBlodded();
+
   @Transient
   default Animal me() {
     return this;

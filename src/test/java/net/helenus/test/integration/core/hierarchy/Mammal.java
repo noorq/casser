@@ -15,12 +15,11 @@
  */
 package net.helenus.test.integration.core.hierarchy;
 
-import net.helenus.mapping.annotation.Column;
-import net.helenus.mapping.annotation.Table;
+import net.helenus.mapping.annotation.InheritedTable;
 
-@Table("pigs")
-public interface Pig extends Mammal {
+@InheritedTable
+public interface Mammal extends Animal {
 
-  @Column(ordinal = 0)
-  String nickname();
+    default boolean warmBlodded() { return true; }
+
 }

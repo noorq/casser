@@ -53,6 +53,7 @@ public class HierarchyTest extends AbstractEmbeddedCassandraTest {
     Optional<Cat> animal =
         session.<Cat>select(Cat.class).where(cat::nickname, eq("garfield")).sync().findFirst();
     Assert.assertTrue(animal.isPresent());
+    Assert.assertTrue(animal.get().warmBlodded());
     Assert.assertFalse(animal.get().eatable());
   }
 

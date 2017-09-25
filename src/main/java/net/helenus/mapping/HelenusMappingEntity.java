@@ -25,6 +25,7 @@ import net.helenus.core.Helenus;
 import net.helenus.core.annotation.Cacheable;
 import net.helenus.mapping.annotation.*;
 import net.helenus.support.HelenusMappingException;
+import org.apache.commons.lang3.ClassUtils;
 
 public final class HelenusMappingEntity implements HelenusEntity {
 
@@ -52,18 +53,32 @@ public final class HelenusMappingEntity implements HelenusEntity {
 
     HelenusSettings settings = Helenus.settings();
 
-    List<Method> methods = new ArrayList<Method>();
+    Map<String, Method> methods = new HashMap<String, Method>();
+    for (Method m : iface.getDeclaredMethods()) {
+        methods.put(m.getName(), m);
+    }
 
-    methods.addAll(Arrays.asList(iface.getDeclaredMethods()));
-    for (Class<?> c : iface.getInterfaces()) {
-      methods.addAll(Arrays.asList(c.getDeclaredMethods()));
+    for (Class<?> c : ClassUtils.getAllInterfaces(iface)) {
+      if (c.getDeclaredAnnotation(Table.class) != null || c.getDeclaredAnnotation(InheritedTable.class) != null) {
+        for (Method m : c.getDeclaredMethods()) {
+            Method o = methods.get(m.getName());
+            if (o != null) {
+                // Prefer overridden method implementation.
+                if (o.getDeclaringClass().isAssignableFrom(m.getDeclaringClass())) {
+                    methods.put(m.getName(), m);
+                }
+            } else {
+                methods.put(m.getName(), m);
+            }
+        }
+      }
     }
 
     List<HelenusProperty> propsLocal = new ArrayList<HelenusProperty>();
     ImmutableMap.Builder<String, HelenusProperty> propsBuilder = ImmutableMap.builder();
     ImmutableMap.Builder<String, Method> methodsBuilder = ImmutableMap.builder();
 
-    for (Method method : methods) {
+    for (Method method : methods.values()) {
 
       if (settings.getGetterMethodDetector().apply(method)) {
 
