@@ -4,8 +4,8 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.helenus</groupId>
-    <artifactId>helenus-core</artifactId>
-    <version>2.0.46-SNAPSHOT</version>
+    <artifactId>helenus-net-core</artifactId>
+    <version>2.0.47-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>helenus</name>
