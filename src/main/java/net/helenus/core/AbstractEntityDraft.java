@@ -111,7 +111,8 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
             @SuppressWarnings("unchecked")
             T currentValue = (T) backingMap.get(key);
             if (currentValue == null || !currentValue.equals(desiredValue)) {
-                return set(key, desiredValue) != null;
+                set(key, desiredValue);
+                return true;
             }
         }
         return false;
