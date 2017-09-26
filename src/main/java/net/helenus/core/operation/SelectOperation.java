@@ -15,7 +15,6 @@
  */
 package net.helenus.core.operation;
 
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Ordering;
@@ -31,8 +30,11 @@ import java.util.stream.StreamSupport;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import net.helenus.core.*;
+import net.helenus.core.cache.Facet;
+import net.helenus.core.cache.EntityIdentifyingFacet;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
+import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.mapping.OrderingDirection;
 import net.helenus.mapping.value.ColumnValueProvider;
@@ -181,30 +183,26 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   }
 
   @Override
-  public String getStatementCacheKey() {
-    List<String> keys = new ArrayList<>(filters.size());
+  public Set<EntityIdentifyingFacet> getIdentityFacets() {
     HelenusEntity entity = props.get(0).getEntity();
-
-    for (HelenusPropertyNode prop : props) {
-      switch (prop.getProperty().getColumnType()) {
-        case PARTITION_KEY:
-        case CLUSTERING_COLUMN:
-
-          Filter filter = filters.get(prop.getProperty());
-          if (filter != null) {
-            keys.add(filter.toString());
-          } else {
-            return null;
+    final Set<EntityIdentifyingFacet> facets = new HashSet<>(filters.size());
+    // Check to see if this select statement has enough information to build one or
+    // more identifying facets.
+    entity.getIdentityFacets().forEach((facetName, facet) -> {
+      EntityIdentifyingFacet boundFacet = null;
+      if (!facet.isFullyBound()) {
+          boundFacet = new EntityIdentifyingFacet(facet);
+          for (HelenusProperty prop : facet.getUnboundEntityProperties()) {
+              Filter filter = filters.get(facet.getProperty());
+              if (filter == null) { break; }
+              boundFacet.setValueForProperty(prop, filter.toString());
           }
-          break;
-        default:
-          if (keys.size() > 0) {
-            return entity.getName() + ": " + Joiner.on(",").join(keys);
-          }
-          return null;
       }
-    }
-    return null;
+      if (boundFacet != null && boundFacet.isFullyBound()) {
+          facets.add(boundFacet);
+      }
+    });
+    return facets;
   }
 
   @Override

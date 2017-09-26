@@ -20,9 +20,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.Method;
 import java.util.*;
+
 import net.helenus.config.HelenusSettings;
 import net.helenus.core.Helenus;
 import net.helenus.core.annotation.Cacheable;
+import net.helenus.core.cache.EntityIdentifyingFacet;
 import net.helenus.mapping.annotation.*;
 import net.helenus.support.HelenusMappingException;
 import org.apache.commons.lang3.ClassUtils;
@@ -36,6 +38,9 @@ public final class HelenusMappingEntity implements HelenusEntity {
   private final ImmutableMap<String, Method> methods;
   private final ImmutableMap<String, HelenusProperty> props;
   private final ImmutableList<HelenusProperty> orderedProps;
+  private final EntityIdentifyingFacet primaryIdentityFacet;
+  private final ImmutableMap<String, EntityIdentifyingFacet> allIdentityFacets;
+  private final ImmutableMap<String, EntityIdentifyingFacet> ancillaryIdentityFacets;
 
   public HelenusMappingEntity(Class<?> iface, Metadata metadata) {
     this(iface, autoDetectType(iface), metadata);
@@ -101,7 +106,35 @@ public final class HelenusMappingEntity implements HelenusEntity {
 
     validateOrdinals();
 
+    // Caching
     cacheable = (null != iface.getDeclaredAnnotation(Cacheable.class));
+
+    ImmutableMap.Builder<String, EntityIdentifyingFacet> allFacetsBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, EntityIdentifyingFacet> ancillaryFacetsBuilder = ImmutableMap.builder();
+    EntityIdentifyingFacet primaryFacet = null;
+    List<HelenusProperty> primaryProperties = new ArrayList<HelenusProperty>(4);
+    for (HelenusProperty prop : propsLocal) {
+        switch(prop.getColumnType()) {
+        case PARTITION_KEY:
+        case CLUSTERING_COLUMN:
+            primaryProperties.add(prop);
+            break;
+        default:
+            if (primaryProperties != null) {
+                primaryFacet = new EntityIdentifyingFacet(keyspace, table, schemaVersion, primaryProperties.toArray(new HelenusProperty[props.size()]));
+                allFacetsBuilder.put("*", primaryFacet);
+                primaryProperties = null;
+            }
+            Optional<IdentityName> optionalIndexName = prop.getIndexName();
+            if (optionalIndexName.isPresent()) {
+                EntityIdentifyingFacet facet = new EntityIdentifyingFacet(keyspace, table, schemaVersion, prop);
+                ancillaryFacetsBuilder.put(prop.getPropertyName(), facet);
+            }
+        }
+    }
+    this.primaryIdentityFacet = primaryFacet;
+    this.ancillaryIdentityFacets = ancillaryFacetsBuilder.build();
+    this.allIdentityFacets = allFacetsBuilder.build();
   }
 
   @Override

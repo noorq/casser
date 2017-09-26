@@ -14,9 +14,9 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.Assert;
 
 @Aspect
-public class RetryConcurrentUnitOfWorkAspect {
+public class RetryAspect {
 
-  private static final Logger log = LoggerFactory.getLogger(RetryConcurrentUnitOfWorkAspect.class);
+  private static final Logger log = LoggerFactory.getLogger(RetryAspect.class);
 
   @Around("@annotation(net.helenus.core.annotations.Retry)")
   public Object retry(ProceedingJoinPoint pjp) throws Throwable {

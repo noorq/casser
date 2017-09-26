@@ -1,5 +1,6 @@
 package net.helenus.core.operation;
 
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import com.codahale.metrics.Meter;
@@ -14,7 +15,7 @@ import brave.Tracer;
 import brave.propagation.TraceContext;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
-
+import net.helenus.core.cache.EntityIdentifyingFacet;
 
 public abstract class Operation<E> {
 
@@ -68,6 +69,6 @@ public abstract class Operation<E> {
 
     public Statement buildStatement(boolean cached) { return null; }
 
-    public String getStatementCacheKey() { return null; }
+    public Set<EntityIdentifyingFacet> getIdentifyingFacets() { return null; }
 
 }

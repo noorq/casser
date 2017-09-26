@@ -181,11 +181,11 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 
   public Metadata getMetadata() { return metadata; }
 
-  public synchronized UnitOfWork begin() {
+  public synchronized <T extends UnitOfWork> T begin() {
       return begin(null);
   }
 
-  public synchronized UnitOfWork begin(UnitOfWork parent) {
+  public synchronized <T extends UnitOfWork> T begin(T parent) {
     try {
       Class<? extends UnitOfWork> clazz = unitOfWorkClass;
       Constructor<? extends UnitOfWork> ctor = clazz.getConstructor(HelenusSession.class, UnitOfWork.class);
@@ -193,7 +193,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
       if (parent != null) {
         parent.addNestedUnitOfWork(uow);
       }
-      return uow.begin();
+      return (T) uow.begin();
     }
     catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
       throw new HelenusException(String.format("Unable to instantiate {} as a UnitOfWork.", unitOfWorkClass.getSimpleName()), e);
