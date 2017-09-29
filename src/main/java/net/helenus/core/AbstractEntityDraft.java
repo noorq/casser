@@ -13,7 +13,6 @@ import net.helenus.mapping.MappingUtil;
 public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
     private final Map<String, Object> backingMap = new HashMap<String, Object>();
-    private final Set<String> mutatedSet = new HashSet<String>();
     private final MapExportable entity;
     private final Map<String, Object> entityMap;
 
@@ -56,7 +55,6 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
         }
 
         backingMap.put(key, value);
-        mutatedSet.add(key);
         return value;
     }
 
@@ -72,14 +70,12 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
             if (map.containsKey(key) && !value.equals(map.get(key))) {
                 backingMap.put(key, value);
-                mutatedSet.add(key);
                 return value;
             }
 
             return map.get(key);
         } else {
             backingMap.put(key, value);
-            mutatedSet.add(key);
 
             return null;
         }
@@ -99,7 +95,6 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
         if (key != null) {
             Object value = backingMap.get(key);
             backingMap.put(key, null);
-            mutatedSet.add(key);
             return value;
         }
         return null;
@@ -136,7 +131,7 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
         } else {
             combined = new HashMap<String, Object>(backingMap.size());
         }
-        for (String key : mutatedSet) {
+        for (String key : mutated()) {
             combined.put(key, backingMap.get(key));
         }
         return combined;
@@ -144,7 +139,7 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
     @Override
     public Set<String> mutated() {
-        return mutatedSet;
+        return backingMap.keySet();
     }
 
     @Override
