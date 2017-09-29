@@ -28,18 +28,21 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
     public E build() { return Helenus.map(getEntityClass(), toMap()); }
 
     protected <T> T get(String key, Class<?> returnType) {
-        T value = (T) entityMap.get(key);
+        T value = (T) backingMap.get(key);
 
         if (value == null) {
+            value = (T) entityMap.get(key);
+            if (value == null) {
 
-            if (Primitives.allPrimitiveTypes().contains(returnType)) {
+                if (Primitives.allPrimitiveTypes().contains(returnType)) {
 
-                DefaultPrimitiveTypes type = DefaultPrimitiveTypes.lookup(returnType);
-                if (type == null) {
-                    throw new RuntimeException("unknown primitive type " + returnType);
+                    DefaultPrimitiveTypes type = DefaultPrimitiveTypes.lookup(returnType);
+                    if (type == null) {
+                        throw new RuntimeException("unknown primitive type " + returnType);
+                    }
+
+                    return (T) type.getDefaultValue();
                 }
-
-                return (T) type.getDefaultValue();
             }
         }
 
