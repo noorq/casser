@@ -140,7 +140,14 @@ public final class Helenus {
   }
 
   public static HelenusEntity entity(Class<?> iface) {
-    return entity(iface, metadataForEntity.get(iface));
+    Metadata metadata = metadataForEntity.get(iface);
+    if (metadata == null) {
+        HelenusSession session = session();
+        if (session != null) {
+            metadata = session.getMetadata();
+        }
+    }
+    return entity(iface, metadata);
   }
 
   public static HelenusEntity entity(Class<?> iface, Metadata metadata) {

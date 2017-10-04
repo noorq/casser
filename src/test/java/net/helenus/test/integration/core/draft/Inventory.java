@@ -3,12 +3,15 @@ package net.helenus.test.integration.core.draft;
 import java.util.UUID;
 
 import net.helenus.core.AbstractAuditedEntityDraft;
+import net.helenus.core.Helenus;
 import net.helenus.core.reflect.MapExportable;
 import net.helenus.mapping.annotation.*;
 
 
 @Table
 public interface Inventory {
+
+    static Inventory inventory = Helenus.dsl(Inventory.class);
 
     @PartitionKey  UUID id();
     @Column("emea") @Types.Counter long EMEA();
@@ -27,7 +30,7 @@ public interface Inventory {
             super(null);
 
             // Primary Key:
-            set("id", id);
+            set(inventory::id, id);
         }
 
         Draft(Inventory inventory) {
@@ -40,33 +43,33 @@ public interface Inventory {
 
         // Immutable properties:
         public UUID id() {
-            return this.<UUID>get("id", UUID.class);
+            return this.<UUID>get(inventory::id, UUID.class);
         }
 
         public long EMEA() {
-            return this.<Long>get("EMEA", long.class);
+            return this.<Long>get(inventory::EMEA, long.class);
         }
 
         public Draft EMEA(long count) {
-            mutate("EMEA", count);
+            mutate(inventory::EMEA, count);
             return this;
         }
 
         public long APAC() {
-            return this.<Long>get("APAC", long.class);
+            return this.<Long>get(inventory::APAC, long.class);
         }
 
         public Draft APAC(long count) {
-            mutate("APAC", count);
+            mutate(inventory::APAC, count);
             return this;
         }
 
         public long NORAM() {
-            return this.<Long>get("NORAM", long.class);
+            return this.<Long>get(inventory::NORAM, long.class);
         }
 
         public Draft NORAM(long count) {
-            mutate("NORAM", count);
+            mutate(inventory::NORAM, count);
             return this;
         }
 
