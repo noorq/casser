@@ -26,6 +26,12 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
     public E build() { return Helenus.map(getEntityClass(), toMap()); }
 
+    @SuppressWarnings("unchecked")
+    protected <T> T get(Getter<T> getter, Class<?> returnType) {
+        return (T) get(this.<T>methodNameFor(getter), returnType);
+    }
+
+    @SuppressWarnings("unchecked")
     protected <T> T get(String key, Class<?> returnType) {
         T value = (T) backingMap.get(key);
 
@@ -48,14 +54,22 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
         return value;
     }
 
-    protected Object set(String key, Object value) {
+    protected <T> Object set(Getter<T> getter, Object value) {
+        return set(this.<T>methodNameFor(getter), value);
+    }
 
+    protected Object set(String key, Object value) {
         if (key == null || value == null) {
             return null;
         }
 
         backingMap.put(key, value);
         return value;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T> T mutate(Getter<T> getter, T value) {
+        return (T) mutate(this.<T>methodNameFor(getter), value);
     }
 
     protected Object mutate(String key, Object value) {
@@ -81,13 +95,13 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
         }
     }
 
-    private String methodNameFor(Getter<?> getter) {
+    private <T> String methodNameFor(Getter<T> getter) {
         return MappingUtil.resolveMappingProperty(getter)
                 .getProperty()
                 .getPropertyName();
     }
 
-    public Object unset(Getter<?> getter) {
+    public <T> Object unset(Getter<T> getter) {
         return unset(methodNameFor(getter));
     }
 
@@ -100,8 +114,8 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
         return null;
     }
 
-    public <T> boolean reset(Getter<?> getter, T desiredValue) {
-        return this.<T>reset(methodNameFor(getter), desiredValue);
+    public <T> boolean reset(Getter<T> getter, T desiredValue) {
+        return this.<T>reset(this.<T>methodNameFor(getter), desiredValue);
     }
 
     public <T> boolean reset(String key, T desiredValue) {

@@ -25,10 +25,14 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+
+import net.helenus.core.reflect.DslExportable;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusEntityType;
+import net.helenus.mapping.MappingUtil;
 import net.helenus.mapping.value.ColumnValuePreparer;
 import net.helenus.mapping.value.ColumnValueProvider;
+import net.helenus.support.Either;
 import net.helenus.support.HelenusException;
 import net.helenus.support.PackageUtil;
 
@@ -53,7 +57,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
 
   private KeyspaceMetadata keyspaceMetadata;
 
-  private final List<Object> initList = new ArrayList<Object>();
+  private final List<Either<Object, Class<?>>> initList = new ArrayList<Either<Object, Class<?>>>();
   private AutoDdl autoDdl = AutoDdl.UPDATE;
 
   SessionInitializer(Session session) {
@@ -181,7 +185,9 @@ public final class SessionInitializer extends AbstractSessionOperations {
       PackageUtil.getClasses(packageName)
           .stream()
           .filter(c -> c.isInterface() && !c.isAnnotation())
-          .forEach(initList::add);
+          .forEach(clazz -> {
+              initList.add(Either.right(clazz));
+          });
     } catch (IOException | ClassNotFoundException e) {
       throw new HelenusException("fail to add package " + packageName, e);
     }
@@ -193,7 +199,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
     int len = dsls.length;
     for (int i = 0; i != len; ++i) {
       Object obj = Objects.requireNonNull(dsls[i], "element " + i + " is empty");
-      initList.add(obj);
+      initList.add(Either.left(obj));
     }
     return this;
   }
@@ -261,7 +267,18 @@ public final class SessionInitializer extends AbstractSessionOperations {
 
     Objects.requireNonNull(usingKeyspace, "please define keyspace by 'use' operator");
 
-    initList.forEach(dsl -> sessionRepository.add(dsl));
+    initList.forEach((either) -> {
+        Class<?> iface = null;
+        if (either.isLeft()) {
+            iface = MappingUtil.getMappingInterface(either.getLeft());
+        } else {
+            iface = either.getRight();
+        }
+
+        DslExportable dsl = (DslExportable) Helenus.dsl(iface);
+        dsl.setMetadata(session.getCluster().getMetadata());
+        sessionRepository.add(dsl);
+    });
 
     TableOperations tableOps = new TableOperations(this, dropUnusedColumns, dropUnusedIndexes);
     UserTypeOperations userTypeOps = new UserTypeOperations(this, dropUnusedColumns);
