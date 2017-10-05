@@ -1,5 +1,6 @@
 package net.helenus.test.integration.core.draft;
 
+import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -8,12 +9,15 @@ import java.util.UUID;
 import com.datastax.driver.core.utils.UUIDs;
 
 import net.helenus.core.AbstractEntityDraft;
+import net.helenus.core.Helenus;
 import net.helenus.core.reflect.MapExportable;
 import net.helenus.mapping.annotation.*;
 
 
 @Table
 public interface Supply {
+
+    static Supply supply = Helenus.dsl(Supply.class);
 
     @PartitionKey UUID id();
     @ClusteringColumn(ordinal=0) default String region() { return "NORAM"; }
@@ -36,8 +40,8 @@ public interface Supply {
             super(null);
 
             // Primary Key:
-            set("id", UUIDs.timeBased());
-            set("region", region);
+            set(supply::id, UUIDs.timeBased());
+            set(supply::region, region);
         }
 
         Draft(Supply supply) {
@@ -48,20 +52,20 @@ public interface Supply {
 
         // Immutable properties:
         public UUID id() {
-            return this.<UUID>get("id", UUID.class);
+            return this.<UUID>get(supply::id, UUID.class);
         }
 
         public String region() {
-            return this.<String>get("region", String.class);
+            return this.<String>get(supply::region, String.class);
         }
 
         // Mutable properties:
         public String code() {
-            return this.<String>get("code", String.class);
+            return this.<String>get(supply::code, String.class);
         }
 
         public Draft code(String code) {
-            mutate("code", code);
+            mutate(supply::code, code);
             return this;
         }
 
@@ -70,11 +74,11 @@ public interface Supply {
         }
 
         public String description() {
-            return this.<String>get("description", String.class);
+            return this.<String>get(supply::description, String.class);
         }
 
         public Draft description(String description) {
-            mutate("description", description);
+            mutate(supply::description, description);
             return this;
         }
 
@@ -83,11 +87,11 @@ public interface Supply {
         }
 
         public Map<String, Long> demand() {
-            return this.<Map<String, Long>>get("demand", Map.class);
+            return this.<Map<String, Long>>get(supply::demand, Map.class);
         }
 
         public Draft demand(Map<String, Long> demand) {
-            mutate("demand", demand);
+            mutate(supply::demand, demand);
             return this;
         }
 
@@ -96,11 +100,11 @@ public interface Supply {
         }
 
         public List<String> suppliers() {
-            return this.<List<String>>get("suppliers", List.class);
+            return this.<List<String>>get(supply::suppliers, List.class);
         }
 
         public Draft suppliers(List<String> suppliers) {
-            mutate("suppliers", suppliers);
+            mutate(supply::suppliers, suppliers);
             return this;
         }
 
@@ -109,11 +113,11 @@ public interface Supply {
         }
 
         public Set<String> shipments() {
-            return this.<Set<String>>get("shipments", Set.class);
+            return this.<Set<String>>get(supply::shipments, Set.class);
         }
 
         public Draft shipments(Set<String> shipments) {
-            mutate("shipments", shipments);
+            mutate(supply::shipments, shipments);
             return this;
         }
 

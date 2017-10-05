@@ -13,7 +13,6 @@ import net.helenus.mapping.MappingUtil;
 public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
     private final Map<String, Object> backingMap = new HashMap<String, Object>();
-    private final Set<String> mutatedSet = new HashSet<String>();
     private final MapExportable entity;
     private final Map<String, Object> entityMap;
 
@@ -27,34 +26,50 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
     public E build() { return Helenus.map(getEntityClass(), toMap()); }
 
+    @SuppressWarnings("unchecked")
+    protected <T> T get(Getter<T> getter, Class<?> returnType) {
+        return (T) get(this.<T>methodNameFor(getter), returnType);
+    }
+
+    @SuppressWarnings("unchecked")
     protected <T> T get(String key, Class<?> returnType) {
-        T value = (T) entityMap.get(key);
+        T value = (T) backingMap.get(key);
 
         if (value == null) {
+            value = (T) entityMap.get(key);
+            if (value == null) {
 
-            if (Primitives.allPrimitiveTypes().contains(returnType)) {
+                if (Primitives.allPrimitiveTypes().contains(returnType)) {
 
-                DefaultPrimitiveTypes type = DefaultPrimitiveTypes.lookup(returnType);
-                if (type == null) {
-                    throw new RuntimeException("unknown primitive type " + returnType);
+                    DefaultPrimitiveTypes type = DefaultPrimitiveTypes.lookup(returnType);
+                    if (type == null) {
+                        throw new RuntimeException("unknown primitive type " + returnType);
+                    }
+
+                    return (T) type.getDefaultValue();
                 }
-
-                return (T) type.getDefaultValue();
             }
         }
 
         return value;
     }
 
-    protected Object set(String key, Object value) {
+    protected <T> Object set(Getter<T> getter, Object value) {
+        return set(this.<T>methodNameFor(getter), value);
+    }
 
+    protected Object set(String key, Object value) {
         if (key == null || value == null) {
             return null;
         }
 
         backingMap.put(key, value);
-        mutatedSet.add(key);
         return value;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T> T mutate(Getter<T> getter, T value) {
+        return (T) mutate(this.<T>methodNameFor(getter), value);
     }
 
     protected Object mutate(String key, Object value) {
@@ -69,26 +84,24 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
             if (map.containsKey(key) && !value.equals(map.get(key))) {
                 backingMap.put(key, value);
-                mutatedSet.add(key);
                 return value;
             }
 
             return map.get(key);
         } else {
             backingMap.put(key, value);
-            mutatedSet.add(key);
 
             return null;
         }
     }
 
-    private String methodNameFor(Getter<?> getter) {
+    private <T> String methodNameFor(Getter<T> getter) {
         return MappingUtil.resolveMappingProperty(getter)
                 .getProperty()
                 .getPropertyName();
     }
 
-    public Object unset(Getter<?> getter) {
+    public <T> Object unset(Getter<T> getter) {
         return unset(methodNameFor(getter));
     }
 
@@ -96,14 +109,13 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
         if (key != null) {
             Object value = backingMap.get(key);
             backingMap.put(key, null);
-            mutatedSet.add(key);
             return value;
         }
         return null;
     }
 
-    public <T> boolean reset(Getter<?> getter, T desiredValue) {
-        return this.<T>reset(methodNameFor(getter), desiredValue);
+    public <T> boolean reset(Getter<T> getter, T desiredValue) {
+        return this.<T>reset(this.<T>methodNameFor(getter), desiredValue);
     }
 
     public <T> boolean reset(String key, T desiredValue) {
@@ -133,7 +145,7 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
         } else {
             combined = new HashMap<String, Object>(backingMap.size());
         }
-        for (String key : mutatedSet) {
+        for (String key : mutated()) {
             combined.put(key, backingMap.get(key));
         }
         return combined;
@@ -141,7 +153,7 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
     @Override
     public Set<String> mutated() {
-        return mutatedSet;
+        return backingMap.keySet();
     }
 
     @Override
