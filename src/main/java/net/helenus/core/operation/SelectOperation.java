@@ -48,6 +48,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   protected List<Ordering> ordering = null;
   protected Integer limit = null;
   protected boolean allowFiltering = false;
+  protected String alternateTableName = null;
 
   @SuppressWarnings("unchecked")
   public SelectOperation(AbstractSessionOperations sessionOperations) {
@@ -127,6 +128,19 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
     }
 
     return new CountOperation(sessionOps, entity);
+  }
+
+  public <V extends E> SelectOperation<E> from(Class<V> materializedViewClass) {
+    Objects.requireNonNull(materializedViewClass);
+    HelenusEntity entity = Helenus.entity(materializedViewClass);
+    this.alternateTableName = entity.getName().toCql();
+    this.allowFiltering = true;
+    return this;
+  }
+
+  public SelectOperation<E> from(String alternateTableName) {
+    this.alternateTableName = alternateTableName;
+    return this;
   }
 
   public SelectFirstOperation<E> single() {
@@ -255,7 +269,8 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
       throw new HelenusMappingException("no entity or table to select data");
     }
 
-    Select select = selection.from(entity.getName().toCql());
+    String tableName = alternateTableName == null ? entity.getName().toCql() : alternateTableName;
+    Select select = selection.from(tableName);
 
     if (ordering != null && !ordering.isEmpty()) {
       select.orderBy(ordering.toArray(new Ordering[ordering.size()]));

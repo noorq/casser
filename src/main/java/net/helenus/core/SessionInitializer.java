@@ -19,13 +19,6 @@ import brave.Tracer;
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.*;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
-
 import net.helenus.core.reflect.DslExportable;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusEntityType;
@@ -35,6 +28,13 @@ import net.helenus.mapping.value.ColumnValueProvider;
 import net.helenus.support.Either;
 import net.helenus.support.HelenusException;
 import net.helenus.support.PackageUtil;
+
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 public final class SessionInitializer extends AbstractSessionOperations {
 
@@ -276,7 +276,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
         }
 
         DslExportable dsl = (DslExportable) Helenus.dsl(iface);
-        dsl.setMetadata(session.getCluster().getMetadata());
+        dsl.setCassandraMetadataForHelenusSesion(session.getCluster().getMetadata());
         sessionRepository.add(dsl);
     });
 
@@ -286,13 +286,21 @@ public final class SessionInitializer extends AbstractSessionOperations {
     switch (autoDdl) {
       case CREATE_DROP:
 
-        // Drop tables first, otherwise a `DROP TYPE ...` will fail as the type is still referenced
-        // by a table.
+        // Drop view first, otherwise a `DROP TABLE ...` will fail as the type is still referenced
+        // by a view.
         sessionRepository
-            .entities()
-            .stream()
-            .filter(e -> e.getType() == HelenusEntityType.TABLE)
-            .forEach(e -> tableOps.dropTable(e));
+              .entities()
+              .stream()
+              .filter(e -> e.getType() == HelenusEntityType.VIEW)
+              .forEach(e -> tableOps.dropView(e));
+
+        // Drop tables second, before DROP TYPE otherwise a `DROP TYPE ...` will fail as the type is
+        // still referenced by a table.
+          sessionRepository
+                  .entities()
+                  .stream()
+                  .filter(e -> e.getType() == HelenusEntityType.TABLE)
+                  .forEach(e -> tableOps.dropTable(e));
 
         eachUserTypeInReverseOrder(userTypeOps, e -> userTypeOps.dropUserType(e));
 
@@ -306,6 +314,12 @@ public final class SessionInitializer extends AbstractSessionOperations {
             .filter(e -> e.getType() == HelenusEntityType.TABLE)
             .forEach(e -> tableOps.createTable(e));
 
+          sessionRepository
+                  .entities()
+                  .stream()
+                  .filter(e -> e.getType() == HelenusEntityType.VIEW)
+                  .forEach(e -> tableOps.createView(e));
+
         break;
 
       case VALIDATE:
@@ -316,16 +330,30 @@ public final class SessionInitializer extends AbstractSessionOperations {
             .stream()
             .filter(e -> e.getType() == HelenusEntityType.TABLE)
             .forEach(e -> tableOps.validateTable(getTableMetadata(e), e));
-        break;
+
+          break;
 
       case UPDATE:
         eachUserTypeInOrder(userTypeOps, e -> userTypeOps.updateUserType(getUserType(e), e));
 
-        sessionRepository
+          sessionRepository
+                  .entities()
+                  .stream()
+                  .filter(e -> e.getType() == HelenusEntityType.VIEW)
+                  .forEach(e -> tableOps.dropView(e));
+
+
+          sessionRepository
             .entities()
             .stream()
             .filter(e -> e.getType() == HelenusEntityType.TABLE)
             .forEach(e -> tableOps.updateTable(getTableMetadata(e), e));
+
+          sessionRepository
+                  .entities()
+                  .stream()
+                  .filter(e -> e.getType() == HelenusEntityType.VIEW)
+                  .forEach(e -> tableOps.createView(e));
         break;
     }
 

@@ -59,7 +59,7 @@ public class DslInvocationHandler<E> implements InvocationHandler {
     this.classLoader = classLoader;
   }
 
-  public void setMetadata(Metadata metadata) {
+  public void setCassandraMetadataForHelenusSesion(Metadata metadata) {
     if (metadata != null) {
       this.metadata = metadata;
       entity = init(metadata);
@@ -130,7 +130,7 @@ public class DslInvocationHandler<E> implements InvocationHandler {
             && args.length == 1
             && args[0] instanceof Metadata) {
       if (metadata == null) {
-          this.setMetadata((Metadata) args[0]);
+          this.setCassandraMetadataForHelenusSesion((Metadata) args[0]);
       }
       return null;
     }
