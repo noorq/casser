@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.*;
 import net.helenus.mapping.ColumnType;
+import net.helenus.mapping.annotation.ClusteringColumn;
 import net.helenus.mapping.type.OptionalColumnMetadata;
 import net.helenus.support.CqlUtil;
 import net.helenus.support.HelenusMappingException;
@@ -171,11 +172,12 @@ public final class SchemaUtil {
       String columnName = prop.getColumnName();
       selection = selection.column(columnName);
     }
-    String tableName =
-        Helenus.entity(entity.getMappingInterface().getInterfaces()[0]).getName().toCql();
+    Class<?> iface = entity.getMappingInterface();
+    String tableName = Helenus.entity(iface.getInterfaces()[0]).getName().toCql();
     Select.Where where = selection.from(tableName).where();
     List<String> p = new ArrayList<String>(props.size());
     List<String> c = new ArrayList<String>(props.size());
+    List<String> o = new ArrayList<String>(props.size());
 
     for (HelenusPropertyNode prop : props) {
       String columnName = prop.getColumnName();
@@ -184,9 +186,15 @@ public final class SchemaUtil {
           p.add(columnName);
           where = where.and(new IsNotNullClause(columnName));
           break;
+
         case CLUSTERING_COLUMN:
           c.add(columnName);
           where = where.and(new IsNotNullClause(columnName));
+
+          ClusteringColumn clusteringColumn = prop.getProperty().getGetterMethod().getAnnotation(ClusteringColumn.class);
+          if (clusteringColumn != null && clusteringColumn.ordering() != null) {
+            o.add(columnName + " " + clusteringColumn.ordering().cql());
+          }
           break;
         default:
           break;
@@ -201,7 +209,11 @@ public final class SchemaUtil {
                 : "")
             + ")";
 
-    return new CreateMaterializedView(keyspace, viewName, where, primaryKey);
+    String clustering = "";
+    if (o.size() > 0) {
+        clustering = "WITH CLUSTERING ORDER BY (" + String.join(", ", o) + ")";
+    }
+    return new CreateMaterializedView(keyspace, viewName, where, primaryKey, clustering);
   }
 
   public static SchemaStatement dropMaterializedView(
