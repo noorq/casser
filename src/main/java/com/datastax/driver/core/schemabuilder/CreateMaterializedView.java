@@ -8,13 +8,15 @@ public class CreateMaterializedView extends Create {
   private String viewName;
   private Select.Where selection;
   private String primaryKey;
+  private String clustering;
 
   public CreateMaterializedView(
-      String keyspaceName, String viewName, Select.Where selection, String primaryKey) {
+      String keyspaceName, String viewName, Select.Where selection, String primaryKey, String clustering) {
     super(keyspaceName, viewName);
     this.viewName = viewName;
     this.selection = selection;
     this.primaryKey = primaryKey;
+    this.clustering = clustering;
   }
 
   public String getQueryString(CodecRegistry codecRegistry) {
@@ -37,6 +39,9 @@ public class CreateMaterializedView extends Create {
     createStatement.setLength(createStatement.length() - 1);
     createStatement.append(" ");
     createStatement.append(primaryKey);
+    if (clustering != null) {
+        createStatement.append(" ").append(clustering);
+    }
     createStatement.append(";");
 
     return createStatement.toString();
