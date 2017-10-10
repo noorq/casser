@@ -34,7 +34,9 @@ public final class BoundOptionalOperation<E>
   }
 
   @Override
-  public Optional<E> transform(ResultSet resultSet) { return delegate.transform(resultSet); }
+  public Optional<E> transform(ResultSet resultSet) {
+    return delegate.transform(resultSet);
+  }
 
   @Override
   public Statement buildStatement(boolean cached) {

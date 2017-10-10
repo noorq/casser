@@ -18,7 +18,6 @@ package net.helenus.mapping.javatype;
 import com.datastax.driver.core.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.AbstractCollection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;

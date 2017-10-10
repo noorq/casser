@@ -19,6 +19,12 @@ import brave.Tracer;
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.*;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import net.helenus.core.reflect.DslExportable;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusEntityType;
@@ -28,13 +34,6 @@ import net.helenus.mapping.value.ColumnValueProvider;
 import net.helenus.support.Either;
 import net.helenus.support.HelenusException;
 import net.helenus.support.PackageUtil;
-
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 
 public final class SessionInitializer extends AbstractSessionOperations {
 
@@ -131,12 +130,12 @@ public final class SessionInitializer extends AbstractSessionOperations {
   }
 
   public SessionInitializer idempotentQueryExecution(boolean idempotent) {
-      this.idempotent = idempotent;
-      return this;
+    this.idempotent = idempotent;
+    return this;
   }
 
   public boolean getDefaultQueryIdempotency() {
-      return idempotent;
+    return idempotent;
   }
 
   @Override
@@ -185,9 +184,10 @@ public final class SessionInitializer extends AbstractSessionOperations {
       PackageUtil.getClasses(packageName)
           .stream()
           .filter(c -> c.isInterface() && !c.isAnnotation())
-          .forEach(clazz -> {
-              initList.add(Either.right(clazz));
-          });
+          .forEach(
+              clazz -> {
+                initList.add(Either.right(clazz));
+              });
     } catch (IOException | ClassNotFoundException e) {
       throw new HelenusException("fail to add package " + packageName, e);
     }
@@ -267,18 +267,19 @@ public final class SessionInitializer extends AbstractSessionOperations {
 
     Objects.requireNonNull(usingKeyspace, "please define keyspace by 'use' operator");
 
-    initList.forEach((either) -> {
-        Class<?> iface = null;
-        if (either.isLeft()) {
+    initList.forEach(
+        (either) -> {
+          Class<?> iface = null;
+          if (either.isLeft()) {
             iface = MappingUtil.getMappingInterface(either.getLeft());
-        } else {
+          } else {
             iface = either.getRight();
-        }
+          }
 
-        DslExportable dsl = (DslExportable) Helenus.dsl(iface);
-        dsl.setCassandraMetadataForHelenusSesion(session.getCluster().getMetadata());
-        sessionRepository.add(dsl);
-    });
+          DslExportable dsl = (DslExportable) Helenus.dsl(iface);
+          dsl.setCassandraMetadataForHelenusSesion(session.getCluster().getMetadata());
+          sessionRepository.add(dsl);
+        });
 
     TableOperations tableOps = new TableOperations(this, dropUnusedColumns, dropUnusedIndexes);
     UserTypeOperations userTypeOps = new UserTypeOperations(this, dropUnusedColumns);
@@ -289,18 +290,18 @@ public final class SessionInitializer extends AbstractSessionOperations {
         // Drop view first, otherwise a `DROP TABLE ...` will fail as the type is still referenced
         // by a view.
         sessionRepository
-              .entities()
-              .stream()
-              .filter(e -> e.getType() == HelenusEntityType.VIEW)
-              .forEach(e -> tableOps.dropView(e));
+            .entities()
+            .stream()
+            .filter(e -> e.getType() == HelenusEntityType.VIEW)
+            .forEach(e -> tableOps.dropView(e));
 
         // Drop tables second, before DROP TYPE otherwise a `DROP TYPE ...` will fail as the type is
         // still referenced by a table.
-          sessionRepository
-                  .entities()
-                  .stream()
-                  .filter(e -> e.getType() == HelenusEntityType.TABLE)
-                  .forEach(e -> tableOps.dropTable(e));
+        sessionRepository
+            .entities()
+            .stream()
+            .filter(e -> e.getType() == HelenusEntityType.TABLE)
+            .forEach(e -> tableOps.dropTable(e));
 
         eachUserTypeInReverseOrder(userTypeOps, e -> userTypeOps.dropUserType(e));
 
@@ -314,11 +315,11 @@ public final class SessionInitializer extends AbstractSessionOperations {
             .filter(e -> e.getType() == HelenusEntityType.TABLE)
             .forEach(e -> tableOps.createTable(e));
 
-          sessionRepository
-                  .entities()
-                  .stream()
-                  .filter(e -> e.getType() == HelenusEntityType.VIEW)
-                  .forEach(e -> tableOps.createView(e));
+        sessionRepository
+            .entities()
+            .stream()
+            .filter(e -> e.getType() == HelenusEntityType.VIEW)
+            .forEach(e -> tableOps.createView(e));
 
         break;
 
@@ -331,29 +332,28 @@ public final class SessionInitializer extends AbstractSessionOperations {
             .filter(e -> e.getType() == HelenusEntityType.TABLE)
             .forEach(e -> tableOps.validateTable(getTableMetadata(e), e));
 
-          break;
+        break;
 
       case UPDATE:
         eachUserTypeInOrder(userTypeOps, e -> userTypeOps.updateUserType(getUserType(e), e));
 
-          sessionRepository
-                  .entities()
-                  .stream()
-                  .filter(e -> e.getType() == HelenusEntityType.VIEW)
-                  .forEach(e -> tableOps.dropView(e));
+        sessionRepository
+            .entities()
+            .stream()
+            .filter(e -> e.getType() == HelenusEntityType.VIEW)
+            .forEach(e -> tableOps.dropView(e));
 
-
-          sessionRepository
+        sessionRepository
             .entities()
             .stream()
             .filter(e -> e.getType() == HelenusEntityType.TABLE)
             .forEach(e -> tableOps.updateTable(getTableMetadata(e), e));
 
-          sessionRepository
-                  .entities()
-                  .stream()
-                  .filter(e -> e.getType() == HelenusEntityType.VIEW)
-                  .forEach(e -> tableOps.createView(e));
+        sessionRepository
+            .entities()
+            .stream()
+            .filter(e -> e.getType() == HelenusEntityType.VIEW)
+            .forEach(e -> tableOps.createView(e));
         break;
     }
 

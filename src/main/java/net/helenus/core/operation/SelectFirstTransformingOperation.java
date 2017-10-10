@@ -36,7 +36,9 @@ public final class SelectFirstTransformingOperation<R, E>
   }
 
   @Override
-  public String getStatementCacheKey() { return delegate.getStatementCacheKey(); }
+  public String getStatementCacheKey() {
+    return delegate.getStatementCacheKey();
+  }
 
   @Override
   public BuiltStatement buildStatement(boolean cached) {

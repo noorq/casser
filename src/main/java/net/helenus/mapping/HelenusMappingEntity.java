@@ -55,21 +55,22 @@ public final class HelenusMappingEntity implements HelenusEntity {
 
     Map<String, Method> methods = new HashMap<String, Method>();
     for (Method m : iface.getDeclaredMethods()) {
-        methods.put(m.getName(), m);
+      methods.put(m.getName(), m);
     }
 
     for (Class<?> c : ClassUtils.getAllInterfaces(iface)) {
-      if (c.getDeclaredAnnotation(Table.class) != null || c.getDeclaredAnnotation(InheritedTable.class) != null) {
+      if (c.getDeclaredAnnotation(Table.class) != null
+          || c.getDeclaredAnnotation(InheritedTable.class) != null) {
         for (Method m : c.getDeclaredMethods()) {
-            Method o = methods.get(m.getName());
-            if (o != null) {
-                // Prefer overridden method implementation.
-                if (o.getDeclaringClass().isAssignableFrom(m.getDeclaringClass())) {
-                    methods.put(m.getName(), m);
-                }
-            } else {
-                methods.put(m.getName(), m);
+          Method o = methods.get(m.getName());
+          if (o != null) {
+            // Prefer overridden method implementation.
+            if (o.getDeclaringClass().isAssignableFrom(m.getDeclaringClass())) {
+              methods.put(m.getName(), m);
             }
+          } else {
+            methods.put(m.getName(), m);
+          }
         }
       }
     }

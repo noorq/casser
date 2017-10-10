@@ -17,8 +17,6 @@ package net.helenus.core.operation;
 
 import com.codahale.metrics.Timer;
 import com.datastax.driver.core.ResultSet;
-
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
@@ -39,7 +37,6 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
   public PreparedOperation<E> prepare() {
     return new PreparedOperation<E>(prepareStatement(), this);
   }
-
 
   public E sync() {
     final Timer.Context context = requestLatency.time();
@@ -72,5 +69,4 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
     if (uow == null) return async();
     return CompletableFuture.<E>supplyAsync(() -> sync(uow));
   }
-
 }

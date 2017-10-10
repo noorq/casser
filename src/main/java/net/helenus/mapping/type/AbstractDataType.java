@@ -55,6 +55,7 @@ public abstract class AbstractDataType {
         "wrong column type " + columnType + " for UserDefinedType in columnName " + columnName);
   }
 
-  public boolean isCollectionType() { return false; }
-
+  public boolean isCollectionType() {
+    return false;
+  }
 }

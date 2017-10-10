@@ -17,9 +17,7 @@ package net.helenus.core;
 
 import com.diffplug.common.base.Errors;
 import com.google.common.collect.TreeTraverser;
-
 import java.util.*;
-
 
 /** Encapsulates the concept of a "transaction" as a unit-of-work. */
 public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfWork, AutoCloseable {
@@ -70,22 +68,25 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
     return null;
   }
 
-  public Map<String, Set<Object>> getCache() { return cache; }
+  public Map<String, Set<Object>> getCache() {
+    return cache;
+  }
 
   private Iterator<AbstractUnitOfWork<E>> getChildNodes() {
     return nested.iterator();
   }
 
-    /**
-     * Checks to see if the work performed between calling begin and now can be committed or not.
-     *
-     * @return a function from which to chain work that only happens when commit is successful
-     * @throws E when the work overlaps with other concurrent writers.
-     */
+  /**
+   * Checks to see if the work performed between calling begin and now can be committed or not.
+   *
+   * @return a function from which to chain work that only happens when commit is successful
+   * @throws E when the work overlaps with other concurrent writers.
+   */
   public PostCommitFunction<Void, Void> commit() throws E {
     // All nested UnitOfWork should be committed (not aborted) before calls to commit, check.
     boolean canCommit = true;
-    TreeTraverser<AbstractUnitOfWork<E>> traverser = TreeTraverser.using(node -> node::getChildNodes);
+    TreeTraverser<AbstractUnitOfWork<E>> traverser =
+        TreeTraverser.using(node -> node::getChildNodes);
     for (AbstractUnitOfWork<E> uow : traverser.postOrderTraversal(this)) {
       if (this != uow) {
         canCommit &= (!uow.aborted && uow.committed);
@@ -112,7 +113,8 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
           if (parentCache.containsKey(key)) {
             // merge the sets
             Set<Object> ps = parentCache.get(key);
-            ps.addAll(cache.get(key)); //TODO(gburd): review this, likely not correct in all cases as-is.
+            ps.addAll(
+                cache.get(key)); //TODO(gburd): review this, likely not correct in all cases as-is.
           } else {
             // add the missing set
             parentCache.put(key, cache.get(key));
@@ -122,9 +124,12 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 
       // Apply all post-commit functions for
       if (parent == null) {
-        traverser.postOrderTraversal(this).forEach(uow -> {
-          uow.applyPostCommitFunctions();
-        });
+        traverser
+            .postOrderTraversal(this)
+            .forEach(
+                uow -> {
+                  uow.applyPostCommitFunctions();
+                });
         return new PostCommitFunction(this, null);
       }
     }
@@ -137,11 +142,15 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 
   /* Explicitly discard the work and mark it as as such in the log. */
   public void abort() {
-    TreeTraverser<AbstractUnitOfWork<E>> traverser = TreeTraverser.using(node -> node::getChildNodes);
-    traverser.postOrderTraversal(this).forEach(uow -> {
-      uow.committed = false;
-      uow.aborted = true;
-    });
+    TreeTraverser<AbstractUnitOfWork<E>> traverser =
+        TreeTraverser.using(node -> node::getChildNodes);
+    traverser
+        .postOrderTraversal(this)
+        .forEach(
+            uow -> {
+              uow.committed = false;
+              uow.aborted = true;
+            });
     // log.record(txn::abort)
     // cache.invalidateSince(txn::start time)
   }
@@ -165,5 +174,4 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
   public boolean hasCommitted() {
     return committed;
   }
-
 }

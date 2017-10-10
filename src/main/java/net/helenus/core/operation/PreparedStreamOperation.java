@@ -17,7 +17,6 @@ package net.helenus.core.operation;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
-import java.util.regex.Pattern;
 
 public final class PreparedStreamOperation<E> {
 

@@ -42,11 +42,8 @@ public class TupleMapTest extends TupleCollectionTest {
 
     // read full object
 
-    Book actual = session.<Book>select(book)
-            .where(book::id, Query.eq(id))
-            .single()
-            .sync()
-            .orElse(null);
+    Book actual =
+        session.<Book>select(book).where(book::id, Query.eq(id)).single().sync().orElse(null);
     Assert.assertEquals(id, actual.id());
     assertEqualMaps(writers, actual.writers());
     Assert.assertNull(actual.reviewers());
@@ -77,11 +74,7 @@ public class TupleMapTest extends TupleCollectionTest {
 
     session.update().set(book::writers, expected).where(book::id, Query.eq(id)).sync();
 
-    actual = session.<Book>select(book)
-            .where(book::id, Query.eq(id))
-            .single()
-            .sync()
-            .orElse(null);
+    actual = session.<Book>select(book).where(book::id, Query.eq(id)).single().sync().orElse(null);
 
     Assert.assertEquals(id, actual.id());
     assertEqualMaps(expected, actual.writers());
@@ -96,7 +89,8 @@ public class TupleMapTest extends TupleCollectionTest {
     expected.put(third, unk);
     session.update().put(book::writers, third, unk).where(book::id, Query.eq(id)).sync();
 
-    actualMap = session.select(book::writers).where(book::id, Query.eq(id)).sync().findFirst().get()._1;
+    actualMap =
+        session.select(book::writers).where(book::id, Query.eq(id)).sync().findFirst().get()._1;
     assertEqualMaps(expected, actualMap);
 
     // putAll operation

@@ -20,6 +20,7 @@ import net.helenus.mapping.annotation.InheritedTable;
 @InheritedTable
 public interface Mammal extends Animal {
 
-    default boolean warmBlodded() { return true; }
-
+  default boolean warmBlodded() {
+    return true;
+  }
 }
