@@ -36,7 +36,9 @@ public final class SelectTransformingOperation<R, E>
   }
 
   @Override
-  public String getStatementCacheKey() { return delegate.getStatementCacheKey(); }
+  public String getStatementCacheKey() {
+    return delegate.getStatementCacheKey();
+  }
 
   @Override
   public BuiltStatement buildStatement(boolean cached) {
@@ -47,5 +49,4 @@ public final class SelectTransformingOperation<R, E>
   public Stream<R> transform(ResultSet resultSet) {
     return delegate.transform(resultSet).map(fn);
   }
-
 }

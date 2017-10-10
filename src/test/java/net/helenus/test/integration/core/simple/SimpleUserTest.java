@@ -18,20 +18,16 @@ package net.helenus.test.integration.core.simple;
 import static net.helenus.core.Query.eq;
 
 import com.datastax.driver.core.ResultSet;
+import java.util.*;
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.core.Operator;
 import net.helenus.core.operation.UpdateOperation;
-import net.helenus.core.reflect.Drafted;
-import net.helenus.mapping.HelenusEntity;
 import net.helenus.support.Fun;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.*;
-
 
 public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
@@ -102,11 +98,7 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
     // select as object
 
-    actual = session.<User>select(user)
-            .where(user::id, eq(100L))
-            .single()
-            .sync()
-            .orElse(null);
+    actual = session.<User>select(user).where(user::id, eq(100L)).single().sync().orElse(null);
     assertUsers(newUser, actual);
 
     // select by columns
@@ -192,11 +184,7 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
     Assert.assertEquals("_albert", name);
 
-    User u2 = session.<User>select(user)
-            .where(user::id, eq(100L))
-            .single()
-            .sync()
-            .orElse(null);
+    User u2 = session.<User>select(user).where(user::id, eq(100L)).single().sync().orElse(null);
 
     Assert.assertEquals(Long.valueOf(100L), u2.id());
     Assert.assertEquals("albert", u2.name());
@@ -204,31 +192,27 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
     //
     User greg =
-            session
-                    .<User>insert(user)
-                    .value(user::name, "greg")
-                    .value(user::age, 44)
-                    .value(user::type, UserType.USER)
-                    .value(user::id, 1234L)
-                    .sync();
+        session
+            .<User>insert(user)
+            .value(user::name, "greg")
+            .value(user::age, 44)
+            .value(user::type, UserType.USER)
+            .value(user::id, 1234L)
+            .sync();
 
     Optional<User> maybeGreg =
-            session
-                    .<User>select(user)
-                    .where(user::id, eq(1234L))
-                    .single()
-                    .sync();
+        session.<User>select(user).where(user::id, eq(1234L)).single().sync();
 
     // INSERT
 
     session
-            .update()
-            .set(user::name, null)
-            .set(user::age, null)
-            .set(user::type, null)
-            .where(user::id, eq(100L))
-            .zipkinContext(null)
-            .sync();
+        .update()
+        .set(user::name, null)
+        .set(user::age, null)
+        .set(user::type, null)
+        .where(user::id, eq(100L))
+        .zipkinContext(null)
+        .sync();
 
     Fun.Tuple3<String, Integer, UserType> tuple =
         session
@@ -252,21 +236,16 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
 
   public void testZipkin() throws Exception {
     session
-            .update()
-            .set(user::name, null)
-            .set(user::age, null)
-            .set(user::type, null)
-            .where(user::id, eq(100L))
-            .zipkinContext(null)
-            .sync();
-
+        .update()
+        .set(user::name, null)
+        .set(user::age, null)
+        .set(user::type, null)
+        .where(user::id, eq(100L))
+        .zipkinContext(null)
+        .sync();
 
     UpdateOperation<ResultSet> update = session.update();
-    update
-            .set(user::name, null)
-            .zipkinContext(null)
-            .sync();
-
+    update.set(user::name, null).zipkinContext(null).sync();
   }
 
   private void assertUsers(User expected, User actual) {

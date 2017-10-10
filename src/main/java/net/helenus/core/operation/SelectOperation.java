@@ -23,13 +23,12 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Selection;
 import com.datastax.driver.core.querybuilder.Select.Where;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
 import net.helenus.core.*;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
@@ -48,13 +47,14 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   protected List<Ordering> ordering = null;
   protected Integer limit = null;
   protected boolean allowFiltering = false;
+  protected String alternateTableName = null;
 
   @SuppressWarnings("unchecked")
   public SelectOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
 
     this.rowMapper =
-      new Function<Row, E>() {
+        new Function<Row, E>() {
 
           @Override
           public E apply(Row source) {
@@ -129,6 +129,19 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
     return new CountOperation(sessionOps, entity);
   }
 
+  public <V extends E> SelectOperation<E> from(Class<V> materializedViewClass) {
+    Objects.requireNonNull(materializedViewClass);
+    HelenusEntity entity = Helenus.entity(materializedViewClass);
+    this.alternateTableName = entity.getName().toCql();
+    this.allowFiltering = true;
+    return this;
+  }
+
+  public SelectOperation<E> from(String alternateTableName) {
+    this.alternateTableName = alternateTableName;
+    return this;
+  }
+
   public SelectFirstOperation<E> single() {
     limit(1);
     return new SelectFirstOperation<E>(this);
@@ -189,7 +202,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
       switch (prop.getProperty().getColumnType()) {
         case PARTITION_KEY:
         case CLUSTERING_COLUMN:
-
           Filter filter = filters.get(prop.getProperty());
           if (filter != null) {
             keys.add(filter.toString());
@@ -225,14 +237,14 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
         entity = prop.getEntity();
       } else if (entity != prop.getEntity()) {
         throw new HelenusMappingException(
-                "you can select columns only from a single entity "
-                        + entity.getMappingInterface()
-                        + " or "
-                        + prop.getEntity().getMappingInterface());
+            "you can select columns only from a single entity "
+                + entity.getMappingInterface()
+                + " or "
+                + prop.getEntity().getMappingInterface());
       }
 
       if (cached) {
-        switch(prop.getProperty().getColumnType()) {
+        switch (prop.getProperty().getColumnType()) {
           case PARTITION_KEY:
           case CLUSTERING_COLUMN:
             break;
@@ -255,7 +267,8 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
       throw new HelenusMappingException("no entity or table to select data");
     }
 
-    Select select = selection.from(entity.getName().toCql());
+    String tableName = alternateTableName == null ? entity.getName().toCql() : alternateTableName;
+    Select select = selection.from(tableName);
 
     if (ordering != null && !ordering.isEmpty()) {
       select.orderBy(ordering.toArray(new Ordering[ordering.size()]));
@@ -290,10 +303,14 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   @Override
   public Stream<E> transform(ResultSet resultSet) {
     if (rowMapper != null) {
-      return StreamSupport.stream(Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED), false).map(rowMapper);
+      return StreamSupport.stream(
+              Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED), false)
+          .map(rowMapper);
     } else {
       return (Stream<E>)
-          StreamSupport.stream(Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED),false);
+          StreamSupport.stream(
+              Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED),
+              false);
     }
   }
 

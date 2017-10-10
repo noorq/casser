@@ -32,7 +32,8 @@ import net.helenus.support.HelenusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>> extends Operation<E> {
+public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>>
+    extends Operation<E> {
 
   final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -54,7 +55,6 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
     this.consistencyLevel = sessionOperations.getDefaultConsistencyLevel();
     this.idempotent = sessionOperations.getDefaultQueryIdempotency();
   }
-
 
   public O ignoreCache(boolean enabled) {
     enableCache = enabled;
@@ -93,8 +93,8 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
   }
 
   public O isIdempotent(boolean idempotent) {
-      this.idempotent = idempotent;
-      return (O) this;
+    this.idempotent = idempotent;
+    return (O) this;
   }
 
   public O downgradingConsistencyRetryPolicy() {
@@ -232,7 +232,7 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
     }
 
     if (idempotent) {
-        statement.setIdempotent(true);
+      statement.setIdempotent(true);
     }
 
     return statement;

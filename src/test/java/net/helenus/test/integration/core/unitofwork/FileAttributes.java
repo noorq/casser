@@ -20,6 +20,5 @@ import net.helenus.mapping.annotation.UDT;
 @UDT
 public interface FileAttributes {
 
-    String owner();
-
+  String owner();
 }

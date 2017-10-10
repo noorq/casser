@@ -19,10 +19,9 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.google.common.base.Joiner;
 import java.util.*;
 import java.util.function.Function;
-
-import com.google.common.base.Joiner;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.Getter;
 import net.helenus.core.Helenus;
@@ -41,7 +40,8 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 
   private HelenusEntity entity;
 
-  private final List<Fun.Tuple2<HelenusPropertyNode, Object>> values = new ArrayList<Fun.Tuple2<HelenusPropertyNode, Object>>();
+  private final List<Fun.Tuple2<HelenusPropertyNode, Object>> values =
+      new ArrayList<Fun.Tuple2<HelenusPropertyNode, Object>>();
   private final T pojo;
   private final Class<?> resultType;
   private boolean ifNotExists;
@@ -57,7 +57,8 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     this.resultType = ResultSet.class;
   }
 
-  public InsertOperation(AbstractSessionOperations sessionOperations, Class<?> resultType, boolean ifNotExists) {
+  public InsertOperation(
+      AbstractSessionOperations sessionOperations, Class<?> resultType, boolean ifNotExists) {
     super(sessionOperations);
 
     this.ifNotExists = ifNotExists;
@@ -172,7 +173,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
             // Some values man need to be converted (e.g. from String to Enum).  This is done
             // within the BeanColumnValueProvider below.
             Optional<Function<Object, Object>> converter =
-                    prop.getReadConverter(sessionOps.getSessionRepository());
+                prop.getReadConverter(sessionOps.getSessionRepository());
             if (converter.isPresent()) {
               backingMap.put(key, converter.get().apply(backingMap.get(key)));
             }
@@ -232,23 +233,25 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
   public String getStatementCacheKey() {
     List<String> keys = new ArrayList<>(values.size());
     values.forEach(
-            t -> {
-              HelenusPropertyNode prop = t._1;
-                switch (prop.getProperty().getColumnType()) {
-                  case PARTITION_KEY:
-                  case CLUSTERING_COLUMN:
-                    keys.add(prop.getColumnName() + "==" + t._2.toString());
-                    break;
-                  default:
-                    break;
-                }
-            });
+        t -> {
+          HelenusPropertyNode prop = t._1;
+          switch (prop.getProperty().getColumnType()) {
+            case PARTITION_KEY:
+            case CLUSTERING_COLUMN:
+              keys.add(prop.getColumnName() + "==" + t._2.toString());
+              break;
+            default:
+              break;
+          }
+        });
     return entity.getName() + ": " + Joiner.on(",").join(keys);
   }
 
   @Override
   public T sync(UnitOfWork uow) {
-    if (uow == null) { return sync(); }
+    if (uow == null) {
+      return sync();
+    }
     T result = super.sync(uow);
     Class<?> iface = entity.getMappingInterface();
     if (resultType == iface) {
@@ -261,5 +264,4 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     }
     return result;
   }
-
 }

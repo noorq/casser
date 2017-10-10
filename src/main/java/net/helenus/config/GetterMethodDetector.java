@@ -35,7 +35,7 @@ public enum GetterMethodDetector implements Function<Method, Boolean> {
     }
 
     if (Modifier.isStatic(method.getModifiers())) {
-        return false;
+      return false;
     }
 
     // Methods marked "Transient" are not mapped, skip them.

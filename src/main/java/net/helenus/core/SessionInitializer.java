@@ -25,7 +25,6 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-
 import net.helenus.core.reflect.DslExportable;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusEntityType;
@@ -131,12 +130,12 @@ public final class SessionInitializer extends AbstractSessionOperations {
   }
 
   public SessionInitializer idempotentQueryExecution(boolean idempotent) {
-      this.idempotent = idempotent;
-      return this;
+    this.idempotent = idempotent;
+    return this;
   }
 
   public boolean getDefaultQueryIdempotency() {
-      return idempotent;
+    return idempotent;
   }
 
   @Override
@@ -185,9 +184,10 @@ public final class SessionInitializer extends AbstractSessionOperations {
       PackageUtil.getClasses(packageName)
           .stream()
           .filter(c -> c.isInterface() && !c.isAnnotation())
-          .forEach(clazz -> {
-              initList.add(Either.right(clazz));
-          });
+          .forEach(
+              clazz -> {
+                initList.add(Either.right(clazz));
+              });
     } catch (IOException | ClassNotFoundException e) {
       throw new HelenusException("fail to add package " + packageName, e);
     }
@@ -267,18 +267,19 @@ public final class SessionInitializer extends AbstractSessionOperations {
 
     Objects.requireNonNull(usingKeyspace, "please define keyspace by 'use' operator");
 
-    initList.forEach((either) -> {
-        Class<?> iface = null;
-        if (either.isLeft()) {
+    initList.forEach(
+        (either) -> {
+          Class<?> iface = null;
+          if (either.isLeft()) {
             iface = MappingUtil.getMappingInterface(either.getLeft());
-        } else {
+          } else {
             iface = either.getRight();
-        }
+          }
 
-        DslExportable dsl = (DslExportable) Helenus.dsl(iface);
-        dsl.setMetadata(session.getCluster().getMetadata());
-        sessionRepository.add(dsl);
-    });
+          DslExportable dsl = (DslExportable) Helenus.dsl(iface);
+          dsl.setCassandraMetadataForHelenusSesion(session.getCluster().getMetadata());
+          sessionRepository.add(dsl);
+        });
 
     TableOperations tableOps = new TableOperations(this, dropUnusedColumns, dropUnusedIndexes);
     UserTypeOperations userTypeOps = new UserTypeOperations(this, dropUnusedColumns);
@@ -286,8 +287,16 @@ public final class SessionInitializer extends AbstractSessionOperations {
     switch (autoDdl) {
       case CREATE_DROP:
 
-        // Drop tables first, otherwise a `DROP TYPE ...` will fail as the type is still referenced
-        // by a table.
+        // Drop view first, otherwise a `DROP TABLE ...` will fail as the type is still referenced
+        // by a view.
+        sessionRepository
+            .entities()
+            .stream()
+            .filter(e -> e.getType() == HelenusEntityType.VIEW)
+            .forEach(e -> tableOps.dropView(e));
+
+        // Drop tables second, before DROP TYPE otherwise a `DROP TYPE ...` will fail as the type is
+        // still referenced by a table.
         sessionRepository
             .entities()
             .stream()
@@ -306,6 +315,12 @@ public final class SessionInitializer extends AbstractSessionOperations {
             .filter(e -> e.getType() == HelenusEntityType.TABLE)
             .forEach(e -> tableOps.createTable(e));
 
+        sessionRepository
+            .entities()
+            .stream()
+            .filter(e -> e.getType() == HelenusEntityType.VIEW)
+            .forEach(e -> tableOps.createView(e));
+
         break;
 
       case VALIDATE:
@@ -316,6 +331,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
             .stream()
             .filter(e -> e.getType() == HelenusEntityType.TABLE)
             .forEach(e -> tableOps.validateTable(getTableMetadata(e), e));
+
         break;
 
       case UPDATE:
@@ -324,8 +340,20 @@ public final class SessionInitializer extends AbstractSessionOperations {
         sessionRepository
             .entities()
             .stream()
+            .filter(e -> e.getType() == HelenusEntityType.VIEW)
+            .forEach(e -> tableOps.dropView(e));
+
+        sessionRepository
+            .entities()
+            .stream()
             .filter(e -> e.getType() == HelenusEntityType.TABLE)
             .forEach(e -> tableOps.updateTable(getTableMetadata(e), e));
+
+        sessionRepository
+            .entities()
+            .stream()
+            .filter(e -> e.getType() == HelenusEntityType.VIEW)
+            .forEach(e -> tableOps.createView(e));
         break;
     }
 

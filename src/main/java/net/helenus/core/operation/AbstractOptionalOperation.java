@@ -21,12 +21,10 @@ import com.datastax.driver.core.ResultSet;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
 
@@ -114,5 +112,4 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
     if (uow == null) return async();
     return CompletableFuture.<Optional<E>>supplyAsync(() -> sync(uow));
   }
-
 }

@@ -17,15 +17,20 @@ package net.helenus.core;
 
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.IndexMetadata;
+import com.datastax.driver.core.querybuilder.IsNotNullClause;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.schemabuilder.*;
 import com.datastax.driver.core.schemabuilder.Create.Options;
 import java.util.*;
 import java.util.stream.Collectors;
+import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.*;
 import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.type.OptionalColumnMetadata;
 import net.helenus.support.CqlUtil;
 import net.helenus.support.HelenusMappingException;
+
 
 public final class SchemaUtil {
 
@@ -141,6 +146,67 @@ public final class SchemaUtil {
   public static SchemaStatement dropUserType(UserType type) {
 
     return SchemaBuilder.dropType(type.getTypeName()).ifExists();
+  }
+
+  public static SchemaStatement createMaterializedView(
+      String keyspace, String viewName, HelenusEntity entity) {
+    if (entity.getType() != HelenusEntityType.VIEW) {
+      throw new HelenusMappingException("expected view entity " + entity);
+    }
+
+    if (entity == null) {
+      throw new HelenusMappingException("no entity or table to select data");
+    }
+
+    List<HelenusPropertyNode> props = new ArrayList<HelenusPropertyNode>();
+    entity
+        .getOrderedProperties()
+        .stream()
+        .map(p -> new HelenusPropertyNode(p, Optional.empty()))
+        .forEach(p -> props.add(p));
+
+    Select.Selection selection = QueryBuilder.select();
+
+    for (HelenusPropertyNode prop : props) {
+      String columnName = prop.getColumnName();
+      selection = selection.column(columnName);
+    }
+    String tableName =
+        Helenus.entity(entity.getMappingInterface().getInterfaces()[0]).getName().toCql();
+    Select.Where where = selection.from(tableName).where();
+    List<String> p = new ArrayList<String>(props.size());
+    List<String> c = new ArrayList<String>(props.size());
+
+    for (HelenusPropertyNode prop : props) {
+      String columnName = prop.getColumnName();
+      switch (prop.getProperty().getColumnType()) {
+        case PARTITION_KEY:
+          p.add(columnName);
+          where = where.and(new IsNotNullClause(columnName));
+          break;
+        case CLUSTERING_COLUMN:
+          c.add(columnName);
+          where = where.and(new IsNotNullClause(columnName));
+          break;
+        default:
+          break;
+      }
+    }
+
+    String primaryKey =
+        "PRIMARY KEY ("
+            + ((p.size() > 1) ? "(" + String.join(", ", p) + ")" : p.get(0))
+            + ((c.size() > 0)
+                ? ", " + ((c.size() > 1) ? "(" + String.join(", ", c) + ")" : c.get(0))
+                : "")
+            + ")";
+
+    return new CreateMaterializedView(keyspace, viewName, where, primaryKey);
+  }
+
+  public static SchemaStatement dropMaterializedView(
+      String keyspace, String viewName, HelenusEntity entity) {
+    return new DropMaterializedView(keyspace, viewName);
   }
 
   public static SchemaStatement createTable(HelenusEntity entity) {

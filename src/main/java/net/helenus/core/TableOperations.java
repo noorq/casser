@@ -35,14 +35,11 @@ public final class TableOperations {
   }
 
   public void createTable(HelenusEntity entity) {
-
     sessionOps.execute(SchemaUtil.createTable(entity), true);
-
     executeBatch(SchemaUtil.createIndexes(entity));
   }
 
   public void dropTable(HelenusEntity entity) {
-
     sessionOps.execute(SchemaUtil.dropTable(entity), true);
   }
 
@@ -50,7 +47,10 @@ public final class TableOperations {
 
     if (tmd == null) {
       throw new HelenusException(
-          "table not exists " + entity.getName() + "for entity " + entity.getMappingInterface());
+          "table does not exists "
+              + entity.getName()
+              + "for entity "
+              + entity.getMappingInterface());
     }
 
     List<SchemaStatement> list = SchemaUtil.alterTable(tmd, entity, dropUnusedColumns);
@@ -67,7 +67,31 @@ public final class TableOperations {
   }
 
   public void updateTable(TableMetadata tmd, HelenusEntity entity) {
+    if (tmd == null) {
+      createTable(entity);
+      return;
+    }
 
+    executeBatch(SchemaUtil.alterTable(tmd, entity, dropUnusedColumns));
+    executeBatch(SchemaUtil.alterIndexes(tmd, entity, dropUnusedIndexes));
+  }
+
+  public void createView(HelenusEntity entity) {
+    sessionOps.execute(
+        SchemaUtil.createMaterializedView(
+            sessionOps.usingKeyspace(), entity.getName().toCql(), entity),
+        true);
+    //    executeBatch(SchemaUtil.createIndexes(entity)); NOTE: Unfortunately C* 3.10 does not yet support 2i on materialized views.
+  }
+
+  public void dropView(HelenusEntity entity) {
+    sessionOps.execute(
+        SchemaUtil.dropMaterializedView(
+            sessionOps.usingKeyspace(), entity.getName().toCql(), entity),
+        true);
+  }
+
+  public void updateView(TableMetadata tmd, HelenusEntity entity) {
     if (tmd == null) {
       createTable(entity);
       return;

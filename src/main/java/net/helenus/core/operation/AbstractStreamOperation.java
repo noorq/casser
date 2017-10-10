@@ -21,20 +21,11 @@ import com.datastax.driver.core.ResultSet;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.helenus.core.AbstractSessionOperations;
-import net.helenus.core.Helenus;
 import net.helenus.core.UnitOfWork;
-import net.helenus.mapping.HelenusEntity;
-import net.helenus.mapping.value.ColumnValueProvider;
-import net.helenus.mapping.value.ValueProviderMap;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>>
     extends AbstractStatementOperation<E, O> {
@@ -113,5 +104,4 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
     if (uow == null) return async();
     return CompletableFuture.<Stream<E>>supplyAsync(() -> sync(uow));
   }
-
 }

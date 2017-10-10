@@ -23,7 +23,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.Map;
-
 import net.helenus.core.Helenus;
 import net.helenus.mapping.annotation.Transient;
 import net.helenus.support.HelenusException;
@@ -94,7 +93,7 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
     }
 
     if ("dsl".equals(methodName)) {
-        return Helenus.dsl(iface);
+      return Helenus.dsl(iface);
     }
 
     if (MapExportable.TO_MAP_METHOD.equals(methodName)) {
