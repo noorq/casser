@@ -29,6 +29,7 @@ import org.junit.Test;
 // See: https://docs.datastax.com/en/cql/3.3/cql/cql_using/useCreateMV.html
 //      https://docs.datastax.com/en/cql/3.3/cql/cql_reference/cqlCreateMaterializedView.html
 //      https://www.datastax.com/dev/blog/materialized-view-performance-in-cassandra-3-x
+//      https://cassandra-zone.com/materialized-views/
 public class MaterializedViewTest extends AbstractEmbeddedCassandraTest {
 
   static Cyclist cyclist;
