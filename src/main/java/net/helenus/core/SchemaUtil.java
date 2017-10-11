@@ -213,7 +213,8 @@ public final class SchemaUtil {
     if (o.size() > 0) {
         clustering = "WITH CLUSTERING ORDER BY (" + String.join(", ", o) + ")";
     }
-    return new CreateMaterializedView(keyspace, viewName, where, primaryKey, clustering);
+    return new CreateMaterializedView(keyspace, viewName, where, primaryKey, clustering)
+            .ifNotExists();
   }
 
   public static SchemaStatement dropMaterializedView(
