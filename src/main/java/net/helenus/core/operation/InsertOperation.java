@@ -83,9 +83,18 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     Set<String> keys = (mutations == null) ? null : mutations;
 
     for (HelenusProperty prop : properties) {
+      boolean addProp = false;
 
-      if (keys == null || keys.contains(prop.getPropertyName())) {
+      switch (prop.getColumnType()) {
+        case PARTITION_KEY:
+        case CLUSTERING_COLUMN:
+          addProp = true;
+          break;
+        default:
+          addProp = (keys == null || keys.contains(prop.getPropertyName()));
+      }
 
+      if (addProp) {
         Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
         value = sessionOps.getValuePreparer().prepareColumnValue(value, prop);
 
