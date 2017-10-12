@@ -70,7 +70,7 @@ public class MaterializedViewTest extends AbstractEmbeddedCassandraTest {
   public void testMv() throws Exception {
     session
         .select(Cyclist.class)
-        .<CyclistsByAge>from(CyclistsByAge.class)
+        .from(CyclistsByAge.class)
         .where(cyclist::age, eq(18))
         .sync();
   }

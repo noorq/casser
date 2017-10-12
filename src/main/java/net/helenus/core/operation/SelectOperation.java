@@ -133,12 +133,12 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
     Objects.requireNonNull(materializedViewClass);
     HelenusEntity entity = Helenus.entity(materializedViewClass);
     this.alternateTableName = entity.getName().toCql();
-    this.allowFiltering = true;
-    return this;
-  }
-
-  public SelectOperation<E> from(String alternateTableName) {
-    this.alternateTableName = alternateTableName;
+    this.props.clear();
+    entity
+        .getOrderedProperties()
+        .stream()
+        .map(p -> new HelenusPropertyNode(p, Optional.empty()))
+        .forEach(p -> this.props.add(p));
     return this;
   }
 
@@ -243,6 +243,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
                 + prop.getEntity().getMappingInterface());
       }
 
+      /* TODO: is this useful information to gather when caching?
       if (cached) {
         switch (prop.getProperty().getColumnType()) {
           case PARTITION_KEY:
@@ -261,6 +262,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
             break;
         }
       }
+      */
     }
 
     if (entity == null) {
