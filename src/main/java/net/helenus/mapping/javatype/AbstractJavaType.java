@@ -33,7 +33,9 @@ import net.helenus.support.HelenusMappingException;
 
 public abstract class AbstractJavaType {
 
-  public static boolean isCollectionType() { return false; }
+  public static boolean isCollectionType() {
+    return false;
+  }
 
   public abstract Class<?> getJavaClass();
 

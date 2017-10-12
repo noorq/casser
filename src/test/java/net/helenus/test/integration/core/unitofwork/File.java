@@ -17,11 +17,9 @@ package net.helenus.test.integration.core.unitofwork;
 
 import net.helenus.mapping.annotation.*;
 
-
 @UDT
 public interface File extends FilesystemNode {
 
-    @Column
-    byte[] data();
-
+  @Column
+  byte[] data();
 }

@@ -19,11 +19,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import net.helenus.core.*;
 import net.helenus.mapping.HelenusProperty;
 
-public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterStreamOperation<E, O>>
+public abstract class AbstractFilterStreamOperation<
+        E, O extends AbstractFilterStreamOperation<E, O>>
     extends AbstractStreamOperation<E, O> {
 
   protected Map<HelenusProperty, Filter<?>> filters = null;

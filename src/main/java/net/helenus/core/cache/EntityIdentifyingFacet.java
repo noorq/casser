@@ -4,11 +4,7 @@ import net.helenus.mapping.HelenusProperty;
 
 public class EntityIdentifyingFacet extends Facet {
 
-    public EntityIdentifyingFacet(HelenusProperty prop) {
+  public EntityIdentifyingFacet(HelenusProperty prop) {}
 
-    }
-
-    public EntityIdentifyingFacet(HelenusProperty[]... props) {
-
-    }
+  public EntityIdentifyingFacet(HelenusProperty[]... props) {}
 }

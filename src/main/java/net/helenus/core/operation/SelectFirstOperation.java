@@ -38,7 +38,9 @@ public final class SelectFirstOperation<E>
   }
 
   @Override
-  public String getStatementCacheKey() { return delegate.getStatementCacheKey(); }
+  public String getStatementCacheKey() {
+    return delegate.getStatementCacheKey();
+  }
 
   @Override
   public BuiltStatement buildStatement(boolean cached) {

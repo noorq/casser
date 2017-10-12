@@ -1,7 +1,6 @@
 package net.helenus.core.cache;
 
-public class Facet {
-}
+public class Facet {}
 /*
 
 An Entity is identifiable via one or more Facets

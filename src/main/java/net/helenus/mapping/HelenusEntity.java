@@ -15,10 +15,9 @@
  */
 package net.helenus.mapping;
 
-import net.helenus.core.cache.EntityIdentifyingFacet;
-
 import java.util.Collection;
 import java.util.Map;
+import net.helenus.core.cache.EntityIdentifyingFacet;
 
 public interface HelenusEntity {
 
@@ -35,5 +34,4 @@ public interface HelenusEntity {
   HelenusProperty getProperty(String name);
 
   Map<String, EntityIdentifyingFacet> getIdentityFacets();
-
 }

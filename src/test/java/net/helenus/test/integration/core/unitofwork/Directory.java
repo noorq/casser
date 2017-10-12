@@ -15,16 +15,13 @@
  */
 package net.helenus.test.integration.core.unitofwork;
 
-import net.helenus.mapping.annotation.*;
-
 import com.datastax.driver.core.DataType.Name;
 import java.util.Set;
-
+import net.helenus.mapping.annotation.*;
 
 @UDT
 public interface Directory extends FilesystemNode {
 
-    @Types.Set(Name.TIMEUUID)
-    Set<FilesystemNode> inodes();
-
+  @Types.Set(Name.TIMEUUID)
+  Set<FilesystemNode> inodes();
 }

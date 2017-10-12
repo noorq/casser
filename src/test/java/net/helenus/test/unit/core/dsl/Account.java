@@ -19,7 +19,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import net.helenus.core.reflect.Drafted;
-import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.annotation.*;
 
 @Table

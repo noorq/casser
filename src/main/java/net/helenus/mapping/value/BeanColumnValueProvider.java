@@ -33,7 +33,7 @@ public enum BeanColumnValueProvider implements ColumnValueProvider {
     try {
       value = getter.invoke(bean, new Object[] {});
     } catch (InvocationTargetException e) {
-      if (e.getCause() != null ) {
+      if (e.getCause() != null) {
         throw new HelenusException("getter threw an exception", e.getCause());
       }
     } catch (ReflectiveOperationException e) {

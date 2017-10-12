@@ -22,15 +22,12 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Selection;
 import com.datastax.driver.core.querybuilder.Select.Where;
+import com.google.common.collect.Iterables;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
 import net.helenus.core.*;
-import net.helenus.core.cache.Facet;
 import net.helenus.core.cache.EntityIdentifyingFacet;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
@@ -56,7 +53,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
     super(sessionOperations);
 
     this.rowMapper =
-      new Function<Row, E>() {
+        new Function<Row, E>() {
 
           @Override
           public E apply(Row source) {
@@ -188,20 +185,25 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
     final Set<EntityIdentifyingFacet> facets = new HashSet<>(filters.size());
     // Check to see if this select statement has enough information to build one or
     // more identifying facets.
-    entity.getIdentityFacets().forEach((facetName, facet) -> {
-      EntityIdentifyingFacet boundFacet = null;
-      if (!facet.isFullyBound()) {
-          boundFacet = new EntityIdentifyingFacet(facet);
-          for (HelenusProperty prop : facet.getUnboundEntityProperties()) {
-              Filter filter = filters.get(facet.getProperty());
-              if (filter == null) { break; }
-              boundFacet.setValueForProperty(prop, filter.toString());
-          }
-      }
-      if (boundFacet != null && boundFacet.isFullyBound()) {
-          facets.add(boundFacet);
-      }
-    });
+    entity
+        .getIdentityFacets()
+        .forEach(
+            (facetName, facet) -> {
+              EntityIdentifyingFacet boundFacet = null;
+              if (!facet.isFullyBound()) {
+                boundFacet = new EntityIdentifyingFacet(facet);
+                for (HelenusProperty prop : facet.getUnboundEntityProperties()) {
+                  Filter filter = filters.get(facet.getProperty());
+                  if (filter == null) {
+                    break;
+                  }
+                  boundFacet.setValueForProperty(prop, filter.toString());
+                }
+              }
+              if (boundFacet != null && boundFacet.isFullyBound()) {
+                facets.add(boundFacet);
+              }
+            });
     return facets;
   }
 
@@ -223,14 +225,14 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
         entity = prop.getEntity();
       } else if (entity != prop.getEntity()) {
         throw new HelenusMappingException(
-                "you can select columns only from a single entity "
-                        + entity.getMappingInterface()
-                        + " or "
-                        + prop.getEntity().getMappingInterface());
+            "you can select columns only from a single entity "
+                + entity.getMappingInterface()
+                + " or "
+                + prop.getEntity().getMappingInterface());
       }
 
       if (cached) {
-        switch(prop.getProperty().getColumnType()) {
+        switch (prop.getProperty().getColumnType()) {
           case PARTITION_KEY:
           case CLUSTERING_COLUMN:
             break;
@@ -288,10 +290,14 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   @Override
   public Stream<E> transform(ResultSet resultSet) {
     if (rowMapper != null) {
-      return StreamSupport.stream(Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED), false).map(rowMapper);
+      return StreamSupport.stream(
+              Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED), false)
+          .map(rowMapper);
     } else {
       return (Stream<E>)
-          StreamSupport.stream(Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED),false);
+          StreamSupport.stream(
+              Spliterators.spliteratorUnknownSize(resultSet.iterator(), Spliterator.ORDERED),
+              false);
     }
   }
 

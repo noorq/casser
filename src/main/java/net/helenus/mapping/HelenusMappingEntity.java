@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.Method;
 import java.util.*;
-
 import net.helenus.config.HelenusSettings;
 import net.helenus.core.Helenus;
 import net.helenus.core.annotation.Cacheable;
@@ -60,21 +59,22 @@ public final class HelenusMappingEntity implements HelenusEntity {
 
     Map<String, Method> methods = new HashMap<String, Method>();
     for (Method m : iface.getDeclaredMethods()) {
-        methods.put(m.getName(), m);
+      methods.put(m.getName(), m);
     }
 
     for (Class<?> c : ClassUtils.getAllInterfaces(iface)) {
-      if (c.getDeclaredAnnotation(Table.class) != null || c.getDeclaredAnnotation(InheritedTable.class) != null) {
+      if (c.getDeclaredAnnotation(Table.class) != null
+          || c.getDeclaredAnnotation(InheritedTable.class) != null) {
         for (Method m : c.getDeclaredMethods()) {
-            Method o = methods.get(m.getName());
-            if (o != null) {
-                // Prefer overridden method implementation.
-                if (o.getDeclaringClass().isAssignableFrom(m.getDeclaringClass())) {
-                    methods.put(m.getName(), m);
-                }
-            } else {
-                methods.put(m.getName(), m);
+          Method o = methods.get(m.getName());
+          if (o != null) {
+            // Prefer overridden method implementation.
+            if (o.getDeclaringClass().isAssignableFrom(m.getDeclaringClass())) {
+              methods.put(m.getName(), m);
             }
+          } else {
+            methods.put(m.getName(), m);
+          }
         }
       }
     }
@@ -110,27 +110,34 @@ public final class HelenusMappingEntity implements HelenusEntity {
     cacheable = (null != iface.getDeclaredAnnotation(Cacheable.class));
 
     ImmutableMap.Builder<String, EntityIdentifyingFacet> allFacetsBuilder = ImmutableMap.builder();
-    ImmutableMap.Builder<String, EntityIdentifyingFacet> ancillaryFacetsBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, EntityIdentifyingFacet> ancillaryFacetsBuilder =
+        ImmutableMap.builder();
     EntityIdentifyingFacet primaryFacet = null;
     List<HelenusProperty> primaryProperties = new ArrayList<HelenusProperty>(4);
     for (HelenusProperty prop : propsLocal) {
-        switch(prop.getColumnType()) {
+      switch (prop.getColumnType()) {
         case PARTITION_KEY:
         case CLUSTERING_COLUMN:
-            primaryProperties.add(prop);
-            break;
+          primaryProperties.add(prop);
+          break;
         default:
-            if (primaryProperties != null) {
-                primaryFacet = new EntityIdentifyingFacet(keyspace, table, schemaVersion, primaryProperties.toArray(new HelenusProperty[props.size()]));
-                allFacetsBuilder.put("*", primaryFacet);
-                primaryProperties = null;
-            }
-            Optional<IdentityName> optionalIndexName = prop.getIndexName();
-            if (optionalIndexName.isPresent()) {
-                EntityIdentifyingFacet facet = new EntityIdentifyingFacet(keyspace, table, schemaVersion, prop);
-                ancillaryFacetsBuilder.put(prop.getPropertyName(), facet);
-            }
-        }
+          if (primaryProperties != null) {
+            primaryFacet =
+                new EntityIdentifyingFacet(
+                    keyspace,
+                    table,
+                    schemaVersion,
+                    primaryProperties.toArray(new HelenusProperty[props.size()]));
+            allFacetsBuilder.put("*", primaryFacet);
+            primaryProperties = null;
+          }
+          Optional<IdentityName> optionalIndexName = prop.getIndexName();
+          if (optionalIndexName.isPresent()) {
+            EntityIdentifyingFacet facet =
+                new EntityIdentifyingFacet(keyspace, table, schemaVersion, prop);
+            ancillaryFacetsBuilder.put(prop.getPropertyName(), facet);
+          }
+      }
     }
     this.primaryIdentityFacet = primaryFacet;
     this.ancillaryIdentityFacets = ancillaryFacetsBuilder.build();

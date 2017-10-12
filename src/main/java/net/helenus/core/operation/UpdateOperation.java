@@ -15,15 +15,13 @@
  */
 package net.helenus.core.operation;
 
-import java.util.*;
-import java.util.function.Function;
-
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.Assignment;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
-
+import java.util.*;
+import java.util.function.Function;
 import net.helenus.core.*;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
@@ -43,19 +41,21 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
   private int[] ttl;
   private long[] timestamp;
 
-  public UpdateOperation(AbstractSessionOperations sessionOperations){
+  public UpdateOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
     this.draft = null;
     this.draftMap = null;
   }
 
-  public UpdateOperation(AbstractSessionOperations sessionOperations, AbstractEntityDraft<E> draft) {
+  public UpdateOperation(
+      AbstractSessionOperations sessionOperations, AbstractEntityDraft<E> draft) {
     super(sessionOperations);
     this.draft = draft;
     this.draftMap = draft.toMap();
   }
 
-  public UpdateOperation(AbstractSessionOperations sessionOperations, HelenusPropertyNode p, Object v) {
+  public UpdateOperation(
+      AbstractSessionOperations sessionOperations, HelenusPropertyNode p, Object v) {
     super(sessionOperations);
     this.draft = null;
     this.draftMap = null;
@@ -152,7 +152,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 
     if (draft != null) {
       String key = p.getProperty().getPropertyName();
-      List<V> list = (List<V>)draftMap.get(key);
+      List<V> list = (List<V>) draftMap.get(key);
       list.add(0, value);
     }
 
@@ -194,7 +194,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 
     if (draft != null) {
       String key = p.getProperty().getPropertyName();
-      List<V> list = (List<V>)draftMap.get(key);
+      List<V> list = (List<V>) draftMap.get(key);
       if (idx < 0) {
         list.add(0, value);
       } else if (idx > list.size()) {
@@ -222,7 +222,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 
     if (draft != null) {
       String key = p.getProperty().getPropertyName();
-      List<V> list = (List<V>)draftMap.get(key);
+      List<V> list = (List<V>) draftMap.get(key);
       list.add(value);
     }
 
@@ -579,7 +579,9 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 
   @Override
   public E sync(UnitOfWork uow) {
-    if (uow == null) { return sync(); }
+    if (uow == null) {
+      return sync();
+    }
     E result = super.sync(uow);
     if (draft != null) {
       String key = getStatementCacheKey();
@@ -591,5 +593,4 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
     }
     return result;
   }
-
 }
