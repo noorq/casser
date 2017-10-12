@@ -185,6 +185,9 @@ public final class HelenusMappingEntity implements HelenusEntity {
       case TABLE:
         return MappingUtil.getTableName(iface, true);
 
+      case VIEW:
+        return MappingUtil.getViewName(iface, true);
+
       case TUPLE:
         return IdentityName.of(MappingUtil.getDefaultEntityName(iface), false);
 
@@ -201,6 +204,8 @@ public final class HelenusMappingEntity implements HelenusEntity {
 
     if (null != iface.getDeclaredAnnotation(Table.class)) {
       return HelenusEntityType.TABLE;
+    } else if (null != iface.getDeclaredAnnotation(MaterializedView.class)) {
+      return HelenusEntityType.VIEW;
     } else if (null != iface.getDeclaredAnnotation(Tuple.class)) {
       return HelenusEntityType.TUPLE;
     } else if (null != iface.getDeclaredAnnotation(UDT.class)) {

@@ -277,7 +277,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
           }
 
           DslExportable dsl = (DslExportable) Helenus.dsl(iface);
-          dsl.setMetadata(session.getCluster().getMetadata());
+          dsl.setCassandraMetadataForHelenusSesion(session.getCluster().getMetadata());
           sessionRepository.add(dsl);
         });
 
@@ -287,8 +287,16 @@ public final class SessionInitializer extends AbstractSessionOperations {
     switch (autoDdl) {
       case CREATE_DROP:
 
-        // Drop tables first, otherwise a `DROP TYPE ...` will fail as the type is still referenced
-        // by a table.
+        // Drop view first, otherwise a `DROP TABLE ...` will fail as the type is still referenced
+        // by a view.
+        sessionRepository
+            .entities()
+            .stream()
+            .filter(e -> e.getType() == HelenusEntityType.VIEW)
+            .forEach(e -> tableOps.dropView(e));
+
+        // Drop tables second, before DROP TYPE otherwise a `DROP TYPE ...` will fail as the type is
+        // still referenced by a table.
         sessionRepository
             .entities()
             .stream()
@@ -307,6 +315,12 @@ public final class SessionInitializer extends AbstractSessionOperations {
             .filter(e -> e.getType() == HelenusEntityType.TABLE)
             .forEach(e -> tableOps.createTable(e));
 
+        sessionRepository
+            .entities()
+            .stream()
+            .filter(e -> e.getType() == HelenusEntityType.VIEW)
+            .forEach(e -> tableOps.createView(e));
+
         break;
 
       case VALIDATE:
@@ -317,6 +331,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
             .stream()
             .filter(e -> e.getType() == HelenusEntityType.TABLE)
             .forEach(e -> tableOps.validateTable(getTableMetadata(e), e));
+
         break;
 
       case UPDATE:
@@ -325,8 +340,20 @@ public final class SessionInitializer extends AbstractSessionOperations {
         sessionRepository
             .entities()
             .stream()
+            .filter(e -> e.getType() == HelenusEntityType.VIEW)
+            .forEach(e -> tableOps.dropView(e));
+
+        sessionRepository
+            .entities()
+            .stream()
             .filter(e -> e.getType() == HelenusEntityType.TABLE)
             .forEach(e -> tableOps.updateTable(getTableMetadata(e), e));
+
+        sessionRepository
+            .entities()
+            .stream()
+            .filter(e -> e.getType() == HelenusEntityType.VIEW)
+            .forEach(e -> tableOps.createView(e));
         break;
     }
 

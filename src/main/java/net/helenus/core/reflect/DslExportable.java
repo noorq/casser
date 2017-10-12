@@ -22,11 +22,11 @@ public interface DslExportable {
 
   public static final String GET_ENTITY_METHOD = "getHelenusMappingEntity";
   public static final String GET_PARENT_METHOD = "getParentDslHelenusPropertyNode";
-  public static final String SET_METADATA_METHOD = "setMetadata";
+  public static final String SET_METADATA_METHOD = "setCassandraMetadataForHelenusSesion";
 
   HelenusEntity getHelenusMappingEntity();
 
   HelenusPropertyNode getParentDslHelenusPropertyNode();
 
-  void setMetadata(Metadata metadata);
+  void setCassandraMetadataForHelenusSesion(Metadata metadata);
 }

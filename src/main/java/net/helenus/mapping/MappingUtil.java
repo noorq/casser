@@ -25,10 +25,7 @@ import javax.validation.ConstraintValidator;
 import net.helenus.core.Getter;
 import net.helenus.core.Helenus;
 import net.helenus.core.reflect.*;
-import net.helenus.mapping.annotation.Index;
-import net.helenus.mapping.annotation.Table;
-import net.helenus.mapping.annotation.Tuple;
-import net.helenus.mapping.annotation.UDT;
+import net.helenus.mapping.annotation.*;
 import net.helenus.support.DslPropertyException;
 import net.helenus.support.HelenusMappingException;
 
@@ -172,6 +169,28 @@ public final class MappingUtil {
     return udt != null;
   }
 
+  public static IdentityName getViewName(Class<?> iface, boolean required) {
+
+    String viewName = null;
+    boolean forceQuote = false;
+
+    MaterializedView view = iface.getDeclaredAnnotation(MaterializedView.class);
+
+    if (view != null) {
+      viewName = view.value();
+      forceQuote = view.forceQuote();
+
+    } else if (required) {
+      throw new HelenusMappingException("entity must have annotation @Table " + iface);
+    }
+
+    if (viewName == null || viewName.isEmpty()) {
+      viewName = getDefaultEntityName(iface);
+    }
+
+    return new IdentityName(viewName, forceQuote);
+  }
+
   public static IdentityName getTableName(Class<?> iface, boolean required) {
 
     String tableName = null;
@@ -222,6 +241,7 @@ public final class MappingUtil {
         }
 
         if (iface.getDeclaredAnnotation(Table.class) != null
+            || iface.getDeclaredAnnotation(MaterializedView.class) != null
             || iface.getDeclaredAnnotation(UDT.class) != null
             || iface.getDeclaredAnnotation(Tuple.class) != null) {
 

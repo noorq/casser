@@ -182,11 +182,11 @@ public final class HelenusSession extends AbstractSessionOperations implements C
     return metadata;
   }
 
-  public synchronized <T extends UnitOfWork> T begin() {
+  public synchronized UnitOfWork begin() {
     return begin(null);
   }
 
-  public synchronized <T extends UnitOfWork> T begin(T parent) {
+  public synchronized UnitOfWork begin(UnitOfWork parent) {
     try {
       Class<? extends UnitOfWork> clazz = unitOfWorkClass;
       Constructor<? extends UnitOfWork> ctor =
@@ -195,7 +195,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
       if (parent != null) {
         parent.addNestedUnitOfWork(uow);
       }
-      return (T) uow.begin();
+      return uow.begin();
     } catch (NoSuchMethodException
         | InvocationTargetException
         | InstantiationException

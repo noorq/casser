@@ -22,6 +22,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Selection;
 import com.datastax.driver.core.querybuilder.Select.Where;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import java.util.*;
 import java.util.function.Function;
@@ -47,6 +48,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   protected List<Ordering> ordering = null;
   protected Integer limit = null;
   protected boolean allowFiltering = false;
+  protected String alternateTableName = null;
 
   @SuppressWarnings("unchecked")
   public SelectOperation(AbstractSessionOperations sessionOperations) {
@@ -126,6 +128,19 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
     }
 
     return new CountOperation(sessionOps, entity);
+  }
+
+  public <V extends E> SelectOperation<E> from(Class<V> materializedViewClass) {
+    Objects.requireNonNull(materializedViewClass);
+    HelenusEntity entity = Helenus.entity(materializedViewClass);
+    this.alternateTableName = entity.getName().toCql();
+    this.props.clear();
+    entity
+        .getOrderedProperties()
+        .stream()
+        .map(p -> new HelenusPropertyNode(p, Optional.empty()))
+        .forEach(p -> this.props.add(p));
+    return this;
   }
 
   public SelectFirstOperation<E> single() {
@@ -231,6 +246,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
                 + prop.getEntity().getMappingInterface());
       }
 
+      /* TODO: is this useful information to gather when caching?
       if (cached) {
         switch (prop.getProperty().getColumnType()) {
           case PARTITION_KEY:
@@ -249,13 +265,15 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
             break;
         }
       }
+      */
     }
 
     if (entity == null) {
       throw new HelenusMappingException("no entity or table to select data");
     }
 
-    Select select = selection.from(entity.getName().toCql());
+    String tableName = alternateTableName == null ? entity.getName().toCql() : alternateTableName;
+    Select select = selection.from(tableName);
 
     if (ordering != null && !ordering.isEmpty()) {
       select.orderBy(ordering.toArray(new Ordering[ordering.size()]));
