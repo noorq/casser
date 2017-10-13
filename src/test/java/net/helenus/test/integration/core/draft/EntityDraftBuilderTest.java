@@ -25,7 +25,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-
 public class EntityDraftBuilderTest extends AbstractEmbeddedCassandraTest {
 
   static Supply supply;
