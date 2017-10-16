@@ -15,7 +15,6 @@
  */
 package net.helenus.core;
 
-
 import java.util.Map;
 import java.util.Set;
 

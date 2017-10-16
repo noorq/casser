@@ -20,13 +20,15 @@ import static net.helenus.core.Query.get;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 public class UDTValueMapTest extends UDTCollectionTest {
 
   @Test
-  public void testValueMapCRUID() {
+  public void testValueMapCRUID() throws TimeoutException {
 
     int id = 999;
 

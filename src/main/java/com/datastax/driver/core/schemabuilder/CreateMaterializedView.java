@@ -11,7 +11,11 @@ public class CreateMaterializedView extends Create {
   private String clustering;
 
   public CreateMaterializedView(
-      String keyspaceName, String viewName, Select.Where selection, String primaryKey, String clustering) {
+      String keyspaceName,
+      String viewName,
+      Select.Where selection,
+      String primaryKey,
+      String clustering) {
     super(keyspaceName, viewName);
     this.viewName = viewName;
     this.selection = selection;
@@ -40,7 +44,7 @@ public class CreateMaterializedView extends Create {
     createStatement.append(" ");
     createStatement.append(primaryKey);
     if (clustering != null) {
-        createStatement.append(" ").append(clustering);
+      createStatement.append(" ").append(clustering);
     }
     createStatement.append(";");
 

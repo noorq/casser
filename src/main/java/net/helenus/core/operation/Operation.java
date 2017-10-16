@@ -10,8 +10,12 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Statement;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
+import net.helenus.support.HelenusException;
 
 public abstract class Operation<E> {
 
@@ -32,8 +36,10 @@ public abstract class Operation<E> {
       AbstractSessionOperations session,
       UnitOfWork uow,
       TraceContext traceContext,
+      long timeout,
+      TimeUnit units,
       boolean showValues,
-      boolean cached) {
+      boolean cached) throws TimeoutException {
 
     // Start recording in a Zipkin sub-span our execution time to perform this operation.
     Tracer tracer = session.getZipkinTracer();
@@ -44,19 +50,14 @@ public abstract class Operation<E> {
 
     try {
 
-      if (span != null) {
-        span.name("cassandra");
-        span.start();
-      }
+        if (span != null) {
+            span.name("cassandra");
+            span.start();
+        }
 
-      Statement statement = options(buildStatement(cached));
-      ResultSetFuture futureResultSet = session.executeAsync(statement, showValues);
-      return futureResultSet.get();
-
-    } catch (InterruptedException | ExecutionException e) {
-
-      throw new RuntimeException(e);
-
+        Statement statement = options(buildStatement(cached));
+        ResultSetFuture futureResultSet = session.executeAsync(statement, showValues);
+        return futureResultSet.getUninterruptibly(timeout, units);
     } finally {
 
       if (span != null) {

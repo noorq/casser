@@ -2,7 +2,6 @@ package net.helenus.test.integration.core.views;
 
 import java.util.Date;
 import java.util.UUID;
-
 import net.helenus.mapping.OrderingDirection;
 import net.helenus.mapping.annotation.*;
 

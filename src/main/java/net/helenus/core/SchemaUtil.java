@@ -32,7 +32,6 @@ import net.helenus.mapping.type.OptionalColumnMetadata;
 import net.helenus.support.CqlUtil;
 import net.helenus.support.HelenusMappingException;
 
-
 public final class SchemaUtil {
 
   private SchemaUtil() {}
@@ -191,7 +190,8 @@ public final class SchemaUtil {
           c.add(columnName);
           where = where.and(new IsNotNullClause(columnName));
 
-          ClusteringColumn clusteringColumn = prop.getProperty().getGetterMethod().getAnnotation(ClusteringColumn.class);
+          ClusteringColumn clusteringColumn =
+              prop.getProperty().getGetterMethod().getAnnotation(ClusteringColumn.class);
           if (clusteringColumn != null && clusteringColumn.ordering() != null) {
             o.add(columnName + " " + clusteringColumn.ordering().cql());
           }
@@ -211,10 +211,10 @@ public final class SchemaUtil {
 
     String clustering = "";
     if (o.size() > 0) {
-        clustering = "WITH CLUSTERING ORDER BY (" + String.join(", ", o) + ")";
+      clustering = "WITH CLUSTERING ORDER BY (" + String.join(", ", o) + ")";
     }
     return new CreateMaterializedView(keyspace, viewName, where, primaryKey, clustering)
-            .ifNotExists();
+        .ifNotExists();
   }
 
   public static SchemaStatement dropMaterializedView(

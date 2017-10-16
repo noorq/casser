@@ -17,6 +17,7 @@ package net.helenus.test.integration.core.simple;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
@@ -82,7 +83,7 @@ public class StaticColumnTest extends AbstractEmbeddedCassandraTest {
   }
 
   @Test
-  public void testCRUID() {
+  public void testCRUID() throws TimeoutException {
 
     MessageImpl msg = new MessageImpl();
     msg.id = 123;

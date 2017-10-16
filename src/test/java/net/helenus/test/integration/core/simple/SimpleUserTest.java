@@ -19,6 +19,8 @@ import static net.helenus.core.Query.eq;
 
 import com.datastax.driver.core.ResultSet;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
+
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.core.Operator;
@@ -234,7 +236,7 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
     Assert.assertEquals(0L, cnt);
   }
 
-  public void testZipkin() throws Exception {
+  public void testZipkin() throws TimeoutException {
     session
         .update()
         .set(user::name, null)

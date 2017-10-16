@@ -23,6 +23,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.concurrent.TimeoutException;
+
 public class SecondaryIndexTest extends AbstractEmbeddedCassandraTest {
 
   Book book;
@@ -36,7 +38,7 @@ public class SecondaryIndexTest extends AbstractEmbeddedCassandraTest {
   }
 
   @Test
-  public void test() throws Exception {
+  public void test() throws TimeoutException {
 
     session
         .insert()
