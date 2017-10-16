@@ -24,7 +24,6 @@ import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Selection;
 import com.datastax.driver.core.querybuilder.Select.Where;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Iterables;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;

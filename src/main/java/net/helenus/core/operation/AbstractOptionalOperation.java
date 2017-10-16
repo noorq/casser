@@ -25,6 +25,9 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeoutException;
+
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
 
@@ -53,17 +56,17 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
         });
   }
 
-  public Optional<E> sync() {
+  public Optional<E> sync() throws TimeoutException {
     final Timer.Context context = requestLatency.time();
     try {
-      ResultSet resultSet = this.execute(sessionOps, null, traceContext, showValues, false);
+      ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout, queryTimeoutUnits, showValues, false);
       return transform(resultSet);
     } finally {
       context.stop();
     }
   }
 
-  public Optional<E> sync(UnitOfWork uow) {
+  public Optional<E> sync(UnitOfWork uow) throws TimeoutException {
     if (uow == null) return sync();
 
     final Timer.Context context = requestLatency.time();
@@ -84,7 +87,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
       }
 
       if (result == null) {
-        ResultSet resultSet = execute(sessionOps, uow, traceContext, showValues, true);
+        ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits, showValues, true);
         result = transform(resultSet);
 
         if (key != null) {
@@ -105,11 +108,19 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
   }
 
   public CompletableFuture<Optional<E>> async() {
-    return CompletableFuture.<Optional<E>>supplyAsync(() -> sync());
+    return CompletableFuture.<Optional<E>>supplyAsync(() -> {
+        try {
+            return sync();
+        } catch (TimeoutException ex) { throw new CompletionException(ex); }
+    });
   }
 
   public CompletableFuture<Optional<E>> async(UnitOfWork uow) {
     if (uow == null) return async();
-    return CompletableFuture.<Optional<E>>supplyAsync(() -> sync(uow));
+    return CompletableFuture.<Optional<E>>supplyAsync(() -> {
+        try {
+            return sync();
+        } catch (TimeoutException ex) { throw new CompletionException(ex); }
+    });
   }
 }

@@ -32,6 +32,8 @@ import net.helenus.support.HelenusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+
 public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>>
     extends Operation<E> {
 
@@ -49,6 +51,8 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
   private boolean enableTracing = false;
   private long[] defaultTimestamp = null;
   private int[] fetchSize = null;
+  long queryExecutionTimeout = 10;
+  TimeUnit queryTimeoutUnits = TimeUnit.SECONDS;
 
   public AbstractStatementOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
@@ -201,6 +205,18 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
     this.fetchSize = new int[1];
     this.fetchSize[0] = fetchSize;
     return (O) this;
+  }
+
+  public O queryTimeoutMs(long ms) {
+      this.queryExecutionTimeout = ms;
+      this.queryTimeoutUnits = TimeUnit.MILLISECONDS;
+      return (O) this;
+  }
+
+  public O queryTimeout(long timeout, TimeUnit units) {
+      this.queryExecutionTimeout = timeout;
+      this.queryTimeoutUnits = units;
+      return (O) this;
   }
 
   public Statement options(Statement statement) {

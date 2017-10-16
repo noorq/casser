@@ -24,6 +24,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.concurrent.TimeoutException;
+
 public class CounterTest extends AbstractEmbeddedCassandraTest {
 
   static Page page;
@@ -42,7 +44,7 @@ public class CounterTest extends AbstractEmbeddedCassandraTest {
   }
 
   @Test
-  public void testCounter() {
+  public void testCounter() throws TimeoutException {
 
     boolean exists =
         session.select(page::hits).where(page::alias, eq("index")).sync().findFirst().isPresent();

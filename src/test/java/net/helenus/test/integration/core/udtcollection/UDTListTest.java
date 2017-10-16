@@ -17,6 +17,8 @@ package net.helenus.test.integration.core.udtcollection;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
+
 import net.helenus.core.Query;
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,7 +26,7 @@ import org.junit.Test;
 public class UDTListTest extends UDTCollectionTest {
 
   @Test
-  public void testListCRUID() {
+  public void testListCRUID() throws TimeoutException {
 
     int id = 777;
 

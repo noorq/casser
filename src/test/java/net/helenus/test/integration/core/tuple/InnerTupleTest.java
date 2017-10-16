@@ -23,6 +23,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.concurrent.TimeoutException;
+
 public class InnerTupleTest extends AbstractEmbeddedCassandraTest {
 
   static PhotoAlbum photoAlbum;
@@ -41,7 +43,7 @@ public class InnerTupleTest extends AbstractEmbeddedCassandraTest {
   }
 
   @Test
-  public void testCruid() {
+  public void testCruid() throws TimeoutException {
 
     Photo photo =
         new Photo() {

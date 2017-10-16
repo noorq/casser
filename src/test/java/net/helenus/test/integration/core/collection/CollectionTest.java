@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
+
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
@@ -51,7 +53,7 @@ public class CollectionTest extends AbstractEmbeddedCassandraTest {
   }
 
   @Test
-  public void testSetCRUID() {
+  public void testSetCRUID() throws TimeoutException {
 
     UUID id = UUID.randomUUID();
 
@@ -148,7 +150,7 @@ public class CollectionTest extends AbstractEmbeddedCassandraTest {
   }
 
   @Test
-  public void testListCRUID() {
+  public void testListCRUID() throws TimeoutException {
 
     UUID id = UUID.randomUUID();
 
@@ -278,7 +280,7 @@ public class CollectionTest extends AbstractEmbeddedCassandraTest {
   }
 
   @Test
-  public void testMapCRUID() {
+  public void testMapCRUID() throws TimeoutException {
 
     UUID id = UUID.randomUUID();
 
