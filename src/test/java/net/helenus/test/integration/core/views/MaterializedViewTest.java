@@ -20,6 +20,8 @@ import static net.helenus.core.Query.eq;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
+
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
@@ -56,7 +58,8 @@ public class MaterializedViewTest extends AbstractEmbeddedCassandraTest {
             .get();
     cyclist = session.dsl(Cyclist.class);
 
-    session
+    try {
+      session
         .insert(cyclist)
         .value(cyclist::cid, UUID.randomUUID())
         .value(cyclist::age, 18)
@@ -64,10 +67,12 @@ public class MaterializedViewTest extends AbstractEmbeddedCassandraTest {
         .value(cyclist::country, "Netherlands")
         .value(cyclist::name, "Pascal EENKHOORN")
         .sync();
+    }
+    catch (TimeoutException e) {}
   }
 
   @Test
-  public void testMv() throws Exception {
+  public void testMv() throws TimeoutException {
     session.select(Cyclist.class).from(CyclistsByAge.class).where(cyclist::age, eq(18)).sync();
   }
 }

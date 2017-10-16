@@ -18,6 +18,8 @@ package net.helenus.test.integration.core.usertype;
 import com.google.common.collect.Sets;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
+
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.core.Query;
@@ -56,7 +58,7 @@ public class InnerUserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
   }
 
   @Test
-  public void testCrud() {
+  public void testCrud() throws TimeoutException {
 
     UUID id = UUID.randomUUID();
 

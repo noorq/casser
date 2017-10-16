@@ -23,6 +23,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
@@ -52,17 +54,17 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
         });
   }
 
-  public Stream<E> sync() {
+  public Stream<E> sync() throws TimeoutException {
     final Timer.Context context = requestLatency.time();
     try {
-      ResultSet resultSet = this.execute(sessionOps, null, traceContext, showValues, false);
+      ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout, queryTimeoutUnits, showValues, false);
       return transform(resultSet);
     } finally {
       context.stop();
     }
   }
 
-  public Stream<E> sync(UnitOfWork uow) {
+  public Stream<E> sync(UnitOfWork uow) throws TimeoutException {
     if (uow == null) return sync();
 
     final Timer.Context context = requestLatency.time();
@@ -82,7 +84,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
       }
 
       if (result == null) {
-        ResultSet resultSet = execute(sessionOps, uow, traceContext, showValues, true);
+        ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits, showValues, true);
         result = transform(resultSet);
 
         if (key != null) {
@@ -97,11 +99,19 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
   }
 
   public CompletableFuture<Stream<E>> async() {
-    return CompletableFuture.<Stream<E>>supplyAsync(() -> sync());
+    return CompletableFuture.<Stream<E>>supplyAsync(() -> {
+        try {
+            return sync();
+        } catch (TimeoutException ex) { throw new CompletionException(ex); }
+    });
   }
 
   public CompletableFuture<Stream<E>> async(UnitOfWork uow) {
     if (uow == null) return async();
-    return CompletableFuture.<Stream<E>>supplyAsync(() -> sync(uow));
+    return CompletableFuture.<Stream<E>>supplyAsync(() -> {
+        try {
+            return sync();
+        } catch (TimeoutException ex) { throw new CompletionException(ex); }
+    });
   }
 }

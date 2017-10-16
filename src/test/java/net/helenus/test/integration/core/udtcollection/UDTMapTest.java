@@ -17,6 +17,8 @@ package net.helenus.test.integration.core.udtcollection;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
+
 import net.helenus.core.Query;
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,7 +26,7 @@ import org.junit.Test;
 public class UDTMapTest extends UDTCollectionTest {
 
   @Test
-  public void testMapCRUID() {
+  public void testMapCRUID() throws TimeoutException {
 
     int id = 333;
 

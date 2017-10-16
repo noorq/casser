@@ -21,6 +21,7 @@ import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import net.helenus.core.*;
 import net.helenus.core.reflect.HelenusPropertyNode;
@@ -578,7 +579,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
   }
 
   @Override
-  public E sync(UnitOfWork uow) {
+  public E sync(UnitOfWork uow) throws TimeoutException {
     if (uow == null) {
       return sync();
     }

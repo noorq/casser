@@ -17,6 +17,8 @@ package net.helenus.test.integration.core.tuplecollection;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
+
 import net.helenus.core.Query;
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,7 +26,7 @@ import org.junit.Test;
 public class TupleKeyMapTest extends TupleCollectionTest {
 
   @Test
-  public void testKeyMapCRUID() {
+  public void testKeyMapCRUID() throws TimeoutException {
 
     int id = 888;
 

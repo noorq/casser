@@ -18,6 +18,8 @@ package net.helenus.test.integration.core.usertype;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
+
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.core.Query;
@@ -103,7 +105,7 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
   }
 
   @Test
-  public void testMappingCRUID() {
+  public void testMappingCRUID() throws TimeoutException {
 
     AddressImpl addr = new AddressImpl();
     addr.street = "1 st";
@@ -174,7 +176,7 @@ public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
   }
 
   @Test
-  public void testNoMapping() {
+  public void testNoMapping() throws TimeoutException {
 
     String ks = getSession().getLoggedKeyspace();
     UserType addressType =

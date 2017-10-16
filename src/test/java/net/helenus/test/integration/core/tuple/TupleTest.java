@@ -27,6 +27,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.concurrent.TimeoutException;
+
 public class TupleTest extends AbstractEmbeddedCassandraTest {
 
   static Album album;
@@ -46,7 +48,7 @@ public class TupleTest extends AbstractEmbeddedCassandraTest {
   }
 
   @Test
-  public void testCruid() {
+  public void testCruid() throws TimeoutException {
 
     AlbumInformation info =
         new AlbumInformation() {
@@ -119,7 +121,7 @@ public class TupleTest extends AbstractEmbeddedCassandraTest {
   }
 
   @Test
-  public void testNoMapping() {
+  public void testNoMapping() throws TimeoutException {
 
     TupleType tupleType = session.getMetadata().newTupleType(DataType.text(), DataType.text());
     TupleValue info = tupleType.newValue();
