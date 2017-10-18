@@ -16,6 +16,7 @@ import java.util.concurrent.TimeoutException;
 
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
+import net.helenus.core.cache.EntityIdentifyingFacet;
 import net.helenus.support.HelenusException;
 
 public abstract class Operation<E> {
@@ -75,7 +76,12 @@ public abstract class Operation<E> {
     return null;
   }
 
-  public Set<EntityIdentifyingFacet> getIdentifyingFacets() {
+  public String[] getQueryKeys() {
+      return null;
+  }
+
+  public Set<EntityIdentifyingFacet> getFacets() {
     return null;
   }
+
 }

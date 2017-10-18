@@ -124,9 +124,6 @@ public final class HelenusMappingEntity implements HelenusEntity {
           if (primaryProperties != null) {
             primaryFacet =
                 new EntityIdentifyingFacet(
-                    keyspace,
-                    table,
-                    schemaVersion,
                     primaryProperties.toArray(new HelenusProperty[props.size()]));
             allFacetsBuilder.put("*", primaryFacet);
             primaryProperties = null;
@@ -134,7 +131,7 @@ public final class HelenusMappingEntity implements HelenusEntity {
           Optional<IdentityName> optionalIndexName = prop.getIndexName();
           if (optionalIndexName.isPresent()) {
             EntityIdentifyingFacet facet =
-                new EntityIdentifyingFacet(keyspace, table, schemaVersion, prop);
+                new EntityIdentifyingFacet(prop);
             ancillaryFacetsBuilder.put(prop.getPropertyName(), facet);
           }
       }
@@ -172,6 +169,11 @@ public final class HelenusMappingEntity implements HelenusEntity {
       return property; //TODO(gburd): review adding these into the props map...
     }
     return props.get(name);
+  }
+
+  @Override
+  public Map<String, EntityIdentifyingFacet> getIdentifyingFacets() {
+    return allIdentityFacets;
   }
 
   @Override

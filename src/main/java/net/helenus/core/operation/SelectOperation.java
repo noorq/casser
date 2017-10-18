@@ -15,6 +15,7 @@
  */
 package net.helenus.core.operation;
 
+import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Ordering;
@@ -22,11 +23,13 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Selection;
 import com.datastax.driver.core.querybuilder.Select.Where;
-import com.google.common.base.Joiner;
+
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import com.google.common.collect.Iterables;
 import net.helenus.core.*;
 import net.helenus.core.cache.EntityIdentifyingFacet;
 import net.helenus.core.reflect.HelenusPropertyNode;
@@ -194,28 +197,24 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   }
 
   @Override
-  public Set<EntityIdentifyingFacet> getIdentityFacets() {
+  public Set<EntityIdentifyingFacet> getFacets() {
     HelenusEntity entity = props.get(0).getEntity();
     final Set<EntityIdentifyingFacet> facets = new HashSet<>(filters.size());
     // Check to see if this select statement has enough information to build one or
     // more identifying facets.
     entity
-        .getIdentityFacets()
+        .getIdentifyingFacets()
         .forEach(
             (facetName, facet) -> {
-              EntityIdentifyingFacet boundFacet = null;
-              if (!facet.isFullyBound()) {
-                boundFacet = new EntityIdentifyingFacet(facet);
-                for (HelenusProperty prop : facet.getUnboundEntityProperties()) {
-                  Filter filter = filters.get(facet.getProperty());
-                  if (filter == null) {
-                    break;
+              if (facet.isFullyBound()) {
+                  facets.add(facet);
+              } else {
+                  HelenusProperty prop = facet.getProperty();
+                  Filter filter = filters.get(prop);
+                  if (filter != null) {
+                      facet.setValueForProperty(prop, filter.toString());
+                      facets.add(facet);
                   }
-                  boundFacet.setValueForProperty(prop, filter.toString());
-                }
-              }
-              if (boundFacet != null && boundFacet.isFullyBound()) {
-                facets.add(boundFacet);
               }
             });
     return facets;
@@ -245,7 +244,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
                 + prop.getEntity().getMappingInterface());
       }
 
-      /* TODO: is this useful information to gather when caching?
       if (cached) {
         switch (prop.getProperty().getColumnType()) {
           case PARTITION_KEY:
@@ -264,7 +262,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
             break;
         }
       }
-      */
+
     }
 
     if (entity == null) {

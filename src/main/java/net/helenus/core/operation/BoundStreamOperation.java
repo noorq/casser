@@ -18,6 +18,9 @@ package net.helenus.core.operation;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Statement;
+import net.helenus.core.cache.EntityIdentifyingFacet;
+
+import java.util.Set;
 import java.util.stream.Stream;
 
 public final class BoundStreamOperation<E>
@@ -34,9 +37,12 @@ public final class BoundStreamOperation<E>
   }
 
   @Override
-  public String getStatementCacheKey() {
-    return delegate.getStatementCacheKey();
+  public String[] getQueryKeys() {
+    return delegate.getQueryKeys();
   }
+
+  @Override
+  public Set<EntityIdentifyingFacet> getFacets() { return delegate.getFacets(); }
 
   @Override
   public Stream<E> transform(ResultSet resultSet) {

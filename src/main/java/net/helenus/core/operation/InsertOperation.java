@@ -240,7 +240,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
   }
 
   @Override
-  public String getStatementCacheKey() {
+  public String[] getQueryKeys() {
     List<String> keys = new ArrayList<>(values.size());
     values.forEach(
         t -> {
@@ -248,13 +248,13 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
           switch (prop.getProperty().getColumnType()) {
             case PARTITION_KEY:
             case CLUSTERING_COLUMN:
-              keys.add(prop.getColumnName() + "==" + t._2.toString());
+              keys.add(entity.getName().toCql() + '.' + prop.getColumnName() + "==" + t._2.toString());
               break;
             default:
               break;
           }
         });
-    return entity.getName() + ": " + Joiner.on(",").join(keys);
+    return keys.toArray(new String[keys.size()]);
   }
 
   @Override
@@ -265,12 +265,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     T result = super.sync(uow);
     Class<?> iface = entity.getMappingInterface();
     if (resultType == iface) {
-      String key = getStatementCacheKey();
-      if (key != null) {
-        Set<Object> set = new HashSet<Object>(1);
-        set.add(result);
-        uow.getCache().put(key, set);
-      }
+        updateCache(uow, result, getQueryKeys());
     }
     return result;
   }

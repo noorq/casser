@@ -17,7 +17,10 @@ package net.helenus.core.operation;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
+import net.helenus.core.cache.EntityIdentifyingFacet;
+
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 public final class SelectFirstTransformingOperation<R, E>
@@ -36,9 +39,12 @@ public final class SelectFirstTransformingOperation<R, E>
   }
 
   @Override
-  public String getStatementCacheKey() {
-    return delegate.getStatementCacheKey();
+  public String[] getQueryKeys() {
+    return delegate.getQueryKeys();
   }
+
+  @Override
+  public Set<EntityIdentifyingFacet> getFacets() { return delegate.getFacets(); }
 
   @Override
   public BuiltStatement buildStatement(boolean cached) {

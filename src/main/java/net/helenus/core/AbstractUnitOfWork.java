@@ -17,15 +17,22 @@ package net.helenus.core;
 
 import com.diffplug.common.base.Errors;
 import com.google.common.collect.TreeTraverser;
+import net.helenus.core.cache.EntityIdentifyingFacet;
+import net.helenus.support.Either;
+import org.ahocorasick.trie.Emit;
+import org.ahocorasick.trie.Trie;
+
 import java.util.*;
+import java.util.stream.Collectors;
 
 /** Encapsulates the concept of a "transaction" as a unit-of-work. */
-public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfWork, AutoCloseable {
+public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfWork<E>, AutoCloseable {
   private final List<AbstractUnitOfWork<E>> nested = new ArrayList<>();
   private final HelenusSession session;
   private final AbstractUnitOfWork<E> parent;
   private List<CommitThunk> postCommit = new ArrayList<CommitThunk>();
-  private final Map<String, Set<Object>> cache = new HashMap<String, Set<Object>>();
+  private final Map<String, Either<Object, Set<Object>>> cache = new HashMap<String, Either<Object, Set<Object>>>();
+  private Trie cacheIndex = Trie.builder().ignoreOverlaps().onlyWholeWordsWhiteSpaceSeparated().build();
   private boolean aborted = false;
   private boolean committed = false;
 
@@ -36,14 +43,15 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
     this.parent = parent;
   }
 
-  public UnitOfWork addNestedUnitOfWork(UnitOfWork uow) {
+  @Override
+  public void addNestedUnitOfWork(UnitOfWork<E> uow) {
     synchronized (nested) {
       nested.add((AbstractUnitOfWork<E>) uow);
     }
-    return this;
   }
 
-  public UnitOfWork begin() {
+  @Override
+  public UnitOfWork<E> begin() {
     // log.record(txn::start)
     return this;
   }
@@ -56,20 +64,49 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
     }
   }
 
-  public Set<Object> cacheLookup(String key) {
-    Set<Object> r = getCache().get(key);
-    if (r != null) {
-      return r;
-    } else {
-      if (parent != null) {
-        return parent.cacheLookup(key);
+  @Override
+  public Optional<Either<Object, Set<Object>>> cacheLookupByFacet(Set<EntityIdentifyingFacet> facets) {
+      Optional<Either<Object, Set<Object>>> result = null;
+      Collection<Emit> emits = cacheIndex.parseText(String.join(" ", facets.stream()
+              .map(facet -> facet.toString()).collect(Collectors.toList())));
+      for (Emit emit : emits) {
+          // NOTE: rethink. should this match *all* facets?  how do I know which emit keyword is the primary key?
+          String key = emit.getKeyword();
+          result = cacheLookup(key);
       }
-    }
-    return null;
+      return result;
   }
 
-  public Map<String, Set<Object>> getCache() {
-    return cache;
+  @Override
+  public Optional<Either<Object, Set<Object>>> cacheLookupByStatement(String[] statementKeys) {
+      Optional<Either<Object, Set<Object>>> result = null;
+      String key = String.join(",", statementKeys);
+      return cacheLookup(key);
+  }
+
+  @Override
+  public Optional<Either<Object, Set<Object>>> cacheLookup(String key) {
+      Optional<Either<Object, Set<Object>>> result = Optional.of(cache.get(key));
+
+      if (result.isPresent()) {
+          return result;
+      } else {
+          // Be sure to check all enclosing UnitOfWork caches as well, we may be nested.
+          if (parent != null) {
+              return parent.cacheLookup(key);
+          }
+      }
+      return Optional.empty();
+  }
+
+  @Override
+  public void cacheUpdate(Either<Object, Set<Object>> value, String[] statementKeys, Set<EntityIdentifyingFacet> facets) {
+      String key = String.join(",", statementKeys);
+      cache.put(key, value);
+      Trie.TrieBuilder builder = cacheIndex.builder();
+      facets.forEach(facet -> {
+          builder.addKeyword(facet.toString());
+      });
   }
 
   private Iterator<AbstractUnitOfWork<E>> getChildNodes() {
@@ -108,18 +145,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 
       // Merge UOW cache into parent's cache.
       if (parent != null) {
-        Map<String, Set<Object>> parentCache = parent.getCache();
-        for (String key : cache.keySet()) {
-          if (parentCache.containsKey(key)) {
-            // merge the sets
-            Set<Object> ps = parentCache.get(key);
-            ps.addAll(
-                cache.get(key)); //TODO(gburd): review this, likely not correct in all cases as-is.
-          } else {
-            // add the missing set
-            parentCache.put(key, cache.get(key));
-          }
-        }
+          parent.assumeCache(cache, cacheIndex);
       }
 
       // Apply all post-commit functions for
@@ -153,6 +179,37 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
             });
     // log.record(txn::abort)
     // cache.invalidateSince(txn::start time)
+  }
+
+  private void assumeCache(Map<String, Either<Object, Set<Object>>> childCache, Trie childCacheIndex) {
+      for (String key : childCache.keySet()) {
+          if (cache.containsKey(key)) {
+              Either<Object, Set<Object>> value = cache.get(key);
+              if (value.isLeft()) {
+                  Object obj = value.getLeft();
+                  // merge objects
+                  Either<Object, Set<Object>> childValue = childCache.get(key);
+                  if (childValue.isLeft()) {
+                      Object childObj = childValue.getLeft();
+                  } else {
+                      Set<Object> childSet = childValue.getRight();
+                  }
+              } else {
+                  // merge the sets
+                  Set<Object> set = value.getRight();
+                  Either<Object, Set<Object>> childValue = childCache.get(key);
+                  if (childValue.isLeft()) {
+                      Object childObj = childValue.getLeft();
+                      set.add(childObj);
+                  } else {
+                      Set<Object> childSet = childValue.getRight();
+                      set.addAll(childSet);
+                  }
+              }
+          } else {
+              cache.put(key, childCache.get(key));
+          }
+      }
   }
 
   public String describeConflicts() {

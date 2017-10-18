@@ -33,5 +33,5 @@ public interface HelenusEntity {
 
   HelenusProperty getProperty(String name);
 
-  Map<String, EntityIdentifyingFacet> getIdentityFacets();
+  Map<String, EntityIdentifyingFacet> getIdentifyingFacets();
 }

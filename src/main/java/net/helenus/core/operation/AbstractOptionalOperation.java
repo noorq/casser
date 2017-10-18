@@ -21,164 +21,109 @@ import com.datastax.driver.core.ResultSet;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.util.HashSet;
-import java.util.Map;
+import net.helenus.core.AbstractSessionOperations;
+import net.helenus.core.UnitOfWork;
+import net.helenus.core.cache.EntityIdentifyingFacet;
+
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 
-import net.helenus.core.AbstractSessionOperations;
-import net.helenus.core.Filter;
-import net.helenus.core.Helenus;
-import net.helenus.core.UnitOfWork;
-import net.helenus.core.cache.EntityIdentifyingFacet;
-import net.helenus.mapping.HelenusEntity;
-import net.helenus.mapping.HelenusProperty;
-import net.helenus.mapping.value.BeanColumnValueProvider;
-import net.helenus.support.Either;
-
-import javax.swing.text.html.parser.Entity;
-
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
-    extends AbstractStatementOperation<E, O> {
+        extends AbstractStatementOperation<E, O> {
 
-  public AbstractOptionalOperation(AbstractSessionOperations sessionOperations) {
-    super(sessionOperations);
-  }
-
-  public abstract Optional<E> transform(ResultSet resultSet);
-
-  public PreparedOptionalOperation<E> prepare() {
-    return new PreparedOptionalOperation<E>(prepareStatement(), this);
-  }
-
-  public ListenableFuture<PreparedOptionalOperation<E>> prepareAsync() {
-    final O _this = (O) this;
-    return Futures.transform(
-        prepareStatementAsync(),
-        new Function<PreparedStatement, PreparedOptionalOperation<E>>() {
-          @Override
-          public PreparedOptionalOperation<E> apply(PreparedStatement preparedStatement) {
-            return new PreparedOptionalOperation<E>(preparedStatement, _this);
-          }
-        });
-  }
-
-  public Optional<E> sync() throws TimeoutException {
-    final Timer.Context context = requestLatency.time();
-    try {
-      ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout, queryTimeoutUnits, showValues, false);
-      return transform(resultSet);
-    } finally {
-      context.stop();
+    public AbstractOptionalOperation(AbstractSessionOperations sessionOperations) {
+        super(sessionOperations);
     }
-  }
 
-  public Optional<E> sync(UnitOfWork uow) throws TimeoutException {
-    if (uow == null) return sync();
+    public abstract Optional<E> transform(ResultSet resultSet);
 
-    final Timer.Context context = requestLatency.time();
-    try {
+    public PreparedOptionalOperation<E> prepare() {
+        return new PreparedOptionalOperation<E>(prepareStatement(), this);
+    }
 
-      Optional<E> result = null;
-      String stmtKey = null;
-      if (enableCache) {
-          Set<EntityIdentifyingFacet> facets = getIdentifyingFacets();
-          if (!facets.isEmpty()) {
-              for (EntityIdentifyingFacet facet : facets) {
-                  //TODO(gburd): what about select ResultSet, Tuple... etc.?
-                  Optional<Either<Set<E>, E>> optionalCachedResult = uow.cacheLookup(facet.hashCode());
-                  if (optionalCachedResult.isPresent()) {
-                      uowCacheHits.mark();
-                      logger.info("UnitOfWork({}) cache hit for facet: {} with key: {}", uow.hashCode(), facet.toString(), facet.hashCode());
-                      Either<Set<E>, E> eitherCachedResult = optionalCachedResult.get();
-                      if (eitherCachedResult.isRight()) {
-                          E cachedResult = eitherCachedResult.getRight();
-                          result = Optional.of(cachedResult);
-                      }
-                      break;
-                  }
-              }
-          } else {
-              // The operation didn't provide enough information to uniquely identify the entity object
-              // using one of the facets, but that doesn't mean a filtering query won't return a proper
-              // result.  Look in the cache to see if this statement has been executed before.
-              stmtKey = getStatementCacheKey();
-              Optional<Either<Set<E>, E>> optionalCachedResult = uow.cacheLookup(stmtKey.hashCode());
-              if (optionalCachedResult.isPresent()) {
-                  Either<Set<E>, E> eitherCachedResult = optionalCachedResult.get();
-                  if (eitherCachedResult.isLeft()) {
-                      Set<E> cachedResult = eitherCachedResult.getLeft();
-                      // Ensure that this non-indexed selection uniquely identified an Entity.
-                      if (!(cachedResult.isEmpty() || cachedResult.size() > 1)) {
-                          uowCacheHits.mark();
-                          logger.info("UnitOfWork({}) cache hit for stmt {} {}", uow.hashCode(), stmtKey,
-                                  stmtKey.hashCode());
-                          result = cachedResult.stream().findFirst();
-                      }
-                  }
-          }
-      }
-
-      if (result == null) {
-        ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits, showValues, true);
-        result = transform(resultSet);
-
-        if (enableCache && result.isPresent()) {
-            // If we executed a query that didn't depend on an we have a stmtKey for the filters, add that to the cache.
-            if (stmtKey != null) {
-                Set<Object> set = new HashSet<Object>(1);
-                set.add(result.get());
-                uow.getCache().put(stmtKey.hashCode(), set);
-            }
-            // Now insert this entity into the cache for each facet for this entity that we can fully bind.
-            E entity = result.get();
-            Map<String, EntityIdentifyingFacet> facetMap = Helenus.entity(result.get().getClass()).getIdentityFacets();
-            facetMap.forEach((facetName, facet) -> {
-                EntityIdentifyingFacet boundFacet = null;
-                if (!facet.isFullyBound()) {
-                    boundFacet = new EntityIdentifyingFacet(facet);
-                    for (HelenusProperty prop : facet.getUnboundEntityProperties()) {
-                        Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(entity, -1, prop);
-                        if (value == null) { break; }
-                        boundFacet.setValueForProperty(prop, value);
+    public ListenableFuture<PreparedOptionalOperation<E>> prepareAsync() {
+        final O _this = (O) this;
+        return Futures.transform(
+                prepareStatementAsync(),
+                new Function<PreparedStatement, PreparedOptionalOperation<E>>() {
+                    @Override
+                    public PreparedOptionalOperation<E> apply(PreparedStatement preparedStatement) {
+                        return new PreparedOptionalOperation<E>(preparedStatement, _this);
                     }
-                }
-                if (boundFacet != null && boundFacet.isFullyBound()) {
-                    uow.getCache().put(boundFacet.hashCode(), Either)
-                }
-            });
-            Set<Object> set = new HashSet<Object>(1);
-            set.add(result.get());
-            uow.getCache().put(key, set);
-          } else {
-            uow.getCache().put(key, new HashSet<Object>(0));
-          }
-        }
-      }
-
-      return result;
-    } finally {
-      context.stop();
+                });
     }
-  }
 
-  public CompletableFuture<Optional<E>> async() {
-    return CompletableFuture.<Optional<E>>supplyAsync(() -> {
+    public Optional<E> sync() throws TimeoutException {
+        final Timer.Context context = requestLatency.time();
         try {
-            return sync();
-        } catch (TimeoutException ex) { throw new CompletionException(ex); }
-    });
-  }
+            ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout, queryTimeoutUnits,
+                    showValues, false);
+            return transform(resultSet);
+        } finally {
+            context.stop();
+        }
+    }
 
-  public CompletableFuture<Optional<E>> async(UnitOfWork uow) {
-    if (uow == null) return async();
-    return CompletableFuture.<Optional<E>>supplyAsync(() -> {
-        try {
+    public Optional<E> sync(UnitOfWork<?> uow) throws TimeoutException {
+        if (uow == null)
             return sync();
-        } catch (TimeoutException ex) { throw new CompletionException(ex); }
-    });
-  }
+
+        final Timer.Context context = requestLatency.time();
+        try {
+
+            Optional<E> result = Optional.empty();
+            String[] statementKeys = null;
+
+            if (enableCache) {
+                Set<EntityIdentifyingFacet> facets = getFacets();
+                statementKeys = getQueryKeys();
+                result = Optional.of(checkCache(uow, facets, statementKeys));
+            }
+
+            if (!result.isPresent()) {
+                // Formulate the query and execute it against the Cassandra cluster.
+                ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
+                        showValues, true);
+
+                // Transform the query result set into the desired shape.
+                result = transform(resultSet);
+            }
+
+            // If we have a result and we're caching then we need to put it into the cache for future requests to find.
+            if (enableCache && result.isPresent()) {
+                updateCache(uow, result.get(), statementKeys);
+            }
+
+            return result;
+        } finally {
+            context.stop();
+        }
+    }
+
+    public CompletableFuture<Optional<E>> async() {
+        return CompletableFuture.<Optional<E>>supplyAsync(() -> {
+            try {
+                return sync();
+            }
+            catch (TimeoutException ex) {
+                throw new CompletionException(ex);
+            }
+        });
+    }
+
+    public CompletableFuture<Optional<E>> async(UnitOfWork<?> uow) {
+        if (uow == null)
+            return async();
+        return CompletableFuture.<Optional<E>>supplyAsync(() -> {
+            try {
+                return sync();
+            }
+            catch (TimeoutException ex) {
+                throw new CompletionException(ex);
+            }
+        });
+    }
 }
