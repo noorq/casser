@@ -5,7 +5,6 @@ import static net.helenus.core.Query.eq;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeoutException;
-
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;

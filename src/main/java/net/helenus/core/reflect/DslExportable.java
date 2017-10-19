@@ -20,13 +20,13 @@ import net.helenus.mapping.HelenusEntity;
 
 public interface DslExportable {
 
-  public static final String GET_ENTITY_METHOD = "getHelenusMappingEntity";
-  public static final String GET_PARENT_METHOD = "getParentDslHelenusPropertyNode";
-  public static final String SET_METADATA_METHOD = "setCassandraMetadataForHelenusSesion";
+  String GET_ENTITY_METHOD = "getHelenusMappingEntity";
+  String GET_PARENT_METHOD = "getParentDslHelenusPropertyNode";
+  String SET_METADATA_METHOD = "setCassandraMetadataForHelenusSession";
 
   HelenusEntity getHelenusMappingEntity();
 
   HelenusPropertyNode getParentDslHelenusPropertyNode();
 
-  void setCassandraMetadataForHelenusSesion(Metadata metadata);
+  void setCassandraMetadataForHelenusSession(Metadata metadata);
 }

@@ -123,16 +123,15 @@ public final class HelenusMappingEntity implements HelenusEntity {
         default:
           if (primaryProperties != null) {
             primaryFacet =
-                new EntityIdentifyingFacet(
-                    primaryProperties.toArray(new HelenusProperty[props.size()]));
+                new EntityIdentifyingFacet(new HashSet<HelenusProperty>(primaryProperties));
             allFacetsBuilder.put("*", primaryFacet);
             primaryProperties = null;
           }
           Optional<IdentityName> optionalIndexName = prop.getIndexName();
           if (optionalIndexName.isPresent()) {
-            EntityIdentifyingFacet facet =
-                new EntityIdentifyingFacet(prop);
+            EntityIdentifyingFacet facet = new EntityIdentifyingFacet(prop);
             ancillaryFacetsBuilder.put(prop.getPropertyName(), facet);
+            allFacetsBuilder.put(prop.getPropertyName(), facet);
           }
       }
     }

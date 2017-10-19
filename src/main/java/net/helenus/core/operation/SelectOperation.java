@@ -23,18 +23,16 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Selection;
 import com.datastax.driver.core.querybuilder.Select.Where;
-
+import com.google.common.collect.Iterables;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-
-import com.google.common.collect.Iterables;
 import net.helenus.core.*;
+import net.helenus.core.cache.BoundFacet;
 import net.helenus.core.cache.EntityIdentifyingFacet;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
-import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.mapping.OrderingDirection;
 import net.helenus.mapping.value.ColumnValueProvider;
@@ -197,27 +195,48 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
   }
 
   @Override
-  public Set<EntityIdentifyingFacet> getFacets() {
+  public String[] getQueryKeys() {
+    int i = 0;
+    String[] keys = new String[filters.size()];
     HelenusEntity entity = props.get(0).getEntity();
-    final Set<EntityIdentifyingFacet> facets = new HashSet<>(filters.size());
+    String entityName = entity.getName().toCql();
+    for (Filter<?> filter : filters.values()) {
+      keys[i++] = entityName + '.' + filter.toString();
+    }
+    return keys;
+  }
+
+  @Override
+  public Map<String, EntityIdentifyingFacet> getIdentifyingFacets() {
+    HelenusEntity entity = props.get(0).getEntity();
+    return entity.getIdentifyingFacets();
+  }
+
+  @Override
+  public Set<BoundFacet> bindFacetValues() {
+    HelenusEntity entity = props.get(0).getEntity();
+    Set<BoundFacet> boundFacets = new HashSet<BoundFacet>();
     // Check to see if this select statement has enough information to build one or
     // more identifying facets.
     entity
         .getIdentifyingFacets()
         .forEach(
             (facetName, facet) -> {
-              if (facet.isFullyBound()) {
-                  facets.add(facet);
-              } else {
-                  HelenusProperty prop = facet.getProperty();
-                  Filter filter = filters.get(prop);
-                  if (filter != null) {
-                      facet.setValueForProperty(prop, filter.toString());
-                      facets.add(facet);
-                  }
+              EntityIdentifyingFacet.Binder binder = facet.binder();
+              facet
+                  .getProperties()
+                  .forEach(
+                      prop -> {
+                        Filter filter = filters.get(prop);
+                        if (filter != null) {
+                          binder.setValueForProperty(prop, filter.toString());
+                        }
+                      });
+              if (binder.isFullyBound()) {
+                boundFacets.add(binder.bind());
               }
             });
-    return facets;
+    return boundFacets;
   }
 
   @Override
@@ -262,7 +281,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
             break;
         }
       }
-
     }
 
     if (entity == null) {

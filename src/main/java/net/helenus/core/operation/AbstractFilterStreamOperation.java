@@ -22,7 +22,9 @@ import java.util.Map;
 import net.helenus.core.*;
 import net.helenus.mapping.HelenusProperty;
 
-public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterStreamOperation<E, O>> extends AbstractStreamOperation<E, O> {
+public abstract class AbstractFilterStreamOperation<
+        E, O extends AbstractFilterStreamOperation<E, O>>
+    extends AbstractStreamOperation<E, O> {
 
   protected Map<HelenusProperty, Filter<?>> filters = null;
   protected List<Filter<?>> ifFilters = null;

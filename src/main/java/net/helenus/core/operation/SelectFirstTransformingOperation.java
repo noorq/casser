@@ -17,11 +17,10 @@ package net.helenus.core.operation;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
-import net.helenus.core.cache.EntityIdentifyingFacet;
-
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import net.helenus.core.cache.BoundFacet;
 
 public final class SelectFirstTransformingOperation<R, E>
     extends AbstractFilterOptionalOperation<R, SelectFirstTransformingOperation<R, E>> {
@@ -44,7 +43,9 @@ public final class SelectFirstTransformingOperation<R, E>
   }
 
   @Override
-  public Set<EntityIdentifyingFacet> getFacets() { return delegate.getFacets(); }
+  public Set<BoundFacet> bindFacetValues() {
+    return delegate.bindFacetValues();
+  }
 
   @Override
   public BuiltStatement buildStatement(boolean cached) {

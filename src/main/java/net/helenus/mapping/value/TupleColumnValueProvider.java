@@ -34,7 +34,8 @@ public final class TupleColumnValueProvider implements ColumnValueProvider {
   }
 
   @Override
-  public <V> V getColumnValue(Object sourceObj, int columnIndexUnused, HelenusProperty property) {
+  public <V> V getColumnValue(
+      Object sourceObj, int columnIndexUnused, HelenusProperty property, boolean immutable) {
 
     int columnIndex = property.getOrdinal();
 

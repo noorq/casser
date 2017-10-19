@@ -22,7 +22,11 @@ import net.helenus.mapping.HelenusProperty;
 
 public interface ColumnValueProvider {
 
-  <V> V getColumnValue(Object source, int columnIndex, HelenusProperty property);
+  <V> V getColumnValue(Object source, int columnIndex, HelenusProperty property, boolean immutable);
+
+  default <V> V getColumnValue(Object source, int columnIndex, HelenusProperty property) {
+    return getColumnValue(source, columnIndex, property, false);
+  }
 
   default <T> TypeCodec<T> codecFor(DataType type) {
     return CodecRegistry.DEFAULT_INSTANCE.codecFor(type);

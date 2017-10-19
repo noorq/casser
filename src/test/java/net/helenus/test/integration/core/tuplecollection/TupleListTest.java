@@ -18,7 +18,6 @@ package net.helenus.test.integration.core.tuplecollection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
-
 import net.helenus.core.Query;
 import org.junit.Assert;
 import org.junit.Test;

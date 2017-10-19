@@ -19,7 +19,6 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.google.common.base.Joiner;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
@@ -28,6 +27,7 @@ import net.helenus.core.Getter;
 import net.helenus.core.Helenus;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.reflect.DefaultPrimitiveTypes;
+import net.helenus.core.reflect.Drafted;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusProperty;
@@ -170,6 +170,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     Class<?> iface = entity.getMappingInterface();
     if (resultType == iface) {
       if (values.size() > 0) {
+        boolean immutable = iface.isAssignableFrom(Drafted.class);
         Collection<HelenusProperty> properties = entity.getOrderedProperties();
         Map<String, Object> backingMap = new HashMap<String, Object>(properties.size());
 
@@ -190,7 +191,8 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
           } else {
             // If we started this operation with an instance of this type, use values from that.
             if (pojo != null) {
-              backingMap.put(key, BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+              backingMap.put(
+                  key, BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, immutable));
             } else {
               // Otherwise we'll use default values for the property type if available.
               Class<?> propType = prop.getJavaType();
@@ -248,7 +250,8 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
           switch (prop.getProperty().getColumnType()) {
             case PARTITION_KEY:
             case CLUSTERING_COLUMN:
-              keys.add(entity.getName().toCql() + '.' + prop.getColumnName() + "==" + t._2.toString());
+              keys.add(
+                  entity.getName().toCql() + '.' + prop.getColumnName() + "==" + t._2.toString());
               break;
             default:
               break;
@@ -265,7 +268,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     T result = super.sync(uow);
     Class<?> iface = entity.getMappingInterface();
     if (resultType == iface) {
-        updateCache(uow, result, getQueryKeys());
+      updateCache(uow, result, entity.getIdentifyingFacets(), getQueryKeys());
     }
     return result;
   }

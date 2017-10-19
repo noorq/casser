@@ -75,7 +75,12 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
         return false;
       }
       if (Proxy.isProxyClass(otherObj.getClass())) {
-        return this == Proxy.getInvocationHandler(otherObj);
+        if (this == Proxy.getInvocationHandler(otherObj)) {
+          return true;
+        }
+      }
+      if (otherObj instanceof MapExportable && src.equals(((MapExportable) otherObj).toMap())) {
+        return true;
       }
       return false;
     }

@@ -13,13 +13,26 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package net.helenus.core.reflect;
+package net.helenus.core.cache;
 
-import java.util.Set;
+import java.util.Map;
+import java.util.stream.Collectors;
+import net.helenus.mapping.HelenusProperty;
 
-public interface Drafted<T> extends MapExportable {
+public class BoundFacet {
+  private final Map<HelenusProperty, Object> properties;
 
-  Set<String> mutated();
+  BoundFacet(Map<HelenusProperty, Object> properties) {
+    this.properties = properties;
+  }
 
-  T build();
+  public String toString() {
+    return String.join(
+        ";",
+        properties
+            .keySet()
+            .stream()
+            .map(key -> properties.get(key).toString())
+            .collect(Collectors.toSet()));
+  }
 }

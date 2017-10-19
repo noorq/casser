@@ -18,7 +18,6 @@ package net.helenus.test.integration.core.udtcollection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
-
 import net.helenus.core.Query;
 import org.junit.Assert;
 import org.junit.Test;

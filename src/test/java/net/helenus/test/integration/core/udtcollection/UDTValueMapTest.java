@@ -21,7 +21,6 @@ import static net.helenus.core.Query.get;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
-
 import org.junit.Assert;
 import org.junit.Test;
 

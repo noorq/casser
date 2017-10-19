@@ -15,11 +15,11 @@
  */
 package net.helenus.core;
 
-import net.helenus.core.cache.EntityIdentifyingFacet;
-import net.helenus.support.Either;
-
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import net.helenus.core.cache.BoundFacet;
+import net.helenus.support.Either;
 
 public interface UnitOfWork<X extends Exception> extends AutoCloseable {
 
@@ -52,8 +52,11 @@ public interface UnitOfWork<X extends Exception> extends AutoCloseable {
   boolean hasCommitted();
 
   Optional<Either<Object, Set<Object>>> cacheLookup(String key);
-  Optional<Either<Object, Set<Object>>> cacheLookupByFacet(Set<EntityIdentifyingFacet> facets);
-  Optional<Either<Object, Set<Object>>> cacheLookupByStatement(String[] statementKeys);
-  void cacheUpdate(Either<Object, Set<Object>> pojo, String[] statementKeys, Set<EntityIdentifyingFacet> facets);
 
+  Optional<Either<Object, Set<Object>>> cacheLookupByFacet(Set<BoundFacet> facets);
+
+  Optional<Either<Object, Set<Object>>> cacheLookupByStatement(String[] statementKeys);
+
+  void cacheUpdate(
+      Either<Object, Set<Object>> pojo, String[] statementKeys, Map<String, BoundFacet> facets);
 }

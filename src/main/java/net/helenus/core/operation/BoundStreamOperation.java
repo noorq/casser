@@ -18,10 +18,9 @@ package net.helenus.core.operation;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Statement;
-import net.helenus.core.cache.EntityIdentifyingFacet;
-
 import java.util.Set;
 import java.util.stream.Stream;
+import net.helenus.core.cache.BoundFacet;
 
 public final class BoundStreamOperation<E>
     extends AbstractStreamOperation<E, BoundStreamOperation<E>> {
@@ -42,7 +41,9 @@ public final class BoundStreamOperation<E>
   }
 
   @Override
-  public Set<EntityIdentifyingFacet> getFacets() { return delegate.getFacets(); }
+  public Set<BoundFacet> bindFacetValues() {
+    return delegate.bindFacetValues();
+  }
 
   @Override
   public Stream<E> transform(ResultSet resultSet) {

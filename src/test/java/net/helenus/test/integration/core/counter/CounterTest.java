@@ -17,14 +17,13 @@ package net.helenus.test.integration.core.counter;
 
 import static net.helenus.core.Query.eq;
 
+import java.util.concurrent.TimeoutException;
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.concurrent.TimeoutException;
 
 public class CounterTest extends AbstractEmbeddedCassandraTest {
 
