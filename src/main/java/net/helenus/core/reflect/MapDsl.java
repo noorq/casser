@@ -19,98 +19,99 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.support.DslPropertyException;
 import net.helenus.support.HelenusMappingException;
 
 public final class MapDsl<K, V> implements Map<K, V> {
 
-  private final HelenusPropertyNode parent;
+	private final HelenusPropertyNode parent;
 
-  public MapDsl(HelenusPropertyNode parent) {
-    this.parent = parent;
-  }
+	public MapDsl(HelenusPropertyNode parent) {
+		this.parent = parent;
+	}
 
-  public HelenusPropertyNode getParent() {
-    return parent;
-  }
+	public HelenusPropertyNode getParent() {
+		return parent;
+	}
 
-  @Override
-  public V get(Object key) {
-    HelenusProperty prop = new HelenusNamedProperty(key.toString());
-    throw new DslPropertyException(new HelenusPropertyNode(prop, Optional.of(parent)));
-  }
+	@Override
+	public V get(Object key) {
+		HelenusProperty prop = new HelenusNamedProperty(key.toString());
+		throw new DslPropertyException(new HelenusPropertyNode(prop, Optional.of(parent)));
+	}
 
-  @Override
-  public int size() {
-    throwShouldNeverCall();
-    return 0;
-  }
+	@Override
+	public int size() {
+		throwShouldNeverCall();
+		return 0;
+	}
 
-  @Override
-  public boolean isEmpty() {
-    throwShouldNeverCall();
-    return false;
-  }
+	@Override
+	public boolean isEmpty() {
+		throwShouldNeverCall();
+		return false;
+	}
 
-  @Override
-  public boolean containsKey(Object key) {
-    throwShouldNeverCall();
-    return false;
-  }
+	@Override
+	public boolean containsKey(Object key) {
+		throwShouldNeverCall();
+		return false;
+	}
 
-  @Override
-  public boolean containsValue(Object value) {
-    throwShouldNeverCall();
-    return false;
-  }
+	@Override
+	public boolean containsValue(Object value) {
+		throwShouldNeverCall();
+		return false;
+	}
 
-  @Override
-  public V put(K key, V value) {
-    throwShouldNeverCall();
-    return null;
-  }
+	@Override
+	public V put(K key, V value) {
+		throwShouldNeverCall();
+		return null;
+	}
 
-  @Override
-  public V remove(Object key) {
-    throwShouldNeverCall();
-    return null;
-  }
+	@Override
+	public V remove(Object key) {
+		throwShouldNeverCall();
+		return null;
+	}
 
-  @Override
-  public void putAll(Map<? extends K, ? extends V> m) {
-    throwShouldNeverCall();
-  }
+	@Override
+	public void putAll(Map<? extends K, ? extends V> m) {
+		throwShouldNeverCall();
+	}
 
-  @Override
-  public void clear() {
-    throwShouldNeverCall();
-  }
+	@Override
+	public void clear() {
+		throwShouldNeverCall();
+	}
 
-  @Override
-  public Set<K> keySet() {
-    throwShouldNeverCall();
-    return null;
-  }
+	@Override
+	public Set<K> keySet() {
+		throwShouldNeverCall();
+		return null;
+	}
 
-  @Override
-  public Collection<V> values() {
-    throwShouldNeverCall();
-    return null;
-  }
+	@Override
+	public Collection<V> values() {
+		throwShouldNeverCall();
+		return null;
+	}
 
-  @Override
-  public Set<java.util.Map.Entry<K, V>> entrySet() {
-    throwShouldNeverCall();
-    return null;
-  }
+	@Override
+	public Set<java.util.Map.Entry<K, V>> entrySet() {
+		throwShouldNeverCall();
+		return null;
+	}
 
-  private void throwShouldNeverCall() {
-    throw new HelenusMappingException("should be never called");
-  }
+	private void throwShouldNeverCall() {
+		throw new HelenusMappingException("should be never called");
+	}
 
-  @Override
-  public String toString() {
-    return "MapDsl";
-  }
+	@Override
+	public String toString() {
+		return "MapDsl";
+	}
 }

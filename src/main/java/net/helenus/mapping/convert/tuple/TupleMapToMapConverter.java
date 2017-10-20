@@ -15,9 +15,11 @@
  */
 package net.helenus.mapping.convert.tuple;
 
-import com.datastax.driver.core.TupleValue;
 import java.util.Map;
 import java.util.function.Function;
+
+import com.datastax.driver.core.TupleValue;
+
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.convert.ProxyValueReader;
 import net.helenus.mapping.value.TupleColumnValueProvider;
@@ -25,19 +27,16 @@ import net.helenus.support.Transformers;
 
 public final class TupleMapToMapConverter implements Function<Object, Object> {
 
-  final ProxyValueReader<TupleValue> keyReader;
-  final ProxyValueReader<TupleValue> valueReader;
+	final ProxyValueReader<TupleValue> keyReader;
+	final ProxyValueReader<TupleValue> valueReader;
 
-  public TupleMapToMapConverter(
-      Class<?> keyClass, Class<?> valueClass, SessionRepository repository) {
-    this.keyReader =
-        new ProxyValueReader<TupleValue>(keyClass, new TupleColumnValueProvider(repository));
-    this.valueReader =
-        new ProxyValueReader<TupleValue>(valueClass, new TupleColumnValueProvider(repository));
-  }
+	public TupleMapToMapConverter(Class<?> keyClass, Class<?> valueClass, SessionRepository repository) {
+		this.keyReader = new ProxyValueReader<TupleValue>(keyClass, new TupleColumnValueProvider(repository));
+		this.valueReader = new ProxyValueReader<TupleValue>(valueClass, new TupleColumnValueProvider(repository));
+	}
 
-  @Override
-  public Object apply(Object t) {
-    return Transformers.transformMap((Map<TupleValue, TupleValue>) t, keyReader, valueReader);
-  }
+	@Override
+	public Object apply(Object t) {
+		return Transformers.transformMap((Map<TupleValue, TupleValue>) t, keyReader, valueReader);
+	}
 }

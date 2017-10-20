@@ -18,15 +18,16 @@ package net.helenus.mapping.convert;
 import java.util.Date;
 import java.util.UUID;
 import java.util.function.Function;
+
 import net.helenus.support.Timeuuid;
 
 /** Simple Date to TimeUUID Converter */
 public enum DateToTimeuuidConverter implements Function<Date, UUID> {
-  INSTANCE;
+	INSTANCE;
 
-  @Override
-  public UUID apply(Date source) {
-    long milliseconds = source.getTime();
-    return Timeuuid.of(milliseconds);
-  }
+	@Override
+	public UUID apply(Date source) {
+		long milliseconds = source.getTime();
+		return Timeuuid.of(milliseconds);
+	}
 }

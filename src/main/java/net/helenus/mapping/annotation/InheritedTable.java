@@ -20,11 +20,13 @@ import java.lang.annotation.*;
 /**
  * Inherited Entity annotation
  *
- * <p>Inherited Table annotation is used to indicate that the methods should also be mapped
+ * <p>
+ * Inherited Table annotation is used to indicate that the methods should also
+ * be mapped
  */
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface InheritedTable {
-  String value() default "";
+	String value() default "";
 }

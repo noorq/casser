@@ -19,15 +19,15 @@ import java.nio.ByteBuffer;
 import java.util.function.Function;
 
 public enum ByteArrayToByteBufferConverter implements Function<byte[], ByteBuffer> {
-  INSTANCE;
+	INSTANCE;
 
-  @Override
-  public ByteBuffer apply(byte[] t) {
+	@Override
+	public ByteBuffer apply(byte[] t) {
 
-    if (t == null) {
-      return null;
-    }
+		if (t == null) {
+			return null;
+		}
 
-    return ByteBuffer.wrap(t);
-  }
+		return ByteBuffer.wrap(t);
+	}
 }

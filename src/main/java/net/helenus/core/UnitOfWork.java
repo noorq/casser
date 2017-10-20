@@ -20,36 +20,39 @@ import java.util.Set;
 
 public interface UnitOfWork<E extends Exception> extends AutoCloseable {
 
-  /**
-   * Marks the beginning of a transactional section of work. Will write a record to the shared
-   * write-ahead log.
-   *
-   * @return the handle used to commit or abort the work.
-   */
-  UnitOfWork begin();
+	/**
+	 * Marks the beginning of a transactional section of work. Will write a record
+	 * to the shared write-ahead log.
+	 *
+	 * @return the handle used to commit or abort the work.
+	 */
+	UnitOfWork begin();
 
-  UnitOfWork addNestedUnitOfWork(UnitOfWork uow);
+	UnitOfWork addNestedUnitOfWork(UnitOfWork uow);
 
-  /**
-   * Checks to see if the work performed between calling begin and now can be committed or not.
-   *
-   * @return a function from which to chain work that only happens when commit is successful
-   * @throws E when the work overlaps with other concurrent writers.
-   */
-  PostCommitFunction<Void, Void> commit() throws E;
+	/**
+	 * Checks to see if the work performed between calling begin and now can be
+	 * committed or not.
+	 *
+	 * @return a function from which to chain work that only happens when commit is
+	 *         successful
+	 * @throws E
+	 *             when the work overlaps with other concurrent writers.
+	 */
+	PostCommitFunction<Void, Void> commit() throws E;
 
-  /**
-   * Explicitly abort the work within this unit of work. Any nested aborted unit of work will
-   * trigger the entire unit of work to commit.
-   */
-  void abort();
+	/**
+	 * Explicitly abort the work within this unit of work. Any nested aborted unit
+	 * of work will trigger the entire unit of work to commit.
+	 */
+	void abort();
 
-  boolean hasAborted();
+	boolean hasAborted();
 
-  boolean hasCommitted();
+	boolean hasCommitted();
 
-  //Either<Object, Set<Object>> cacheLookup(String key);
-  Set<Object> cacheLookup(String key);
+	// Either<Object, Set<Object>> cacheLookup(String key);
+	Set<Object> cacheLookup(String key);
 
-  Map<String, Set<Object>> getCache();
+	Map<String, Set<Object>> getCache();
 }

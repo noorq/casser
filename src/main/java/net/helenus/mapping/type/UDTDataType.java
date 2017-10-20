@@ -18,100 +18,100 @@ package net.helenus.mapping.type;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.schemabuilder.*;
+
 import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.IdentityName;
 
 public final class UDTDataType extends AbstractDataType {
 
-  private final IdentityName udtName;
-  private final Class<?> udtClass;
+	private final IdentityName udtName;
+	private final Class<?> udtClass;
 
-  public UDTDataType(ColumnType columnType, IdentityName udtName, Class<?> udtClass) {
-    super(columnType);
-    this.udtName = udtName;
-    this.udtClass = udtClass;
-  }
+	public UDTDataType(ColumnType columnType, IdentityName udtName, Class<?> udtClass) {
+		super(columnType);
+		this.udtName = udtName;
+		this.udtClass = udtClass;
+	}
 
-  @Override
-  public Class<?>[] getTypeArguments() {
-    return new Class<?>[] {udtClass};
-  }
+	@Override
+	public Class<?>[] getTypeArguments() {
+		return new Class<?>[]{udtClass};
+	}
 
-  public IdentityName getUdtName() {
-    return udtName;
-  }
+	public IdentityName getUdtName() {
+		return udtName;
+	}
 
-  @Override
-  public void addColumn(Create create, IdentityName columnName) {
+	@Override
+	public void addColumn(Create create, IdentityName columnName) {
 
-    UDTType udtType = SchemaBuilder.frozen(udtName.toCql());
+		UDTType udtType = SchemaBuilder.frozen(udtName.toCql());
 
-    switch (columnType) {
-      case PARTITION_KEY:
-        create.addUDTPartitionKey(columnName.toCql(), udtType);
-        break;
+		switch (columnType) {
+			case PARTITION_KEY :
+				create.addUDTPartitionKey(columnName.toCql(), udtType);
+				break;
 
-      case CLUSTERING_COLUMN:
-        create.addUDTClusteringColumn(columnName.toCql(), udtType);
-        break;
+			case CLUSTERING_COLUMN :
+				create.addUDTClusteringColumn(columnName.toCql(), udtType);
+				break;
 
-      case STATIC_COLUMN:
-        create.addUDTStaticColumn(columnName.toCql(), udtType);
-        break;
+			case STATIC_COLUMN :
+				create.addUDTStaticColumn(columnName.toCql(), udtType);
+				break;
 
-      case COLUMN:
-        create.addUDTColumn(columnName.toCql(), udtType);
-        break;
+			case COLUMN :
+				create.addUDTColumn(columnName.toCql(), udtType);
+				break;
 
-      default:
-        throwWrongColumnType(columnName);
-    }
-  }
+			default :
+				throwWrongColumnType(columnName);
+		}
+	}
 
-  @Override
-  public void addColumn(CreateType create, IdentityName columnName) {
-    ensureSimpleColumn(columnName);
+	@Override
+	public void addColumn(CreateType create, IdentityName columnName) {
+		ensureSimpleColumn(columnName);
 
-    UDTType udtType = SchemaBuilder.frozen(udtName.toCql());
-    create.addUDTColumn(columnName.toCql(), udtType);
-  }
+		UDTType udtType = SchemaBuilder.frozen(udtName.toCql());
+		create.addUDTColumn(columnName.toCql(), udtType);
+	}
 
-  @Override
-  public SchemaStatement alterColumn(
-      Alter alter, IdentityName columnName, OptionalColumnMetadata columnMetadata) {
+	@Override
+	public SchemaStatement alterColumn(Alter alter, IdentityName columnName, OptionalColumnMetadata columnMetadata) {
 
-    ensureSimpleColumn(columnName);
+		ensureSimpleColumn(columnName);
 
-    if (columnMetadata != null) {
+		if (columnMetadata != null) {
 
-      DataType metadataType = columnMetadata.getType();
-      if (metadataType.getName() == DataType.Name.UDT && metadataType instanceof UserType) {
+			DataType metadataType = columnMetadata.getType();
+			if (metadataType.getName() == DataType.Name.UDT && metadataType instanceof UserType) {
 
-        UserType metadataUserType = (UserType) metadataType;
+				UserType metadataUserType = (UserType) metadataType;
 
-        if (!udtName.getName().equals(metadataUserType.getTypeName())) {
+				if (!udtName.getName().equals(metadataUserType.getTypeName())) {
 
-          UDTType udtType = SchemaBuilder.frozen(udtName.toCql());
-          return alter.alterColumn(columnName.toCql()).udtType(udtType);
-        }
+					UDTType udtType = SchemaBuilder.frozen(udtName.toCql());
+					return alter.alterColumn(columnName.toCql()).udtType(udtType);
+				}
 
-      } else {
+			} else {
 
-        UDTType udtType = SchemaBuilder.frozen(udtName.toCql());
-        return alter.alterColumn(columnName.toCql()).udtType(udtType);
-      }
+				UDTType udtType = SchemaBuilder.frozen(udtName.toCql());
+				return alter.alterColumn(columnName.toCql()).udtType(udtType);
+			}
 
-    } else {
+		} else {
 
-      UDTType udtType = SchemaBuilder.frozen(udtName.toCql());
-      return alter.addColumn(columnName.toCql()).udtType(udtType);
-    }
+			UDTType udtType = SchemaBuilder.frozen(udtName.toCql());
+			return alter.addColumn(columnName.toCql()).udtType(udtType);
+		}
 
-    return null;
-  }
+		return null;
+	}
 
-  @Override
-  public String toString() {
-    return "UDT<" + udtName + ">";
-  }
+	@Override
+	public String toString() {
+		return "UDT<" + udtName + ">";
+	}
 }

@@ -15,8 +15,11 @@
  */
 package net.helenus.core.operation;
 
-import brave.Tracer;
-import brave.propagation.TraceContext;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.RegularStatement;
@@ -27,284 +30,283 @@ import com.datastax.driver.core.policies.FallthroughRetryPolicy;
 import com.datastax.driver.core.policies.RetryPolicy;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.google.common.util.concurrent.ListenableFuture;
+
+import brave.Tracer;
+import brave.propagation.TraceContext;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.support.HelenusException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.TimeUnit;
+public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>> extends Operation<E> {
 
-public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>>
-    extends Operation<E> {
+	final Logger logger = LoggerFactory.getLogger(getClass());
 
-  final Logger logger = LoggerFactory.getLogger(getClass());
+	public abstract Statement buildStatement(boolean cached);
 
-  public abstract Statement buildStatement(boolean cached);
+	protected boolean enableCache = true;
+	protected boolean showValues = true;
+	protected TraceContext traceContext;
+	private ConsistencyLevel consistencyLevel;
+	private ConsistencyLevel serialConsistencyLevel;
+	private RetryPolicy retryPolicy;
+	private boolean idempotent = false;
+	private boolean enableTracing = false;
+	private long[] defaultTimestamp = null;
+	private int[] fetchSize = null;
+	long queryExecutionTimeout = 10;
+	TimeUnit queryTimeoutUnits = TimeUnit.SECONDS;
 
-  protected boolean enableCache = true;
-  protected boolean showValues = true;
-  protected TraceContext traceContext;
-  private ConsistencyLevel consistencyLevel;
-  private ConsistencyLevel serialConsistencyLevel;
-  private RetryPolicy retryPolicy;
-  private boolean idempotent = false;
-  private boolean enableTracing = false;
-  private long[] defaultTimestamp = null;
-  private int[] fetchSize = null;
-  long queryExecutionTimeout = 10;
-  TimeUnit queryTimeoutUnits = TimeUnit.SECONDS;
+	public AbstractStatementOperation(AbstractSessionOperations sessionOperations) {
+		super(sessionOperations);
+		this.consistencyLevel = sessionOperations.getDefaultConsistencyLevel();
+		this.idempotent = sessionOperations.getDefaultQueryIdempotency();
+	}
 
-  public AbstractStatementOperation(AbstractSessionOperations sessionOperations) {
-    super(sessionOperations);
-    this.consistencyLevel = sessionOperations.getDefaultConsistencyLevel();
-    this.idempotent = sessionOperations.getDefaultQueryIdempotency();
-  }
+	public O ignoreCache(boolean enabled) {
+		enableCache = enabled;
+		return (O) this;
+	}
 
-  public O ignoreCache(boolean enabled) {
-    enableCache = enabled;
-    return (O) this;
-  }
+	public O ignoreCache() {
+		enableCache = true;
+		return (O) this;
+	}
 
-  public O ignoreCache() {
-    enableCache = true;
-    return (O) this;
-  }
+	public O showValues(boolean enabled) {
+		this.showValues = enabled;
+		return (O) this;
+	}
 
-  public O showValues(boolean enabled) {
-    this.showValues = enabled;
-    return (O) this;
-  }
+	public O defaultTimestamp(long timestamp) {
+		this.defaultTimestamp = new long[1];
+		this.defaultTimestamp[0] = timestamp;
+		return (O) this;
+	}
 
-  public O defaultTimestamp(long timestamp) {
-    this.defaultTimestamp = new long[1];
-    this.defaultTimestamp[0] = timestamp;
-    return (O) this;
-  }
+	public O retryPolicy(RetryPolicy retryPolicy) {
+		this.retryPolicy = retryPolicy;
+		return (O) this;
+	}
 
-  public O retryPolicy(RetryPolicy retryPolicy) {
-    this.retryPolicy = retryPolicy;
-    return (O) this;
-  }
+	public O defaultRetryPolicy() {
+		this.retryPolicy = DefaultRetryPolicy.INSTANCE;
+		return (O) this;
+	}
 
-  public O defaultRetryPolicy() {
-    this.retryPolicy = DefaultRetryPolicy.INSTANCE;
-    return (O) this;
-  }
+	public O idempotent() {
+		this.idempotent = true;
+		return (O) this;
+	}
 
-  public O idempotent() {
-    this.idempotent = true;
-    return (O) this;
-  }
+	public O isIdempotent(boolean idempotent) {
+		this.idempotent = idempotent;
+		return (O) this;
+	}
 
-  public O isIdempotent(boolean idempotent) {
-    this.idempotent = idempotent;
-    return (O) this;
-  }
+	public O downgradingConsistencyRetryPolicy() {
+		this.retryPolicy = DowngradingConsistencyRetryPolicy.INSTANCE;
+		return (O) this;
+	}
 
-  public O downgradingConsistencyRetryPolicy() {
-    this.retryPolicy = DowngradingConsistencyRetryPolicy.INSTANCE;
-    return (O) this;
-  }
+	public O fallthroughRetryPolicy() {
+		this.retryPolicy = FallthroughRetryPolicy.INSTANCE;
+		return (O) this;
+	}
 
-  public O fallthroughRetryPolicy() {
-    this.retryPolicy = FallthroughRetryPolicy.INSTANCE;
-    return (O) this;
-  }
+	public O consistency(ConsistencyLevel level) {
+		this.consistencyLevel = level;
+		return (O) this;
+	}
 
-  public O consistency(ConsistencyLevel level) {
-    this.consistencyLevel = level;
-    return (O) this;
-  }
+	public O consistencyAny() {
+		this.consistencyLevel = ConsistencyLevel.ANY;
+		return (O) this;
+	}
 
-  public O consistencyAny() {
-    this.consistencyLevel = ConsistencyLevel.ANY;
-    return (O) this;
-  }
+	public O consistencyOne() {
+		this.consistencyLevel = ConsistencyLevel.ONE;
+		return (O) this;
+	}
 
-  public O consistencyOne() {
-    this.consistencyLevel = ConsistencyLevel.ONE;
-    return (O) this;
-  }
+	public O consistencyQuorum() {
+		this.consistencyLevel = ConsistencyLevel.QUORUM;
+		return (O) this;
+	}
 
-  public O consistencyQuorum() {
-    this.consistencyLevel = ConsistencyLevel.QUORUM;
-    return (O) this;
-  }
+	public O consistencyAll() {
+		this.consistencyLevel = ConsistencyLevel.ALL;
+		return (O) this;
+	}
 
-  public O consistencyAll() {
-    this.consistencyLevel = ConsistencyLevel.ALL;
-    return (O) this;
-  }
+	public O consistencyLocalOne() {
+		this.consistencyLevel = ConsistencyLevel.LOCAL_ONE;
+		return (O) this;
+	}
 
-  public O consistencyLocalOne() {
-    this.consistencyLevel = ConsistencyLevel.LOCAL_ONE;
-    return (O) this;
-  }
+	public O consistencyLocalQuorum() {
+		this.consistencyLevel = ConsistencyLevel.LOCAL_QUORUM;
+		return (O) this;
+	}
 
-  public O consistencyLocalQuorum() {
-    this.consistencyLevel = ConsistencyLevel.LOCAL_QUORUM;
-    return (O) this;
-  }
+	public O consistencyEachQuorum() {
+		this.consistencyLevel = ConsistencyLevel.EACH_QUORUM;
+		return (O) this;
+	}
 
-  public O consistencyEachQuorum() {
-    this.consistencyLevel = ConsistencyLevel.EACH_QUORUM;
-    return (O) this;
-  }
+	public O serialConsistency(ConsistencyLevel level) {
+		this.serialConsistencyLevel = level;
+		return (O) this;
+	}
 
-  public O serialConsistency(ConsistencyLevel level) {
-    this.serialConsistencyLevel = level;
-    return (O) this;
-  }
+	public O serialConsistencyAny() {
+		this.serialConsistencyLevel = ConsistencyLevel.ANY;
+		return (O) this;
+	}
 
-  public O serialConsistencyAny() {
-    this.serialConsistencyLevel = ConsistencyLevel.ANY;
-    return (O) this;
-  }
+	public O serialConsistencyOne() {
+		this.serialConsistencyLevel = ConsistencyLevel.ONE;
+		return (O) this;
+	}
 
-  public O serialConsistencyOne() {
-    this.serialConsistencyLevel = ConsistencyLevel.ONE;
-    return (O) this;
-  }
+	public O serialConsistencyQuorum() {
+		this.serialConsistencyLevel = ConsistencyLevel.QUORUM;
+		return (O) this;
+	}
 
-  public O serialConsistencyQuorum() {
-    this.serialConsistencyLevel = ConsistencyLevel.QUORUM;
-    return (O) this;
-  }
+	public O serialConsistencyAll() {
+		this.serialConsistencyLevel = ConsistencyLevel.ALL;
+		return (O) this;
+	}
 
-  public O serialConsistencyAll() {
-    this.serialConsistencyLevel = ConsistencyLevel.ALL;
-    return (O) this;
-  }
+	public O serialConsistencyLocal() {
+		this.serialConsistencyLevel = ConsistencyLevel.LOCAL_SERIAL;
+		return (O) this;
+	}
 
-  public O serialConsistencyLocal() {
-    this.serialConsistencyLevel = ConsistencyLevel.LOCAL_SERIAL;
-    return (O) this;
-  }
+	public O serialConsistencyLocalQuorum() {
+		this.serialConsistencyLevel = ConsistencyLevel.LOCAL_QUORUM;
+		return (O) this;
+	}
 
-  public O serialConsistencyLocalQuorum() {
-    this.serialConsistencyLevel = ConsistencyLevel.LOCAL_QUORUM;
-    return (O) this;
-  }
+	public O disableTracing() {
+		this.enableTracing = false;
+		return (O) this;
+	}
 
-  public O disableTracing() {
-    this.enableTracing = false;
-    return (O) this;
-  }
+	public O enableTracing() {
+		this.enableTracing = true;
+		return (O) this;
+	}
 
-  public O enableTracing() {
-    this.enableTracing = true;
-    return (O) this;
-  }
+	public O tracing(boolean enable) {
+		this.enableTracing = enable;
+		return (O) this;
+	}
 
-  public O tracing(boolean enable) {
-    this.enableTracing = enable;
-    return (O) this;
-  }
+	public O fetchSize(int fetchSize) {
+		this.fetchSize = new int[1];
+		this.fetchSize[0] = fetchSize;
+		return (O) this;
+	}
 
-  public O fetchSize(int fetchSize) {
-    this.fetchSize = new int[1];
-    this.fetchSize[0] = fetchSize;
-    return (O) this;
-  }
+	public O queryTimeoutMs(long ms) {
+		this.queryExecutionTimeout = ms;
+		this.queryTimeoutUnits = TimeUnit.MILLISECONDS;
+		return (O) this;
+	}
 
-  public O queryTimeoutMs(long ms) {
-      this.queryExecutionTimeout = ms;
-      this.queryTimeoutUnits = TimeUnit.MILLISECONDS;
-      return (O) this;
-  }
+	public O queryTimeout(long timeout, TimeUnit units) {
+		this.queryExecutionTimeout = timeout;
+		this.queryTimeoutUnits = units;
+		return (O) this;
+	}
 
-  public O queryTimeout(long timeout, TimeUnit units) {
-      this.queryExecutionTimeout = timeout;
-      this.queryTimeoutUnits = units;
-      return (O) this;
-  }
+	public Statement options(Statement statement) {
 
-  public Statement options(Statement statement) {
+		if (defaultTimestamp != null) {
+			statement.setDefaultTimestamp(defaultTimestamp[0]);
+		}
 
-    if (defaultTimestamp != null) {
-      statement.setDefaultTimestamp(defaultTimestamp[0]);
-    }
+		if (consistencyLevel != null) {
+			statement.setConsistencyLevel(consistencyLevel);
+		}
 
-    if (consistencyLevel != null) {
-      statement.setConsistencyLevel(consistencyLevel);
-    }
+		if (serialConsistencyLevel != null) {
+			statement.setSerialConsistencyLevel(serialConsistencyLevel);
+		}
 
-    if (serialConsistencyLevel != null) {
-      statement.setSerialConsistencyLevel(serialConsistencyLevel);
-    }
+		if (retryPolicy != null) {
+			statement.setRetryPolicy(retryPolicy);
+		}
 
-    if (retryPolicy != null) {
-      statement.setRetryPolicy(retryPolicy);
-    }
+		if (enableTracing) {
+			statement.enableTracing();
+		} else {
+			statement.disableTracing();
+		}
 
-    if (enableTracing) {
-      statement.enableTracing();
-    } else {
-      statement.disableTracing();
-    }
+		if (fetchSize != null) {
+			statement.setFetchSize(fetchSize[0]);
+		}
 
-    if (fetchSize != null) {
-      statement.setFetchSize(fetchSize[0]);
-    }
+		if (idempotent) {
+			statement.setIdempotent(true);
+		}
 
-    if (idempotent) {
-      statement.setIdempotent(true);
-    }
+		return statement;
+	}
 
-    return statement;
-  }
+	public O zipkinContext(TraceContext traceContext) {
+		if (traceContext != null) {
+			Tracer tracer = this.sessionOps.getZipkinTracer();
+			if (tracer != null) {
+				this.traceContext = traceContext;
+			}
+		}
 
-  public O zipkinContext(TraceContext traceContext) {
-    if (traceContext != null) {
-      Tracer tracer = this.sessionOps.getZipkinTracer();
-      if (tracer != null) {
-        this.traceContext = traceContext;
-      }
-    }
+		return (O) this;
+	}
 
-    return (O) this;
-  }
+	public Statement statement() {
+		return buildStatement(false);
+	}
 
-  public Statement statement() {
-    return buildStatement(false);
-  }
+	public String cql() {
+		Statement statement = buildStatement(false);
+		if (statement == null)
+			return "";
+		if (statement instanceof BuiltStatement) {
+			BuiltStatement buildStatement = (BuiltStatement) statement;
+			return buildStatement.setForceNoValues(true).getQueryString();
+		} else {
+			return statement.toString();
+		}
+	}
 
-  public String cql() {
-    Statement statement = buildStatement(false);
-    if (statement == null) return "";
-    if (statement instanceof BuiltStatement) {
-      BuiltStatement buildStatement = (BuiltStatement) statement;
-      return buildStatement.setForceNoValues(true).getQueryString();
-    } else {
-      return statement.toString();
-    }
-  }
+	public PreparedStatement prepareStatement() {
 
-  public PreparedStatement prepareStatement() {
+		Statement statement = buildStatement(true);
 
-    Statement statement = buildStatement(true);
+		if (statement instanceof RegularStatement) {
 
-    if (statement instanceof RegularStatement) {
+			RegularStatement regularStatement = (RegularStatement) statement;
 
-      RegularStatement regularStatement = (RegularStatement) statement;
+			return sessionOps.prepare(regularStatement);
+		}
 
-      return sessionOps.prepare(regularStatement);
-    }
+		throw new HelenusException("only RegularStatements can be prepared");
+	}
 
-    throw new HelenusException("only RegularStatements can be prepared");
-  }
+	public ListenableFuture<PreparedStatement> prepareStatementAsync() {
 
-  public ListenableFuture<PreparedStatement> prepareStatementAsync() {
+		Statement statement = buildStatement(true);
 
-    Statement statement = buildStatement(true);
+		if (statement instanceof RegularStatement) {
 
-    if (statement instanceof RegularStatement) {
+			RegularStatement regularStatement = (RegularStatement) statement;
 
-      RegularStatement regularStatement = (RegularStatement) statement;
+			return sessionOps.prepareAsync(regularStatement);
+		}
 
-      return sessionOps.prepareAsync(regularStatement);
-    }
-
-    throw new HelenusException("only RegularStatements can be prepared");
-  }
+		throw new HelenusException("only RegularStatements can be prepared");
+	}
 }

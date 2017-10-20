@@ -15,38 +15,40 @@
  */
 package net.helenus.core.operation;
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.querybuilder.BuiltStatement;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.querybuilder.BuiltStatement;
+
 public final class SelectTransformingOperation<R, E>
-    extends AbstractFilterStreamOperation<R, SelectTransformingOperation<R, E>> {
+		extends
+			AbstractFilterStreamOperation<R, SelectTransformingOperation<R, E>> {
 
-  private final SelectOperation<E> delegate;
-  private final Function<E, R> fn;
+	private final SelectOperation<E> delegate;
+	private final Function<E, R> fn;
 
-  public SelectTransformingOperation(SelectOperation<E> delegate, Function<E, R> fn) {
-    super(delegate.sessionOps);
+	public SelectTransformingOperation(SelectOperation<E> delegate, Function<E, R> fn) {
+		super(delegate.sessionOps);
 
-    this.delegate = delegate;
-    this.fn = fn;
-    this.filters = delegate.filters;
-    this.ifFilters = delegate.ifFilters;
-  }
+		this.delegate = delegate;
+		this.fn = fn;
+		this.filters = delegate.filters;
+		this.ifFilters = delegate.ifFilters;
+	}
 
-  @Override
-  public String getStatementCacheKey() {
-    return delegate.getStatementCacheKey();
-  }
+	@Override
+	public String getStatementCacheKey() {
+		return delegate.getStatementCacheKey();
+	}
 
-  @Override
-  public BuiltStatement buildStatement(boolean cached) {
-    return delegate.buildStatement(cached);
-  }
+	@Override
+	public BuiltStatement buildStatement(boolean cached) {
+		return delegate.buildStatement(cached);
+	}
 
-  @Override
-  public Stream<R> transform(ResultSet resultSet) {
-    return delegate.transform(resultSet).map(fn);
-  }
+	@Override
+	public Stream<R> transform(ResultSet resultSet) {
+		return delegate.transform(resultSet).map(fn);
+	}
 }

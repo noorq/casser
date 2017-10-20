@@ -16,8 +16,5 @@
 package net.helenus.mapping;
 
 public enum ColumnType {
-  PARTITION_KEY,
-  CLUSTERING_COLUMN,
-  STATIC_COLUMN,
-  COLUMN;
+	PARTITION_KEY, CLUSTERING_COLUMN, STATIC_COLUMN, COLUMN;
 }

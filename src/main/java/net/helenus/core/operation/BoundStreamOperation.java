@@ -15,36 +15,35 @@
  */
 package net.helenus.core.operation;
 
+import java.util.stream.Stream;
+
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Statement;
-import java.util.stream.Stream;
 
-public final class BoundStreamOperation<E>
-    extends AbstractStreamOperation<E, BoundStreamOperation<E>> {
+public final class BoundStreamOperation<E> extends AbstractStreamOperation<E, BoundStreamOperation<E>> {
 
-  private final BoundStatement boundStatement;
-  private final AbstractStreamOperation<E, ?> delegate;
+	private final BoundStatement boundStatement;
+	private final AbstractStreamOperation<E, ?> delegate;
 
-  public BoundStreamOperation(
-      BoundStatement boundStatement, AbstractStreamOperation<E, ?> operation) {
-    super(operation.sessionOps);
-    this.boundStatement = boundStatement;
-    this.delegate = operation;
-  }
+	public BoundStreamOperation(BoundStatement boundStatement, AbstractStreamOperation<E, ?> operation) {
+		super(operation.sessionOps);
+		this.boundStatement = boundStatement;
+		this.delegate = operation;
+	}
 
-  @Override
-  public String getStatementCacheKey() {
-    return delegate.getStatementCacheKey();
-  }
+	@Override
+	public String getStatementCacheKey() {
+		return delegate.getStatementCacheKey();
+	}
 
-  @Override
-  public Stream<E> transform(ResultSet resultSet) {
-    return delegate.transform(resultSet);
-  }
+	@Override
+	public Stream<E> transform(ResultSet resultSet) {
+		return delegate.transform(resultSet);
+	}
 
-  @Override
-  public Statement buildStatement(boolean cached) {
-    return boundStatement;
-  }
+	@Override
+	public Statement buildStatement(boolean cached) {
+		return boundStatement;
+	}
 }

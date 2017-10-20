@@ -15,30 +15,28 @@
  */
 package net.helenus.mapping.convert.tuple;
 
-import com.datastax.driver.core.TupleType;
 import java.util.Map;
 import java.util.function.Function;
+
+import com.datastax.driver.core.TupleType;
+
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.convert.TupleValueWriter;
 import net.helenus.support.Transformers;
 
 public final class MapToTupleMapConverter implements Function<Object, Object> {
 
-  final TupleValueWriter keyWriter;
-  final TupleValueWriter valueWriter;
+	final TupleValueWriter keyWriter;
+	final TupleValueWriter valueWriter;
 
-  public MapToTupleMapConverter(
-      Class<?> keyClass,
-      TupleType keyType,
-      Class<?> valueClass,
-      TupleType valueType,
-      SessionRepository repository) {
-    this.keyWriter = new TupleValueWriter(keyClass, keyType, repository);
-    this.valueWriter = new TupleValueWriter(valueClass, valueType, repository);
-  }
+	public MapToTupleMapConverter(Class<?> keyClass, TupleType keyType, Class<?> valueClass, TupleType valueType,
+			SessionRepository repository) {
+		this.keyWriter = new TupleValueWriter(keyClass, keyType, repository);
+		this.valueWriter = new TupleValueWriter(valueClass, valueType, repository);
+	}
 
-  @Override
-  public Object apply(Object t) {
-    return Transformers.transformMap((Map<Object, Object>) t, keyWriter, valueWriter);
-  }
+	@Override
+	public Object apply(Object t) {
+		return Transformers.transformMap((Map<Object, Object>) t, keyWriter, valueWriter);
+	}
 }

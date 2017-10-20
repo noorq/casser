@@ -19,16 +19,16 @@ import net.helenus.core.reflect.HelenusPropertyNode;
 
 public final class DslPropertyException extends HelenusException {
 
-  private static final long serialVersionUID = -2745598205929757758L;
+	private static final long serialVersionUID = -2745598205929757758L;
 
-  private final HelenusPropertyNode propertyNode;
+	private final HelenusPropertyNode propertyNode;
 
-  public DslPropertyException(HelenusPropertyNode propertyNode) {
-    super("DSL PropertyNode Exception");
-    this.propertyNode = propertyNode;
-  }
+	public DslPropertyException(HelenusPropertyNode propertyNode) {
+		super("DSL PropertyNode Exception");
+		this.propertyNode = propertyNode;
+	}
 
-  public HelenusPropertyNode getPropertyNode() {
-    return propertyNode;
-  }
+	public HelenusPropertyNode getPropertyNode() {
+		return propertyNode;
+	}
 }

@@ -15,48 +15,52 @@
  */
 package net.helenus.mapping.value;
 
-import com.datastax.driver.core.*;
-import com.datastax.driver.core.querybuilder.BindMarker;
 import java.util.Optional;
 import java.util.function.Function;
+
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.ProtocolVersion;
+import com.datastax.driver.core.TupleType;
+import com.datastax.driver.core.querybuilder.BindMarker;
+
 import net.helenus.core.HelenusValidator;
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.HelenusProperty;
 
 public final class TupleColumnValuePreparer implements ColumnValuePreparer {
 
-  private final TupleType tupleType;
-  private final SessionRepository repository;
+	private final TupleType tupleType;
+	private final SessionRepository repository;
 
-  public TupleColumnValuePreparer(TupleType tupleType, SessionRepository repository) {
-    this.tupleType = tupleType;
-    this.repository = repository;
-  }
+	public TupleColumnValuePreparer(TupleType tupleType, SessionRepository repository) {
+		this.tupleType = tupleType;
+		this.repository = repository;
+	}
 
-  @Override
-  public Object prepareColumnValue(Object value, HelenusProperty prop) {
+	@Override
+	public Object prepareColumnValue(Object value, HelenusProperty prop) {
 
-    if (value instanceof BindMarker) {
-      return value;
-    }
+		if (value instanceof BindMarker) {
+			return value;
+		}
 
-    HelenusValidator.INSTANCE.validate(prop, value);
+		HelenusValidator.INSTANCE.validate(prop, value);
 
-    if (value != null) {
+		if (value != null) {
 
-      Optional<Function<Object, Object>> converter = prop.getWriteConverter(repository);
+			Optional<Function<Object, Object>> converter = prop.getWriteConverter(repository);
 
-      if (converter.isPresent()) {
-        value = converter.get().apply(value);
-      }
+			if (converter.isPresent()) {
+				value = converter.get().apply(value);
+			}
 
-      int columnIndex = prop.getOrdinal();
+			int columnIndex = prop.getOrdinal();
 
-      DataType dataType = tupleType.getComponentTypes().get(columnIndex);
+			DataType dataType = tupleType.getComponentTypes().get(columnIndex);
 
-      return codecFor(dataType).serialize(value, ProtocolVersion.NEWEST_SUPPORTED);
-    }
+			return codecFor(dataType).serialize(value, ProtocolVersion.NEWEST_SUPPORTED);
+		}
 
-    return null;
-  }
+		return null;
+	}
 }

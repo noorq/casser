@@ -15,72 +15,77 @@
  */
 package net.helenus.core.operation;
 
-import com.codahale.metrics.Timer;
-import com.datastax.driver.core.ResultSet;
-
-import java.sql.Time;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 
-import com.diffplug.common.base.Errors;
+import com.codahale.metrics.Timer;
+import com.datastax.driver.core.ResultSet;
+
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
 
-public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
-    extends AbstractStatementOperation<E, O> {
+public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> extends AbstractStatementOperation<E, O> {
 
-  public abstract E transform(ResultSet resultSet);
+	public abstract E transform(ResultSet resultSet);
 
-  public boolean cacheable() {
-    return false;
-  }
+	public boolean cacheable() {
+		return false;
+	}
 
-  public AbstractOperation(AbstractSessionOperations sessionOperations) {
-    super(sessionOperations);
-  }
+	public AbstractOperation(AbstractSessionOperations sessionOperations) {
+		super(sessionOperations);
+	}
 
-  public PreparedOperation<E> prepare() {
-    return new PreparedOperation<E>(prepareStatement(), this);
-  }
+	public PreparedOperation<E> prepare() {
+		return new PreparedOperation<E>(prepareStatement(), this);
+	}
 
-  public E sync() throws TimeoutException {
-    final Timer.Context context = requestLatency.time();
-    try {
-      ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout, queryTimeoutUnits, showValues, false);
-      return transform(resultSet);
-    } finally {
-      context.stop();
-    }
-  }
+	public E sync() throws TimeoutException {
+		final Timer.Context context = requestLatency.time();
+		try {
+			ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout, queryTimeoutUnits,
+					showValues, false);
+			return transform(resultSet);
+		} finally {
+			context.stop();
+		}
+	}
 
-  public E sync(UnitOfWork uow) throws TimeoutException {
-    if (uow == null) return sync();
+	public E sync(UnitOfWork uow) throws TimeoutException {
+		if (uow == null)
+			return sync();
 
-    final Timer.Context context = requestLatency.time();
-    try {
-      ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits, showValues, true);
-      E result = transform(resultSet);
-      return result;
-    } finally {
-      context.stop();
-    }
-  }
+		final Timer.Context context = requestLatency.time();
+		try {
+			ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
+					showValues, true);
+			E result = transform(resultSet);
+			return result;
+		} finally {
+			context.stop();
+		}
+	}
 
-  public CompletableFuture<E> async() {
-    return CompletableFuture.<E>supplyAsync(() -> {
-        try {
-            return sync();
-        } catch (TimeoutException ex) { throw new CompletionException(ex); }
-    });
-  }
+	public CompletableFuture<E> async() {
+		return CompletableFuture.<E>supplyAsync(() -> {
+			try {
+				return sync();
+			} catch (TimeoutException ex) {
+				throw new CompletionException(ex);
+			}
+		});
+	}
 
-  public CompletableFuture<E> async(UnitOfWork uow) {
-    if (uow == null) return async();
-    return CompletableFuture.<E>supplyAsync(() -> {
-        try {
-            return sync();
-        } catch (TimeoutException ex) { throw new CompletionException(ex); }
-    });
-  }
+	public CompletableFuture<E> async(UnitOfWork uow) {
+		if (uow == null)
+			return async();
+		return CompletableFuture.<E>supplyAsync(() -> {
+			try {
+				return sync();
+			} catch (TimeoutException ex) {
+				throw new CompletionException(ex);
+			}
+		});
+	}
 }

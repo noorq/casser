@@ -15,40 +15,40 @@
  */
 package net.helenus.core.operation;
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.querybuilder.BuiltStatement;
 import java.util.Optional;
 import java.util.function.Function;
 
-public final class SelectFirstOperation<E>
-    extends AbstractFilterOptionalOperation<E, SelectFirstOperation<E>> {
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.querybuilder.BuiltStatement;
 
-  private final SelectOperation<E> delegate;
+public final class SelectFirstOperation<E> extends AbstractFilterOptionalOperation<E, SelectFirstOperation<E>> {
 
-  public SelectFirstOperation(SelectOperation<E> delegate) {
-    super(delegate.sessionOps);
+	private final SelectOperation<E> delegate;
 
-    this.delegate = delegate;
-    this.filters = delegate.filters;
-    this.ifFilters = delegate.ifFilters;
-  }
+	public SelectFirstOperation(SelectOperation<E> delegate) {
+		super(delegate.sessionOps);
 
-  public <R> SelectFirstTransformingOperation<R, E> map(Function<E, R> fn) {
-    return new SelectFirstTransformingOperation<R, E>(delegate, fn);
-  }
+		this.delegate = delegate;
+		this.filters = delegate.filters;
+		this.ifFilters = delegate.ifFilters;
+	}
 
-  @Override
-  public String getStatementCacheKey() {
-    return delegate.getStatementCacheKey();
-  }
+	public <R> SelectFirstTransformingOperation<R, E> map(Function<E, R> fn) {
+		return new SelectFirstTransformingOperation<R, E>(delegate, fn);
+	}
 
-  @Override
-  public BuiltStatement buildStatement(boolean cached) {
-    return delegate.buildStatement(cached);
-  }
+	@Override
+	public String getStatementCacheKey() {
+		return delegate.getStatementCacheKey();
+	}
 
-  @Override
-  public Optional<E> transform(ResultSet resultSet) {
-    return delegate.transform(resultSet).findFirst();
-  }
+	@Override
+	public BuiltStatement buildStatement(boolean cached) {
+		return delegate.buildStatement(cached);
+	}
+
+	@Override
+	public Optional<E> transform(ResultSet resultSet) {
+		return delegate.transform(resultSet).findFirst();
+	}
 }
