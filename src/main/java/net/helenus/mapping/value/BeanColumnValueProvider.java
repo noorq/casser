@@ -17,31 +17,32 @@ package net.helenus.mapping.value;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.support.HelenusException;
 import net.helenus.support.HelenusMappingException;
 
 public enum BeanColumnValueProvider implements ColumnValueProvider {
-  INSTANCE;
+	INSTANCE;
 
-  @Override
-  public <V> V getColumnValue(Object bean, int columnIndexUnused, HelenusProperty property) {
+	@Override
+	public <V> V getColumnValue(Object bean, int columnIndexUnused, HelenusProperty property, boolean immutable) {
 
-    Method getter = property.getGetterMethod();
+		Method getter = property.getGetterMethod();
 
-    Object value = null;
-    try {
-      value = getter.invoke(bean, new Object[] {});
-    } catch (InvocationTargetException e) {
-      if (e.getCause() != null) {
-        throw new HelenusException("getter threw an exception", e.getCause());
-      }
-    } catch (ReflectiveOperationException e) {
-      throw new HelenusMappingException("fail to call getter " + getter, e);
-    } catch (IllegalArgumentException e) {
-      throw new HelenusMappingException("invalid getter " + getter, e);
-    }
+		Object value = null;
+		try {
+			value = getter.invoke(bean, new Object[]{});
+		} catch (InvocationTargetException e) {
+			if (e.getCause() != null) {
+				throw new HelenusException("getter threw an exception", e.getCause());
+			}
+		} catch (ReflectiveOperationException e) {
+			throw new HelenusMappingException("fail to call getter " + getter, e);
+		} catch (IllegalArgumentException e) {
+			throw new HelenusMappingException("invalid getter " + getter, e);
+		}
 
-    return (V) value;
-  }
+		return (V) value;
+	}
 }

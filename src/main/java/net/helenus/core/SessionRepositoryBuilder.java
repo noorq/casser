@@ -15,15 +15,17 @@
  */
 package net.helenus.core;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusEntityType;
 import net.helenus.mapping.HelenusProperty;
@@ -33,112 +35,110 @@ import net.helenus.support.HelenusMappingException;
 
 public final class SessionRepositoryBuilder {
 
-  private static final Optional<HelenusEntityType> OPTIONAL_UDT =
-      Optional.of(HelenusEntityType.UDT);
+	private static final Optional<HelenusEntityType> OPTIONAL_UDT = Optional.of(HelenusEntityType.UDT);
 
-  private final Map<Class<?>, HelenusEntity> entityMap = new HashMap<Class<?>, HelenusEntity>();
+	private final Map<Class<?>, HelenusEntity> entityMap = new HashMap<Class<?>, HelenusEntity>();
 
-  private final Map<String, UserType> userTypeMap = new HashMap<String, UserType>();
+	private final Map<String, UserType> userTypeMap = new HashMap<String, UserType>();
 
-  private final Multimap<HelenusEntity, HelenusEntity> userTypeUsesMap = HashMultimap.create();
+	private final Multimap<HelenusEntity, HelenusEntity> userTypeUsesMap = HashMultimap.create();
 
-  private final Session session;
+	private final Session session;
 
-  SessionRepositoryBuilder(Session session) {
-    this.session = session;
-  }
+	SessionRepositoryBuilder(Session session) {
+		this.session = session;
+	}
 
-  public SessionRepository build() {
-    return new SessionRepository(this);
-  }
+	public SessionRepository build() {
+		return new SessionRepository(this);
+	}
 
-  public Collection<HelenusEntity> getUserTypeUses(HelenusEntity udtName) {
-    return userTypeUsesMap.get(udtName);
-  }
+	public Collection<HelenusEntity> getUserTypeUses(HelenusEntity udtName) {
+		return userTypeUsesMap.get(udtName);
+	}
 
-  public Collection<HelenusEntity> entities() {
-    return entityMap.values();
-  }
+	public Collection<HelenusEntity> entities() {
+		return entityMap.values();
+	}
 
-  protected Map<Class<?>, HelenusEntity> getEntityMap() {
-    return entityMap;
-  }
+	protected Map<Class<?>, HelenusEntity> getEntityMap() {
+		return entityMap;
+	}
 
-  protected Map<String, UserType> getUserTypeMap() {
-    return userTypeMap;
-  }
+	protected Map<String, UserType> getUserTypeMap() {
+		return userTypeMap;
+	}
 
-  public void addUserType(String name, UserType userType) {
-    userTypeMap.putIfAbsent(name.toLowerCase(), userType);
-  }
+	public void addUserType(String name, UserType userType) {
+		userTypeMap.putIfAbsent(name.toLowerCase(), userType);
+	}
 
-  public HelenusEntity add(Object dsl) {
-    return add(dsl, Optional.empty());
-  }
+	public HelenusEntity add(Object dsl) {
+		return add(dsl, Optional.empty());
+	}
 
-  public void addEntity(HelenusEntity entity) {
+	public void addEntity(HelenusEntity entity) {
 
-    HelenusEntity concurrentEntity = entityMap.putIfAbsent(entity.getMappingInterface(), entity);
+		HelenusEntity concurrentEntity = entityMap.putIfAbsent(entity.getMappingInterface(), entity);
 
-    if (concurrentEntity == null) {
-      addUserDefinedTypes(entity.getOrderedProperties());
-    }
-  }
+		if (concurrentEntity == null) {
+			addUserDefinedTypes(entity.getOrderedProperties());
+		}
+	}
 
-  public HelenusEntity add(Object dsl, Optional<HelenusEntityType> type) {
+	public HelenusEntity add(Object dsl, Optional<HelenusEntityType> type) {
 
-    HelenusEntity helenusEntity = Helenus.resolve(dsl, session.getCluster().getMetadata());
+		HelenusEntity helenusEntity = Helenus.resolve(dsl, session.getCluster().getMetadata());
 
-    Class<?> iface = helenusEntity.getMappingInterface();
+		Class<?> iface = helenusEntity.getMappingInterface();
 
-    HelenusEntity entity = entityMap.get(iface);
+		HelenusEntity entity = entityMap.get(iface);
 
-    if (entity == null) {
+		if (entity == null) {
 
-      entity = helenusEntity;
+			entity = helenusEntity;
 
-      if (type.isPresent() && entity.getType() != type.get()) {
-        throw new HelenusMappingException(
-            "unexpected entity type " + entity.getType() + " for " + entity);
-      }
+			if (type.isPresent() && entity.getType() != type.get()) {
+				throw new HelenusMappingException("unexpected entity type " + entity.getType() + " for " + entity);
+			}
 
-      HelenusEntity concurrentEntity = entityMap.putIfAbsent(iface, entity);
+			HelenusEntity concurrentEntity = entityMap.putIfAbsent(iface, entity);
 
-      if (concurrentEntity == null) {
-        addUserDefinedTypes(entity.getOrderedProperties());
-      } else {
-        entity = concurrentEntity;
-      }
-    }
+			if (concurrentEntity == null) {
+				addUserDefinedTypes(entity.getOrderedProperties());
+			} else {
+				entity = concurrentEntity;
+			}
+		}
 
-    return entity;
-  }
+		return entity;
+	}
 
-  private void addUserDefinedTypes(Collection<HelenusProperty> props) {
+	private void addUserDefinedTypes(Collection<HelenusProperty> props) {
 
-    for (HelenusProperty prop : props) {
+		for (HelenusProperty prop : props) {
 
-      AbstractDataType type = prop.getDataType();
+			AbstractDataType type = prop.getDataType();
 
-      if (type instanceof DTDataType) {
-        continue;
-      }
+			if (type instanceof DTDataType) {
+				continue;
+			}
 
-      if (!UDTValue.class.isAssignableFrom(prop.getJavaType())) {
+			if (!UDTValue.class.isAssignableFrom(prop.getJavaType())) {
 
-        for (Class<?> udtClass : type.getTypeArguments()) {
+				for (Class<?> udtClass : type.getTypeArguments()) {
 
-          if (UDTValue.class.isAssignableFrom(udtClass)) {
-            continue;
-          }
+					if (UDTValue.class.isAssignableFrom(udtClass)) {
+						continue;
+					}
 
-          HelenusEntity addedUserType = add(udtClass, OPTIONAL_UDT);
+					HelenusEntity addedUserType = add(udtClass, OPTIONAL_UDT);
 
-          if (HelenusEntityType.UDT == prop.getEntity().getType()) {
-            userTypeUsesMap.put(prop.getEntity(), addedUserType);
-          }
-        }
-      }
-    }
-  }
+					if (HelenusEntityType.UDT == prop.getEntity().getType()) {
+						userTypeUsesMap.put(prop.getEntity(), addedUserType);
+					}
+				}
+			}
+		}
+	}
 }

@@ -20,7 +20,6 @@ import static net.helenus.core.Query.eq;
 import com.datastax.driver.core.ResultSet;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
-
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.core.Operator;

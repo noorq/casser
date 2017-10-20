@@ -17,16 +17,18 @@ package net.helenus.mapping.validator;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+
 import net.helenus.mapping.annotation.Constraints;
 import net.helenus.mapping.annotation.Constraints.NotNull;
 
 public final class NotNullValidator implements ConstraintValidator<Constraints.NotNull, Object> {
 
-  @Override
-  public void initialize(NotNull constraintAnnotation) {}
+	@Override
+	public void initialize(NotNull constraintAnnotation) {
+	}
 
-  @Override
-  public boolean isValid(Object value, ConstraintValidatorContext context) {
-    return value != null;
-  }
+	@Override
+	public boolean isValid(Object value, ConstraintValidatorContext context) {
+		return value != null;
+	}
 }

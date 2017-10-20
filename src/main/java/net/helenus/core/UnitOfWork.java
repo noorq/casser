@@ -15,41 +15,45 @@
  */
 package net.helenus.core;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
+import java.util.Optional;
 
-public interface UnitOfWork<E extends Exception> extends AutoCloseable {
+import net.helenus.core.cache.Facet;
 
-  /**
-   * Marks the beginning of a transactional section of work. Will write a record to the shared
-   * write-ahead log.
-   *
-   * @return the handle used to commit or abort the work.
-   */
-  UnitOfWork begin();
+public interface UnitOfWork<X extends Exception> extends AutoCloseable {
 
-  UnitOfWork addNestedUnitOfWork(UnitOfWork uow);
+	/**
+	 * Marks the beginning of a transactional section of work. Will write a record
+	 * to the shared write-ahead log.
+	 *
+	 * @return the handle used to commit or abort the work.
+	 */
+	UnitOfWork<X> begin();
 
-  /**
-   * Checks to see if the work performed between calling begin and now can be committed or not.
-   *
-   * @return a function from which to chain work that only happens when commit is successful
-   * @throws E when the work overlaps with other concurrent writers.
-   */
-  PostCommitFunction<Void, Void> commit() throws E;
+	void addNestedUnitOfWork(UnitOfWork<X> uow);
 
-  /**
-   * Explicitly abort the work within this unit of work. Any nested aborted unit of work will
-   * trigger the entire unit of work to commit.
-   */
-  void abort();
+	/**
+	 * Checks to see if the work performed between calling begin and now can be
+	 * committed or not.
+	 *
+	 * @return a function from which to chain work that only happens when commit is
+	 *         successful
+	 * @throws X
+	 *             when the work overlaps with other concurrent writers.
+	 */
+	PostCommitFunction<Void, Void> commit() throws X;
 
-  boolean hasAborted();
+	/**
+	 * Explicitly abort the work within this unit of work. Any nested aborted unit
+	 * of work will trigger the entire unit of work to commit.
+	 */
+	void abort();
 
-  boolean hasCommitted();
+	boolean hasAborted();
 
-  //Either<Object, Set<Object>> cacheLookup(String key);
-  Set<Object> cacheLookup(String key);
+	boolean hasCommitted();
 
-  Map<String, Set<Object>> getCache();
+	Optional<Object> cacheLookup(List<Facet> facets);
+
+	void cacheUpdate(Object pojo, List<Facet> facets);
 }

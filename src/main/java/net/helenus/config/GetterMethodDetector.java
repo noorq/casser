@@ -18,31 +18,32 @@ package net.helenus.config;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.function.Function;
+
 import net.helenus.mapping.annotation.Transient;
 
 public enum GetterMethodDetector implements Function<Method, Boolean> {
-  INSTANCE;
+	INSTANCE;
 
-  @Override
-  public Boolean apply(Method method) {
+	@Override
+	public Boolean apply(Method method) {
 
-    if (method == null) {
-      throw new IllegalArgumentException("empty parameter");
-    }
+		if (method == null) {
+			throw new IllegalArgumentException("empty parameter");
+		}
 
-    if (method.getParameterCount() != 0 || method.getReturnType() == void.class) {
-      return false;
-    }
+		if (method.getParameterCount() != 0 || method.getReturnType() == void.class) {
+			return false;
+		}
 
-    if (Modifier.isStatic(method.getModifiers())) {
-      return false;
-    }
+		if (Modifier.isStatic(method.getModifiers())) {
+			return false;
+		}
 
-    // Methods marked "Transient" are not mapped, skip them.
-    if (method.getDeclaredAnnotation(Transient.class) != null) {
-      return false;
-    }
+		// Methods marked "Transient" are not mapped, skip them.
+		if (method.getDeclaredAnnotation(Transient.class) != null) {
+			return false;
+		}
 
-    return true;
-  }
+		return true;
+	}
 }

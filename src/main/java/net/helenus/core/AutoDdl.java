@@ -16,8 +16,5 @@
 package net.helenus.core;
 
 public enum AutoDdl {
-  VALIDATE,
-  UPDATE,
-  CREATE,
-  CREATE_DROP;
+	VALIDATE, UPDATE, CREATE, CREATE_DROP;
 }

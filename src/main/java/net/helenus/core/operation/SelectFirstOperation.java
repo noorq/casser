@@ -15,40 +15,48 @@
  */
 package net.helenus.core.operation;
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.querybuilder.BuiltStatement;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-public final class SelectFirstOperation<E>
-    extends AbstractFilterOptionalOperation<E, SelectFirstOperation<E>> {
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.querybuilder.BuiltStatement;
 
-  private final SelectOperation<E> delegate;
+import net.helenus.core.cache.Facet;
 
-  public SelectFirstOperation(SelectOperation<E> delegate) {
-    super(delegate.sessionOps);
+public final class SelectFirstOperation<E> extends AbstractFilterOptionalOperation<E, SelectFirstOperation<E>> {
 
-    this.delegate = delegate;
-    this.filters = delegate.filters;
-    this.ifFilters = delegate.ifFilters;
-  }
+	private final SelectOperation<E> delegate;
 
-  public <R> SelectFirstTransformingOperation<R, E> map(Function<E, R> fn) {
-    return new SelectFirstTransformingOperation<R, E>(delegate, fn);
-  }
+	public SelectFirstOperation(SelectOperation<E> delegate) {
+		super(delegate.sessionOps);
 
-  @Override
-  public String getStatementCacheKey() {
-    return delegate.getStatementCacheKey();
-  }
+		this.delegate = delegate;
+		this.filters = delegate.filters;
+		this.ifFilters = delegate.ifFilters;
+	}
 
-  @Override
-  public BuiltStatement buildStatement(boolean cached) {
-    return delegate.buildStatement(cached);
-  }
+	public <R> SelectFirstTransformingOperation<R, E> map(Function<E, R> fn) {
+		return new SelectFirstTransformingOperation<R, E>(delegate, fn);
+	}
 
-  @Override
-  public Optional<E> transform(ResultSet resultSet) {
-    return delegate.transform(resultSet).findFirst();
-  }
+	@Override
+	public BuiltStatement buildStatement(boolean cached) {
+		return delegate.buildStatement(cached);
+	}
+
+	@Override
+	public List<Facet> getFacets() {
+		return delegate.getFacets();
+	}
+
+	@Override
+	public List<Facet> bindFacetValues() {
+		return delegate.bindFacetValues();
+	}
+
+	@Override
+	public Optional<E> transform(ResultSet resultSet) {
+		return delegate.transform(resultSet).findFirst();
+	}
 }

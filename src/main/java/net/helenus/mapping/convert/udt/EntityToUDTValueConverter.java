@@ -16,13 +16,13 @@
 package net.helenus.mapping.convert.udt;
 
 import com.datastax.driver.core.UserType;
+
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.convert.UDTValueWriter;
 
 public final class EntityToUDTValueConverter extends UDTValueWriter {
 
-  public EntityToUDTValueConverter(
-      Class<?> iface, UserType userType, SessionRepository repository) {
-    super(iface, userType, repository);
-  }
+	public EntityToUDTValueConverter(Class<?> iface, UserType userType, SessionRepository repository) {
+		super(iface, userType, repository);
+	}
 }

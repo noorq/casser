@@ -17,27 +17,27 @@ package net.helenus.mapping.validator;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+
 import net.helenus.mapping.annotation.Constraints;
 
-public final class MinLengthValidator
-    implements ConstraintValidator<Constraints.MinLength, Object>, SizeConstraint {
+public final class MinLengthValidator implements ConstraintValidator<Constraints.MinLength, Object>, SizeConstraint {
 
-  int minLength;
+	int minLength;
 
-  @Override
-  public void initialize(Constraints.MinLength constraintAnnotation) {
-    this.minLength = constraintAnnotation.value();
-  }
+	@Override
+	public void initialize(Constraints.MinLength constraintAnnotation) {
+		this.minLength = constraintAnnotation.value();
+	}
 
-  @Override
-  public boolean isValid(Object value, ConstraintValidatorContext context) {
+	@Override
+	public boolean isValid(Object value, ConstraintValidatorContext context) {
 
-    int[] size = getSize(value);
+		int[] size = getSize(value);
 
-    if (size == null || size.length == 0) {
-      return true;
-    }
+		if (size == null || size.length == 0) {
+			return true;
+		}
 
-    return size[0] >= minLength;
-  }
+		return size[0] >= minLength;
+	}
 }

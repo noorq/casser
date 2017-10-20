@@ -15,23 +15,25 @@
  */
 package net.helenus.mapping.convert.udt;
 
-import com.datastax.driver.core.UserType;
 import java.util.Map;
 import java.util.function.Function;
+
+import com.datastax.driver.core.UserType;
+
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.convert.UDTValueWriter;
 import net.helenus.support.Transformers;
 
 public final class MapToUDTKeyMapConverter implements Function<Object, Object> {
 
-  final UDTValueWriter writer;
+	final UDTValueWriter writer;
 
-  public MapToUDTKeyMapConverter(Class<?> iface, UserType userType, SessionRepository repository) {
-    this.writer = new UDTValueWriter(iface, userType, repository);
-  }
+	public MapToUDTKeyMapConverter(Class<?> iface, UserType userType, SessionRepository repository) {
+		this.writer = new UDTValueWriter(iface, userType, repository);
+	}
 
-  @Override
-  public Object apply(Object t) {
-    return Transformers.transformMapKey((Map<Object, Object>) t, writer);
-  }
+	@Override
+	public Object apply(Object t) {
+		return Transformers.transformMapKey((Map<Object, Object>) t, writer);
+	}
 }

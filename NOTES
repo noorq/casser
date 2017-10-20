@@ -1,3 +1,8 @@
+
+
+
+
+
 --- Cache
       // `E` is the type of the Entity class or one of:
       //     - ResultSet
@@ -315,3 +320,34 @@ begin:
       }
     };
   }
+----------------------------------
+      if ("ttl".equals(methodName) && method.getParameterCount() == 1 && method.getReturnType() == int.class) {
+          Getter getter = (Getter) args[0];
+          if (getter == null) {
+              return false;
+          }
+          HelenusProperty prop = MappingUtil.resolveMappingProperty(getter).getProperty();
+          String getterName = prop.getPropertyName();
+          String ttlKeyForProperty = prop.getColumnName().toCql() + "_ttl";
+          if (src.containsKey(ttlKeyForProperty)) {
+              return src.get(ttlKeyForProperty);
+          } else {
+              return 0;
+          }
+      }
+
+      if ("written".equals(methodName) && method.getParameterCount() == 1 && method.getReturnType() == int.class) {
+          Getter getter = (Getter) args[0];
+          if (getter == null) {
+              return false;
+          }
+          HelenusProperty prop = MappingUtil.resolveMappingProperty(getter).getProperty();
+          String getterName = prop.getPropertyName();
+          String ttlKeyForProperty = prop.getColumnName().toCql() + "_ttl";
+          if (src.containsKey(ttlKeyForProperty)) {
+              return src.get(ttlKeyForProperty);
+          } else {
+              return 0;
+          }
+      }
+

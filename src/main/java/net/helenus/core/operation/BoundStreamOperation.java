@@ -15,36 +15,38 @@
  */
 package net.helenus.core.operation;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Statement;
-import java.util.stream.Stream;
 
-public final class BoundStreamOperation<E>
-    extends AbstractStreamOperation<E, BoundStreamOperation<E>> {
+import net.helenus.core.cache.Facet;
 
-  private final BoundStatement boundStatement;
-  private final AbstractStreamOperation<E, ?> delegate;
+public final class BoundStreamOperation<E> extends AbstractStreamOperation<E, BoundStreamOperation<E>> {
 
-  public BoundStreamOperation(
-      BoundStatement boundStatement, AbstractStreamOperation<E, ?> operation) {
-    super(operation.sessionOps);
-    this.boundStatement = boundStatement;
-    this.delegate = operation;
-  }
+	private final BoundStatement boundStatement;
+	private final AbstractStreamOperation<E, ?> delegate;
 
-  @Override
-  public String getStatementCacheKey() {
-    return delegate.getStatementCacheKey();
-  }
+	public BoundStreamOperation(BoundStatement boundStatement, AbstractStreamOperation<E, ?> operation) {
+		super(operation.sessionOps);
+		this.boundStatement = boundStatement;
+		this.delegate = operation;
+	}
 
-  @Override
-  public Stream<E> transform(ResultSet resultSet) {
-    return delegate.transform(resultSet);
-  }
+	@Override
+	public List<Facet> bindFacetValues() {
+		return delegate.bindFacetValues();
+	}
 
-  @Override
-  public Statement buildStatement(boolean cached) {
-    return boundStatement;
-  }
+	@Override
+	public Stream<E> transform(ResultSet resultSet) {
+		return delegate.transform(resultSet);
+	}
+
+	@Override
+	public Statement buildStatement(boolean cached) {
+		return boundStatement;
+	}
 }

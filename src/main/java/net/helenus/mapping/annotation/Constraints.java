@@ -16,200 +16,240 @@
 package net.helenus.mapping.annotation;
 
 import java.lang.annotation.*;
+
 import javax.validation.Constraint;
+
 import net.helenus.mapping.validator.*;
 
 /**
- * Constraint annotations are using for data integrity mostly for @java.lang.String types. The place
- * of the annotation is the particular method in model interface.
+ * Constraint annotations are using for data integrity mostly
+ * for @java.lang.String types. The place of the annotation is the particular
+ * method in model interface.
  *
- * <p>All of them does not have effect on selects and data retrieval operations.
+ * <p>
+ * All of them does not have effect on selects and data retrieval operations.
  *
- * <p>Support types: - @NotNull supports any @java.lang.Object type - All annotations
- * support @java.lang.String type
+ * <p>
+ * Support types: - @NotNull supports any @java.lang.Object type - All
+ * annotations support @java.lang.String type
  */
 public final class Constraints {
 
-  private Constraints() {}
+	private Constraints() {
+	}
 
-  /**
-   * NotNull annotation is using to check that value is not null before storing it
-   *
-   * <p>Applicable to use in any @java.lang.Object
-   *
-   * <p>It does not check on selects and data retrieval operations
-   */
-  @Documented
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Constraint(validatedBy = NotNullValidator.class)
-  public @interface NotNull {}
+	/**
+	 * NotNull annotation is using to check that value is not null before storing it
+	 *
+	 * <p>
+	 * Applicable to use in any @java.lang.Object
+	 *
+	 * <p>
+	 * It does not check on selects and data retrieval operations
+	 */
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+	@Constraint(validatedBy = NotNullValidator.class)
+	public @interface NotNull {
+	}
 
-  /**
-   * NotEmpty annotation is using to check that value has text before storing it
-   *
-   * <p>Also checks for the null and it is more strict annotation then @NotNull
-   *
-   * <p>Can be used for @java.lang.CharSequence, @ByteBuffer and any array
-   *
-   * <p>It does not check on selects and data retrieval operations
-   */
-  @Documented
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Constraint(validatedBy = NotEmptyValidator.class)
-  public @interface NotEmpty {}
+	/**
+	 * NotEmpty annotation is using to check that value has text before storing it
+	 *
+	 * <p>
+	 * Also checks for the null and it is more strict annotation then @NotNull
+	 *
+	 * <p>
+	 * Can be used for @java.lang.CharSequence, @ByteBuffer and any array
+	 *
+	 * <p>
+	 * It does not check on selects and data retrieval operations
+	 */
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+	@Constraint(validatedBy = NotEmptyValidator.class)
+	public @interface NotEmpty {
+	}
 
-  /**
-   * Email annotation is using to check that value has a valid email before storing it
-   *
-   * <p>Can be used only for @CharSequence
-   *
-   * <p>It does not check on selects and data retrieval operations
-   */
-  @Documented
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Constraint(validatedBy = EmailValidator.class)
-  public @interface Email {}
+	/**
+	 * Email annotation is using to check that value has a valid email before
+	 * storing it
+	 *
+	 * <p>
+	 * Can be used only for @CharSequence
+	 *
+	 * <p>
+	 * It does not check on selects and data retrieval operations
+	 */
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+	@Constraint(validatedBy = EmailValidator.class)
+	public @interface Email {
+	}
 
-  /**
-   * Number annotation is using to check that all letters in value are digits before storing it
-   *
-   * <p>Can be used only for @java.lang.CharSequence
-   *
-   * <p>It does not check on selects and data retrieval operations
-   */
-  @Documented
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Constraint(validatedBy = NumberValidator.class)
-  public @interface Number {}
+	/**
+	 * Number annotation is using to check that all letters in value are digits
+	 * before storing it
+	 *
+	 * <p>
+	 * Can be used only for @java.lang.CharSequence
+	 *
+	 * <p>
+	 * It does not check on selects and data retrieval operations
+	 */
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+	@Constraint(validatedBy = NumberValidator.class)
+	public @interface Number {
+	}
 
-  /**
-   * Alphabet annotation is using to check that all letters in value are in specific alphabet before
-   * storing it
-   *
-   * <p>Can be used only for @java.lang.CharSequence
-   *
-   * <p>It does not check on selects and data retrieval operations
-   */
-  @Documented
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Constraint(validatedBy = AlphabetValidator.class)
-  public @interface Alphabet {
+	/**
+	 * Alphabet annotation is using to check that all letters in value are in
+	 * specific alphabet before storing it
+	 *
+	 * <p>
+	 * Can be used only for @java.lang.CharSequence
+	 *
+	 * <p>
+	 * It does not check on selects and data retrieval operations
+	 */
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+	@Constraint(validatedBy = AlphabetValidator.class)
+	public @interface Alphabet {
 
-    /**
-     * Defines alphabet that will be used to check value
-     *
-     * @return alphabet characters in the string
-     */
-    String value();
-  }
+		/**
+		 * Defines alphabet that will be used to check value
+		 *
+		 * @return alphabet characters in the string
+		 */
+		String value();
+	}
 
-  /**
-   * Length annotation is using to ensure that value has exact length before storing it
-   *
-   * <p>Can be used for @java.lang.CharSequence, @ByteBuffer and any array
-   *
-   * <p>It does not have effect on selects and data retrieval operations
-   */
-  @Documented
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Constraint(validatedBy = LengthValidator.class)
-  public @interface Length {
+	/**
+	 * Length annotation is using to ensure that value has exact length before
+	 * storing it
+	 *
+	 * <p>
+	 * Can be used for @java.lang.CharSequence, @ByteBuffer and any array
+	 *
+	 * <p>
+	 * It does not have effect on selects and data retrieval operations
+	 */
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+	@Constraint(validatedBy = LengthValidator.class)
+	public @interface Length {
 
-    int value();
-  }
+		int value();
+	}
 
-  /**
-   * MaxLength annotation is using to ensure that value has length less or equal to some threshold
-   * before storing it
-   *
-   * <p>Can be used for @java.lang.CharSequence, @ByteBuffer and byte[]
-   *
-   * <p>It does not have effect on selects and data retrieval operations
-   */
-  @Documented
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Constraint(validatedBy = MaxLengthValidator.class)
-  public @interface MaxLength {
+	/**
+	 * MaxLength annotation is using to ensure that value has length less or equal
+	 * to some threshold before storing it
+	 *
+	 * <p>
+	 * Can be used for @java.lang.CharSequence, @ByteBuffer and byte[]
+	 *
+	 * <p>
+	 * It does not have effect on selects and data retrieval operations
+	 */
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+	@Constraint(validatedBy = MaxLengthValidator.class)
+	public @interface MaxLength {
 
-    int value();
-  }
+		int value();
+	}
 
-  /**
-   * MinLength annotation is using to ensure that value has length greater or equal to some
-   * threshold before storing it
-   *
-   * <p>Can be used for @java.lang.CharSequence, @ByteBuffer and byte[]
-   *
-   * <p>It does not have effect on selects and data retrieval operations
-   */
-  @Documented
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Constraint(validatedBy = MinLengthValidator.class)
-  public @interface MinLength {
+	/**
+	 * MinLength annotation is using to ensure that value has length greater or
+	 * equal to some threshold before storing it
+	 *
+	 * <p>
+	 * Can be used for @java.lang.CharSequence, @ByteBuffer and byte[]
+	 *
+	 * <p>
+	 * It does not have effect on selects and data retrieval operations
+	 */
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+	@Constraint(validatedBy = MinLengthValidator.class)
+	public @interface MinLength {
 
-    int value();
-  }
+		int value();
+	}
 
-  /**
-   * LowerCase annotation is using to ensure that value is in lower case before storing it
-   *
-   * <p>Can be used only for @java.lang.CharSequence
-   *
-   * <p>It does not have effect on selects and data retrieval operations
-   */
-  @Documented
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Constraint(validatedBy = LowerCaseValidator.class)
-  public @interface LowerCase {}
+	/**
+	 * LowerCase annotation is using to ensure that value is in lower case before
+	 * storing it
+	 *
+	 * <p>
+	 * Can be used only for @java.lang.CharSequence
+	 *
+	 * <p>
+	 * It does not have effect on selects and data retrieval operations
+	 */
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+	@Constraint(validatedBy = LowerCaseValidator.class)
+	public @interface LowerCase {
+	}
 
-  /**
-   * UpperCase annotation is using to ensure that value is in upper case before storing it
-   *
-   * <p>Can be used only for @java.lang.CharSequence
-   *
-   * <p>It does not have effect on selects and data retrieval operations
-   */
-  @Documented
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Constraint(validatedBy = UpperCaseValidator.class)
-  public @interface UpperCase {}
+	/**
+	 * UpperCase annotation is using to ensure that value is in upper case before
+	 * storing it
+	 *
+	 * <p>
+	 * Can be used only for @java.lang.CharSequence
+	 *
+	 * <p>
+	 * It does not have effect on selects and data retrieval operations
+	 */
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+	@Constraint(validatedBy = UpperCaseValidator.class)
+	public @interface UpperCase {
+	}
 
-  /**
-   * Pattern annotation is LowerCase annotation is using to ensure that value is upper case before
-   * storing it
-   *
-   * <p>Can be used only for @java.lang.CharSequence
-   *
-   * <p>It does not have effect on selects and data retrieval operations
-   */
-  @Documented
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-  @Constraint(validatedBy = PatternValidator.class)
-  public @interface Pattern {
+	/**
+	 * Pattern annotation is LowerCase annotation is using to ensure that value is
+	 * upper case before storing it
+	 *
+	 * <p>
+	 * Can be used only for @java.lang.CharSequence
+	 *
+	 * <p>
+	 * It does not have effect on selects and data retrieval operations
+	 */
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+	@Constraint(validatedBy = PatternValidator.class)
+	public @interface Pattern {
 
-    /**
-     * User defined regex expression to check match of the value
-     *
-     * @return Java regex pattern
-     */
-    String value();
+		/**
+		 * User defined regex expression to check match of the value
+		 *
+		 * @return Java regex pattern
+		 */
+		String value();
 
-    /**
-     * Regex flags composition
-     *
-     * @return Java regex flags
-     */
-    int flags();
-  }
+		/**
+		 * Regex flags composition
+		 *
+		 * @return Java regex flags
+		 */
+		int flags();
+	}
 }

@@ -21,7 +21,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
-
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
@@ -60,15 +59,15 @@ public class MaterializedViewTest extends AbstractEmbeddedCassandraTest {
 
     try {
       session
-        .insert(cyclist)
-        .value(cyclist::cid, UUID.randomUUID())
-        .value(cyclist::age, 18)
-        .value(cyclist::birthday, dateFromString("1997-02-08"))
-        .value(cyclist::country, "Netherlands")
-        .value(cyclist::name, "Pascal EENKHOORN")
-        .sync();
+          .insert(cyclist)
+          .value(cyclist::cid, UUID.randomUUID())
+          .value(cyclist::age, 18)
+          .value(cyclist::birthday, dateFromString("1997-02-08"))
+          .value(cyclist::country, "Netherlands")
+          .value(cyclist::name, "Pascal EENKHOORN")
+          .sync();
+    } catch (TimeoutException e) {
     }
-    catch (TimeoutException e) {}
   }
 
   @Test

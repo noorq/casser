@@ -15,6 +15,7 @@
  */
 package net.helenus.test.integration.core.tuple;
 
+import java.util.concurrent.TimeoutException;
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.core.Query;
@@ -22,8 +23,6 @@ import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.concurrent.TimeoutException;
 
 public class InnerTupleTest extends AbstractEmbeddedCassandraTest {
 
