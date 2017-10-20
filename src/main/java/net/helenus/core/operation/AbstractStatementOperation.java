@@ -15,6 +15,10 @@
  */
 package net.helenus.core.operation;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -34,17 +38,21 @@ import com.google.common.util.concurrent.ListenableFuture;
 import brave.Tracer;
 import brave.propagation.TraceContext;
 import net.helenus.core.AbstractSessionOperations;
+import net.helenus.core.UnitOfWork;
+import net.helenus.core.cache.Facet;
+import net.helenus.core.cache.UnboundFacet;
+import net.helenus.core.reflect.MapExportable;
+import net.helenus.mapping.value.BeanColumnValueProvider;
 import net.helenus.support.HelenusException;
 
 public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>> extends Operation<E> {
 
 	final Logger logger = LoggerFactory.getLogger(getClass());
-
-	public abstract Statement buildStatement(boolean cached);
-
 	protected boolean enableCache = true;
 	protected boolean showValues = true;
 	protected TraceContext traceContext;
+	long queryExecutionTimeout = 10;
+	TimeUnit queryTimeoutUnits = TimeUnit.SECONDS;
 	private ConsistencyLevel consistencyLevel;
 	private ConsistencyLevel serialConsistencyLevel;
 	private RetryPolicy retryPolicy;
@@ -52,14 +60,14 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 	private boolean enableTracing = false;
 	private long[] defaultTimestamp = null;
 	private int[] fetchSize = null;
-	long queryExecutionTimeout = 10;
-	TimeUnit queryTimeoutUnits = TimeUnit.SECONDS;
 
 	public AbstractStatementOperation(AbstractSessionOperations sessionOperations) {
 		super(sessionOperations);
 		this.consistencyLevel = sessionOperations.getDefaultConsistencyLevel();
 		this.idempotent = sessionOperations.getDefaultQueryIdempotency();
 	}
+
+	public abstract Statement buildStatement(boolean cached);
 
 	public O ignoreCache(boolean enabled) {
 		enableCache = enabled;
@@ -308,5 +316,52 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		}
 
 		throw new HelenusException("only RegularStatements can be prepared");
+	}
+
+	protected E checkCache(UnitOfWork<?> uow, List<Facet> facets) {
+		E result = null;
+		Optional<Object> optionalCachedResult = Optional.empty();
+
+		if (!facets.isEmpty()) {
+			optionalCachedResult = uow.cacheLookup(facets);
+			if (optionalCachedResult.isPresent()) {
+				uowCacheHits.mark();
+				logger.info("UnitOfWork({}) cache hit using facets", uow.hashCode());
+				result = (E) optionalCachedResult.get();
+			}
+		}
+
+		if (result == null) {
+			uowCacheMiss.mark();
+			logger.info("UnitOfWork({}) cache miss", uow.hashCode());
+		}
+
+		return result;
+	}
+
+	protected void updateCache(UnitOfWork<?> uow, E pojo, List<Facet> identifyingFacets) {
+		List<Facet> facets = new ArrayList<>();
+		Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
+
+		for (Facet facet : identifyingFacets) {
+			if (facet instanceof UnboundFacet) {
+				UnboundFacet unboundFacet = (UnboundFacet) facet;
+				UnboundFacet.Binder binder = unboundFacet.binder();
+				unboundFacet.getProperties().forEach(prop -> {
+					if (valueMap == null) {
+						Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
+						binder.setValueForProperty(prop, value.toString());
+					} else {
+						binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
+					}
+					facets.add(binder.bind());
+				});
+			} else {
+				facets.add(facet);
+			}
+		}
+
+		// Cache the value (pojo), the statement key, and the fully bound facets.
+		uow.cacheUpdate(pojo, facets);
 	}
 }

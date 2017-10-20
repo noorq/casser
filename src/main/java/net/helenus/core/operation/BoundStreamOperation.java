@@ -15,11 +15,14 @@
  */
 package net.helenus.core.operation;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Statement;
+
+import net.helenus.core.cache.Facet;
 
 public final class BoundStreamOperation<E> extends AbstractStreamOperation<E, BoundStreamOperation<E>> {
 
@@ -33,8 +36,8 @@ public final class BoundStreamOperation<E> extends AbstractStreamOperation<E, Bo
 	}
 
 	@Override
-	public String getStatementCacheKey() {
-		return delegate.getStatementCacheKey();
+	public List<Facet> bindFacetValues() {
+		return delegate.bindFacetValues();
 	}
 
 	@Override

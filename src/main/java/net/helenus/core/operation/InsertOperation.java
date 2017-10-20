@@ -23,13 +23,13 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.google.common.base.Joiner;
 
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.Getter;
 import net.helenus.core.Helenus;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.reflect.DefaultPrimitiveTypes;
+import net.helenus.core.reflect.Drafted;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusProperty;
@@ -166,6 +166,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 		Class<?> iface = entity.getMappingInterface();
 		if (resultType == iface) {
 			if (values.size() > 0) {
+				boolean immutable = iface.isAssignableFrom(Drafted.class);
 				Collection<HelenusProperty> properties = entity.getOrderedProperties();
 				Map<String, Object> backingMap = new HashMap<String, Object>(properties.size());
 
@@ -187,7 +188,8 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 						// If we started this operation with an instance of this type, use values from
 						// that.
 						if (pojo != null) {
-							backingMap.put(key, BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+							backingMap.put(key,
+									BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, immutable));
 						} else {
 							// Otherwise we'll use default values for the property type if available.
 							Class<?> propType = prop.getJavaType();
@@ -235,23 +237,6 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 	}
 
 	@Override
-	public String getStatementCacheKey() {
-		List<String> keys = new ArrayList<>(values.size());
-		values.forEach(t -> {
-			HelenusPropertyNode prop = t._1;
-			switch (prop.getProperty().getColumnType()) {
-				case PARTITION_KEY :
-				case CLUSTERING_COLUMN :
-					keys.add(prop.getColumnName() + "==" + t._2.toString());
-					break;
-				default :
-					break;
-			}
-		});
-		return entity.getName() + ": " + Joiner.on(",").join(keys);
-	}
-
-	@Override
 	public T sync(UnitOfWork uow) throws TimeoutException {
 		if (uow == null) {
 			return sync();
@@ -259,12 +244,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 		T result = super.sync(uow);
 		Class<?> iface = entity.getMappingInterface();
 		if (resultType == iface) {
-			String key = getStatementCacheKey();
-			if (key != null) {
-				Set<Object> set = new HashSet<Object>(1);
-				set.add(result);
-				uow.getCache().put(key, set);
-			}
+			updateCache(uow, result, entity.getFacets());
 		}
 		return result;
 	}

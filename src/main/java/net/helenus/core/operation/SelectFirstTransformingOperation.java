@@ -15,11 +15,14 @@
  */
 package net.helenus.core.operation;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
+
+import net.helenus.core.cache.Facet;
 
 public final class SelectFirstTransformingOperation<R, E>
 		extends
@@ -38,8 +41,8 @@ public final class SelectFirstTransformingOperation<R, E>
 	}
 
 	@Override
-	public String getStatementCacheKey() {
-		return delegate.getStatementCacheKey();
+	public List<Facet> bindFacetValues() {
+		return delegate.bindFacetValues();
 	}
 
 	@Override

@@ -17,13 +17,18 @@ package net.helenus.mapping.value;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.Row;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.HelenusProperty;
@@ -37,15 +42,15 @@ public final class RowColumnValueProvider implements ColumnValueProvider {
 	}
 
 	@Override
-	public <V> V getColumnValue(Object sourceObj, int columnIndex, HelenusProperty property) {
+	public <V> V getColumnValue(Object sourceObj, int columnIndex, HelenusProperty property, boolean immutable) {
 
 		Row source = (Row) sourceObj;
 
 		Object value = null;
 		if (columnIndex != -1) {
-			value = readValueByIndex(source, columnIndex);
+			value = readValueByIndex(source, columnIndex, immutable);
 		} else {
-			value = readValueByName(source, property.getColumnName().getName());
+			value = readValueByName(source, property.getColumnName().getName(), immutable);
 		}
 
 		if (value != null) {
@@ -60,7 +65,7 @@ public final class RowColumnValueProvider implements ColumnValueProvider {
 		return (V) value;
 	}
 
-	private Object readValueByIndex(Row source, int columnIndex) {
+	private Object readValueByIndex(Row source, int columnIndex, boolean immutable) {
 
 		if (source.isNull(columnIndex)) {
 			return null;
@@ -76,12 +81,15 @@ public final class RowColumnValueProvider implements ColumnValueProvider {
 
 			switch (columnType.getName()) {
 				case SET :
-					return source.getSet(columnIndex, codecFor(typeArguments.get(0)).getJavaType());
+					Set set = source.getSet(columnIndex, codecFor(typeArguments.get(0)).getJavaType());
+					return immutable ? ImmutableSet.copyOf(set) : set;
 				case MAP :
-					return source.getMap(columnIndex, codecFor(typeArguments.get(0)).getJavaType(),
+					Map map = source.getMap(columnIndex, codecFor(typeArguments.get(0)).getJavaType(),
 							codecFor(typeArguments.get(1)).getJavaType());
+					return immutable ? ImmutableMap.copyOf(map) : map;
 				case LIST :
-					return source.getList(columnIndex, codecFor(typeArguments.get(0)).getJavaType());
+					List list = source.getList(columnIndex, codecFor(typeArguments.get(0)).getJavaType());
+					return immutable ? ImmutableList.copyOf(list) : list;
 			}
 		}
 
@@ -91,7 +99,7 @@ public final class RowColumnValueProvider implements ColumnValueProvider {
 		return value;
 	}
 
-	private Object readValueByName(Row source, String columnName) {
+	private Object readValueByName(Row source, String columnName, boolean immutable) {
 
 		if (source.isNull(columnName)) {
 			return null;
@@ -107,12 +115,15 @@ public final class RowColumnValueProvider implements ColumnValueProvider {
 
 			switch (columnType.getName()) {
 				case SET :
-					return source.getSet(columnName, codecFor(typeArguments.get(0)).getJavaType());
+					Set set = source.getSet(columnName, codecFor(typeArguments.get(0)).getJavaType());
+					return immutable ? ImmutableSet.copyOf(set) : set;
 				case MAP :
-					return source.getMap(columnName, codecFor(typeArguments.get(0)).getJavaType(),
+					Map map = source.getMap(columnName, codecFor(typeArguments.get(0)).getJavaType(),
 							codecFor(typeArguments.get(1)).getJavaType());
+					return immutable ? ImmutableMap.copyOf(map) : map;
 				case LIST :
-					return source.getList(columnName, codecFor(typeArguments.get(0)).getJavaType());
+					List list = source.getList(columnName, codecFor(typeArguments.get(0)).getJavaType());
+					return immutable ? ImmutableList.copyOf(list) : list;
 			}
 		}
 

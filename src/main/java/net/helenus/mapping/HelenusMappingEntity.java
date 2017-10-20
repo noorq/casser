@@ -28,6 +28,8 @@ import com.google.common.collect.ImmutableMap;
 import net.helenus.config.HelenusSettings;
 import net.helenus.core.Helenus;
 import net.helenus.core.annotation.Cacheable;
+import net.helenus.core.cache.Facet;
+import net.helenus.core.cache.UnboundFacet;
 import net.helenus.mapping.annotation.*;
 import net.helenus.support.HelenusMappingException;
 
@@ -40,6 +42,7 @@ public final class HelenusMappingEntity implements HelenusEntity {
 	private final ImmutableMap<String, Method> methods;
 	private final ImmutableMap<String, HelenusProperty> props;
 	private final ImmutableList<HelenusProperty> orderedProps;
+	private final List<Facet> facets;
 
 	public HelenusMappingEntity(Class<?> iface, Metadata metadata) {
 		this(iface, autoDetectType(iface), metadata);
@@ -105,7 +108,34 @@ public final class HelenusMappingEntity implements HelenusEntity {
 
 		validateOrdinals();
 
+		// Caching
 		cacheable = (null != iface.getDeclaredAnnotation(Cacheable.class));
+
+		List<HelenusProperty> primaryKeyProperties = new ArrayList<>();
+		ImmutableList.Builder<Facet> facetsBuilder = ImmutableList.builder();
+		facetsBuilder.add(new Facet("table", name.toCql()));
+		for (HelenusProperty prop : orderedProps) {
+			switch (prop.getColumnType()) {
+				case PARTITION_KEY :
+				case CLUSTERING_COLUMN :
+					primaryKeyProperties.add(prop);
+					break;
+				default :
+					if (primaryKeyProperties != null && primaryKeyProperties.size() > 0) {
+						facetsBuilder.add(new UnboundFacet(primaryKeyProperties));
+						primaryKeyProperties = null;
+					}
+					Optional<IdentityName> optionalIndexName = prop.getIndexName();
+					if (optionalIndexName.isPresent()) {
+						UnboundFacet facet = new UnboundFacet(prop);
+						facetsBuilder.add(facet);
+					}
+			}
+		}
+		if (primaryKeyProperties != null && primaryKeyProperties.size() > 0) {
+			facetsBuilder.add(new UnboundFacet(primaryKeyProperties));
+		}
+		this.facets = facetsBuilder.build();
 	}
 
 	@Override
@@ -136,6 +166,11 @@ public final class HelenusMappingEntity implements HelenusEntity {
 			return property; // TODO(gburd): review adding these into the props map...
 		}
 		return props.get(name);
+	}
+
+	@Override
+	public List<Facet> getFacets() {
+		return facets;
 	}
 
 	@Override

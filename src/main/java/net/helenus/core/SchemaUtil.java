@@ -140,6 +140,28 @@ public final class SchemaUtil {
 		return SchemaBuilder.dropType(type.getTypeName()).ifExists();
 	}
 
+	public static String createPrimaryKeyPhrase(Collection<HelenusProperty> properties) {
+		List<String> p = new ArrayList<String>(properties.size());
+		List<String> c = new ArrayList<String>(properties.size());
+
+		for (HelenusProperty prop : properties) {
+			String columnName = prop.getColumnName().toCql();
+			switch (prop.getColumnType()) {
+				case PARTITION_KEY :
+					p.add(columnName);
+					break;
+				case CLUSTERING_COLUMN :
+					c.add(columnName);
+					break;
+				default :
+					break;
+			}
+		}
+
+		return "(" + ((p.size() > 1) ? "(" + String.join(", ", p) + ")" : p.get(0))
+				+ ((c.size() > 0) ? ", " + ((c.size() > 1) ? "(" + String.join(", ", c) + ")" : c.get(0)) : "") + ")";
+	}
+
 	public static SchemaStatement createMaterializedView(String keyspace, String viewName, HelenusEntity entity) {
 		if (entity.getType() != HelenusEntityType.VIEW) {
 			throw new HelenusMappingException("expected view entity " + entity);
@@ -162,20 +184,16 @@ public final class SchemaUtil {
 		Class<?> iface = entity.getMappingInterface();
 		String tableName = Helenus.entity(iface.getInterfaces()[0]).getName().toCql();
 		Select.Where where = selection.from(tableName).where();
-		List<String> p = new ArrayList<String>(props.size());
-		List<String> c = new ArrayList<String>(props.size());
 		List<String> o = new ArrayList<String>(props.size());
 
 		for (HelenusPropertyNode prop : props) {
 			String columnName = prop.getColumnName();
 			switch (prop.getProperty().getColumnType()) {
 				case PARTITION_KEY :
-					p.add(columnName);
 					where = where.and(new IsNotNullClause(columnName));
 					break;
 
 				case CLUSTERING_COLUMN :
-					c.add(columnName);
 					where = where.and(new IsNotNullClause(columnName));
 
 					ClusteringColumn clusteringColumn = prop.getProperty().getGetterMethod()
@@ -189,8 +207,7 @@ public final class SchemaUtil {
 			}
 		}
 
-		String primaryKey = "PRIMARY KEY (" + ((p.size() > 1) ? "(" + String.join(", ", p) + ")" : p.get(0))
-				+ ((c.size() > 0) ? ", " + ((c.size() > 1) ? "(" + String.join(", ", c) + ")" : c.get(0)) : "") + ")";
+		String primaryKey = "PRIMARY KEY " + createPrimaryKeyPhrase(entity.getOrderedProperties());
 
 		String clustering = "";
 		if (o.size() > 0) {

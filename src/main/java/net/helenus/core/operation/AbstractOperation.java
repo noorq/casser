@@ -27,14 +27,14 @@ import net.helenus.core.UnitOfWork;
 
 public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> extends AbstractStatementOperation<E, O> {
 
+	public AbstractOperation(AbstractSessionOperations sessionOperations) {
+		super(sessionOperations);
+	}
+
 	public abstract E transform(ResultSet resultSet);
 
 	public boolean cacheable() {
 		return false;
-	}
-
-	public AbstractOperation(AbstractSessionOperations sessionOperations) {
-		super(sessionOperations);
 	}
 
 	public PreparedOperation<E> prepare() {

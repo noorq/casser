@@ -575,13 +575,10 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 			return sync();
 		}
 		E result = super.sync(uow);
+		// TODO(gburd): Only drafted entity objects are updated in the cache at this
+		// time.
 		if (draft != null) {
-			String key = getStatementCacheKey();
-			if (key != null) {
-				Set<Object> set = new HashSet<Object>(1);
-				set.add(result);
-				uow.getCache().put(key, set);
-			}
+			updateCache(uow, result, getFacets());
 		}
 		return result;
 	}

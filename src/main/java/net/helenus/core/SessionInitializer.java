@@ -264,7 +264,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
 			}
 
 			DslExportable dsl = (DslExportable) Helenus.dsl(iface);
-			dsl.setCassandraMetadataForHelenusSesion(session.getCluster().getMetadata());
+			dsl.setCassandraMetadataForHelenusSession(session.getCluster().getMetadata());
 			sessionRepository.add(dsl);
 		});
 

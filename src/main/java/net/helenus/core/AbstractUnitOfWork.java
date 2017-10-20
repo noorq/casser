@@ -18,17 +18,23 @@ package net.helenus.core;
 import java.util.*;
 
 import com.diffplug.common.base.Errors;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import com.google.common.collect.TreeTraverser;
 
+import net.helenus.core.cache.Facet;
+
 /** Encapsulates the concept of a "transaction" as a unit-of-work. */
-public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfWork, AutoCloseable {
+public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfWork<E>, AutoCloseable {
 	private final List<AbstractUnitOfWork<E>> nested = new ArrayList<>();
 	private final HelenusSession session;
 	private final AbstractUnitOfWork<E> parent;
 	private List<CommitThunk> postCommit = new ArrayList<CommitThunk>();
-	private final Map<String, Set<Object>> cache = new HashMap<String, Set<Object>>();
 	private boolean aborted = false;
 	private boolean committed = false;
+
+	// Cache:
+	private final Table<String, String, Object> cache = HashBasedTable.create();
 
 	protected AbstractUnitOfWork(HelenusSession session, AbstractUnitOfWork<E> parent) {
 		Objects.requireNonNull(session, "containing session cannot be null");
@@ -37,14 +43,15 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		this.parent = parent;
 	}
 
-	public UnitOfWork addNestedUnitOfWork(UnitOfWork uow) {
+	@Override
+	public void addNestedUnitOfWork(UnitOfWork<E> uow) {
 		synchronized (nested) {
 			nested.add((AbstractUnitOfWork<E>) uow);
 		}
-		return this;
 	}
 
-	public UnitOfWork begin() {
+	@Override
+	public UnitOfWork<E> begin() {
 		// log.record(txn::start)
 		return this;
 	}
@@ -57,20 +64,41 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		}
 	}
 
-	public Set<Object> cacheLookup(String key) {
-		Set<Object> r = getCache().get(key);
-		if (r != null) {
-			return r;
-		} else {
-			if (parent != null) {
-				return parent.cacheLookup(key);
+	@Override
+	public Optional<Object> cacheLookup(List<Facet> facets) {
+		Facet table = facets.remove(0);
+		String tableName = table.value().toString();
+		Optional<Object> result = Optional.empty();
+		for (Facet facet : facets) {
+			String columnName = facet.name() + "==" + facet.value();
+			Object value = cache.get(tableName, columnName);
+			if (value != null) {
+				if (result.isPresent() && result.get() != value) {
+					// One facet matched, but another did not.
+					result = Optional.empty();
+					break;
+				} else {
+					result = Optional.of(value);
+				}
 			}
 		}
-		return null;
+		if (!result.isPresent()) {
+			// Be sure to check all enclosing UnitOfWork caches as well, we may be nested.
+			if (parent != null) {
+				return parent.cacheLookup(facets);
+			}
+		}
+		return result;
 	}
 
-	public Map<String, Set<Object>> getCache() {
-		return cache;
+	@Override
+	public void cacheUpdate(Object value, List<Facet> facets) {
+		Facet table = facets.remove(0);
+		String tableName = table.value().toString();
+		for (Facet facet : facets) {
+			String columnName = facet.name() + "==" + facet.value();
+			cache.put(tableName, columnName, value);
+		}
 	}
 
 	private Iterator<AbstractUnitOfWork<E>> getChildNodes() {
@@ -108,25 +136,14 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			committed = true;
 			aborted = false;
 
-			// TODO(gburd): union this cache with parent's (if there is a parent) or with
-			// the session cache for all cacheable entities we currently hold
-
 			nested.forEach((uow) -> Errors.rethrow().wrap(uow::commit));
 
 			// Merge UOW cache into parent's cache.
 			if (parent != null) {
-				Map<String, Set<Object>> parentCache = parent.getCache();
-				for (String key : cache.keySet()) {
-					if (parentCache.containsKey(key)) {
-						// merge the sets
-						Set<Object> ps = parentCache.get(key);
-						ps.addAll(cache.get(key)); // TODO(gburd): review this, likely not correct in all cases as-is.
-					} else {
-						// add the missing set
-						parentCache.put(key, cache.get(key));
-					}
-				}
-			}
+				parent.mergeCache(cache);
+			} // else {
+				// TODO... merge into session cache objects marked cacheable
+				// }
 
 			// Apply all post-commit functions for
 			if (parent == null) {
@@ -152,6 +169,23 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		});
 		// log.record(txn::abort)
 		// cache.invalidateSince(txn::start time)
+	}
+
+	private void mergeCache(Table<String, String, Object> from) {
+		Table<String, String, Object> to = this.cache;
+		from.rowMap().forEach((rowKey, columnMap) -> {
+			columnMap.forEach((columnKey, value) -> {
+				if (to.contains(rowKey, columnKey)) {
+					to.put(rowKey, columnKey, merge(to.get(rowKey, columnKey), from.get(rowKey, columnKey)));
+				} else {
+					to.put(rowKey, columnKey, from.get(rowKey, columnKey));
+				}
+			});
+		});
+	}
+
+	private Object merge(Object to, Object from) {
+		return to; // TODO(gburd): yeah...
 	}
 
 	public String describeConflicts() {

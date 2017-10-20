@@ -105,6 +105,10 @@ public final class Filter<V> {
 		return new Filter<V>(node, postulate);
 	}
 
+	public V[] postulateValues() {
+		return postulate.values();
+	}
+
 	@Override
 	public String toString() {
 		return node.getColumnName() + postulate.toString();

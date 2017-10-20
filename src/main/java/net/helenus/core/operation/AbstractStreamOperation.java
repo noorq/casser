@@ -15,7 +15,7 @@
  */
 package net.helenus.core.operation;
 
-import java.util.Set;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
@@ -30,6 +30,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
+import net.helenus.core.cache.Facet;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>>
 		extends
@@ -67,23 +68,20 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 		}
 	}
 
-	public Stream<E> sync(UnitOfWork uow) throws TimeoutException {
+	public Stream<E> sync(UnitOfWork<?> uow) throws TimeoutException {
 		if (uow == null)
 			return sync();
 
 		final Timer.Context context = requestLatency.time();
 		try {
 			Stream<E> result = null;
-			String key = getStatementCacheKey();
-			if (enableCache && key != null) {
-				Set<E> cachedResult = (Set<E>) uow.cacheLookup(key);
+			E cachedResult = null;
+
+			if (enableCache) {
+				List<Facet> facets = bindFacetValues();
+				cachedResult = checkCache(uow, facets);
 				if (cachedResult != null) {
-					// TODO(gburd): what about select ResultSet, Tuple... etc.?
-					uowCacheHits.mark();
-					logger.info("UOW({}) cache hit, {}", uow.hashCode());
-					result = cachedResult.stream();
-				} else {
-					uowCacheMiss.mark();
+					result = Stream.of(cachedResult);
 				}
 			}
 
@@ -91,10 +89,12 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 				ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
 						showValues, true);
 				result = transform(resultSet);
+			}
 
-				if (key != null) {
-					uow.getCache().put(key, (Set<Object>) result);
-				}
+			// If we have a result and we're caching then we need to put it into the cache
+			// for future requests to find.
+			if (enableCache && cachedResult != null) {
+				updateCache(uow, cachedResult, getFacets());
 			}
 
 			return result;
@@ -113,7 +113,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 		});
 	}
 
-	public CompletableFuture<Stream<E>> async(UnitOfWork uow) {
+	public CompletableFuture<Stream<E>> async(UnitOfWork<?> uow) {
 		if (uow == null)
 			return async();
 		return CompletableFuture.<Stream<E>>supplyAsync(() -> {

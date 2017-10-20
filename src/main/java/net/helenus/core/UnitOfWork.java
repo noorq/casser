@@ -15,10 +15,12 @@
  */
 package net.helenus.core;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
+import java.util.Optional;
 
-public interface UnitOfWork<E extends Exception> extends AutoCloseable {
+import net.helenus.core.cache.Facet;
+
+public interface UnitOfWork<X extends Exception> extends AutoCloseable {
 
 	/**
 	 * Marks the beginning of a transactional section of work. Will write a record
@@ -26,9 +28,9 @@ public interface UnitOfWork<E extends Exception> extends AutoCloseable {
 	 *
 	 * @return the handle used to commit or abort the work.
 	 */
-	UnitOfWork begin();
+	UnitOfWork<X> begin();
 
-	UnitOfWork addNestedUnitOfWork(UnitOfWork uow);
+	void addNestedUnitOfWork(UnitOfWork<X> uow);
 
 	/**
 	 * Checks to see if the work performed between calling begin and now can be
@@ -36,10 +38,10 @@ public interface UnitOfWork<E extends Exception> extends AutoCloseable {
 	 *
 	 * @return a function from which to chain work that only happens when commit is
 	 *         successful
-	 * @throws E
+	 * @throws X
 	 *             when the work overlaps with other concurrent writers.
 	 */
-	PostCommitFunction<Void, Void> commit() throws E;
+	PostCommitFunction<Void, Void> commit() throws X;
 
 	/**
 	 * Explicitly abort the work within this unit of work. Any nested aborted unit
@@ -51,8 +53,7 @@ public interface UnitOfWork<E extends Exception> extends AutoCloseable {
 
 	boolean hasCommitted();
 
-	// Either<Object, Set<Object>> cacheLookup(String key);
-	Set<Object> cacheLookup(String key);
+	Optional<Object> cacheLookup(List<Facet> facets);
 
-	Map<String, Set<Object>> getCache();
+	void cacheUpdate(Object pojo, List<Facet> facets);
 }

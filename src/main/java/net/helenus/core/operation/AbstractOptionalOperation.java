@@ -15,9 +15,8 @@
  */
 package net.helenus.core.operation;
 
-import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
@@ -29,8 +28,16 @@ import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import com.codahale.metrics.Timer;
+import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.ResultSet;
+import com.google.common.base.Function;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
+import net.helenus.core.cache.Facet;
 
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
 		extends
@@ -68,41 +75,39 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 		}
 	}
 
-	public Optional<E> sync(UnitOfWork uow) throws TimeoutException {
+	public Optional<E> sync(UnitOfWork<?> uow) throws TimeoutException {
 		if (uow == null)
 			return sync();
 
 		final Timer.Context context = requestLatency.time();
 		try {
 
-			Optional<E> result = null;
-			String key = getStatementCacheKey();
-			if (enableCache && key != null) {
-				Set<E> cachedResult = (Set<E>) uow.cacheLookup(key);
-				if (cachedResult != null) {
-					// TODO(gburd): what about select ResultSet, Tuple... etc.?
-					uowCacheHits.mark();
-					logger.info("UOW({}) cache hit, {}", uow.hashCode(), key);
-					result = cachedResult.stream().findFirst();
-				} else {
-					uowCacheMiss.mark();
+			Optional<E> result = Optional.empty();
+			E cacheResult = null;
+			String[] statementKeys = null;
+
+			if (enableCache) {
+				List<Facet> facets = bindFacetValues();
+				cacheResult = checkCache(uow, facets);
+				if (cacheResult != null) {
+					result = Optional.of(cacheResult);
 				}
 			}
 
-			if (result == null) {
+			if (!result.isPresent()) {
+				// Formulate the query and execute it against the Cassandra cluster.
 				ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
 						showValues, true);
-				result = transform(resultSet);
 
-				if (key != null) {
-					if (result.isPresent()) {
-						Set<Object> set = new HashSet<Object>(1);
-						set.add(result.get());
-						uow.getCache().put(key, set);
-					} else {
-						uow.getCache().put(key, new HashSet<Object>(0));
-					}
-				}
+				// Transform the query result set into the desired shape.
+				result = transform(resultSet);
+			}
+
+			// If we have a result, it wasn't from cache, and we're caching things then we
+			// need to put this result
+			// into the cache for future requests to find.
+			if (enableCache && cacheResult == null && result.isPresent()) {
+				updateCache(uow, result.get(), getFacets());
 			}
 
 			return result;
@@ -121,7 +126,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 		});
 	}
 
-	public CompletableFuture<Optional<E>> async(UnitOfWork uow) {
+	public CompletableFuture<Optional<E>> async(UnitOfWork<?> uow) {
 		if (uow == null)
 			return async();
 		return CompletableFuture.<Optional<E>>supplyAsync(() -> {

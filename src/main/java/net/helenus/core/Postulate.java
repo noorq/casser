@@ -71,6 +71,10 @@ public final class Postulate<V> {
 		}
 	}
 
+	public V[] values() {
+		return values;
+	}
+
 	@Override
 	public String toString() {
 

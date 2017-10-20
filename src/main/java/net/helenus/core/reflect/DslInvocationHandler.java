@@ -58,7 +58,7 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 		this.classLoader = classLoader;
 	}
 
-	public void setCassandraMetadataForHelenusSesion(Metadata metadata) {
+	public void setCassandraMetadataForHelenusSession(Metadata metadata) {
 		if (metadata != null) {
 			this.metadata = metadata;
 			entity = init(metadata);
@@ -118,7 +118,7 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 
 		if (DslExportable.SET_METADATA_METHOD.equals(methodName) && args.length == 1 && args[0] instanceof Metadata) {
 			if (metadata == null) {
-				this.setCassandraMetadataForHelenusSesion((Metadata) args[0]);
+				this.setCassandraMetadataForHelenusSession((Metadata) args[0]);
 			}
 			return null;
 		}

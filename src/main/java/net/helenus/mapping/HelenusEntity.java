@@ -16,6 +16,9 @@
 package net.helenus.mapping;
 
 import java.util.Collection;
+import java.util.List;
+
+import net.helenus.core.cache.Facet;
 
 public interface HelenusEntity {
 
@@ -30,4 +33,6 @@ public interface HelenusEntity {
 	Collection<HelenusProperty> getOrderedProperties();
 
 	HelenusProperty getProperty(String name);
+
+	List<Facet> getFacets();
 }

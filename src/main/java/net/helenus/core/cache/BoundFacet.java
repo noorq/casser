@@ -13,23 +13,26 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package net.helenus.mapping.value;
+package net.helenus.core.cache;
 
-import com.datastax.driver.core.CodecRegistry;
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.TypeCodec;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import net.helenus.mapping.HelenusProperty;
 
-public interface ColumnValueProvider {
+public class BoundFacet extends Facet<String> {
+	private final Map<HelenusProperty, Object> properties;
 
-	<V> V getColumnValue(Object source, int columnIndex, HelenusProperty property, boolean immutable);
-
-	default <V> V getColumnValue(Object source, int columnIndex, HelenusProperty property) {
-		return getColumnValue(source, columnIndex, property, false);
+	BoundFacet(String name, Map<HelenusProperty, Object> properties) {
+		super(name,
+				(properties.keySet().size() > 1)
+						? "[" + String.join(", ",
+								properties.keySet().stream().map(key -> properties.get(key).toString())
+										.collect(Collectors.toSet()))
+								+ "]"
+						: String.join("", properties.keySet().stream().map(key -> properties.get(key).toString())
+								.collect(Collectors.toSet())));
+		this.properties = properties;
 	}
 
-	default <T> TypeCodec<T> codecFor(DataType type) {
-		return CodecRegistry.DEFAULT_INSTANCE.codecFor(type);
-	}
 }

@@ -28,9 +28,11 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Selection;
 import com.datastax.driver.core.querybuilder.Select.Where;
-import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 
 import net.helenus.core.*;
+import net.helenus.core.cache.Facet;
+import net.helenus.core.cache.UnboundFacet;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.MappingUtil;
@@ -42,9 +44,8 @@ import net.helenus.support.HelenusMappingException;
 
 public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectOperation<E>> {
 
-	protected Function<Row, E> rowMapper = null;
 	protected final List<HelenusPropertyNode> props = new ArrayList<HelenusPropertyNode>();
-
+	protected Function<Row, E> rowMapper = null;
 	protected List<Ordering> ordering = null;
 	protected Integer limit = null;
 	protected boolean allowFiltering = false;
@@ -176,29 +177,38 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	}
 
 	@Override
-	public String getStatementCacheKey() {
-		List<String> keys = new ArrayList<>(filters.size());
+	public List<Facet> getFacets() {
 		HelenusEntity entity = props.get(0).getEntity();
+		return entity.getFacets();
+	}
 
-		for (HelenusPropertyNode prop : props) {
-			switch (prop.getProperty().getColumnType()) {
-				case PARTITION_KEY :
-				case CLUSTERING_COLUMN :
-					Filter filter = filters.get(prop.getProperty());
+	@Override
+	public List<Facet> bindFacetValues() {
+		HelenusEntity entity = props.get(0).getEntity();
+		List<Facet> boundFacets = new ArrayList<>();
+
+		for (Facet facet : entity.getFacets()) {
+			if (facet instanceof UnboundFacet) {
+				UnboundFacet unboundFacet = (UnboundFacet) facet;
+				UnboundFacet.Binder binder = unboundFacet.binder();
+				unboundFacet.getProperties().forEach(prop -> {
+					Filter filter = filters.get(prop);
 					if (filter != null) {
-						keys.add(filter.toString());
-					} else {
-						return null;
+						Object[] postulates = filter.postulateValues();
+						for (Object p : postulates) {
+							binder.setValueForProperty(prop, p.toString());
+						}
 					}
-					break;
-				default :
-					if (keys.size() > 0) {
-						return entity.getName() + ": " + Joiner.on(",").join(keys);
-					}
-					return null;
+
+				});
+				if (binder.isBound()) {
+					boundFacets.add(binder.bind());
+				}
+			} else {
+				boundFacets.add(facet);
 			}
 		}
-		return null;
+		return boundFacets;
 	}
 
 	@Override
@@ -222,16 +232,24 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 						+ entity.getMappingInterface() + " or " + prop.getEntity().getMappingInterface());
 			}
 
-			/*
-			 * TODO: is this useful information to gather when caching? if (cached) { switch
-			 * (prop.getProperty().getColumnType()) { case PARTITION_KEY: case
-			 * CLUSTERING_COLUMN: break; default: if (entity.equals(prop.getEntity())) { if
-			 * (prop.getNext().isPresent()) { columnName =
-			 * Iterables.getLast(prop).getColumnName().toCql(true); } if
-			 * (!prop.getProperty().getDataType().isCollectionType()) {
-			 * selection.writeTime(columnName).as(columnName + "_writeTime");
-			 * selection.ttl(columnName).as(columnName + "_ttl"); } } break; } }
-			 */
+			if (cached) {
+				switch (prop.getProperty().getColumnType()) {
+					case PARTITION_KEY :
+					case CLUSTERING_COLUMN :
+						break;
+					default :
+						if (entity.equals(prop.getEntity())) {
+							if (prop.getNext().isPresent()) {
+								columnName = Iterables.getLast(prop).getColumnName().toCql(true);
+							}
+							if (!prop.getProperty().getDataType().isCollectionType()) {
+								selection.writeTime(columnName).as(columnName + "_writeTime");
+								selection.ttl(columnName).as(columnName + "_ttl");
+							}
+						}
+						break;
+				}
+			}
 		}
 
 		if (entity == null) {

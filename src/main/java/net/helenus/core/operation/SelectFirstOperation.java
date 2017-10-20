@@ -15,11 +15,14 @@
  */
 package net.helenus.core.operation;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
+
+import net.helenus.core.cache.Facet;
 
 public final class SelectFirstOperation<E> extends AbstractFilterOptionalOperation<E, SelectFirstOperation<E>> {
 
@@ -38,13 +41,18 @@ public final class SelectFirstOperation<E> extends AbstractFilterOptionalOperati
 	}
 
 	@Override
-	public String getStatementCacheKey() {
-		return delegate.getStatementCacheKey();
+	public BuiltStatement buildStatement(boolean cached) {
+		return delegate.buildStatement(cached);
 	}
 
 	@Override
-	public BuiltStatement buildStatement(boolean cached) {
-		return delegate.buildStatement(cached);
+	public List<Facet> getFacets() {
+		return delegate.getFacets();
+	}
+
+	@Override
+	public List<Facet> bindFacetValues() {
+		return delegate.bindFacetValues();
 	}
 
 	@Override

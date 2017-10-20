@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import net.helenus.core.reflect.Drafted;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.support.HelenusMappingException;
@@ -29,11 +30,13 @@ public final class ValueProviderMap implements Map<String, Object> {
 	private final Object source;
 	private final ColumnValueProvider valueProvider;
 	private final HelenusEntity entity;
+	private final boolean immutable;
 
 	public ValueProviderMap(Object source, ColumnValueProvider valueProvider, HelenusEntity entity) {
 		this.source = source;
 		this.valueProvider = valueProvider;
 		this.entity = entity;
+		this.immutable = entity.getMappingInterface().isAssignableFrom(Drafted.class);
 	}
 
 	@Override
@@ -42,7 +45,7 @@ public final class ValueProviderMap implements Map<String, Object> {
 			String name = (String) key;
 			HelenusProperty prop = entity.getProperty(name);
 			if (prop != null) {
-				return valueProvider.getColumnValue(source, -1, prop);
+				return valueProvider.getColumnValue(source, -1, prop, immutable);
 			}
 		}
 		return null;
@@ -120,5 +123,22 @@ public final class ValueProviderMap implements Map<String, Object> {
 	@Override
 	public String toString() {
 		return source.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || (!o.getClass().isAssignableFrom(Map.class) && getClass() != o.getClass()))
+			return false;
+
+		Map that = (Map) o;
+		if (this.size() != that.size())
+			return false;
+		for (String key : this.keySet())
+			if (!this.get(key).equals(that.get(key)))
+				return false;
+
+		return true;
 	}
 }
