@@ -15,126 +15,115 @@
  */
 package net.helenus.core.operation;
 
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
+
 import com.codahale.metrics.Timer;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Stream;
+
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
-import net.helenus.core.cache.BoundFacet;
+import net.helenus.core.cache.Facet;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>>
-    extends AbstractStatementOperation<E, O> {
+		extends
+			AbstractStatementOperation<E, O> {
 
-  public AbstractStreamOperation(AbstractSessionOperations sessionOperations) {
-    super(sessionOperations);
-  }
+	public AbstractStreamOperation(AbstractSessionOperations sessionOperations) {
+		super(sessionOperations);
+	}
 
-  public abstract Stream<E> transform(ResultSet resultSet);
+	public abstract Stream<E> transform(ResultSet resultSet);
 
-  public PreparedStreamOperation<E> prepare() {
-    return new PreparedStreamOperation<E>(prepareStatement(), this);
-  }
+	public PreparedStreamOperation<E> prepare() {
+		return new PreparedStreamOperation<E>(prepareStatement(), this);
+	}
 
-  public ListenableFuture<PreparedStreamOperation<E>> prepareAsync() {
-    final O _this = (O) this;
-    return Futures.transform(
-        prepareStatementAsync(),
-        new Function<PreparedStatement, PreparedStreamOperation<E>>() {
-          @Override
-          public PreparedStreamOperation<E> apply(PreparedStatement preparedStatement) {
-            return new PreparedStreamOperation<E>(preparedStatement, _this);
-          }
-        });
-  }
+	public ListenableFuture<PreparedStreamOperation<E>> prepareAsync() {
+		final O _this = (O) this;
+		return Futures.transform(prepareStatementAsync(),
+				new Function<PreparedStatement, PreparedStreamOperation<E>>() {
+					@Override
+					public PreparedStreamOperation<E> apply(PreparedStatement preparedStatement) {
+						return new PreparedStreamOperation<E>(preparedStatement, _this);
+					}
+				});
+	}
 
-  public Stream<E> sync() throws TimeoutException {
-    final Timer.Context context = requestLatency.time();
-    try {
-      ResultSet resultSet =
-          this.execute(
-              sessionOps,
-              null,
-              traceContext,
-              queryExecutionTimeout,
-              queryTimeoutUnits,
-              showValues,
-              false);
-      return transform(resultSet);
-    } finally {
-      context.stop();
-    }
-  }
+	public Stream<E> sync() throws TimeoutException {
+		final Timer.Context context = requestLatency.time();
+		try {
+			ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout, queryTimeoutUnits,
+					showValues, false);
+			return transform(resultSet);
+		} finally {
+			context.stop();
+		}
+	}
 
-  public Stream<E> sync(UnitOfWork<?> uow) throws TimeoutException {
-    if (uow == null) return sync();
+	public Stream<E> sync(UnitOfWork<?> uow) throws TimeoutException {
+		if (uow == null)
+			return sync();
 
-    final Timer.Context context = requestLatency.time();
-    try {
-      Stream<E> result = null;
-      E cachedResult = null;
-      String[] statementKeys = null;
+		final Timer.Context context = requestLatency.time();
+		try {
+			Stream<E> result = null;
+			E cachedResult = null;
+			String[] statementKeys = null;
 
-      if (enableCache) {
-        Set<BoundFacet> facets = bindFacetValues();
-        statementKeys = getQueryKeys();
-        cachedResult = checkCache(uow, facets, statementKeys);
-        if (cachedResult != null) {
-          result = Stream.of(cachedResult);
-        }
-      }
+			if (enableCache) {
+				Set<Facet> facets = bindFacetValues();
+				statementKeys = getQueryKeys();
+				cachedResult = checkCache(uow, facets, statementKeys);
+				if (cachedResult != null) {
+					result = Stream.of(cachedResult);
+				}
+			}
 
-      if (result == null) {
-        ResultSet resultSet =
-            execute(
-                sessionOps,
-                uow,
-                traceContext,
-                queryExecutionTimeout,
-                queryTimeoutUnits,
-                showValues,
-                true);
-        result = transform(resultSet);
-      }
+			if (result == null) {
+				ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
+						showValues, true);
+				result = transform(resultSet);
+			}
 
-      // If we have a result and we're caching then we need to put it into the cache for future requests to find.
-      if (enableCache && cachedResult != null) {
-        updateCache(uow, cachedResult, getIdentifyingFacets(), statementKeys);
-      }
+			// If we have a result and we're caching then we need to put it into the cache
+			// for future requests to find.
+			if (enableCache && cachedResult != null) {
+				updateCache(uow, cachedResult, getIdentifyingFacets(), statementKeys);
+			}
 
-      return result;
-    } finally {
-      context.stop();
-    }
-  }
+			return result;
+		} finally {
+			context.stop();
+		}
+	}
 
-  public CompletableFuture<Stream<E>> async() {
-    return CompletableFuture.<Stream<E>>supplyAsync(
-        () -> {
-          try {
-            return sync();
-          } catch (TimeoutException ex) {
-            throw new CompletionException(ex);
-          }
-        });
-  }
+	public CompletableFuture<Stream<E>> async() {
+		return CompletableFuture.<Stream<E>>supplyAsync(() -> {
+			try {
+				return sync();
+			} catch (TimeoutException ex) {
+				throw new CompletionException(ex);
+			}
+		});
+	}
 
-  public CompletableFuture<Stream<E>> async(UnitOfWork<?> uow) {
-    if (uow == null) return async();
-    return CompletableFuture.<Stream<E>>supplyAsync(
-        () -> {
-          try {
-            return sync();
-          } catch (TimeoutException ex) {
-            throw new CompletionException(ex);
-          }
-        });
-  }
+	public CompletableFuture<Stream<E>> async(UnitOfWork<?> uow) {
+		if (uow == null)
+			return async();
+		return CompletableFuture.<Stream<E>>supplyAsync(() -> {
+			try {
+				return sync();
+			} catch (TimeoutException ex) {
+				throw new CompletionException(ex);
+			}
+		});
+	}
 }

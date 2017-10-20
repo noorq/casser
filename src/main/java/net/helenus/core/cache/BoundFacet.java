@@ -17,22 +17,18 @@ package net.helenus.core.cache;
 
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import net.helenus.mapping.HelenusProperty;
 
-public class BoundFacet {
-  private final Map<HelenusProperty, Object> properties;
+public class BoundFacet extends Facet {
+	private final Map<HelenusProperty, Object> properties;
 
-  BoundFacet(Map<HelenusProperty, Object> properties) {
-    this.properties = properties;
-  }
+	BoundFacet(Map<HelenusProperty, Object> properties) {
+		this.properties = properties;
+	}
 
-  public String toString() {
-    return String.join(
-        ";",
-        properties
-            .keySet()
-            .stream()
-            .map(key -> properties.get(key).toString())
-            .collect(Collectors.toSet()));
-  }
+	public String toString() {
+		return String.join(";",
+				properties.keySet().stream().map(key -> properties.get(key).toString()).collect(Collectors.toSet()));
+	}
 }

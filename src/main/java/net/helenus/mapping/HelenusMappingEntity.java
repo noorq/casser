@@ -15,315 +15,296 @@
  */
 package net.helenus.mapping;
 
-import com.datastax.driver.core.*;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.Method;
 import java.util.*;
+
+import org.apache.commons.lang3.ClassUtils;
+
+import com.datastax.driver.core.DefaultMetadata;
+import com.datastax.driver.core.Metadata;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import net.helenus.config.HelenusSettings;
 import net.helenus.core.Helenus;
 import net.helenus.core.annotation.Cacheable;
 import net.helenus.core.cache.EntityIdentifyingFacet;
 import net.helenus.mapping.annotation.*;
 import net.helenus.support.HelenusMappingException;
-import org.apache.commons.lang3.ClassUtils;
 
 public final class HelenusMappingEntity implements HelenusEntity {
 
-  private final Class<?> iface;
-  private final HelenusEntityType type;
-  private final IdentityName name;
-  private final boolean cacheable;
-  private final ImmutableMap<String, Method> methods;
-  private final ImmutableMap<String, HelenusProperty> props;
-  private final ImmutableList<HelenusProperty> orderedProps;
-  private final EntityIdentifyingFacet primaryIdentityFacet;
-  private final ImmutableMap<String, EntityIdentifyingFacet> allIdentityFacets;
-  private final ImmutableMap<String, EntityIdentifyingFacet> ancillaryIdentityFacets;
+	private final Class<?> iface;
+	private final HelenusEntityType type;
+	private final IdentityName name;
+	private final boolean cacheable;
+	private final ImmutableMap<String, Method> methods;
+	private final ImmutableMap<String, HelenusProperty> props;
+	private final ImmutableList<HelenusProperty> orderedProps;
+	private final EntityIdentifyingFacet primaryIdentityFacet;
+	private final ImmutableMap<String, EntityIdentifyingFacet> allIdentityFacets;
+	private final ImmutableMap<String, EntityIdentifyingFacet> ancillaryIdentityFacets;
 
-  public HelenusMappingEntity(Class<?> iface, Metadata metadata) {
-    this(iface, autoDetectType(iface), metadata);
-  }
+	public HelenusMappingEntity(Class<?> iface, Metadata metadata) {
+		this(iface, autoDetectType(iface), metadata);
+	}
 
-  public HelenusMappingEntity(Class<?> iface, HelenusEntityType type, Metadata metadata) {
+	public HelenusMappingEntity(Class<?> iface, HelenusEntityType type, Metadata metadata) {
 
-    if (iface == null || !iface.isInterface()) {
-      throw new IllegalArgumentException("invalid parameter " + iface);
-    }
+		if (iface == null || !iface.isInterface()) {
+			throw new IllegalArgumentException("invalid parameter " + iface);
+		}
 
-    this.iface = iface;
-    this.type = Objects.requireNonNull(type, "type is empty");
-    this.name = resolveName(iface, type);
+		this.iface = iface;
+		this.type = Objects.requireNonNull(type, "type is empty");
+		this.name = resolveName(iface, type);
 
-    HelenusSettings settings = Helenus.settings();
+		HelenusSettings settings = Helenus.settings();
 
-    Map<String, Method> methods = new HashMap<String, Method>();
-    for (Method m : iface.getDeclaredMethods()) {
-      methods.put(m.getName(), m);
-    }
+		Map<String, Method> methods = new HashMap<String, Method>();
+		for (Method m : iface.getDeclaredMethods()) {
+			methods.put(m.getName(), m);
+		}
 
-    for (Class<?> c : ClassUtils.getAllInterfaces(iface)) {
-      if (c.getDeclaredAnnotation(Table.class) != null
-          || c.getDeclaredAnnotation(InheritedTable.class) != null) {
-        for (Method m : c.getDeclaredMethods()) {
-          Method o = methods.get(m.getName());
-          if (o != null) {
-            // Prefer overridden method implementation.
-            if (o.getDeclaringClass().isAssignableFrom(m.getDeclaringClass())) {
-              methods.put(m.getName(), m);
-            }
-          } else {
-            methods.put(m.getName(), m);
-          }
-        }
-      }
-    }
+		for (Class<?> c : ClassUtils.getAllInterfaces(iface)) {
+			if (c.getDeclaredAnnotation(Table.class) != null || c.getDeclaredAnnotation(InheritedTable.class) != null) {
+				for (Method m : c.getDeclaredMethods()) {
+					Method o = methods.get(m.getName());
+					if (o != null) {
+						// Prefer overridden method implementation.
+						if (o.getDeclaringClass().isAssignableFrom(m.getDeclaringClass())) {
+							methods.put(m.getName(), m);
+						}
+					} else {
+						methods.put(m.getName(), m);
+					}
+				}
+			}
+		}
 
-    List<HelenusProperty> propsLocal = new ArrayList<HelenusProperty>();
-    ImmutableMap.Builder<String, HelenusProperty> propsBuilder = ImmutableMap.builder();
-    ImmutableMap.Builder<String, Method> methodsBuilder = ImmutableMap.builder();
+		List<HelenusProperty> propsLocal = new ArrayList<HelenusProperty>();
+		ImmutableMap.Builder<String, HelenusProperty> propsBuilder = ImmutableMap.builder();
+		ImmutableMap.Builder<String, Method> methodsBuilder = ImmutableMap.builder();
 
-    for (Method method : methods.values()) {
+		for (Method method : methods.values()) {
 
-      if (settings.getGetterMethodDetector().apply(method)) {
+			if (settings.getGetterMethodDetector().apply(method)) {
 
-        methodsBuilder.put(method.getName(), method);
+				methodsBuilder.put(method.getName(), method);
 
-        if (metadata != null) {
-          HelenusProperty prop = new HelenusMappingProperty(this, method, metadata);
+				if (metadata != null) {
+					HelenusProperty prop = new HelenusMappingProperty(this, method, metadata);
 
-          propsBuilder.put(prop.getPropertyName(), prop);
-          propsLocal.add(prop);
-        }
-      }
-    }
+					propsBuilder.put(prop.getPropertyName(), prop);
+					propsLocal.add(prop);
+				}
+			}
+		}
 
-    this.methods = methodsBuilder.build();
-    this.props = propsBuilder.build();
+		this.methods = methodsBuilder.build();
+		this.props = propsBuilder.build();
 
-    Collections.sort(propsLocal, TypeAndOrdinalColumnComparator.INSTANCE);
-    this.orderedProps = ImmutableList.copyOf(propsLocal);
+		Collections.sort(propsLocal, TypeAndOrdinalColumnComparator.INSTANCE);
+		this.orderedProps = ImmutableList.copyOf(propsLocal);
 
-    validateOrdinals();
+		validateOrdinals();
 
-    // Caching
-    cacheable = (null != iface.getDeclaredAnnotation(Cacheable.class));
+		// Caching
+		cacheable = (null != iface.getDeclaredAnnotation(Cacheable.class));
 
-    ImmutableMap.Builder<String, EntityIdentifyingFacet> allFacetsBuilder = ImmutableMap.builder();
-    ImmutableMap.Builder<String, EntityIdentifyingFacet> ancillaryFacetsBuilder =
-        ImmutableMap.builder();
-    EntityIdentifyingFacet primaryFacet = null;
-    List<HelenusProperty> primaryProperties = new ArrayList<HelenusProperty>(4);
-    for (HelenusProperty prop : propsLocal) {
-      switch (prop.getColumnType()) {
-        case PARTITION_KEY:
-        case CLUSTERING_COLUMN:
-          primaryProperties.add(prop);
-          break;
-        default:
-          if (primaryProperties != null) {
-            primaryFacet =
-                new EntityIdentifyingFacet(new HashSet<HelenusProperty>(primaryProperties));
-            allFacetsBuilder.put("*", primaryFacet);
-            primaryProperties = null;
-          }
-          Optional<IdentityName> optionalIndexName = prop.getIndexName();
-          if (optionalIndexName.isPresent()) {
-            EntityIdentifyingFacet facet = new EntityIdentifyingFacet(prop);
-            ancillaryFacetsBuilder.put(prop.getPropertyName(), facet);
-            allFacetsBuilder.put(prop.getPropertyName(), facet);
-          }
-      }
-    }
-    this.primaryIdentityFacet = primaryFacet;
-    this.ancillaryIdentityFacets = ancillaryFacetsBuilder.build();
-    this.allIdentityFacets = allFacetsBuilder.build();
-  }
+		ImmutableMap.Builder<String, EntityIdentifyingFacet> allFacetsBuilder = ImmutableMap.builder();
+		ImmutableMap.Builder<String, EntityIdentifyingFacet> ancillaryFacetsBuilder = ImmutableMap.builder();
+		EntityIdentifyingFacet primaryFacet = null;
+		List<HelenusProperty> primaryProperties = new ArrayList<HelenusProperty>(4);
+		for (HelenusProperty prop : propsLocal) {
+			switch (prop.getColumnType()) {
+				case PARTITION_KEY :
+				case CLUSTERING_COLUMN :
+					primaryProperties.add(prop);
+					break;
+				default :
+					if (primaryProperties != null) {
+						primaryFacet = new EntityIdentifyingFacet(new HashSet<HelenusProperty>(primaryProperties));
+						allFacetsBuilder.put("*", primaryFacet);
+						primaryProperties = null;
+					}
+					Optional<IdentityName> optionalIndexName = prop.getIndexName();
+					if (optionalIndexName.isPresent()) {
+						EntityIdentifyingFacet facet = new EntityIdentifyingFacet(prop);
+						ancillaryFacetsBuilder.put(prop.getPropertyName(), facet);
+						allFacetsBuilder.put(prop.getPropertyName(), facet);
+					}
+			}
+		}
+		this.primaryIdentityFacet = primaryFacet;
+		this.ancillaryIdentityFacets = ancillaryFacetsBuilder.build();
+		this.allIdentityFacets = allFacetsBuilder.build();
+	}
 
-  @Override
-  public HelenusEntityType getType() {
-    return type;
-  }
+	@Override
+	public HelenusEntityType getType() {
+		return type;
+	}
 
-  @Override
-  public boolean isCacheable() {
-    return cacheable;
-  }
+	@Override
+	public boolean isCacheable() {
+		return cacheable;
+	}
 
-  @Override
-  public Class<?> getMappingInterface() {
-    return iface;
-  }
+	@Override
+	public Class<?> getMappingInterface() {
+		return iface;
+	}
 
-  @Override
-  public Collection<HelenusProperty> getOrderedProperties() {
-    return orderedProps;
-  }
+	@Override
+	public Collection<HelenusProperty> getOrderedProperties() {
+		return orderedProps;
+	}
 
-  @Override
-  public HelenusProperty getProperty(String name) {
-    HelenusProperty property = props.get(name);
-    if (property == null && methods.containsKey(name)) {
-      property = new HelenusMappingProperty(this, methods.get(name), new DefaultMetadata());
-      return property; //TODO(gburd): review adding these into the props map...
-    }
-    return props.get(name);
-  }
+	@Override
+	public HelenusProperty getProperty(String name) {
+		HelenusProperty property = props.get(name);
+		if (property == null && methods.containsKey(name)) {
+			property = new HelenusMappingProperty(this, methods.get(name), new DefaultMetadata());
+			return property; // TODO(gburd): review adding these into the props map...
+		}
+		return props.get(name);
+	}
 
-  @Override
-  public Map<String, EntityIdentifyingFacet> getIdentifyingFacets() {
-    return allIdentityFacets;
-  }
+	@Override
+	public Map<String, EntityIdentifyingFacet> getIdentifyingFacets() {
+		return allIdentityFacets;
+	}
 
-  @Override
-  public IdentityName getName() {
-    return name;
-  }
+	@Override
+	public IdentityName getName() {
+		return name;
+	}
 
-  private static IdentityName resolveName(Class<?> iface, HelenusEntityType type) {
+	private static IdentityName resolveName(Class<?> iface, HelenusEntityType type) {
 
-    switch (type) {
-      case TABLE:
-        return MappingUtil.getTableName(iface, true);
+		switch (type) {
+			case TABLE :
+				return MappingUtil.getTableName(iface, true);
 
-      case VIEW:
-        return MappingUtil.getViewName(iface, true);
+			case VIEW :
+				return MappingUtil.getViewName(iface, true);
 
-      case TUPLE:
-        return IdentityName.of(MappingUtil.getDefaultEntityName(iface), false);
+			case TUPLE :
+				return IdentityName.of(MappingUtil.getDefaultEntityName(iface), false);
 
-      case UDT:
-        return MappingUtil.getUserDefinedTypeName(iface, true);
-    }
+			case UDT :
+				return MappingUtil.getUserDefinedTypeName(iface, true);
+		}
 
-    throw new HelenusMappingException("invalid entity type " + type + " in " + type);
-  }
+		throw new HelenusMappingException("invalid entity type " + type + " in " + type);
+	}
 
-  private static HelenusEntityType autoDetectType(Class<?> iface) {
+	private static HelenusEntityType autoDetectType(Class<?> iface) {
 
-    Objects.requireNonNull(iface, "empty iface");
+		Objects.requireNonNull(iface, "empty iface");
 
-    if (null != iface.getDeclaredAnnotation(Table.class)) {
-      return HelenusEntityType.TABLE;
-    } else if (null != iface.getDeclaredAnnotation(MaterializedView.class)) {
-      return HelenusEntityType.VIEW;
-    } else if (null != iface.getDeclaredAnnotation(Tuple.class)) {
-      return HelenusEntityType.TUPLE;
-    } else if (null != iface.getDeclaredAnnotation(UDT.class)) {
-      return HelenusEntityType.UDT;
-    }
+		if (null != iface.getDeclaredAnnotation(Table.class)) {
+			return HelenusEntityType.TABLE;
+		} else if (null != iface.getDeclaredAnnotation(MaterializedView.class)) {
+			return HelenusEntityType.VIEW;
+		} else if (null != iface.getDeclaredAnnotation(Tuple.class)) {
+			return HelenusEntityType.TUPLE;
+		} else if (null != iface.getDeclaredAnnotation(UDT.class)) {
+			return HelenusEntityType.UDT;
+		}
 
-    throw new HelenusMappingException(
-        "entity must be annotated by @Table or @Tuple or @UserDefinedType " + iface);
-  }
+		throw new HelenusMappingException("entity must be annotated by @Table or @Tuple or @UserDefinedType " + iface);
+	}
 
-  private void validateOrdinals() {
+	private void validateOrdinals() {
 
-    switch (getType()) {
-      case TABLE:
-        validateOrdinalsForTable();
-        break;
+		switch (getType()) {
+			case TABLE :
+				validateOrdinalsForTable();
+				break;
 
-      case TUPLE:
-        validateOrdinalsInTuple();
-        break;
+			case TUPLE :
+				validateOrdinalsInTuple();
+				break;
 
-      default:
-        break;
-    }
-  }
+			default :
+				break;
+		}
+	}
 
-  private void validateOrdinalsForTable() {
+	private void validateOrdinalsForTable() {
 
-    BitSet partitionKeys = new BitSet();
-    BitSet clusteringColumns = new BitSet();
+		BitSet partitionKeys = new BitSet();
+		BitSet clusteringColumns = new BitSet();
 
-    for (HelenusProperty prop : getOrderedProperties()) {
+		for (HelenusProperty prop : getOrderedProperties()) {
 
-      ColumnType type = prop.getColumnType();
+			ColumnType type = prop.getColumnType();
 
-      int ordinal = prop.getOrdinal();
+			int ordinal = prop.getOrdinal();
 
-      switch (type) {
-        case PARTITION_KEY:
-          if (partitionKeys.get(ordinal)) {
-            throw new HelenusMappingException(
-                "detected two or more partition key columns with the same ordinal "
-                    + ordinal
-                    + " in "
-                    + prop.getEntity());
-          }
-          partitionKeys.set(ordinal);
-          break;
+			switch (type) {
+				case PARTITION_KEY :
+					if (partitionKeys.get(ordinal)) {
+						throw new HelenusMappingException(
+								"detected two or more partition key columns with the same ordinal " + ordinal + " in "
+										+ prop.getEntity());
+					}
+					partitionKeys.set(ordinal);
+					break;
 
-        case CLUSTERING_COLUMN:
-          if (clusteringColumns.get(ordinal)) {
-            throw new HelenusMappingException(
-                "detected two or clustering columns with the same ordinal "
-                    + ordinal
-                    + " in "
-                    + prop.getEntity());
-          }
-          clusteringColumns.set(ordinal);
-          break;
+				case CLUSTERING_COLUMN :
+					if (clusteringColumns.get(ordinal)) {
+						throw new HelenusMappingException("detected two or clustering columns with the same ordinal "
+								+ ordinal + " in " + prop.getEntity());
+					}
+					clusteringColumns.set(ordinal);
+					break;
 
-        default:
-          break;
-      }
-    }
-  }
+				default :
+					break;
+			}
+		}
+	}
 
-  private void validateOrdinalsInTuple() {
-    boolean[] ordinals = new boolean[props.size()];
+	private void validateOrdinalsInTuple() {
+		boolean[] ordinals = new boolean[props.size()];
 
-    getOrderedProperties()
-        .forEach(
-            p -> {
-              int ordinal = p.getOrdinal();
+		getOrderedProperties().forEach(p -> {
+			int ordinal = p.getOrdinal();
 
-              if (ordinal < 0 || ordinal >= ordinals.length) {
-                throw new HelenusMappingException(
-                    "invalid ordinal "
-                        + ordinal
-                        + " found for property "
-                        + p.getPropertyName()
-                        + " in "
-                        + p.getEntity());
-              }
+			if (ordinal < 0 || ordinal >= ordinals.length) {
+				throw new HelenusMappingException("invalid ordinal " + ordinal + " found for property "
+						+ p.getPropertyName() + " in " + p.getEntity());
+			}
 
-              if (ordinals[ordinal]) {
-                throw new HelenusMappingException(
-                    "detected two or more properties with the same ordinal "
-                        + ordinal
-                        + " in "
-                        + p.getEntity());
-              }
+			if (ordinals[ordinal]) {
+				throw new HelenusMappingException(
+						"detected two or more properties with the same ordinal " + ordinal + " in " + p.getEntity());
+			}
 
-              ordinals[ordinal] = true;
-            });
+			ordinals[ordinal] = true;
+		});
 
-    for (int i = 0; i != ordinals.length; ++i) {
-      if (!ordinals[i]) {
-        throw new HelenusMappingException("detected absent ordinal " + i + " in " + this);
-      }
-    }
-  }
+		for (int i = 0; i != ordinals.length; ++i) {
+			if (!ordinals[i]) {
+				throw new HelenusMappingException("detected absent ordinal " + i + " in " + this);
+			}
+		}
+	}
 
-  @Override
-  public String toString() {
+	@Override
+	public String toString() {
 
-    StringBuilder str = new StringBuilder();
-    str.append(iface.getSimpleName())
-        .append("(")
-        .append(name.getName())
-        .append(") ")
-        .append(type.name().toLowerCase())
-        .append(":\n");
+		StringBuilder str = new StringBuilder();
+		str.append(iface.getSimpleName()).append("(").append(name.getName()).append(") ")
+				.append(type.name().toLowerCase()).append(":\n");
 
-    for (HelenusProperty prop : getOrderedProperties()) {
-      str.append(prop.toString());
-      str.append("\n");
-    }
-    return str.toString();
-  }
+		for (HelenusProperty prop : getOrderedProperties()) {
+			str.append(prop.toString());
+			str.append("\n");
+		}
+		return str.toString();
+	}
 }

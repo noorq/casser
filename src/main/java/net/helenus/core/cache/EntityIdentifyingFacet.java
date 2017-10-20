@@ -19,54 +19,55 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import net.helenus.mapping.HelenusProperty;
 
 public class EntityIdentifyingFacet extends Facet {
 
-  private final Set<HelenusProperty> properties;
+	private final Set<HelenusProperty> properties;
 
-  public EntityIdentifyingFacet(HelenusProperty prop) {
-    properties = new HashSet<HelenusProperty>();
-    properties.add(prop);
-  }
+	public EntityIdentifyingFacet(HelenusProperty prop) {
+		properties = new HashSet<HelenusProperty>();
+		properties.add(prop);
+	}
 
-  public EntityIdentifyingFacet(Set<HelenusProperty> props) {
-    properties = props;
-  }
+	public EntityIdentifyingFacet(Set<HelenusProperty> props) {
+		properties = props;
+	}
 
-  public boolean isFullyBound() {
-    return false;
-  }
+	public boolean isFullyBound() {
+		return false;
+	}
 
-  public Set<HelenusProperty> getProperties() {
-    return properties;
-  }
+	public Set<HelenusProperty> getProperties() {
+		return properties;
+	}
 
-  public Binder binder() {
-    return new Binder(properties);
-  }
+	public Binder binder() {
+		return new Binder(properties);
+	}
 
-  public static class Binder {
+	public static class Binder {
 
-    private final Set<HelenusProperty> properties = new HashSet<HelenusProperty>();
-    private Map<HelenusProperty, Object> boundProperties = new HashMap<HelenusProperty, Object>();
+		private final Set<HelenusProperty> properties = new HashSet<HelenusProperty>();
+		private Map<HelenusProperty, Object> boundProperties = new HashMap<HelenusProperty, Object>();
 
-    Binder(Set<HelenusProperty> properties) {
-      this.properties.addAll(properties);
-    }
+		Binder(Set<HelenusProperty> properties) {
+			this.properties.addAll(properties);
+		}
 
-    public Binder setValueForProperty(HelenusProperty prop, Object value) {
-      properties.remove(prop);
-      boundProperties.put(prop, value);
-      return this;
-    }
+		public Binder setValueForProperty(HelenusProperty prop, Object value) {
+			properties.remove(prop);
+			boundProperties.put(prop, value);
+			return this;
+		}
 
-    public boolean isFullyBound() {
-      return properties.isEmpty();
-    }
+		public boolean isFullyBound() {
+			return properties.isEmpty();
+		}
 
-    public BoundFacet bind() {
-      return new BoundFacet(boundProperties);
-    }
-  }
+		public BoundFacet bind() {
+			return new BoundFacet(boundProperties);
+		}
+	}
 }

@@ -20,26 +20,25 @@ import com.datastax.driver.core.PreparedStatement;
 
 public final class PreparedStreamOperation<E> {
 
-  private final PreparedStatement preparedStatement;
-  private final AbstractStreamOperation<E, ?> operation;
+	private final PreparedStatement preparedStatement;
+	private final AbstractStreamOperation<E, ?> operation;
 
-  public PreparedStreamOperation(
-      PreparedStatement statement, AbstractStreamOperation<E, ?> operation) {
-    this.preparedStatement = statement;
-    this.operation = operation;
-  }
+	public PreparedStreamOperation(PreparedStatement statement, AbstractStreamOperation<E, ?> operation) {
+		this.preparedStatement = statement;
+		this.operation = operation;
+	}
 
-  public PreparedStatement getPreparedStatement() {
-    return preparedStatement;
-  }
+	public PreparedStatement getPreparedStatement() {
+		return preparedStatement;
+	}
 
-  public BoundStreamOperation<E> bind(Object... params) {
-    BoundStatement boundStatement = preparedStatement.bind(params);
-    return new BoundStreamOperation<E>(boundStatement, operation);
-  }
+	public BoundStreamOperation<E> bind(Object... params) {
+		BoundStatement boundStatement = preparedStatement.bind(params);
+		return new BoundStreamOperation<E>(boundStatement, operation);
+	}
 
-  @Override
-  public String toString() {
-    return preparedStatement.getQueryString();
-  }
+	@Override
+	public String toString() {
+		return preparedStatement.getQueryString();
+	}
 }

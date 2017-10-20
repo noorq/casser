@@ -20,33 +20,38 @@ import java.lang.annotation.*;
 /**
  * Materialized alternate view of another Entity annotation
  *
- * <p>MaterializedView annotation is used to define different mapping to some other Table interface
+ * <p>
+ * MaterializedView annotation is used to define different mapping to some other
+ * Table interface
  *
- * <p>This is useful when you need to perform IN or SORT/ORDER-BY queries and to do so you'll need
- * different materialized table on disk in Cassandra.
+ * <p>
+ * This is useful when you need to perform IN or SORT/ORDER-BY queries and to do
+ * so you'll need different materialized table on disk in Cassandra.
  *
- * <p>For each @Table annotated interface Helenus will create/update/verify Cassandra Materialized
- * Views and some indexes if needed on startup.
+ * <p>
+ * For each @Table annotated interface Helenus will create/update/verify
+ * Cassandra Materialized Views and some indexes if needed on startup.
  */
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface MaterializedView {
 
-  /**
-   * Default value is the SimpleName of the interface normalized to underscore
-   *
-   * @return name of the type
-   */
-  String value() default "";
+	/**
+	 * Default value is the SimpleName of the interface normalized to underscore
+	 *
+	 * @return name of the type
+	 */
+	String value() default "";
 
-  /**
-   * For reserved words in Cassandra we need quotation in CQL queries. This property marks that the
-   * name of the type needs to be quoted.
-   *
-   * <p>Default value is false, we are quoting only selected names.
-   *
-   * @return true if name have to be quoted
-   */
-  boolean forceQuote() default false;
+	/**
+	 * For reserved words in Cassandra we need quotation in CQL queries. This
+	 * property marks that the name of the type needs to be quoted.
+	 *
+	 * <p>
+	 * Default value is false, we are quoting only selected names.
+	 *
+	 * @return true if name have to be quoted
+	 */
+	boolean forceQuote() default false;
 }

@@ -31,20 +31,21 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE})
 public @interface UDT {
 
-  /**
-   * Default value is the SimpleName of the interface normalized to underscore
-   *
-   * @return name of the UDT type
-   */
-  String value() default "";
+	/**
+	 * Default value is the SimpleName of the interface normalized to underscore
+	 *
+	 * @return name of the UDT type
+	 */
+	String value() default "";
 
-  /**
-   * For reserved words in Cassandra we need quotation in CQL queries. This property marks that the
-   * name of the UDT type needs to be quoted.
-   *
-   * <p>Default value is false, we are quoting only selected names.
-   *
-   * @return true if name have to be quoted
-   */
-  boolean forceQuote() default false;
+	/**
+	 * For reserved words in Cassandra we need quotation in CQL queries. This
+	 * property marks that the name of the UDT type needs to be quoted.
+	 *
+	 * <p>
+	 * Default value is false, we are quoting only selected names.
+	 *
+	 * @return true if name have to be quoted
+	 */
+	boolean forceQuote() default false;
 }

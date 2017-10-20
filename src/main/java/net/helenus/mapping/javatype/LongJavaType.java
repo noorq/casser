@@ -15,11 +15,13 @@
  */
 package net.helenus.mapping.javatype;
 
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.Metadata;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Optional;
+
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.Metadata;
+
 import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.annotation.Types;
 import net.helenus.mapping.type.AbstractDataType;
@@ -27,28 +29,28 @@ import net.helenus.mapping.type.DTDataType;
 
 public final class LongJavaType extends AbstractJavaType {
 
-  @Override
-  public Class<?> getJavaClass() {
-    return Long.class;
-  }
+	@Override
+	public Class<?> getJavaClass() {
+		return Long.class;
+	}
 
-  @Override
-  public Optional<Class<?>> getPrimitiveJavaClass() {
-    return Optional.of(long.class);
-  }
+	@Override
+	public Optional<Class<?>> getPrimitiveJavaClass() {
+		return Optional.of(long.class);
+	}
 
-  @Override
-  public AbstractDataType resolveDataType(
-      Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+	@Override
+	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType,
+			Metadata metadata) {
 
-    if (null != getter.getDeclaredAnnotation(Types.Counter.class)) {
-      return new DTDataType(columnType, DataType.counter());
-    }
+		if (null != getter.getDeclaredAnnotation(Types.Counter.class)) {
+			return new DTDataType(columnType, DataType.counter());
+		}
 
-    if (null != getter.getDeclaredAnnotation(Types.Bigint.class)) {
-      return new DTDataType(columnType, DataType.bigint());
-    }
+		if (null != getter.getDeclaredAnnotation(Types.Bigint.class)) {
+			return new DTDataType(columnType, DataType.bigint());
+		}
 
-    return new DTDataType(columnType, DataType.bigint());
-  }
+		return new DTDataType(columnType, DataType.bigint());
+	}
 }

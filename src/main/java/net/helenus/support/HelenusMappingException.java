@@ -17,17 +17,17 @@ package net.helenus.support;
 
 public class HelenusMappingException extends HelenusException {
 
-  private static final long serialVersionUID = -4730562130753392363L;
+	private static final long serialVersionUID = -4730562130753392363L;
 
-  public HelenusMappingException(String msg) {
-    super(msg);
-  }
+	public HelenusMappingException(String msg) {
+		super(msg);
+	}
 
-  public HelenusMappingException(Throwable t) {
-    super(t);
-  }
+	public HelenusMappingException(Throwable t) {
+		super(t);
+	}
 
-  public HelenusMappingException(String msg, Throwable t) {
-    super(msg, t);
-  }
+	public HelenusMappingException(String msg, Throwable t) {
+		super(msg, t);
+	}
 }

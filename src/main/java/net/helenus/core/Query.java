@@ -15,80 +15,83 @@
  */
 package net.helenus.core;
 
-import com.datastax.driver.core.querybuilder.BindMarker;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import com.datastax.driver.core.querybuilder.BindMarker;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
+
 import net.helenus.mapping.OrderingDirection;
 
 /** Sugar methods for the queries */
 public final class Query {
 
-  private Query() {}
+	private Query() {
+	}
 
-  public static BindMarker marker() {
-    return QueryBuilder.bindMarker();
-  }
+	public static BindMarker marker() {
+		return QueryBuilder.bindMarker();
+	}
 
-  public static BindMarker marker(String name) {
-    return QueryBuilder.bindMarker(name);
-  }
+	public static BindMarker marker(String name) {
+		return QueryBuilder.bindMarker(name);
+	}
 
-  public static Ordered asc(Getter<?> getter) {
-    return new Ordered(getter, OrderingDirection.ASC);
-  }
+	public static Ordered asc(Getter<?> getter) {
+		return new Ordered(getter, OrderingDirection.ASC);
+	}
 
-  public static Ordered desc(Getter<?> getter) {
-    return new Ordered(getter, OrderingDirection.DESC);
-  }
+	public static Ordered desc(Getter<?> getter) {
+		return new Ordered(getter, OrderingDirection.DESC);
+	}
 
-  public static <V> Postulate<V> eq(V val) {
-    return Postulate.of(Operator.EQ, val);
-  }
+	public static <V> Postulate<V> eq(V val) {
+		return Postulate.of(Operator.EQ, val);
+	}
 
-  public static <V> Postulate<V> lt(V val) {
-    return Postulate.of(Operator.LT, val);
-  }
+	public static <V> Postulate<V> lt(V val) {
+		return Postulate.of(Operator.LT, val);
+	}
 
-  public static <V> Postulate<V> lte(V val) {
-    return Postulate.of(Operator.LTE, val);
-  }
+	public static <V> Postulate<V> lte(V val) {
+		return Postulate.of(Operator.LTE, val);
+	}
 
-  public static <V> Postulate<V> gt(V val) {
-    return Postulate.of(Operator.GT, val);
-  }
+	public static <V> Postulate<V> gt(V val) {
+		return Postulate.of(Operator.GT, val);
+	}
 
-  public static <V> Postulate<V> gte(V val) {
-    return Postulate.of(Operator.GTE, val);
-  }
+	public static <V> Postulate<V> gte(V val) {
+		return Postulate.of(Operator.GTE, val);
+	}
 
-  public static <V> Postulate<V> in(V[] vals) {
-    return new Postulate<V>(Operator.IN, vals);
-  }
+	public static <V> Postulate<V> in(V[] vals) {
+		return new Postulate<V>(Operator.IN, vals);
+	}
 
-  public static <K, V> Getter<V> getIdx(Getter<List<V>> listGetter, int index) {
-    Objects.requireNonNull(listGetter, "listGetter is null");
+	public static <K, V> Getter<V> getIdx(Getter<List<V>> listGetter, int index) {
+		Objects.requireNonNull(listGetter, "listGetter is null");
 
-    return new Getter<V>() {
+		return new Getter<V>() {
 
-      @Override
-      public V get() {
-        return listGetter.get().get(index);
-      }
-    };
-  }
+			@Override
+			public V get() {
+				return listGetter.get().get(index);
+			}
+		};
+	}
 
-  public static <K, V> Getter<V> get(Getter<Map<K, V>> mapGetter, K k) {
-    Objects.requireNonNull(mapGetter, "mapGetter is null");
-    Objects.requireNonNull(k, "key is null");
+	public static <K, V> Getter<V> get(Getter<Map<K, V>> mapGetter, K k) {
+		Objects.requireNonNull(mapGetter, "mapGetter is null");
+		Objects.requireNonNull(k, "key is null");
 
-    return new Getter<V>() {
+		return new Getter<V>() {
 
-      @Override
-      public V get() {
-        return mapGetter.get().get(k);
-      }
-    };
-  }
+			@Override
+			public V get() {
+				return mapGetter.get().get(k);
+			}
+		};
+	}
 }

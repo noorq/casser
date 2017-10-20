@@ -22,38 +22,38 @@ import java.util.Map;
 
 public interface SizeConstraint {
 
-  static final int[] EMPTY = new int[0];
+	static final int[] EMPTY = new int[0];
 
-  default int[] getSize(Object value) {
+	default int[] getSize(Object value) {
 
-    if (value == null) {
-      return null;
-    }
+		if (value == null) {
+			return null;
+		}
 
-    if (value.getClass().isArray()) {
-      return new int[] {Array.getLength(value)};
-    }
+		if (value.getClass().isArray()) {
+			return new int[]{Array.getLength(value)};
+		}
 
-    if (value instanceof CharSequence) {
-      CharSequence seq = (CharSequence) value;
-      return new int[] {seq.length()};
-    }
+		if (value instanceof CharSequence) {
+			CharSequence seq = (CharSequence) value;
+			return new int[]{seq.length()};
+		}
 
-    if (value instanceof ByteBuffer) {
-      ByteBuffer bb = (ByteBuffer) value;
-      return new int[] {bb.position()};
-    }
+		if (value instanceof ByteBuffer) {
+			ByteBuffer bb = (ByteBuffer) value;
+			return new int[]{bb.position()};
+		}
 
-    if (value instanceof Collection) {
-      Collection<?> col = (Collection<?>) value;
-      return new int[] {col.size()};
-    }
+		if (value instanceof Collection) {
+			Collection<?> col = (Collection<?>) value;
+			return new int[]{col.size()};
+		}
 
-    if (value instanceof Map) {
-      Map<?, ?> map = (Map<?, ?>) value;
-      return new int[] {map.size()};
-    }
+		if (value instanceof Map) {
+			Map<?, ?> map = (Map<?, ?>) value;
+			return new int[]{map.size()};
+		}
 
-    return EMPTY;
-  }
+		return EMPTY;
+	}
 }

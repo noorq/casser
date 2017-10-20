@@ -15,97 +15,88 @@
  */
 package net.helenus.core;
 
+import java.util.List;
+
 import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.schemabuilder.SchemaStatement;
-import java.util.List;
+
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.support.HelenusException;
 
 public final class TableOperations {
 
-  private final AbstractSessionOperations sessionOps;
-  private final boolean dropUnusedColumns;
-  private final boolean dropUnusedIndexes;
+	private final AbstractSessionOperations sessionOps;
+	private final boolean dropUnusedColumns;
+	private final boolean dropUnusedIndexes;
 
-  public TableOperations(
-      AbstractSessionOperations sessionOps, boolean dropUnusedColumns, boolean dropUnusedIndexes) {
-    this.sessionOps = sessionOps;
-    this.dropUnusedColumns = dropUnusedColumns;
-    this.dropUnusedIndexes = dropUnusedIndexes;
-  }
+	public TableOperations(AbstractSessionOperations sessionOps, boolean dropUnusedColumns, boolean dropUnusedIndexes) {
+		this.sessionOps = sessionOps;
+		this.dropUnusedColumns = dropUnusedColumns;
+		this.dropUnusedIndexes = dropUnusedIndexes;
+	}
 
-  public void createTable(HelenusEntity entity) {
-    sessionOps.execute(SchemaUtil.createTable(entity), true);
-    executeBatch(SchemaUtil.createIndexes(entity));
-  }
+	public void createTable(HelenusEntity entity) {
+		sessionOps.execute(SchemaUtil.createTable(entity), true);
+		executeBatch(SchemaUtil.createIndexes(entity));
+	}
 
-  public void dropTable(HelenusEntity entity) {
-    sessionOps.execute(SchemaUtil.dropTable(entity), true);
-  }
+	public void dropTable(HelenusEntity entity) {
+		sessionOps.execute(SchemaUtil.dropTable(entity), true);
+	}
 
-  public void validateTable(TableMetadata tmd, HelenusEntity entity) {
+	public void validateTable(TableMetadata tmd, HelenusEntity entity) {
 
-    if (tmd == null) {
-      throw new HelenusException(
-          "table does not exists "
-              + entity.getName()
-              + "for entity "
-              + entity.getMappingInterface());
-    }
+		if (tmd == null) {
+			throw new HelenusException(
+					"table does not exists " + entity.getName() + "for entity " + entity.getMappingInterface());
+		}
 
-    List<SchemaStatement> list = SchemaUtil.alterTable(tmd, entity, dropUnusedColumns);
+		List<SchemaStatement> list = SchemaUtil.alterTable(tmd, entity, dropUnusedColumns);
 
-    list.addAll(SchemaUtil.alterIndexes(tmd, entity, dropUnusedIndexes));
+		list.addAll(SchemaUtil.alterIndexes(tmd, entity, dropUnusedIndexes));
 
-    if (!list.isEmpty()) {
-      throw new HelenusException(
-          "schema changed for entity "
-              + entity.getMappingInterface()
-              + ", apply this command: "
-              + list);
-    }
-  }
+		if (!list.isEmpty()) {
+			throw new HelenusException(
+					"schema changed for entity " + entity.getMappingInterface() + ", apply this command: " + list);
+		}
+	}
 
-  public void updateTable(TableMetadata tmd, HelenusEntity entity) {
-    if (tmd == null) {
-      createTable(entity);
-      return;
-    }
+	public void updateTable(TableMetadata tmd, HelenusEntity entity) {
+		if (tmd == null) {
+			createTable(entity);
+			return;
+		}
 
-    executeBatch(SchemaUtil.alterTable(tmd, entity, dropUnusedColumns));
-    executeBatch(SchemaUtil.alterIndexes(tmd, entity, dropUnusedIndexes));
-  }
+		executeBatch(SchemaUtil.alterTable(tmd, entity, dropUnusedColumns));
+		executeBatch(SchemaUtil.alterIndexes(tmd, entity, dropUnusedIndexes));
+	}
 
-  public void createView(HelenusEntity entity) {
-    sessionOps.execute(
-        SchemaUtil.createMaterializedView(
-            sessionOps.usingKeyspace(), entity.getName().toCql(), entity),
-        true);
-    //    executeBatch(SchemaUtil.createIndexes(entity)); NOTE: Unfortunately C* 3.10 does not yet support 2i on materialized views.
-  }
+	public void createView(HelenusEntity entity) {
+		sessionOps.execute(
+				SchemaUtil.createMaterializedView(sessionOps.usingKeyspace(), entity.getName().toCql(), entity), true);
+		// executeBatch(SchemaUtil.createIndexes(entity)); NOTE: Unfortunately C* 3.10
+		// does not yet support 2i on materialized views.
+	}
 
-  public void dropView(HelenusEntity entity) {
-    sessionOps.execute(
-        SchemaUtil.dropMaterializedView(
-            sessionOps.usingKeyspace(), entity.getName().toCql(), entity),
-        true);
-  }
+	public void dropView(HelenusEntity entity) {
+		sessionOps.execute(
+				SchemaUtil.dropMaterializedView(sessionOps.usingKeyspace(), entity.getName().toCql(), entity), true);
+	}
 
-  public void updateView(TableMetadata tmd, HelenusEntity entity) {
-    if (tmd == null) {
-      createTable(entity);
-      return;
-    }
+	public void updateView(TableMetadata tmd, HelenusEntity entity) {
+		if (tmd == null) {
+			createTable(entity);
+			return;
+		}
 
-    executeBatch(SchemaUtil.alterTable(tmd, entity, dropUnusedColumns));
-    executeBatch(SchemaUtil.alterIndexes(tmd, entity, dropUnusedIndexes));
-  }
+		executeBatch(SchemaUtil.alterTable(tmd, entity, dropUnusedColumns));
+		executeBatch(SchemaUtil.alterIndexes(tmd, entity, dropUnusedIndexes));
+	}
 
-  private void executeBatch(List<SchemaStatement> list) {
+	private void executeBatch(List<SchemaStatement> list) {
 
-    list.forEach(
-        s -> {
-          sessionOps.execute(s, true);
-        });
-  }
+		list.forEach(s -> {
+			sessionOps.execute(s, true);
+		});
+	}
 }

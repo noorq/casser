@@ -17,26 +17,27 @@ package net.helenus.mapping.validator;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+
 import net.helenus.mapping.annotation.Constraints.Length;
 
 public final class LengthValidator implements ConstraintValidator<Length, Object>, SizeConstraint {
 
-  int length;
+	int length;
 
-  @Override
-  public void initialize(Length constraintAnnotation) {
-    this.length = constraintAnnotation.value();
-  }
+	@Override
+	public void initialize(Length constraintAnnotation) {
+		this.length = constraintAnnotation.value();
+	}
 
-  @Override
-  public boolean isValid(Object value, ConstraintValidatorContext context) {
+	@Override
+	public boolean isValid(Object value, ConstraintValidatorContext context) {
 
-    int[] size = getSize(value);
+		int[] size = getSize(value);
 
-    if (size == null || size.length == 0) {
-      return true;
-    }
+		if (size == null || size.length == 0) {
+			return true;
+		}
 
-    return size[0] == length;
-  }
+		return size[0] == length;
+	}
 }

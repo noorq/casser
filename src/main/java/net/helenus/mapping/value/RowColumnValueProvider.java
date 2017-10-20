@@ -15,123 +15,121 @@
  */
 package net.helenus.mapping.value;
 
-import com.datastax.driver.core.*;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+
+import com.datastax.driver.core.ColumnDefinitions;
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.ProtocolVersion;
+import com.datastax.driver.core.Row;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.HelenusProperty;
 
 public final class RowColumnValueProvider implements ColumnValueProvider {
 
-  private final SessionRepository repository;
+	private final SessionRepository repository;
 
-  public RowColumnValueProvider(SessionRepository repository) {
-    this.repository = repository;
-  }
+	public RowColumnValueProvider(SessionRepository repository) {
+		this.repository = repository;
+	}
 
-  @Override
-  public <V> V getColumnValue(
-      Object sourceObj, int columnIndex, HelenusProperty property, boolean immutable) {
+	@Override
+	public <V> V getColumnValue(Object sourceObj, int columnIndex, HelenusProperty property, boolean immutable) {
 
-    Row source = (Row) sourceObj;
+		Row source = (Row) sourceObj;
 
-    Object value = null;
-    if (columnIndex != -1) {
-      value = readValueByIndex(source, columnIndex, immutable);
-    } else {
-      value = readValueByName(source, property.getColumnName().getName(), immutable);
-    }
+		Object value = null;
+		if (columnIndex != -1) {
+			value = readValueByIndex(source, columnIndex, immutable);
+		} else {
+			value = readValueByName(source, property.getColumnName().getName(), immutable);
+		}
 
-    if (value != null) {
+		if (value != null) {
 
-      Optional<Function<Object, Object>> converter = property.getReadConverter(repository);
+			Optional<Function<Object, Object>> converter = property.getReadConverter(repository);
 
-      if (converter.isPresent()) {
-        value = converter.get().apply(value);
-      }
-    }
+			if (converter.isPresent()) {
+				value = converter.get().apply(value);
+			}
+		}
 
-    return (V) value;
-  }
+		return (V) value;
+	}
 
-  private Object readValueByIndex(Row source, int columnIndex, boolean immutable) {
+	private Object readValueByIndex(Row source, int columnIndex, boolean immutable) {
 
-    if (source.isNull(columnIndex)) {
-      return null;
-    }
+		if (source.isNull(columnIndex)) {
+			return null;
+		}
 
-    ColumnDefinitions columnDefinitions = source.getColumnDefinitions();
+		ColumnDefinitions columnDefinitions = source.getColumnDefinitions();
 
-    DataType columnType = columnDefinitions.getType(columnIndex);
+		DataType columnType = columnDefinitions.getType(columnIndex);
 
-    if (columnType.isCollection()) {
+		if (columnType.isCollection()) {
 
-      List<DataType> typeArguments = columnType.getTypeArguments();
+			List<DataType> typeArguments = columnType.getTypeArguments();
 
-      switch (columnType.getName()) {
-        case SET:
-          Set set = source.getSet(columnIndex, codecFor(typeArguments.get(0)).getJavaType());
-          return immutable ? ImmutableSet.copyOf(set) : set;
-        case MAP:
-          Map map =
-              source.getMap(
-                  columnIndex,
-                  codecFor(typeArguments.get(0)).getJavaType(),
-                  codecFor(typeArguments.get(1)).getJavaType());
-          return immutable ? ImmutableMap.copyOf(map) : map;
-        case LIST:
-          List list = source.getList(columnIndex, codecFor(typeArguments.get(0)).getJavaType());
-          return immutable ? ImmutableList.copyOf(list) : list;
-      }
-    }
+			switch (columnType.getName()) {
+				case SET :
+					Set set = source.getSet(columnIndex, codecFor(typeArguments.get(0)).getJavaType());
+					return immutable ? ImmutableSet.copyOf(set) : set;
+				case MAP :
+					Map map = source.getMap(columnIndex, codecFor(typeArguments.get(0)).getJavaType(),
+							codecFor(typeArguments.get(1)).getJavaType());
+					return immutable ? ImmutableMap.copyOf(map) : map;
+				case LIST :
+					List list = source.getList(columnIndex, codecFor(typeArguments.get(0)).getJavaType());
+					return immutable ? ImmutableList.copyOf(list) : list;
+			}
+		}
 
-    ByteBuffer bytes = source.getBytesUnsafe(columnIndex);
-    Object value = codecFor(columnType).deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);
+		ByteBuffer bytes = source.getBytesUnsafe(columnIndex);
+		Object value = codecFor(columnType).deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);
 
-    return value;
-  }
+		return value;
+	}
 
-  private Object readValueByName(Row source, String columnName, boolean immutable) {
+	private Object readValueByName(Row source, String columnName, boolean immutable) {
 
-    if (source.isNull(columnName)) {
-      return null;
-    }
+		if (source.isNull(columnName)) {
+			return null;
+		}
 
-    ColumnDefinitions columnDefinitions = source.getColumnDefinitions();
+		ColumnDefinitions columnDefinitions = source.getColumnDefinitions();
 
-    DataType columnType = columnDefinitions.getType(columnName);
+		DataType columnType = columnDefinitions.getType(columnName);
 
-    if (columnType.isCollection()) {
+		if (columnType.isCollection()) {
 
-      List<DataType> typeArguments = columnType.getTypeArguments();
+			List<DataType> typeArguments = columnType.getTypeArguments();
 
-      switch (columnType.getName()) {
-        case SET:
-          Set set = source.getSet(columnName, codecFor(typeArguments.get(0)).getJavaType());
-          return immutable ? ImmutableSet.copyOf(set) : set;
-        case MAP:
-          Map map =
-              source.getMap(
-                  columnName,
-                  codecFor(typeArguments.get(0)).getJavaType(),
-                  codecFor(typeArguments.get(1)).getJavaType());
-          return immutable ? ImmutableMap.copyOf(map) : map;
-        case LIST:
-          List list = source.getList(columnName, codecFor(typeArguments.get(0)).getJavaType());
-          return immutable ? ImmutableList.copyOf(list) : list;
-      }
-    }
+			switch (columnType.getName()) {
+				case SET :
+					Set set = source.getSet(columnName, codecFor(typeArguments.get(0)).getJavaType());
+					return immutable ? ImmutableSet.copyOf(set) : set;
+				case MAP :
+					Map map = source.getMap(columnName, codecFor(typeArguments.get(0)).getJavaType(),
+							codecFor(typeArguments.get(1)).getJavaType());
+					return immutable ? ImmutableMap.copyOf(map) : map;
+				case LIST :
+					List list = source.getList(columnName, codecFor(typeArguments.get(0)).getJavaType());
+					return immutable ? ImmutableList.copyOf(list) : list;
+			}
+		}
 
-    ByteBuffer bytes = source.getBytesUnsafe(columnName);
-    Object value = codecFor(columnType).deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);
+		ByteBuffer bytes = source.getBytesUnsafe(columnName);
+		Object value = codecFor(columnType).deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);
 
-    return value;
-  }
+		return value;
+	}
 }

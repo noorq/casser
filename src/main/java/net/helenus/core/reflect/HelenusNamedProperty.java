@@ -19,7 +19,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.Function;
+
 import javax.validation.ConstraintValidator;
+
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.*;
 import net.helenus.mapping.type.AbstractDataType;
@@ -27,79 +29,79 @@ import net.helenus.support.HelenusMappingException;
 
 public final class HelenusNamedProperty implements HelenusProperty {
 
-  private final String name;
+	private final String name;
 
-  public HelenusNamedProperty(String name) {
-    this.name = name;
-  }
+	public HelenusNamedProperty(String name) {
+		this.name = name;
+	}
 
-  @Override
-  public HelenusEntity getEntity() {
-    throw new HelenusMappingException("will never called");
-  }
+	@Override
+	public HelenusEntity getEntity() {
+		throw new HelenusMappingException("will never called");
+	}
 
-  @Override
-  public String getPropertyName() {
-    return name;
-  }
+	@Override
+	public String getPropertyName() {
+		return name;
+	}
 
-  @Override
-  public Method getGetterMethod() {
-    throw new HelenusMappingException("will never called");
-  }
+	@Override
+	public Method getGetterMethod() {
+		throw new HelenusMappingException("will never called");
+	}
 
-  @Override
-  public IdentityName getColumnName() {
-    return IdentityName.of(name, false);
-  }
+	@Override
+	public IdentityName getColumnName() {
+		return IdentityName.of(name, false);
+	}
 
-  @Override
-  public Optional<IdentityName> getIndexName() {
-    return Optional.empty();
-  }
+	@Override
+	public Optional<IdentityName> getIndexName() {
+		return Optional.empty();
+	}
 
-  @Override
-  public boolean caseSensitiveIndex() {
-    return false;
-  }
+	@Override
+	public boolean caseSensitiveIndex() {
+		return false;
+	}
 
-  @Override
-  public Class<?> getJavaType() {
-    throw new HelenusMappingException("will never called");
-  }
+	@Override
+	public Class<?> getJavaType() {
+		throw new HelenusMappingException("will never called");
+	}
 
-  @Override
-  public AbstractDataType getDataType() {
-    throw new HelenusMappingException("will never called");
-  }
+	@Override
+	public AbstractDataType getDataType() {
+		throw new HelenusMappingException("will never called");
+	}
 
-  @Override
-  public ColumnType getColumnType() {
-    return ColumnType.COLUMN;
-  }
+	@Override
+	public ColumnType getColumnType() {
+		return ColumnType.COLUMN;
+	}
 
-  @Override
-  public int getOrdinal() {
-    return 0;
-  }
+	@Override
+	public int getOrdinal() {
+		return 0;
+	}
 
-  @Override
-  public OrderingDirection getOrdering() {
-    return OrderingDirection.ASC;
-  }
+	@Override
+	public OrderingDirection getOrdering() {
+		return OrderingDirection.ASC;
+	}
 
-  @Override
-  public Optional<Function<Object, Object>> getReadConverter(SessionRepository repository) {
-    return Optional.empty();
-  }
+	@Override
+	public Optional<Function<Object, Object>> getReadConverter(SessionRepository repository) {
+		return Optional.empty();
+	}
 
-  @Override
-  public Optional<Function<Object, Object>> getWriteConverter(SessionRepository repository) {
-    return Optional.empty();
-  }
+	@Override
+	public Optional<Function<Object, Object>> getWriteConverter(SessionRepository repository) {
+		return Optional.empty();
+	}
 
-  @Override
-  public ConstraintValidator<? extends Annotation, ?>[] getValidators() {
-    return MappingUtil.EMPTY_VALIDATORS;
-  }
+	@Override
+	public ConstraintValidator<? extends Annotation, ?>[] getValidators() {
+		return MappingUtil.EMPTY_VALIDATORS;
+	}
 }

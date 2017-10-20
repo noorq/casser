@@ -17,21 +17,22 @@ package net.helenus.mapping;
 
 import java.util.Collection;
 import java.util.Map;
+
 import net.helenus.core.cache.EntityIdentifyingFacet;
 
 public interface HelenusEntity {
 
-  HelenusEntityType getType();
+	HelenusEntityType getType();
 
-  boolean isCacheable();
+	boolean isCacheable();
 
-  Class<?> getMappingInterface();
+	Class<?> getMappingInterface();
 
-  IdentityName getName();
+	IdentityName getName();
 
-  Collection<HelenusProperty> getOrderedProperties();
+	Collection<HelenusProperty> getOrderedProperties();
 
-  HelenusProperty getProperty(String name);
+	HelenusProperty getProperty(String name);
 
-  Map<String, EntityIdentifyingFacet> getIdentifyingFacets();
+	Map<String, EntityIdentifyingFacet> getIdentifyingFacets();
 }

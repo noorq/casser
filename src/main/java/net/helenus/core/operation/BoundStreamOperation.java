@@ -15,43 +15,43 @@
  */
 package net.helenus.core.operation;
 
+import java.util.Set;
+import java.util.stream.Stream;
+
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Statement;
-import java.util.Set;
-import java.util.stream.Stream;
-import net.helenus.core.cache.BoundFacet;
 
-public final class BoundStreamOperation<E>
-    extends AbstractStreamOperation<E, BoundStreamOperation<E>> {
+import net.helenus.core.cache.Facet;
 
-  private final BoundStatement boundStatement;
-  private final AbstractStreamOperation<E, ?> delegate;
+public final class BoundStreamOperation<E> extends AbstractStreamOperation<E, BoundStreamOperation<E>> {
 
-  public BoundStreamOperation(
-      BoundStatement boundStatement, AbstractStreamOperation<E, ?> operation) {
-    super(operation.sessionOps);
-    this.boundStatement = boundStatement;
-    this.delegate = operation;
-  }
+	private final BoundStatement boundStatement;
+	private final AbstractStreamOperation<E, ?> delegate;
 
-  @Override
-  public String[] getQueryKeys() {
-    return delegate.getQueryKeys();
-  }
+	public BoundStreamOperation(BoundStatement boundStatement, AbstractStreamOperation<E, ?> operation) {
+		super(operation.sessionOps);
+		this.boundStatement = boundStatement;
+		this.delegate = operation;
+	}
 
-  @Override
-  public Set<BoundFacet> bindFacetValues() {
-    return delegate.bindFacetValues();
-  }
+	@Override
+	public String[] getQueryKeys() {
+		return delegate.getQueryKeys();
+	}
 
-  @Override
-  public Stream<E> transform(ResultSet resultSet) {
-    return delegate.transform(resultSet);
-  }
+	@Override
+	public Set<Facet> bindFacetValues() {
+		return delegate.bindFacetValues();
+	}
 
-  @Override
-  public Statement buildStatement(boolean cached) {
-    return boundStatement;
-  }
+	@Override
+	public Stream<E> transform(ResultSet resultSet) {
+		return delegate.transform(resultSet);
+	}
+
+	@Override
+	public Statement buildStatement(boolean cached) {
+		return boundStatement;
+	}
 }

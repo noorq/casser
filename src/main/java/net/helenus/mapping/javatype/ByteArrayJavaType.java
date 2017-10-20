@@ -15,13 +15,15 @@
  */
 package net.helenus.mapping.javatype;
 
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.Metadata;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.function.Function;
+
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.Metadata;
+
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.annotation.Types;
@@ -33,43 +35,41 @@ import net.helenus.mapping.type.DTDataType;
 
 public final class ByteArrayJavaType extends AbstractJavaType {
 
-  @Override
-  public Class<?> getJavaClass() {
-    return byte[].class;
-  }
+	@Override
+	public Class<?> getJavaClass() {
+		return byte[].class;
+	}
 
-  @Override
-  public AbstractDataType resolveDataType(
-      Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+	@Override
+	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType,
+			Metadata metadata) {
 
-    if (null != getter.getDeclaredAnnotation(Types.Blob.class)) {
-      return new DTDataType(columnType, DataType.blob());
-    }
+		if (null != getter.getDeclaredAnnotation(Types.Blob.class)) {
+			return new DTDataType(columnType, DataType.blob());
+		}
 
-    Types.Custom custom = getter.getDeclaredAnnotation(Types.Custom.class);
+		Types.Custom custom = getter.getDeclaredAnnotation(Types.Custom.class);
 
-    if (null != custom) {
-      return new DTDataType(columnType, DataType.custom(custom.className()));
-    }
+		if (null != custom) {
+			return new DTDataType(columnType, DataType.custom(custom.className()));
+		}
 
-    return new DTDataType(columnType, DataType.blob());
-  }
+		return new DTDataType(columnType, DataType.blob());
+	}
 
-  @Override
-  public Optional<Function<Object, Object>> resolveReadConverter(
-      AbstractDataType dataType, SessionRepository repository) {
+	@Override
+	public Optional<Function<Object, Object>> resolveReadConverter(AbstractDataType dataType,
+			SessionRepository repository) {
 
-    return Optional.of(
-        TypedConverter.create(
-            ByteBuffer.class, byte[].class, ByteBufferToByteArrayConverter.INSTANCE));
-  }
+		return Optional
+				.of(TypedConverter.create(ByteBuffer.class, byte[].class, ByteBufferToByteArrayConverter.INSTANCE));
+	}
 
-  @Override
-  public Optional<Function<Object, Object>> resolveWriteConverter(
-      AbstractDataType dataType, SessionRepository repository) {
+	@Override
+	public Optional<Function<Object, Object>> resolveWriteConverter(AbstractDataType dataType,
+			SessionRepository repository) {
 
-    return Optional.of(
-        TypedConverter.create(
-            byte[].class, ByteBuffer.class, ByteArrayToByteBufferConverter.INSTANCE));
-  }
+		return Optional
+				.of(TypedConverter.create(byte[].class, ByteBuffer.class, ByteArrayToByteBufferConverter.INSTANCE));
+	}
 }

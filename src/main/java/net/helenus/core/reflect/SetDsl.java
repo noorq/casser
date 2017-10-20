@@ -18,103 +18,104 @@ package net.helenus.core.reflect;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
+
 import net.helenus.support.HelenusMappingException;
 
 public final class SetDsl<V> implements Set<V> {
 
-  private final HelenusPropertyNode parent;
+	private final HelenusPropertyNode parent;
 
-  public SetDsl(HelenusPropertyNode parent) {
-    this.parent = parent;
-  }
+	public SetDsl(HelenusPropertyNode parent) {
+		this.parent = parent;
+	}
 
-  public HelenusPropertyNode getParent() {
-    return parent;
-  }
+	public HelenusPropertyNode getParent() {
+		return parent;
+	}
 
-  @Override
-  public int size() {
-    throwShouldNeverCall();
-    return 0;
-  }
+	@Override
+	public int size() {
+		throwShouldNeverCall();
+		return 0;
+	}
 
-  @Override
-  public boolean isEmpty() {
-    throwShouldNeverCall();
-    return false;
-  }
+	@Override
+	public boolean isEmpty() {
+		throwShouldNeverCall();
+		return false;
+	}
 
-  @Override
-  public boolean contains(Object o) {
-    throwShouldNeverCall();
-    return false;
-  }
+	@Override
+	public boolean contains(Object o) {
+		throwShouldNeverCall();
+		return false;
+	}
 
-  @Override
-  public Iterator<V> iterator() {
-    throwShouldNeverCall();
-    return null;
-  }
+	@Override
+	public Iterator<V> iterator() {
+		throwShouldNeverCall();
+		return null;
+	}
 
-  @Override
-  public Object[] toArray() {
-    throwShouldNeverCall();
-    return null;
-  }
+	@Override
+	public Object[] toArray() {
+		throwShouldNeverCall();
+		return null;
+	}
 
-  @Override
-  public <T> T[] toArray(T[] a) {
-    throwShouldNeverCall();
-    return null;
-  }
+	@Override
+	public <T> T[] toArray(T[] a) {
+		throwShouldNeverCall();
+		return null;
+	}
 
-  @Override
-  public boolean add(V e) {
-    throwShouldNeverCall();
-    return false;
-  }
+	@Override
+	public boolean add(V e) {
+		throwShouldNeverCall();
+		return false;
+	}
 
-  @Override
-  public boolean remove(Object o) {
-    throwShouldNeverCall();
-    return false;
-  }
+	@Override
+	public boolean remove(Object o) {
+		throwShouldNeverCall();
+		return false;
+	}
 
-  @Override
-  public boolean containsAll(Collection<?> c) {
-    throwShouldNeverCall();
-    return false;
-  }
+	@Override
+	public boolean containsAll(Collection<?> c) {
+		throwShouldNeverCall();
+		return false;
+	}
 
-  @Override
-  public boolean addAll(Collection<? extends V> c) {
-    throwShouldNeverCall();
-    return false;
-  }
+	@Override
+	public boolean addAll(Collection<? extends V> c) {
+		throwShouldNeverCall();
+		return false;
+	}
 
-  @Override
-  public boolean retainAll(Collection<?> c) {
-    throwShouldNeverCall();
-    return false;
-  }
+	@Override
+	public boolean retainAll(Collection<?> c) {
+		throwShouldNeverCall();
+		return false;
+	}
 
-  @Override
-  public boolean removeAll(Collection<?> c) {
-    throwShouldNeverCall();
-    return false;
-  }
+	@Override
+	public boolean removeAll(Collection<?> c) {
+		throwShouldNeverCall();
+		return false;
+	}
 
-  @Override
-  public void clear() {
-    throwShouldNeverCall();
-  }
+	@Override
+	public void clear() {
+		throwShouldNeverCall();
+	}
 
-  private void throwShouldNeverCall() {
-    throw new HelenusMappingException("should be never called");
-  }
+	private void throwShouldNeverCall() {
+		throw new HelenusMappingException("should be never called");
+	}
 
-  @Override
-  public String toString() {
-    return "SetDsl";
-  }
+	@Override
+	public String toString() {
+		return "SetDsl";
+	}
 }

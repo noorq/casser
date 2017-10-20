@@ -18,45 +18,49 @@ package net.helenus.core;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+
 import net.helenus.core.cache.BoundFacet;
+import net.helenus.core.cache.Facet;
 import net.helenus.support.Either;
 
 public interface UnitOfWork<X extends Exception> extends AutoCloseable {
 
-  /**
-   * Marks the beginning of a transactional section of work. Will write a record to the shared
-   * write-ahead log.
-   *
-   * @return the handle used to commit or abort the work.
-   */
-  UnitOfWork<X> begin();
+	/**
+	 * Marks the beginning of a transactional section of work. Will write a record
+	 * to the shared write-ahead log.
+	 *
+	 * @return the handle used to commit or abort the work.
+	 */
+	UnitOfWork<X> begin();
 
-  void addNestedUnitOfWork(UnitOfWork<X> uow);
+	void addNestedUnitOfWork(UnitOfWork<X> uow);
 
-  /**
-   * Checks to see if the work performed between calling begin and now can be committed or not.
-   *
-   * @return a function from which to chain work that only happens when commit is successful
-   * @throws X when the work overlaps with other concurrent writers.
-   */
-  PostCommitFunction<Void, Void> commit() throws X;
+	/**
+	 * Checks to see if the work performed between calling begin and now can be
+	 * committed or not.
+	 *
+	 * @return a function from which to chain work that only happens when commit is
+	 *         successful
+	 * @throws X
+	 *             when the work overlaps with other concurrent writers.
+	 */
+	PostCommitFunction<Void, Void> commit() throws X;
 
-  /**
-   * Explicitly abort the work within this unit of work. Any nested aborted unit of work will
-   * trigger the entire unit of work to commit.
-   */
-  void abort();
+	/**
+	 * Explicitly abort the work within this unit of work. Any nested aborted unit
+	 * of work will trigger the entire unit of work to commit.
+	 */
+	void abort();
 
-  boolean hasAborted();
+	boolean hasAborted();
 
-  boolean hasCommitted();
+	boolean hasCommitted();
 
-  Optional<Either<Object, Set<Object>>> cacheLookup(String key);
+	Optional<Either<Object, Set<Object>>> cacheLookup(String key);
 
-  Optional<Either<Object, Set<Object>>> cacheLookupByFacet(Set<BoundFacet> facets);
+	Optional<Either<Object, Set<Object>>> cacheLookupByFacet(Set<Facet> facets);
 
-  Optional<Either<Object, Set<Object>>> cacheLookupByStatement(String[] statementKeys);
+	Optional<Either<Object, Set<Object>>> cacheLookupByStatement(String[] statementKeys);
 
-  void cacheUpdate(
-      Either<Object, Set<Object>> pojo, String[] statementKeys, Map<String, BoundFacet> facets);
+	void cacheUpdate(Either<Object, Set<Object>> pojo, String[] statementKeys, Map<String, BoundFacet> facets);
 }

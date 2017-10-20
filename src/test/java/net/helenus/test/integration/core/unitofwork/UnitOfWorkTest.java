@@ -150,16 +150,21 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
     UUID key = UUIDs.timeBased();
 
     try (UnitOfWork uow = session.begin()) {
-      // This should inserted Widget, but not cache it.
+      // This should insert and cache Widget in the uow.
       session
           .<Widget>insert(widget)
           .value(widget::id, key)
           .value(widget::name, RandomString.make(20))
-          .sync();
+          .sync(uow);
 
       // This should read from the database and return a Widget.
       w1 =
-          session.<Widget>select(widget).where(widget::id, eq(key)).single().sync(uow).orElse(null);
+          session
+                  .<Widget>select(widget)
+                  .where(widget::id, eq(key))
+                  .single()
+                  .sync(uow)
+                  .orElse(null);
 
       // This should read from the cache and get the same instance of a Widget.
       w2 =
