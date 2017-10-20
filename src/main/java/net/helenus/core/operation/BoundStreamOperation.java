@@ -15,7 +15,7 @@
  */
 package net.helenus.core.operation;
 
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Stream;
 
 import com.datastax.driver.core.BoundStatement;
@@ -36,12 +36,7 @@ public final class BoundStreamOperation<E> extends AbstractStreamOperation<E, Bo
 	}
 
 	@Override
-	public String[] getQueryKeys() {
-		return delegate.getQueryKeys();
-	}
-
-	@Override
-	public Set<Facet> bindFacetValues() {
+	public List<Facet> bindFacetValues() {
 		return delegate.bindFacetValues();
 	}
 

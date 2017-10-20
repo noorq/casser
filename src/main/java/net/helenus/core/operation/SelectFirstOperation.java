@@ -15,15 +15,13 @@
  */
 package net.helenus.core.operation;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 
-import net.helenus.core.cache.EntityIdentifyingFacet;
 import net.helenus.core.cache.Facet;
 
 public final class SelectFirstOperation<E> extends AbstractFilterOptionalOperation<E, SelectFirstOperation<E>> {
@@ -48,17 +46,12 @@ public final class SelectFirstOperation<E> extends AbstractFilterOptionalOperati
 	}
 
 	@Override
-	public String[] getQueryKeys() {
-		return delegate.getQueryKeys();
+	public List<Facet> getFacets() {
+		return delegate.getFacets();
 	}
 
 	@Override
-	public Map<String, EntityIdentifyingFacet> getIdentifyingFacets() {
-		return delegate.getIdentifyingFacets();
-	}
-
-	@Override
-	public Set<Facet> bindFacetValues() {
+	public List<Facet> bindFacetValues() {
 		return delegate.bindFacetValues();
 	}
 

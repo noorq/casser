@@ -15,8 +15,8 @@
  */
 package net.helenus.core.operation;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
@@ -80,9 +80,8 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 			String[] statementKeys = null;
 
 			if (enableCache) {
-				Set<Facet> facets = bindFacetValues();
-				statementKeys = getQueryKeys();
-				cacheResult = checkCache(uow, facets, statementKeys);
+				List<Facet> facets = bindFacetValues();
+				cacheResult = checkCache(uow, facets);
 				if (cacheResult != null) {
 					result = Optional.of(cacheResult);
 				}
@@ -101,7 +100,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 			// need to put this result
 			// into the cache for future requests to find.
 			if (enableCache && cacheResult == null && result.isPresent()) {
-				updateCache(uow, result.get(), getIdentifyingFacets(), statementKeys);
+				updateCache(uow, result.get(), getFacets());
 			}
 
 			return result;

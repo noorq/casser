@@ -15,10 +15,10 @@
  */
 package net.helenus.core.operation;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -39,12 +39,10 @@ import brave.Tracer;
 import brave.propagation.TraceContext;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
-import net.helenus.core.cache.BoundFacet;
-import net.helenus.core.cache.EntityIdentifyingFacet;
 import net.helenus.core.cache.Facet;
+import net.helenus.core.cache.UnboundFacet;
 import net.helenus.core.reflect.MapExportable;
 import net.helenus.mapping.value.BeanColumnValueProvider;
-import net.helenus.support.Either;
 import net.helenus.support.HelenusException;
 
 public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>> extends Operation<E> {
@@ -320,42 +318,16 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		throw new HelenusException("only RegularStatements can be prepared");
 	}
 
-	protected E checkCache(UnitOfWork<?> uow, Set<Facet> facets, String[] statementKeys) {
+	protected E checkCache(UnitOfWork<?> uow, List<Facet> facets) {
 		E result = null;
-		Optional<Either<Object, Set<Object>>> optionalCachedResult = Optional.empty();
+		Optional<Object> optionalCachedResult = Optional.empty();
 
 		if (!facets.isEmpty()) {
-			// TODO(gburd): what about select ResultSet, Tuple... etc.?
-			optionalCachedResult = uow.cacheLookupByFacet(facets);
+			optionalCachedResult = uow.cacheLookup(facets);
 			if (optionalCachedResult.isPresent()) {
-				Either<Object, Set<Object>> eitherCachedResult = optionalCachedResult.get();
-				if (eitherCachedResult.isLeft()) {
-					uowCacheHits.mark();
-					logger.info("UnitOfWork({}) cache hit using facets", uow.hashCode());
-					result = (E) eitherCachedResult.getLeft();
-				}
-			}
-		}
-
-		if (result == null && statementKeys != null) {
-			// Then check to see if this query happens to uniquely identify a single object
-			// in thecache.
-			optionalCachedResult = uow.cacheLookupByStatement(statementKeys);
-			if (optionalCachedResult.isPresent()) {
-				Either<Object, Set<Object>> eitherCachedResult = optionalCachedResult.get();
-				// Statements always store Set<E> as the value in the cache.
-				if (eitherCachedResult.isRight()) {
-					Set<Object> cachedResult = eitherCachedResult.getRight();
-					if (cachedResult.size() == 1) {
-						Optional<Object> maybeResult = cachedResult.stream().findFirst();
-						if (maybeResult.isPresent()) {
-							uowCacheHits.mark();
-							logger.info("UnitOfWork({}) cache hit for stmt", uow.hashCode());
-						} else {
-							result = null;
-						}
-					}
-				}
+				uowCacheHits.mark();
+				logger.info("UnitOfWork({}) cache hit using facets", uow.hashCode());
+				result = (E) optionalCachedResult.get();
 			}
 		}
 
@@ -367,30 +339,29 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		return result;
 	}
 
-	protected void updateCache(UnitOfWork<?> uow, E pojo, Map<String, EntityIdentifyingFacet> facetMap,
-			String[] statementKeys) {
-
-		// Insert this entity into the cache for each facet for this entity that we can
-		// fully bind.
-		Map<String, BoundFacet> boundFacets = new HashMap<String, BoundFacet>();
+	protected void updateCache(UnitOfWork<?> uow, E pojo, List<Facet> identifyingFacets) {
+		List<Facet> facets = new ArrayList<>();
 		Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
-		facetMap.forEach((facetName, facet) -> {
-			if (!facet.isFullyBound()) {
-				EntityIdentifyingFacet.Binder binder = facet.binder();
-				facet.getProperties().forEach(prop -> {
+
+		for (Facet facet : identifyingFacets) {
+			if (facet instanceof UnboundFacet) {
+				UnboundFacet unboundFacet = (UnboundFacet) facet;
+				UnboundFacet.Binder binder = unboundFacet.binder();
+				unboundFacet.getProperties().forEach(prop -> {
 					if (valueMap == null) {
 						Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
-						binder.setValueForProperty(prop, prop.getColumnName().toCql() + "==" + value.toString());
+						binder.setValueForProperty(prop, value.toString());
 					} else {
-						binder.setValueForProperty(prop,
-								prop.getColumnName().toCql() + "==" + valueMap.get(prop.getPropertyName()).toString());
+						binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
 					}
+					facets.add(binder.bind());
 				});
-				boundFacets.put(facetName, binder.bind());
+			} else {
+				facets.add(facet);
 			}
-		});
+		}
 
 		// Cache the value (pojo), the statement key, and the fully bound facets.
-		uow.cacheUpdate(Either.left(pojo), statementKeys, boundFacets);
+		uow.cacheUpdate(pojo, facets);
 	}
 }

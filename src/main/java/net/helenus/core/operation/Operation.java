@@ -15,8 +15,7 @@
  */
 package net.helenus.core.operation;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -32,7 +31,6 @@ import brave.Tracer;
 import brave.propagation.TraceContext;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
-import net.helenus.core.cache.EntityIdentifyingFacet;
 import net.helenus.core.cache.Facet;
 
 public abstract class Operation<E> {
@@ -87,15 +85,12 @@ public abstract class Operation<E> {
 		return null;
 	}
 
-	public String[] getQueryKeys() {
+	public List<Facet> getFacets() {
 		return null;
 	}
 
-	public Map<String, EntityIdentifyingFacet> getIdentifyingFacets() {
+	public List<Facet> bindFacetValues() {
 		return null;
 	}
 
-	public Set<Facet> bindFacetValues() {
-		return null;
-	}
 }

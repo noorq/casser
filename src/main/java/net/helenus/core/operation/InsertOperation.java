@@ -237,23 +237,6 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 	}
 
 	@Override
-	public String[] getQueryKeys() {
-		List<String> keys = new ArrayList<>(values.size());
-		values.forEach(t -> {
-			HelenusPropertyNode prop = t._1;
-			switch (prop.getProperty().getColumnType()) {
-				case PARTITION_KEY :
-				case CLUSTERING_COLUMN :
-					keys.add(entity.getName().toCql() + '.' + prop.getColumnName() + "==" + t._2.toString());
-					break;
-				default :
-					break;
-			}
-		});
-		return keys.toArray(new String[keys.size()]);
-	}
-
-	@Override
 	public T sync(UnitOfWork uow) throws TimeoutException {
 		if (uow == null) {
 			return sync();
@@ -261,7 +244,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 		T result = super.sync(uow);
 		Class<?> iface = entity.getMappingInterface();
 		if (resultType == iface) {
-			updateCache(uow, result, entity.getIdentifyingFacets(), getQueryKeys());
+			updateCache(uow, result, entity.getFacets());
 		}
 		return result;
 	}

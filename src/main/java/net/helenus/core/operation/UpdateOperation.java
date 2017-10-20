@@ -578,7 +578,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		// TODO(gburd): Only drafted entity objects are updated in the cache at this
 		// time.
 		if (draft != null) {
-			updateCache(uow, result, getIdentifyingFacets(), getQueryKeys());
+			updateCache(uow, result, getFacets());
 		}
 		return result;
 	}

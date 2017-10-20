@@ -15,7 +15,7 @@
  */
 package net.helenus.core.operation;
 
-import java.util.Set;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
@@ -76,12 +76,10 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 		try {
 			Stream<E> result = null;
 			E cachedResult = null;
-			String[] statementKeys = null;
 
 			if (enableCache) {
-				Set<Facet> facets = bindFacetValues();
-				statementKeys = getQueryKeys();
-				cachedResult = checkCache(uow, facets, statementKeys);
+				List<Facet> facets = bindFacetValues();
+				cachedResult = checkCache(uow, facets);
 				if (cachedResult != null) {
 					result = Stream.of(cachedResult);
 				}
@@ -96,7 +94,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 			// If we have a result and we're caching then we need to put it into the cache
 			// for future requests to find.
 			if (enableCache && cachedResult != null) {
-				updateCache(uow, cachedResult, getIdentifyingFacets(), statementKeys);
+				updateCache(uow, cachedResult, getFacets());
 			}
 
 			return result;

@@ -20,15 +20,19 @@ import java.util.stream.Collectors;
 
 import net.helenus.mapping.HelenusProperty;
 
-public class BoundFacet extends Facet {
+public class BoundFacet extends Facet<String> {
 	private final Map<HelenusProperty, Object> properties;
 
-	BoundFacet(Map<HelenusProperty, Object> properties) {
+	BoundFacet(String name, Map<HelenusProperty, Object> properties) {
+		super(name,
+				(properties.keySet().size() > 1)
+						? "[" + String.join(", ",
+								properties.keySet().stream().map(key -> properties.get(key).toString())
+										.collect(Collectors.toSet()))
+								+ "]"
+						: String.join("", properties.keySet().stream().map(key -> properties.get(key).toString())
+								.collect(Collectors.toSet())));
 		this.properties = properties;
 	}
 
-	public String toString() {
-		return String.join(";",
-				properties.keySet().stream().map(key -> properties.get(key).toString()).collect(Collectors.toSet()));
-	}
 }

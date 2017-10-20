@@ -15,8 +15,8 @@
  */
 package net.helenus.core.operation;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 
 import com.datastax.driver.core.ResultSet;
@@ -41,12 +41,7 @@ public final class SelectFirstTransformingOperation<R, E>
 	}
 
 	@Override
-	public String[] getQueryKeys() {
-		return delegate.getQueryKeys();
-	}
-
-	@Override
-	public Set<Facet> bindFacetValues() {
+	public List<Facet> bindFacetValues() {
 		return delegate.bindFacetValues();
 	}
 

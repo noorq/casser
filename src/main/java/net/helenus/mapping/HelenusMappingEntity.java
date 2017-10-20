@@ -28,7 +28,8 @@ import com.google.common.collect.ImmutableMap;
 import net.helenus.config.HelenusSettings;
 import net.helenus.core.Helenus;
 import net.helenus.core.annotation.Cacheable;
-import net.helenus.core.cache.EntityIdentifyingFacet;
+import net.helenus.core.cache.Facet;
+import net.helenus.core.cache.UnboundFacet;
 import net.helenus.mapping.annotation.*;
 import net.helenus.support.HelenusMappingException;
 
@@ -41,9 +42,7 @@ public final class HelenusMappingEntity implements HelenusEntity {
 	private final ImmutableMap<String, Method> methods;
 	private final ImmutableMap<String, HelenusProperty> props;
 	private final ImmutableList<HelenusProperty> orderedProps;
-	private final EntityIdentifyingFacet primaryIdentityFacet;
-	private final ImmutableMap<String, EntityIdentifyingFacet> allIdentityFacets;
-	private final ImmutableMap<String, EntityIdentifyingFacet> ancillaryIdentityFacets;
+	private final List<Facet> facets;
 
 	public HelenusMappingEntity(Class<?> iface, Metadata metadata) {
 		this(iface, autoDetectType(iface), metadata);
@@ -112,33 +111,31 @@ public final class HelenusMappingEntity implements HelenusEntity {
 		// Caching
 		cacheable = (null != iface.getDeclaredAnnotation(Cacheable.class));
 
-		ImmutableMap.Builder<String, EntityIdentifyingFacet> allFacetsBuilder = ImmutableMap.builder();
-		ImmutableMap.Builder<String, EntityIdentifyingFacet> ancillaryFacetsBuilder = ImmutableMap.builder();
-		EntityIdentifyingFacet primaryFacet = null;
-		List<HelenusProperty> primaryProperties = new ArrayList<HelenusProperty>(4);
-		for (HelenusProperty prop : propsLocal) {
+		List<HelenusProperty> primaryKeyProperties = new ArrayList<>();
+		ImmutableList.Builder<Facet> facetsBuilder = ImmutableList.builder();
+		facetsBuilder.add(new Facet("table", name.toCql()));
+		for (HelenusProperty prop : orderedProps) {
 			switch (prop.getColumnType()) {
 				case PARTITION_KEY :
 				case CLUSTERING_COLUMN :
-					primaryProperties.add(prop);
+					primaryKeyProperties.add(prop);
 					break;
 				default :
-					if (primaryProperties != null) {
-						primaryFacet = new EntityIdentifyingFacet(new HashSet<HelenusProperty>(primaryProperties));
-						allFacetsBuilder.put("*", primaryFacet);
-						primaryProperties = null;
+					if (primaryKeyProperties != null && primaryKeyProperties.size() > 0) {
+						facetsBuilder.add(new UnboundFacet(primaryKeyProperties));
+						primaryKeyProperties = null;
 					}
 					Optional<IdentityName> optionalIndexName = prop.getIndexName();
 					if (optionalIndexName.isPresent()) {
-						EntityIdentifyingFacet facet = new EntityIdentifyingFacet(prop);
-						ancillaryFacetsBuilder.put(prop.getPropertyName(), facet);
-						allFacetsBuilder.put(prop.getPropertyName(), facet);
+						UnboundFacet facet = new UnboundFacet(prop);
+						facetsBuilder.add(facet);
 					}
 			}
 		}
-		this.primaryIdentityFacet = primaryFacet;
-		this.ancillaryIdentityFacets = ancillaryFacetsBuilder.build();
-		this.allIdentityFacets = allFacetsBuilder.build();
+		if (primaryKeyProperties != null && primaryKeyProperties.size() > 0) {
+			facetsBuilder.add(new UnboundFacet(primaryKeyProperties));
+		}
+		this.facets = facetsBuilder.build();
 	}
 
 	@Override
@@ -172,8 +169,8 @@ public final class HelenusMappingEntity implements HelenusEntity {
 	}
 
 	@Override
-	public Map<String, EntityIdentifyingFacet> getIdentifyingFacets() {
-		return allIdentityFacets;
+	public List<Facet> getFacets() {
+		return facets;
 	}
 
 	@Override

@@ -15,15 +15,13 @@
  */
 package net.helenus.core.operation;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 
-import net.helenus.core.cache.EntityIdentifyingFacet;
 import net.helenus.core.cache.Facet;
 
 public final class SelectTransformingOperation<R, E>
@@ -43,18 +41,13 @@ public final class SelectTransformingOperation<R, E>
 	}
 
 	@Override
-	public String[] getQueryKeys() {
-		return delegate.getQueryKeys();
-	}
-
-	@Override
-	public Set<Facet> bindFacetValues() {
+	public List<Facet> bindFacetValues() {
 		return delegate.bindFacetValues();
 	}
 
 	@Override
-	public Map<String, EntityIdentifyingFacet> getIdentifyingFacets() {
-		return delegate.getIdentifyingFacets();
+	public List<Facet> getFacets() {
+		return delegate.getFacets();
 	}
 
 	@Override

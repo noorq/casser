@@ -31,8 +31,8 @@ import com.datastax.driver.core.querybuilder.Select.Where;
 import com.google.common.collect.Iterables;
 
 import net.helenus.core.*;
-import net.helenus.core.cache.EntityIdentifyingFacet;
 import net.helenus.core.cache.Facet;
+import net.helenus.core.cache.UnboundFacet;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.MappingUtil;
@@ -177,31 +177,37 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	}
 
 	@Override
-	public Map<String, EntityIdentifyingFacet> getIdentifyingFacets() {
+	public List<Facet> getFacets() {
 		HelenusEntity entity = props.get(0).getEntity();
-		return entity.getIdentifyingFacets();
+		return entity.getFacets();
 	}
 
 	@Override
-	public Set<Facet> bindFacetValues() {
+	public List<Facet> bindFacetValues() {
 		HelenusEntity entity = props.get(0).getEntity();
-		Set<Facet> boundFacets = new HashSet<Facet>();
-		// Check to see if this select statement has enough information to build one or
-		// more identifying facets.
-		entity.getIdentifyingFacets().forEach((facetName, facet) -> {
-			EntityIdentifyingFacet.Binder binder = facet.binder();
-			facet.getProperties().forEach(prop -> {
-				Filter filter = filters.get(prop);
-				if (filter != null) {
-					binder.setValueForProperty(prop, filter.toString());
-				} else if (facetName.equals("*")) {
-					binder.setValueForProperty(prop, "");
+		List<Facet> boundFacets = new ArrayList<>();
+
+		for (Facet facet : entity.getFacets()) {
+			if (facet instanceof UnboundFacet) {
+				UnboundFacet unboundFacet = (UnboundFacet) facet;
+				UnboundFacet.Binder binder = unboundFacet.binder();
+				unboundFacet.getProperties().forEach(prop -> {
+					Filter filter = filters.get(prop);
+					if (filter != null) {
+						Object[] postulates = filter.postulateValues();
+						for (Object p : postulates) {
+							binder.setValueForProperty(prop, p.toString());
+						}
+					}
+
+				});
+				if (binder.isBound()) {
+					boundFacets.add(binder.bind());
 				}
-			});
-			if (binder.isFullyBound()) {
-				boundFacets.add(binder.bind());
+			} else {
+				boundFacets.add(facet);
 			}
-		});
+		}
 		return boundFacets;
 	}
 

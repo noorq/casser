@@ -16,17 +16,13 @@
 package net.helenus.core;
 
 import java.util.*;
-import java.util.stream.Collectors;
-
-import org.ahocorasick.trie.Emit;
-import org.ahocorasick.trie.Trie;
 
 import com.diffplug.common.base.Errors;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import com.google.common.collect.TreeTraverser;
 
-import net.helenus.core.cache.BoundFacet;
 import net.helenus.core.cache.Facet;
-import net.helenus.support.Either;
 
 /** Encapsulates the concept of a "transaction" as a unit-of-work. */
 public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfWork<E>, AutoCloseable {
@@ -34,10 +30,11 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	private final HelenusSession session;
 	private final AbstractUnitOfWork<E> parent;
 	private List<CommitThunk> postCommit = new ArrayList<CommitThunk>();
-	private final Map<String, Either<Object, Set<Object>>> cache = new HashMap<String, Either<Object, Set<Object>>>();
-	private Trie cacheIndex = Trie.builder().ignoreOverlaps().build();
 	private boolean aborted = false;
 	private boolean committed = false;
+
+	// Cache:
+	private final Table<String, String, Object> cache = HashBasedTable.create();
 
 	protected AbstractUnitOfWork(HelenusSession session, AbstractUnitOfWork<E> parent) {
 		Objects.requireNonNull(session, "containing session cannot be null");
@@ -68,62 +65,40 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	}
 
 	@Override
-	public Optional<Either<Object, Set<Object>>> cacheLookupByFacet(Set<Facet> facets) {
-		Optional<Either<Object, Set<Object>>> result = Optional.empty();
-		Collection<Emit> emits = cacheIndex.parseText(
-				String.join(" ", facets.stream().map(facet -> facet.toString()).collect(Collectors.toList())));
-		for (Emit emit : emits) {
-			// NOTE: rethink. should this match *all* facets? how do I know which emit
-			// keyword is the primary key?
-			String key = emit.getKeyword();
-			result = cacheLookup(key);
-			if (result.isPresent()) {
-				return result;
+	public Optional<Object> cacheLookup(List<Facet> facets) {
+		Facet table = facets.remove(0);
+		String tableName = table.value().toString();
+		Optional<Object> result = Optional.empty();
+		for (Facet facet : facets) {
+			String columnName = facet.name() + "==" + facet.value();
+			Object value = cache.get(tableName, columnName);
+			if (value != null) {
+				if (result.isPresent() && result.get() != value) {
+					// One facet matched, but another did not.
+					result = Optional.empty();
+					break;
+				} else {
+					result = Optional.of(value);
+				}
 			}
 		}
 		if (!result.isPresent()) {
 			// Be sure to check all enclosing UnitOfWork caches as well, we may be nested.
 			if (parent != null) {
-				return parent.cacheLookupByFacet(facets);
+				return parent.cacheLookup(facets);
 			}
 		}
 		return result;
 	}
 
 	@Override
-	public Optional<Either<Object, Set<Object>>> cacheLookupByStatement(String[] statementKeys) {
-		String key = String.join(",", statementKeys);
-		return cacheLookup(key);
-	}
-
-	@Override
-	public Optional<Either<Object, Set<Object>>> cacheLookup(String key) {
-		Optional<Either<Object, Set<Object>>> result = (cache.containsKey(key))
-				? Optional.of(cache.get(key))
-				: Optional.empty();
-
-		if (!result.isPresent()) {
-			// Be sure to check all enclosing UnitOfWork caches as well, we may be nested.
-			if (parent != null) {
-				return parent.cacheLookup(key);
-			}
+	public void cacheUpdate(Object value, List<Facet> facets) {
+		Facet table = facets.remove(0);
+		String tableName = table.value().toString();
+		for (Facet facet : facets) {
+			String columnName = facet.name() + "==" + facet.value();
+			cache.put(tableName, columnName, value);
 		}
-		return result;
-	}
-
-	@Override
-	public void cacheUpdate(Either<Object, Set<Object>> value, String[] statementKeys,
-			Map<String, BoundFacet> facetMap) {
-		String key = "CQL::" + String.join(",", statementKeys);
-		cache.put(key, value);
-		Trie.TrieBuilder builder = cacheIndex.builder().ignoreOverlaps();
-		facetMap.forEach((facetName, facet) -> {
-			builder.addKeyword(facet.toString());
-			if (facetName.equals("*")) {
-				cache.put(facet.toString(), value);
-			}
-		});
-		cacheIndex = builder.build();
 	}
 
 	private Iterator<AbstractUnitOfWork<E>> getChildNodes() {
@@ -161,15 +136,14 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			committed = true;
 			aborted = false;
 
-			// TODO(gburd): union this cache with parent's (if there is a parent) or with
-			// the session cache for all cacheable entities we currently hold
-
 			nested.forEach((uow) -> Errors.rethrow().wrap(uow::commit));
 
 			// Merge UOW cache into parent's cache.
 			if (parent != null) {
-				parent.assumeCache(cache, cacheIndex);
-			}
+				parent.mergeCache(cache);
+			} // else {
+				// TODO... merge into session cache objects marked cacheable
+				// }
 
 			// Apply all post-commit functions for
 			if (parent == null) {
@@ -197,35 +171,21 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		// cache.invalidateSince(txn::start time)
 	}
 
-	private void assumeCache(Map<String, Either<Object, Set<Object>>> childCache, Trie childCacheIndex) {
-		for (String key : childCache.keySet()) {
-			if (cache.containsKey(key)) {
-				Either<Object, Set<Object>> value = cache.get(key);
-				if (value.isLeft()) {
-					Object obj = value.getLeft();
-					// merge objects
-					Either<Object, Set<Object>> childValue = childCache.get(key);
-					if (childValue.isLeft()) {
-						Object childObj = childValue.getLeft();
-					} else {
-						Set<Object> childSet = childValue.getRight();
-					}
+	private void mergeCache(Table<String, String, Object> from) {
+		Table<String, String, Object> to = this.cache;
+		from.rowMap().forEach((rowKey, columnMap) -> {
+			columnMap.forEach((columnKey, value) -> {
+				if (to.contains(rowKey, columnKey)) {
+					to.put(rowKey, columnKey, merge(to.get(rowKey, columnKey), from.get(rowKey, columnKey)));
 				} else {
-					// merge the sets
-					Set<Object> set = value.getRight();
-					Either<Object, Set<Object>> childValue = childCache.get(key);
-					if (childValue.isLeft()) {
-						Object childObj = childValue.getLeft();
-						set.add(childObj);
-					} else {
-						Set<Object> childSet = childValue.getRight();
-						set.addAll(childSet);
-					}
+					to.put(rowKey, columnKey, from.get(rowKey, columnKey));
 				}
-			} else {
-				cache.put(key, childCache.get(key));
-			}
-		}
+			});
+		});
+	}
+
+	private Object merge(Object to, Object from) {
+		return to; // TODO(gburd): yeah...
 	}
 
 	public String describeConflicts() {

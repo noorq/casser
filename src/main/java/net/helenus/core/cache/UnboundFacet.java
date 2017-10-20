@@ -15,44 +15,45 @@
  */
 package net.helenus.core.cache;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import net.helenus.core.SchemaUtil;
 import net.helenus.mapping.HelenusProperty;
 
-public class EntityIdentifyingFacet extends Facet {
+public class UnboundFacet extends Facet<String> {
 
-	private final Set<HelenusProperty> properties;
+	private final List<HelenusProperty> properties;
 
-	public EntityIdentifyingFacet(HelenusProperty prop) {
-		properties = new HashSet<HelenusProperty>();
-		properties.add(prop);
+	public UnboundFacet(List<HelenusProperty> properties) {
+		super(SchemaUtil.createPrimaryKeyPhrase(properties));
+		this.properties = properties;
 	}
 
-	public EntityIdentifyingFacet(Set<HelenusProperty> props) {
-		properties = props;
+	public UnboundFacet(HelenusProperty property) {
+		super(property.getPropertyName());
+		properties = new ArrayList<HelenusProperty>();
+		properties.add(property);
 	}
 
-	public boolean isFullyBound() {
-		return false;
-	}
-
-	public Set<HelenusProperty> getProperties() {
+	public List<HelenusProperty> getProperties() {
 		return properties;
 	}
 
 	public Binder binder() {
-		return new Binder(properties);
+		return new Binder(name(), properties);
 	}
 
 	public static class Binder {
 
-		private final Set<HelenusProperty> properties = new HashSet<HelenusProperty>();
+		private final String name;
+		private final List<HelenusProperty> properties = new ArrayList<HelenusProperty>();
 		private Map<HelenusProperty, Object> boundProperties = new HashMap<HelenusProperty, Object>();
 
-		Binder(Set<HelenusProperty> properties) {
+		Binder(String name, List<HelenusProperty> properties) {
+			this.name = name;
 			this.properties.addAll(properties);
 		}
 
@@ -62,12 +63,12 @@ public class EntityIdentifyingFacet extends Facet {
 			return this;
 		}
 
-		public boolean isFullyBound() {
+		public boolean isBound() {
 			return properties.isEmpty();
 		}
 
 		public BoundFacet bind() {
-			return new BoundFacet(boundProperties);
+			return new BoundFacet(name, boundProperties);
 		}
 	}
 }
