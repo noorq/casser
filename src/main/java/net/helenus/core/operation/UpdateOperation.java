@@ -570,13 +570,12 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 	}
 
 	@Override
-	public E sync(UnitOfWork uow) throws TimeoutException {
+	public E sync(UnitOfWork uow) {//throws TimeoutException {
 		if (uow == null) {
 			return sync();
 		}
 		E result = super.sync(uow);
-		// TODO(gburd): Only drafted entity objects are updated in the cache at this
-		// time.
+		// TODO(gburd): Only drafted entity objects are updated in the cache at this time.
 		if (draft != null) {
 			updateCache(uow, result, getFacets());
 		}

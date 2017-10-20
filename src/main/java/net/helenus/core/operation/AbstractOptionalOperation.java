@@ -64,7 +64,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 				});
 	}
 
-	public Optional<E> sync() throws TimeoutException {
+	public Optional<E> sync() {//throws TimeoutException {
 		final Timer.Context context = requestLatency.time();
 		try {
 			ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout, queryTimeoutUnits,
@@ -75,7 +75,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 		}
 	}
 
-	public Optional<E> sync(UnitOfWork<?> uow) throws TimeoutException {
+	public Optional<E> sync(UnitOfWork<?> uow) {//throws TimeoutException {
 		if (uow == null)
 			return sync();
 
@@ -118,11 +118,11 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 
 	public CompletableFuture<Optional<E>> async() {
 		return CompletableFuture.<Optional<E>>supplyAsync(() -> {
-			try {
+//			try {
 				return sync();
-			} catch (TimeoutException ex) {
-				throw new CompletionException(ex);
-			}
+//			} catch (TimeoutException ex) {
+//				throw new CompletionException(ex);
+//			}
 		});
 	}
 
@@ -130,11 +130,11 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 		if (uow == null)
 			return async();
 		return CompletableFuture.<Optional<E>>supplyAsync(() -> {
-			try {
+//			try {
 				return sync();
-			} catch (TimeoutException ex) {
-				throw new CompletionException(ex);
-			}
+//			} catch (TimeoutException ex) {
+//				throw new CompletionException(ex);
+//			}
 		});
 	}
 }

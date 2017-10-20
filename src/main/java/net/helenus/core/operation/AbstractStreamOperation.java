@@ -57,7 +57,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 				});
 	}
 
-	public Stream<E> sync() throws TimeoutException {
+	public Stream<E> sync() {//throws TimeoutException {
 		final Timer.Context context = requestLatency.time();
 		try {
 			ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout, queryTimeoutUnits,
@@ -68,7 +68,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 		}
 	}
 
-	public Stream<E> sync(UnitOfWork<?> uow) throws TimeoutException {
+	public Stream<E> sync(UnitOfWork<?> uow) {//throws TimeoutException {
 		if (uow == null)
 			return sync();
 
@@ -105,11 +105,11 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
 	public CompletableFuture<Stream<E>> async() {
 		return CompletableFuture.<Stream<E>>supplyAsync(() -> {
-			try {
+//			try {
 				return sync();
-			} catch (TimeoutException ex) {
-				throw new CompletionException(ex);
-			}
+//			} catch (TimeoutException ex) {
+//				throw new CompletionException(ex);
+//			}
 		});
 	}
 
@@ -117,11 +117,11 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 		if (uow == null)
 			return async();
 		return CompletableFuture.<Stream<E>>supplyAsync(() -> {
-			try {
+//			try {
 				return sync();
-			} catch (TimeoutException ex) {
-				throw new CompletionException(ex);
-			}
+//			} catch (TimeoutException ex) {
+//				throw new CompletionException(ex);
+//			}
 		});
 	}
 }

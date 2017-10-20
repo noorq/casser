@@ -49,7 +49,7 @@ public abstract class Operation<E> {
 	}
 
 	public ResultSet execute(AbstractSessionOperations session, UnitOfWork uow, TraceContext traceContext, long timeout,
-			TimeUnit units, boolean showValues, boolean cached) throws TimeoutException {
+			TimeUnit units, boolean showValues, boolean cached) { //throws TimeoutException {
 
 		// Start recording in a Zipkin sub-span our execution time to perform this
 		// operation.
@@ -68,7 +68,7 @@ public abstract class Operation<E> {
 
 			Statement statement = options(buildStatement(cached));
 			ResultSetFuture futureResultSet = session.executeAsync(statement, showValues);
-			return futureResultSet.getUninterruptibly(timeout, units);
+            return futureResultSet.getUninterruptibly(); //TODO(gburd): (timeout, units);
 		} finally {
 
 			if (span != null) {
