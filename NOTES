@@ -351,3 +351,30 @@ begin:
           }
       }
 
+
+
+-----------------
+
+    public void setPurpose(String purpose) {
+        purpose_ = purpose;
+    }
+
+    public void logTimers(String what) {
+        LOG.info(String.format("UOW(%s) %s %s (total: %.3fµs db: %.3fµs or %2.2f%% of total time)",
+                hashCode(), purpose_, what,
+                elapsedTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0,
+                databaseTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0,
+                (elapsedTime_.elapsed(TimeUnit.MICROSECONDS) / databaseTime_.elapsed(TimeUnit.MICROSECONDS)) * 100.0));
+    }
+
+--- postCommitFunction
+        elapsedTime_.stop();
+        if (purpose_ != null) {
+            logTimers("committed");
+        }
+
+--- abort
+            elapsedTime_.stop();
+            if (purpose_ != null) {
+                logTimers("aborted");
+            }

@@ -18,6 +18,7 @@ package net.helenus.core;
 import java.util.*;
 
 import com.diffplug.common.base.Errors;
+import com.google.common.cache.Cache;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.google.common.collect.TreeTraverser;
@@ -32,6 +33,10 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	private List<CommitThunk> postCommit = new ArrayList<CommitThunk>();
 	private boolean aborted = false;
 	private boolean committed = false;
+
+    private String purpose_;
+    private Stopwatch elapsedTime_;
+    public Stopwatch databaseTime_;
 
 	// Cache:
 	private final Table<String, String, Object> cache = HashBasedTable.create();
@@ -86,7 +91,11 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			// Be sure to check all enclosing UnitOfWork caches as well, we may be nested.
 			if (parent != null) {
 				return parent.cacheLookup(facets);
-			}
+			} else {
+			    Cache<String, Object> cache = session.getSessionCache();
+
+			    cache.getIfPresent(key)
+            }
 		}
 		return result;
 	}
@@ -141,9 +150,10 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			// Merge UOW cache into parent's cache.
 			if (parent != null) {
 				parent.mergeCache(cache);
-			} // else {
-				// TODO... merge into session cache objects marked cacheable
-				// }
+			} else {
+                Cache<String, Object> cache = session.getSessionCache();
+                cache.put
+            }
 
 			// Apply all post-commit functions for
 			if (parent == null) {
