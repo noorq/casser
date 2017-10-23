@@ -65,4 +65,10 @@ public @interface Index {
 	 * @return true if the index should ignore case when comparing
 	 */
 	boolean caseSensitive() default true;
+
+    /**
+     *
+     * @return
+     */
+    boolean distinct() default false;
 }

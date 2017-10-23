@@ -125,8 +125,8 @@ public final class HelenusMappingEntity implements HelenusEntity {
 						facetsBuilder.add(new UnboundFacet(primaryKeyProperties));
 						primaryKeyProperties = null;
 					}
-					Optional<IdentityName> optionalIndexName = prop.getIndexName();
-					if (optionalIndexName.isPresent()) {
+					Index idx = prop.getGetterMethod().getAnnotation(Index.class);
+					if (idx.distinct()) {
 						UnboundFacet facet = new UnboundFacet(prop);
 						facetsBuilder.add(facet);
 					}

@@ -86,6 +86,12 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	}
 
 	public void logTimers(String what) {
+
+	    cache hit, miss;
+        multiple calls, sometimes to db, sometimes to cache, sometimes both...
+        uow.setPurpose(getClass().getSimpleName() + "::" + Thread.currentThread().getStackTrace()[1].getMethodName());
+
+
 		double e = (double) elapsedTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
 		double d = (double) databaseTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
 		double c = (double) cacheLookupTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
