@@ -28,10 +28,6 @@ public enum OrderingDirection {
 		this.cql = cql;
 	}
 
-	public String cql() {
-		return cql;
-	}
-
 	public static OrderingDirection parseString(String name) {
 
 		if (ASC.cql.equalsIgnoreCase(name)) {
@@ -41,5 +37,9 @@ public enum OrderingDirection {
 		}
 
 		throw new HelenusMappingException("invalid ordering direction name " + name);
+	}
+
+	public String cql() {
+		return cql;
 	}
 }

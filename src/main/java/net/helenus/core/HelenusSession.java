@@ -59,8 +59,6 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 
 	private final Session session;
 	private final CodecRegistry registry;
-	private volatile String usingKeyspace;
-	private volatile boolean showCql;
 	private final ConsistencyLevel defaultConsistencyLevel;
 	private final boolean defaultQueryIdempotency;
 	private final MetricRegistry metricRegistry;
@@ -71,10 +69,11 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 	private final Executor executor;
 	private final boolean dropSchemaOnClose;
 	private final Cache sessionCache;
-
 	private final RowColumnValueProvider valueProvider;
 	private final StatementColumnValuePreparer valuePreparer;
 	private final Metadata metadata;
+	private volatile String usingKeyspace;
+	private volatile boolean showCql;
 
 	HelenusSession(Session session, String usingKeyspace, CodecRegistry registry, boolean showCql,
 			PrintStream printStream, SessionRepositoryBuilder sessionRepositoryBuilder, Executor executor,

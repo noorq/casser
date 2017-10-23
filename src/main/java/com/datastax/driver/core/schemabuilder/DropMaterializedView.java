@@ -4,15 +4,10 @@ import com.google.common.base.Optional;
 
 public class DropMaterializedView extends Drop {
 
-	enum DroppedItem {
-		TABLE, TYPE, INDEX, MATERIALIZED_VIEW
-	}
-
+	private final String itemType = "MATERIALIZED VIEW";
 	private Optional<String> keyspaceName = Optional.absent();
 	private String itemName;
 	private boolean ifExists = true;
-	private final String itemType = "MATERIALIZED VIEW";
-
 	public DropMaterializedView(String keyspaceName, String viewName) {
 		this(keyspaceName, viewName, DroppedItem.MATERIALIZED_VIEW);
 	}
@@ -46,5 +41,9 @@ public class DropMaterializedView extends Drop {
 
 		dropStatement.append(itemName);
 		return dropStatement.toString();
+	}
+
+	enum DroppedItem {
+		TABLE, TYPE, INDEX, MATERIALIZED_VIEW
 	}
 }

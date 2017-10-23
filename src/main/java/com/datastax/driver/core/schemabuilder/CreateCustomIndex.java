@@ -69,39 +69,6 @@ public class CreateCustomIndex extends CreateIndex {
 		return new CreateCustomIndex.CreateIndexOn();
 	}
 
-	public class CreateIndexOn extends CreateIndex.CreateIndexOn {
-		/**
-		 * Specify the column to create the index on.
-		 *
-		 * @param columnName
-		 *            the column name.
-		 * @return the final CREATE INDEX statement.
-		 */
-		public SchemaStatement andColumn(String columnName) {
-			validateNotEmpty(columnName, "Column name");
-			validateNotKeyWord(columnName,
-					String.format("The column name '%s' is not allowed because it is a reserved keyword", columnName));
-			CreateCustomIndex.this.columnName = columnName;
-			return SchemaStatement.fromQueryString(buildInternal());
-		}
-
-		/**
-		 * Create an index on the keys of the given map column.
-		 *
-		 * @param columnName
-		 *            the column name.
-		 * @return the final CREATE INDEX statement.
-		 */
-		public SchemaStatement andKeysOfColumn(String columnName) {
-			validateNotEmpty(columnName, "Column name");
-			validateNotKeyWord(columnName,
-					String.format("The column name '%s' is not allowed because it is a reserved keyword", columnName));
-			CreateCustomIndex.this.columnName = columnName;
-			CreateCustomIndex.this.keys = true;
-			return SchemaStatement.fromQueryString(buildInternal());
-		}
-	}
-
 	String getCustomClassName() {
 		return "";
 	}
@@ -144,5 +111,38 @@ public class CreateCustomIndex extends CreateIndex {
 		createStatement.append(" }");
 
 		return createStatement.toString();
+	}
+
+	public class CreateIndexOn extends CreateIndex.CreateIndexOn {
+		/**
+		 * Specify the column to create the index on.
+		 *
+		 * @param columnName
+		 *            the column name.
+		 * @return the final CREATE INDEX statement.
+		 */
+		public SchemaStatement andColumn(String columnName) {
+			validateNotEmpty(columnName, "Column name");
+			validateNotKeyWord(columnName,
+					String.format("The column name '%s' is not allowed because it is a reserved keyword", columnName));
+			CreateCustomIndex.this.columnName = columnName;
+			return SchemaStatement.fromQueryString(buildInternal());
+		}
+
+		/**
+		 * Create an index on the keys of the given map column.
+		 *
+		 * @param columnName
+		 *            the column name.
+		 * @return the final CREATE INDEX statement.
+		 */
+		public SchemaStatement andKeysOfColumn(String columnName) {
+			validateNotEmpty(columnName, "Column name");
+			validateNotKeyWord(columnName,
+					String.format("The column name '%s' is not allowed because it is a reserved keyword", columnName));
+			CreateCustomIndex.this.columnName = columnName;
+			CreateCustomIndex.this.keys = true;
+			return SchemaStatement.fromQueryString(buildInternal());
+		}
 	}
 }

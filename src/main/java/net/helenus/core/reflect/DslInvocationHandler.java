@@ -36,18 +36,14 @@ import net.helenus.support.HelenusException;
 
 public class DslInvocationHandler<E> implements InvocationHandler {
 
-	private HelenusEntity entity = null;
-	private Metadata metadata = null;
-
 	private final Class<E> iface;
 	private final ClassLoader classLoader;
-
 	private final Optional<HelenusPropertyNode> parent;
-
 	private final Map<Method, HelenusProperty> map = new HashMap<Method, HelenusProperty>();
-
 	private final Map<Method, Object> udtMap = new HashMap<Method, Object>();
 	private final Map<Method, Object> tupleMap = new HashMap<Method, Object>();
+	private HelenusEntity entity = null;
+	private Metadata metadata = null;
 
 	public DslInvocationHandler(Class<E> iface, ClassLoader classLoader, Optional<HelenusPropertyNode> parent,
 			Metadata metadata) {

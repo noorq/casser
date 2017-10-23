@@ -34,12 +34,10 @@ import net.helenus.support.Immutables;
 
 public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateOperation<E>> {
 
-	private HelenusEntity entity = null;
-
 	private final List<Assignment> assignments = new ArrayList<Assignment>();
 	private final AbstractEntityDraft<E> draft;
 	private final Map<String, Object> draftMap;
-
+	private HelenusEntity entity = null;
 	private int[] ttl;
 	private long[] timestamp;
 

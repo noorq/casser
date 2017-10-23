@@ -30,6 +30,10 @@ public final class UuidBuilder {
 
 	private long mostSigBits = 0L;
 
+	public static long getTimestampMillis(UUID uuid) {
+		return (uuid.timestamp() - NUM_100NS_SINCE_UUID_EPOCH) / NUM_100NS_IN_MILLISECOND;
+	}
+
 	public long getLeastSignificantBits() {
 		return leastSigBits;
 	}
@@ -86,9 +90,5 @@ public final class UuidBuilder {
 	public UuidBuilder setMaxClockSeqAndNode() {
 		this.leastSigBits = MAX_CLOCK_SEQ_AND_NODE;
 		return this;
-	}
-
-	public static long getTimestampMillis(UUID uuid) {
-		return (uuid.timestamp() - NUM_100NS_SINCE_UUID_EPOCH) / NUM_100NS_IN_MILLISECOND;
 	}
 }

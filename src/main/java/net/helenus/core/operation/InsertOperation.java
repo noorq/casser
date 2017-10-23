@@ -40,11 +40,10 @@ import net.helenus.support.HelenusMappingException;
 
 public final class InsertOperation<T> extends AbstractOperation<T, InsertOperation<T>> {
 
-	private HelenusEntity entity;
-
 	private final List<Fun.Tuple2<HelenusPropertyNode, Object>> values = new ArrayList<Fun.Tuple2<HelenusPropertyNode, Object>>();
 	private final T pojo;
 	private final Class<?> resultType;
+	private HelenusEntity entity;
 	private boolean ifNotExists;
 
 	private int[] ttl;

@@ -40,6 +40,7 @@ import net.helenus.support.PackageUtil;
 public final class SessionInitializer extends AbstractSessionOperations {
 
 	private final Session session;
+	private final List<Either<Object, Class<?>>> initList = new ArrayList<Either<Object, Class<?>>>();
 	private CodecRegistry registry;
 	private String usingKeyspace;
 	private boolean showCql = false;
@@ -50,15 +51,10 @@ public final class SessionInitializer extends AbstractSessionOperations {
 	private PrintStream printStream = System.out;
 	private Executor executor = MoreExecutors.directExecutor();
 	private Class<? extends UnitOfWork> unitOfWorkClass = UnitOfWorkImpl.class;
-
 	private SessionRepositoryBuilder sessionRepository;
-
 	private boolean dropUnusedColumns = false;
 	private boolean dropUnusedIndexes = false;
-
 	private KeyspaceMetadata keyspaceMetadata;
-
-	private final List<Either<Object, Class<?>>> initList = new ArrayList<Either<Object, Class<?>>>();
 	private AutoDdl autoDdl = AutoDdl.UPDATE;
 
 	SessionInitializer(Session session) {

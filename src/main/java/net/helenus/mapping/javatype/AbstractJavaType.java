@@ -39,29 +39,6 @@ public abstract class AbstractJavaType {
 		return false;
 	}
 
-	public abstract Class<?> getJavaClass();
-
-	public boolean isApplicable(Class<?> javaClass) {
-		return false;
-	}
-
-	public abstract AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType,
-			Metadata metadata);
-
-	public Optional<Class<?>> getPrimitiveJavaClass() {
-		return Optional.empty();
-	}
-
-	public Optional<Function<Object, Object>> resolveReadConverter(AbstractDataType dataType,
-			SessionRepository repository) {
-		return Optional.empty();
-	}
-
-	public Optional<Function<Object, Object>> resolveWriteConverter(AbstractDataType dataType,
-			SessionRepository repository) {
-		return Optional.empty();
-	}
-
 	static IdentityName resolveUDT(Types.UDT annotation) {
 		return IdentityName.of(annotation.value(), annotation.forceQuote());
 	}
@@ -79,21 +56,6 @@ public abstract class AbstractJavaType {
 		if (args != expected) {
 			throw new HelenusMappingException(
 					"expected " + expected + " of typed arguments for the property " + getter);
-		}
-	}
-
-	static class DataTypeInfo {
-		final DataType dataType;
-		final Class<?> typeArgument;
-
-		DataTypeInfo(DataType dataType) {
-			this.dataType = dataType;
-			this.typeArgument = null;
-		}
-
-		DataTypeInfo(DataType dataType, Class<?> typeArgument) {
-			this.dataType = dataType;
-			this.typeArgument = typeArgument;
 		}
 	}
 
@@ -136,5 +98,43 @@ public abstract class AbstractJavaType {
 		}
 
 		return new Type[]{};
+	}
+
+	public abstract Class<?> getJavaClass();
+
+	public boolean isApplicable(Class<?> javaClass) {
+		return false;
+	}
+
+	public abstract AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType,
+			Metadata metadata);
+
+	public Optional<Class<?>> getPrimitiveJavaClass() {
+		return Optional.empty();
+	}
+
+	public Optional<Function<Object, Object>> resolveReadConverter(AbstractDataType dataType,
+			SessionRepository repository) {
+		return Optional.empty();
+	}
+
+	public Optional<Function<Object, Object>> resolveWriteConverter(AbstractDataType dataType,
+			SessionRepository repository) {
+		return Optional.empty();
+	}
+
+	static class DataTypeInfo {
+		final DataType dataType;
+		final Class<?> typeArgument;
+
+		DataTypeInfo(DataType dataType) {
+			this.dataType = dataType;
+			this.typeArgument = null;
+		}
+
+		DataTypeInfo(DataType dataType, Class<?> typeArgument) {
+			this.dataType = dataType;
+			this.typeArgument = typeArgument;
+		}
 	}
 }

@@ -35,10 +35,10 @@ import net.helenus.support.HelenusMappingException;
 
 public final class Helenus {
 
-	private static volatile HelenusSettings settings = new DefaultHelenusSettings();
 	private static final ConcurrentMap<Class<?>, Object> dslCache = new ConcurrentHashMap<Class<?>, Object>();
 	private static final ConcurrentMap<Class<?>, Metadata> metadataForEntity = new ConcurrentHashMap<Class<?>, Metadata>();
 	private static final Set<HelenusSession> sessions = new HashSet<HelenusSession>();
+	private static volatile HelenusSettings settings = new DefaultHelenusSettings();
 	private static volatile HelenusSession singleton;
 
 	private Helenus() {

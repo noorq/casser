@@ -21,10 +21,6 @@ import java.util.UUID;
 
 public final class Timeuuid {
 
-	private static class Holder {
-		static final SecureRandom numberGenerator = new SecureRandom();
-	}
-
 	private Timeuuid() {
 	}
 
@@ -71,5 +67,9 @@ public final class Timeuuid {
 
 	public static long getTimestampMillis(UUID uuid) {
 		return UuidBuilder.getTimestampMillis(uuid);
+	}
+
+	private static class Holder {
+		static final SecureRandom numberGenerator = new SecureRandom();
 	}
 }

@@ -45,11 +45,9 @@ public final class HelenusMappingProperty implements HelenusProperty {
 	private final Class<?> javaType;
 	private final AbstractJavaType abstractJavaType;
 	private final AbstractDataType dataType;
-
+	private final ConstraintValidator<? extends Annotation, ?>[] validators;
 	private volatile Optional<Function<Object, Object>> readConverter = null;
 	private volatile Optional<Function<Object, Object>> writeConverter = null;
-
-	private final ConstraintValidator<? extends Annotation, ?>[] validators;
 
 	public HelenusMappingProperty(HelenusMappingEntity entity, Method getter, Metadata metadata) {
 		this.entity = entity;

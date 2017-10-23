@@ -66,6 +66,9 @@ public final class MappingJavaTypes {
 		knownTypes = builder.build();
 	}
 
+	private MappingJavaTypes() {
+	}
+
 	private static void add(ImmutableMap.Builder<Class<?>, AbstractJavaType> builder, AbstractJavaType jt) {
 
 		builder.put(jt.getJavaClass(), jt);
@@ -74,9 +77,6 @@ public final class MappingJavaTypes {
 		if (primitiveJavaClass.isPresent()) {
 			builder.put(primitiveJavaClass.get(), jt);
 		}
-	}
-
-	private MappingJavaTypes() {
 	}
 
 	public static AbstractJavaType resolveJavaType(Class<?> javaClass) {

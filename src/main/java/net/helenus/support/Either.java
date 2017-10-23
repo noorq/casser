@@ -27,6 +27,14 @@ public final class Either<L, R> {
 		this.right = right;
 	}
 
+	public static <L, R> Either<L, R> left(L left) {
+		return new Either<L, R>(left, null);
+	}
+
+	public static <L, R> Either<L, R> right(R right) {
+		return new Either<L, R>(null, right);
+	}
+
 	public boolean isLeft() {
 		return left != null;
 	}
@@ -41,14 +49,6 @@ public final class Either<L, R> {
 
 	public R getRight() {
 		return right;
-	}
-
-	public static <L, R> Either<L, R> left(L left) {
-		return new Either<L, R>(left, null);
-	}
-
-	public static <L, R> Either<L, R> right(R right) {
-		return new Either<L, R>(null, right);
 	}
 
 	public EitherCase getCase() {

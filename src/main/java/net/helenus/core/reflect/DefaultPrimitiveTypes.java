@@ -22,9 +22,6 @@ public enum DefaultPrimitiveTypes {
 	BOOLEAN(boolean.class, false), BYTE(byte.class, (byte) 0x0), CHAR(char.class, (char) 0x0), SHORT(short.class,
 			(short) 0), INT(int.class, 0), LONG(long.class, 0L), FLOAT(float.class, 0.0f), DOUBLE(double.class, 0.0);
 
-	private final Class<?> primitiveClass;
-	private final Object defaultValue;
-
 	private static final Map<Class<?>, DefaultPrimitiveTypes> map = new HashMap<Class<?>, DefaultPrimitiveTypes>();
 
 	static {
@@ -32,6 +29,9 @@ public enum DefaultPrimitiveTypes {
 			map.put(type.getPrimitiveClass(), type);
 		}
 	}
+
+	private final Class<?> primitiveClass;
+	private final Object defaultValue;
 
 	private DefaultPrimitiveTypes(Class<?> primitiveClass, Object defaultValue) {
 		this.primitiveClass = primitiveClass;

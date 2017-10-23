@@ -138,6 +138,42 @@ public final class HelenusMappingEntity implements HelenusEntity {
 		this.facets = facetsBuilder.build();
 	}
 
+	private static IdentityName resolveName(Class<?> iface, HelenusEntityType type) {
+
+		switch (type) {
+			case TABLE :
+				return MappingUtil.getTableName(iface, true);
+
+			case VIEW :
+				return MappingUtil.getViewName(iface, true);
+
+			case TUPLE :
+				return IdentityName.of(MappingUtil.getDefaultEntityName(iface), false);
+
+			case UDT :
+				return MappingUtil.getUserDefinedTypeName(iface, true);
+		}
+
+		throw new HelenusMappingException("invalid entity type " + type + " in " + type);
+	}
+
+	private static HelenusEntityType autoDetectType(Class<?> iface) {
+
+		Objects.requireNonNull(iface, "empty iface");
+
+		if (null != iface.getDeclaredAnnotation(Table.class)) {
+			return HelenusEntityType.TABLE;
+		} else if (null != iface.getDeclaredAnnotation(MaterializedView.class)) {
+			return HelenusEntityType.VIEW;
+		} else if (null != iface.getDeclaredAnnotation(Tuple.class)) {
+			return HelenusEntityType.TUPLE;
+		} else if (null != iface.getDeclaredAnnotation(UDT.class)) {
+			return HelenusEntityType.UDT;
+		}
+
+		throw new HelenusMappingException("entity must be annotated by @Table or @Tuple or @UserDefinedType " + iface);
+	}
+
 	@Override
 	public HelenusEntityType getType() {
 		return type;
@@ -176,42 +212,6 @@ public final class HelenusMappingEntity implements HelenusEntity {
 	@Override
 	public IdentityName getName() {
 		return name;
-	}
-
-	private static IdentityName resolveName(Class<?> iface, HelenusEntityType type) {
-
-		switch (type) {
-			case TABLE :
-				return MappingUtil.getTableName(iface, true);
-
-			case VIEW :
-				return MappingUtil.getViewName(iface, true);
-
-			case TUPLE :
-				return IdentityName.of(MappingUtil.getDefaultEntityName(iface), false);
-
-			case UDT :
-				return MappingUtil.getUserDefinedTypeName(iface, true);
-		}
-
-		throw new HelenusMappingException("invalid entity type " + type + " in " + type);
-	}
-
-	private static HelenusEntityType autoDetectType(Class<?> iface) {
-
-		Objects.requireNonNull(iface, "empty iface");
-
-		if (null != iface.getDeclaredAnnotation(Table.class)) {
-			return HelenusEntityType.TABLE;
-		} else if (null != iface.getDeclaredAnnotation(MaterializedView.class)) {
-			return HelenusEntityType.VIEW;
-		} else if (null != iface.getDeclaredAnnotation(Tuple.class)) {
-			return HelenusEntityType.TUPLE;
-		} else if (null != iface.getDeclaredAnnotation(UDT.class)) {
-			return HelenusEntityType.UDT;
-		}
-
-		throw new HelenusMappingException("entity must be annotated by @Table or @Tuple or @UserDefinedType " + iface);
 	}
 
 	private void validateOrdinals() {

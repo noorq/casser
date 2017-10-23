@@ -22,6 +22,10 @@ import net.helenus.mapping.annotation.Constraints;
 
 public class NumberValidator implements ConstraintValidator<Constraints.Number, CharSequence> {
 
+	private static boolean isNumber(char ch) {
+		return ch >= '0' && ch <= '9';
+	}
+
 	@Override
 	public void initialize(Constraints.Number constraintAnnotation) {
 	}
@@ -44,9 +48,5 @@ public class NumberValidator implements ConstraintValidator<Constraints.Number, 
 		}
 
 		return true;
-	}
-
-	private static boolean isNumber(char ch) {
-		return ch >= '0' && ch <= '9';
 	}
 }

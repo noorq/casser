@@ -25,13 +25,13 @@ import net.helenus.mapping.value.BeanColumnValueProvider;
 
 public abstract class AbstractEntityValueWriter<V> {
 
-	abstract void writeColumn(V outValue, Object value, HelenusProperty prop);
-
 	final HelenusEntity entity;
 
 	public AbstractEntityValueWriter(Class<?> iface) {
 		this.entity = Helenus.entity(iface);
 	}
+
+	abstract void writeColumn(V outValue, Object value, HelenusProperty prop);
 
 	public void write(V outValue, Object source) {
 

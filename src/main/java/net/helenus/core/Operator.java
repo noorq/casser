@@ -31,8 +31,6 @@ public enum Operator {
 
 	LTE("<=");
 
-	private final String name;
-
 	private static final Map<String, Operator> indexByName = new HashMap<String, Operator>();
 
 	static {
@@ -41,15 +39,17 @@ public enum Operator {
 		}
 	}
 
+	private final String name;
+
 	private Operator(String name) {
 		this.name = name;
 	}
 
-	public String getName() {
-		return name;
-	}
-
 	public static Operator findByOperator(String name) {
 		return indexByName.get(name);
+	}
+
+	public String getName() {
+		return name;
 	}
 }

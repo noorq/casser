@@ -22,6 +22,10 @@ import net.helenus.mapping.annotation.Constraints;
 
 public final class UpperCaseValidator implements ConstraintValidator<Constraints.UpperCase, CharSequence> {
 
+	private static boolean isLowerCaseLetter(char ch) {
+		return ch >= 'a' && ch <= 'z';
+	}
+
 	@Override
 	public void initialize(Constraints.UpperCase constraintAnnotation) {
 	}
@@ -47,9 +51,5 @@ public final class UpperCaseValidator implements ConstraintValidator<Constraints
 		}
 
 		return true;
-	}
-
-	private static boolean isLowerCaseLetter(char ch) {
-		return ch >= 'a' && ch <= 'z';
 	}
 }

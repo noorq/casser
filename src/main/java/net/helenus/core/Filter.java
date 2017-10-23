@@ -33,14 +33,6 @@ public final class Filter<V> {
 		this.postulate = postulate;
 	}
 
-	public HelenusPropertyNode getNode() {
-		return node;
-	}
-
-	public Clause getClause(ColumnValuePreparer valuePreparer) {
-		return postulate.getClause(node, valuePreparer);
-	}
-
 	public static <V> Filter<V> equal(Getter<V> getter, V val) {
 		return create(getter, Operator.EQ, val);
 	}
@@ -103,6 +95,14 @@ public final class Filter<V> {
 		Postulate<V> postulate = Postulate.of(op, val);
 
 		return new Filter<V>(node, postulate);
+	}
+
+	public HelenusPropertyNode getNode() {
+		return node;
+	}
+
+	public Clause getClause(ColumnValuePreparer valuePreparer) {
+		return postulate.getClause(node, valuePreparer);
 	}
 
 	public V[] postulateValues() {

@@ -26,6 +26,12 @@ import net.helenus.support.HelenusMappingException;
 
 public abstract class AbstractDataType {
 
+	final ColumnType columnType;
+
+	public AbstractDataType(ColumnType columnType) {
+		this.columnType = columnType;
+	}
+
 	public abstract void addColumn(Create create, IdentityName columnName);
 
 	public abstract void addColumn(CreateType create, IdentityName columnName);
@@ -34,12 +40,6 @@ public abstract class AbstractDataType {
 			OptionalColumnMetadata columnInformation);
 
 	public abstract Class<?>[] getTypeArguments();
-
-	final ColumnType columnType;
-
-	public AbstractDataType(ColumnType columnType) {
-		this.columnType = columnType;
-	}
 
 	public ColumnType getColumnType() {
 		return columnType;

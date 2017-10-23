@@ -31,9 +31,8 @@ import org.slf4j.LoggerFactory;
 
 public class PackageUtil {
 
-	private static final Logger log = LoggerFactory.getLogger(PackageUtil.class);
-
 	public static final String JAR_URL_SEPARATOR = "!/";
+	private static final Logger log = LoggerFactory.getLogger(PackageUtil.class);
 
 	private static void doFetchInPath(Set<Class<?>> classes, File directory, String packageName,
 			ClassLoader classLoader) throws ClassNotFoundException {

@@ -43,6 +43,26 @@ import net.helenus.support.HelenusMappingException;
 
 public final class TupleValueJavaType extends AbstractJavaType {
 
+	public static TupleType toTupleType(Class<?> javaType, Metadata metadata) {
+		HelenusEntity tupleEntity = Helenus.entity(javaType, metadata);
+
+		List<DataType> tupleTypes = tupleEntity.getOrderedProperties().stream().map(p -> p.getDataType())
+				.filter(d -> d instanceof DTDataType).map(d -> (DTDataType) d).map(d -> d.getDataType())
+				.collect(Collectors.toList());
+
+		if (tupleTypes.size() < tupleEntity.getOrderedProperties().size()) {
+
+			List<IdentityName> wrongColumns = tupleEntity.getOrderedProperties().stream()
+					.filter(p -> !(p.getDataType() instanceof DTDataType)).map(p -> p.getColumnName())
+					.collect(Collectors.toList());
+
+			throw new HelenusMappingException(
+					"non simple types in tuple " + tupleEntity.getMappingInterface() + " in columns: " + wrongColumns);
+		}
+
+		return metadata.newTupleType(tupleTypes.toArray(new DataType[tupleTypes.size()]));
+	}
+
 	@Override
 	public Class<?> getJavaClass() {
 		return TupleValue.class;
@@ -80,26 +100,6 @@ public final class TupleValueJavaType extends AbstractJavaType {
 		} else {
 			return new DTDataType(columnType, toTupleType(javaType, metadata), javaType);
 		}
-	}
-
-	public static TupleType toTupleType(Class<?> javaType, Metadata metadata) {
-		HelenusEntity tupleEntity = Helenus.entity(javaType, metadata);
-
-		List<DataType> tupleTypes = tupleEntity.getOrderedProperties().stream().map(p -> p.getDataType())
-				.filter(d -> d instanceof DTDataType).map(d -> (DTDataType) d).map(d -> d.getDataType())
-				.collect(Collectors.toList());
-
-		if (tupleTypes.size() < tupleEntity.getOrderedProperties().size()) {
-
-			List<IdentityName> wrongColumns = tupleEntity.getOrderedProperties().stream()
-					.filter(p -> !(p.getDataType() instanceof DTDataType)).map(p -> p.getColumnName())
-					.collect(Collectors.toList());
-
-			throw new HelenusMappingException(
-					"non simple types in tuple " + tupleEntity.getMappingInterface() + " in columns: " + wrongColumns);
-		}
-
-		return metadata.newTupleType(tupleTypes.toArray(new DataType[tupleTypes.size()]));
 	}
 
 	@Override
