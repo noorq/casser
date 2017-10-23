@@ -50,6 +50,8 @@ public final class BoundStreamOperation<E> extends AbstractStreamOperation<E, Bo
 		return boundStatement;
 	}
 
-    @Override
-    public boolean isSessionCacheable() { return delegate.isSessionCacheable(); }
+	@Override
+	public boolean isSessionCacheable() {
+		return delegate.isSessionCacheable();
+	}
 }

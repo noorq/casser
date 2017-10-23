@@ -19,25 +19,24 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.concurrent.Executor;
 
-import com.google.common.cache.Cache;
-import com.google.common.collect.Table;
-import net.helenus.core.cache.Facet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
+import com.google.common.collect.Table;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import brave.Tracer;
+import net.helenus.core.cache.Facet;
 import net.helenus.mapping.value.ColumnValuePreparer;
 import net.helenus.mapping.value.ColumnValueProvider;
 import net.helenus.support.HelenusException;
 
 public abstract class AbstractSessionOperations {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractSessionOperations.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractSessionOperations.class);
 
 	public abstract Session currentSession();
 
@@ -120,7 +119,8 @@ public abstract class AbstractSessionOperations {
 		return null;
 	}
 
-    public void mergeCache(Table<String, String, Object> cache) {}
+	public void mergeCache(Table<String, String, Object> cache) {
+	}
 
 	RuntimeException translateException(RuntimeException e) {
 		if (e instanceof HelenusException) {
@@ -129,9 +129,12 @@ public abstract class AbstractSessionOperations {
 		throw new HelenusException(e);
 	}
 
-    public Object checkCache(String tableName, List<Facet> facets) { return null; }
+	public Object checkCache(String tableName, List<Facet> facets) {
+		return null;
+	}
 
-    public void updateCache(Object pojo, List<Facet> facets) { }
+	public void updateCache(Object pojo, List<Facet> facets) {
+	}
 
 	void printCql(String cql) {
 		getPrintStream().println(cql);

@@ -17,10 +17,7 @@ package net.helenus.core.operation;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 import com.codahale.metrics.Timer;
@@ -61,52 +58,51 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 				});
 	}
 
-	public Stream<E> sync() {//throws TimeoutException {
-        final Timer.Context context = requestLatency.time();
-        try {
-            Stream<E> resultStream = null;
-            E cacheResult = null;
-            boolean updateCache = isSessionCacheable();
+	public Stream<E> sync() {// throws TimeoutException {
+		final Timer.Context context = requestLatency.time();
+		try {
+			Stream<E> resultStream = null;
+			E cacheResult = null;
+			boolean updateCache = isSessionCacheable();
 
-            if (enableCache && isSessionCacheable()) {
-                List<Facet> facets = bindFacetValues();
-                String tableName = CacheUtil.schemaName(facets);
-                cacheResult = (E) sessionOps.checkCache(tableName, facets);
-                if (cacheResult != null) {
-                    resultStream = Stream.of(cacheResult);
-                    updateCache = false;
-                }
-            }
+			if (enableCache && isSessionCacheable()) {
+				List<Facet> facets = bindFacetValues();
+				String tableName = CacheUtil.schemaName(facets);
+				cacheResult = (E) sessionOps.checkCache(tableName, facets);
+				if (cacheResult != null) {
+					resultStream = Stream.of(cacheResult);
+					updateCache = false;
+				}
+			}
 
-            if (resultStream == null) {
-                // Formulate the query and execute it against the Cassandra cluster.
-                ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout,
-                        queryTimeoutUnits,
-                        showValues, false);
+			if (resultStream == null) {
+				// Formulate the query and execute it against the Cassandra cluster.
+				ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout,
+						queryTimeoutUnits, showValues, false);
 
-                // Transform the query result set into the desired shape.
-                resultStream = transform(resultSet);
-            }
+				// Transform the query result set into the desired shape.
+				resultStream = transform(resultSet);
+			}
 
-            if (updateCache && resultStream != null) {
-                List<Facet> facets = getFacets();
-                if (facets != null && facets.size() > 1) {
-                    List<E> again = new ArrayList<>();
-                    resultStream.forEach(result -> {
-                        sessionOps.updateCache(result, facets);
-                        again.add(result);
-                    });
-                    resultStream = again.stream();
-                }
-            }
-            return resultStream;
+			if (updateCache && resultStream != null) {
+				List<Facet> facets = getFacets();
+				if (facets != null && facets.size() > 1) {
+					List<E> again = new ArrayList<>();
+					resultStream.forEach(result -> {
+						sessionOps.updateCache(result, facets);
+						again.add(result);
+					});
+					resultStream = again.stream();
+				}
+			}
+			return resultStream;
 
 		} finally {
 			context.stop();
 		}
 	}
 
-	public Stream<E> sync(UnitOfWork<?> uow) {//throws TimeoutException {
+	public Stream<E> sync(UnitOfWork<?> uow) {// throws TimeoutException {
 		if (uow == null)
 			return sync();
 
@@ -117,8 +113,8 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 			boolean updateCache = true;
 
 			if (enableCache) {
-                Stopwatch timer = uow.getCacheLookupTimer();
-                timer.start();
+				Stopwatch timer = uow.getCacheLookupTimer();
+				timer.start();
 				List<Facet> facets = bindFacetValues();
 				cachedResult = checkCache(uow, facets);
 				if (cachedResult != null) {
@@ -137,13 +133,13 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 			// If we have a result and we're caching then we need to put it into the cache
 			// for future requests to find.
 			if (updateCache && resultStream != null) {
-                List<E> again = new ArrayList<>();
-                List<Facet> facets = getFacets();
-                resultStream.forEach(result -> {
-                    updateCache(uow, result, facets);
-                    again.add(result);
-                });
-                resultStream = again.stream();
+				List<E> again = new ArrayList<>();
+				List<Facet> facets = getFacets();
+				resultStream.forEach(result -> {
+					updateCache(uow, result, facets);
+					again.add(result);
+				});
+				resultStream = again.stream();
 			}
 
 			return resultStream;
@@ -154,11 +150,11 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
 	public CompletableFuture<Stream<E>> async() {
 		return CompletableFuture.<Stream<E>>supplyAsync(() -> {
-//			try {
-				return sync();
-//			} catch (TimeoutException ex) {
-//				throw new CompletionException(ex);
-//			}
+			// try {
+			return sync();
+			// } catch (TimeoutException ex) {
+			// throw new CompletionException(ex);
+			// }
 		});
 	}
 
@@ -166,11 +162,11 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 		if (uow == null)
 			return async();
 		return CompletableFuture.<Stream<E>>supplyAsync(() -> {
-//			try {
-				return sync();
-//			} catch (TimeoutException ex) {
-//				throw new CompletionException(ex);
-//			}
+			// try {
+			return sync();
+			// } catch (TimeoutException ex) {
+			// throw new CompletionException(ex);
+			// }
 		});
 	}
 }

@@ -185,8 +185,8 @@ public final class Helenus {
 			}
 
 			if (metadata != null) {
-                metadataForEntity.putIfAbsent(iface, metadata);
-            }
+				metadataForEntity.putIfAbsent(iface, metadata);
+			}
 			return entity(iface, metadata);
 		}
 

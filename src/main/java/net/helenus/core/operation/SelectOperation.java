@@ -20,6 +20,9 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
@@ -41,12 +44,10 @@ import net.helenus.mapping.value.ColumnValueProvider;
 import net.helenus.mapping.value.ValueProviderMap;
 import net.helenus.support.Fun;
 import net.helenus.support.HelenusMappingException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, SelectOperation<E>> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SelectOperation.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SelectOperation.class);
 
 	protected final List<HelenusPropertyNode> props = new ArrayList<HelenusPropertyNode>();
 	protected Function<Row, E> rowMapper = null;
@@ -86,7 +87,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		entity.getOrderedProperties().stream().map(p -> new HelenusPropertyNode(p, Optional.empty()))
 				.forEach(p -> this.props.add(p));
 
-        isCacheable = entity.isCacheable();
+		isCacheable = entity.isCacheable();
 	}
 
 	public SelectOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity,
@@ -98,7 +99,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		entity.getOrderedProperties().stream().map(p -> new HelenusPropertyNode(p, Optional.empty()))
 				.forEach(p -> this.props.add(p));
 
-        isCacheable = entity.isCacheable();
+		isCacheable = entity.isCacheable();
 	}
 
 	public SelectOperation(AbstractSessionOperations sessionOperations, Function<Row, E> rowMapper,
@@ -185,8 +186,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		return this;
 	}
 
-    @Override
-    public boolean isSessionCacheable() { return isCacheable; }
+	@Override
+	public boolean isSessionCacheable() {
+		return isCacheable;
+	}
 
 	@Override
 	public List<Facet> getFacets() {
@@ -200,10 +203,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		List<Facet> boundFacets = new ArrayList<>();
 
 		for (Facet facet : entity.getFacets()) {
-            if (facet instanceof UnboundFacet) {
-                UnboundFacet unboundFacet = (UnboundFacet) facet;
-                UnboundFacet.Binder binder = unboundFacet.binder();
-                unboundFacet.getProperties().forEach(prop -> {
+			if (facet instanceof UnboundFacet) {
+				UnboundFacet unboundFacet = (UnboundFacet) facet;
+				UnboundFacet.Binder binder = unboundFacet.binder();
+				unboundFacet.getProperties().forEach(prop -> {
 					Filter filter = filters.get(prop);
 					if (filter != null) {
 						Object[] postulates = filter.postulateValues();

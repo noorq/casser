@@ -17,7 +17,6 @@ package net.helenus.core.operation;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
@@ -25,11 +24,11 @@ import com.codahale.metrics.Timer;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Statement;
+import com.google.common.base.Stopwatch;
 
 import brave.Span;
 import brave.Tracer;
 import brave.propagation.TraceContext;
-import com.google.common.base.Stopwatch;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.cache.Facet;
@@ -50,7 +49,7 @@ public abstract class Operation<E> {
 	}
 
 	public ResultSet execute(AbstractSessionOperations session, UnitOfWork uow, TraceContext traceContext, long timeout,
-			TimeUnit units, boolean showValues, boolean cached) { //throws TimeoutException {
+			TimeUnit units, boolean showValues, boolean cached) { // throws TimeoutException {
 
 		// Start recording in a Zipkin sub-span our execution time to perform this
 		// operation.
@@ -68,17 +67,18 @@ public abstract class Operation<E> {
 			}
 
 			Statement statement = options(buildStatement(cached));
-            Stopwatch timer = null;
+			Stopwatch timer = null;
 			if (uow != null) {
-                timer = uow.getExecutionTimer();
-                timer.start();
-            }
+				timer = uow.getExecutionTimer();
+				timer.start();
+			}
 			ResultSetFuture futureResultSet = session.executeAsync(statement, showValues);
-			ResultSet resultSet = futureResultSet.getUninterruptibly(); //TODO(gburd): (timeout, units);
+			ResultSet resultSet = futureResultSet.getUninterruptibly(); // TODO(gburd): (timeout, units);
 
-			if (uow != null) timer.stop();
+			if (uow != null)
+				timer.stop();
 
-            return resultSet;
+			return resultSet;
 
 		} finally {
 
@@ -104,6 +104,8 @@ public abstract class Operation<E> {
 		return null;
 	}
 
-	public boolean isSessionCacheable() { return false; }
+	public boolean isSessionCacheable() {
+		return false;
+	}
 
 }

@@ -40,6 +40,8 @@ public final class BoundOperation<E> extends AbstractOperation<E, BoundOperation
 		return boundStatement;
 	}
 
-    @Override
-    public boolean isSessionCacheable() { return delegate.isSessionCacheable(); }
+	@Override
+	public boolean isSessionCacheable() {
+		return delegate.isSessionCacheable();
+	}
 }

@@ -16,8 +16,6 @@
 package net.helenus.core.operation;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.TimeoutException;
 
 import com.codahale.metrics.Timer;
 import com.datastax.driver.core.ResultSet;
@@ -41,7 +39,7 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> ex
 		return new PreparedOperation<E>(prepareStatement(), this);
 	}
 
-	public E sync() {//throws TimeoutException {
+	public E sync() {// throws TimeoutException {
 		final Timer.Context context = requestLatency.time();
 		try {
 			ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout, queryTimeoutUnits,
@@ -52,7 +50,7 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> ex
 		}
 	}
 
-	public E sync(UnitOfWork uow) {//throws TimeoutException {
+	public E sync(UnitOfWork uow) {// throws TimeoutException {
 		if (uow == null)
 			return sync();
 
@@ -69,11 +67,11 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> ex
 
 	public CompletableFuture<E> async() {
 		return CompletableFuture.<E>supplyAsync(() -> {
-//			try {
-				return sync();
-//			} catch (TimeoutException ex) {
-//				throw new CompletionException(ex);
-//			}
+			// try {
+			return sync();
+			// } catch (TimeoutException ex) {
+			// throw new CompletionException(ex);
+			// }
 		});
 	}
 
@@ -81,11 +79,11 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> ex
 		if (uow == null)
 			return async();
 		return CompletableFuture.<E>supplyAsync(() -> {
-//			try {
-				return sync();
-//			} catch (TimeoutException ex) {
-//				throw new CompletionException(ex);
-//			}
+			// try {
+			return sync();
+			// } catch (TimeoutException ex) {
+			// throw new CompletionException(ex);
+			// }
 		});
 	}
 }

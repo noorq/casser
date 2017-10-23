@@ -18,6 +18,9 @@ package net.helenus.core;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.diffplug.common.base.Errors;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.HashBasedTable;
@@ -26,29 +29,24 @@ import com.google.common.collect.TreeTraverser;
 
 import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Encapsulates the concept of a "transaction" as a unit-of-work. */
 public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfWork<E>, AutoCloseable {
 
-
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractUnitOfWork.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractUnitOfWork.class);
 
 	private final List<AbstractUnitOfWork<E>> nested = new ArrayList<>();
 	private final HelenusSession session;
 	private final AbstractUnitOfWork<E> parent;
+	// Cache:
+	private final Table<String, String, Object> cache = HashBasedTable.create();
 	private List<CommitThunk> postCommit = new ArrayList<CommitThunk>();
 	private boolean aborted = false;
 	private boolean committed = false;
-
 	private String purpose_;
 	private Stopwatch elapsedTime_;
 	private Stopwatch databaseTime_ = Stopwatch.createUnstarted();
 	private Stopwatch cacheLookupTime_ = Stopwatch.createUnstarted();
-
-	// Cache:
-	private final Table<String, String, Object> cache = HashBasedTable.create();
 
 	protected AbstractUnitOfWork(HelenusSession session, AbstractUnitOfWork<E> parent) {
 		Objects.requireNonNull(session, "containing session cannot be null");
@@ -57,17 +55,17 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		this.parent = parent;
 	}
 
-    @Override
-    public Stopwatch getExecutionTimer() {
-        return databaseTime_;
-    }
+	@Override
+	public Stopwatch getExecutionTimer() {
+		return databaseTime_;
+	}
 
-    @Override
-    public Stopwatch getCacheLookupTimer() {
-        return cacheLookupTime_;
-    }
+	@Override
+	public Stopwatch getCacheLookupTimer() {
+		return cacheLookupTime_;
+	}
 
-    @Override
+	@Override
 	public void addNestedUnitOfWork(UnitOfWork<E> uow) {
 		synchronized (nested) {
 			nested.add((AbstractUnitOfWork<E>) uow);
@@ -82,54 +80,54 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	}
 
 	@Override
-    public UnitOfWork setPurpose(String purpose) {
-        purpose_ = purpose;
-        return this;
-    }
+	public UnitOfWork setPurpose(String purpose) {
+		purpose_ = purpose;
+		return this;
+	}
 
-    public void logTimers(String what) {
-	    double e = (double)elapsedTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
-	    double d = (double)databaseTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
-	    double c = (double)cacheLookupTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
-        double fd = (d / (e - c)) * 100.0;
-        double fc = (c / (e - d)) * 100.0;
-        LOG.info(String.format("UOW(%s)%s %s (total: %.3fms cache: %.3fms %2.2f%% db: %.3fms %2.2f%%)",
-                hashCode(), (purpose_ == null ? "" : " " + purpose_), what, e, c, fc, d, fd));
-    }
+	public void logTimers(String what) {
+		double e = (double) elapsedTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
+		double d = (double) databaseTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
+		double c = (double) cacheLookupTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
+		double fd = (d / (e - c)) * 100.0;
+		double fc = (c / (e - d)) * 100.0;
+		LOG.info(String.format("UOW(%s)%s %s (total: %.3fms cache: %.3fms %2.2f%% db: %.3fms %2.2f%%)", hashCode(),
+				(purpose_ == null ? "" : " " + purpose_), what, e, c, fc, d, fd));
+	}
 
-    private void applyPostCommitFunctions() {
+	private void applyPostCommitFunctions() {
 		if (!postCommit.isEmpty()) {
 			for (CommitThunk f : postCommit) {
 				f.apply();
 			}
 		}
-        logTimers("committed");
+		logTimers("committed");
 	}
 
 	@Override
 	public Optional<Object> cacheLookup(List<Facet> facets) {
-        String tableName = CacheUtil.schemaName(facets);
+		String tableName = CacheUtil.schemaName(facets);
 		Optional<Object> result = Optional.empty();
 		for (Facet facet : facets) {
-		    if (!facet.fixed()) {
-                String columnName = facet.name() + "==" + facet.value();
-                Object value = cache.get(tableName, columnName);
-                if (value != null) {
-                    if (result.isPresent() && result.get() != value) {
-                        // One facet matched, but another did not.
-                        result = Optional.empty();
-                        break;
-                    } else {
-                        result = Optional.of(value);
-                    }
-                }
-            }
+			if (!facet.fixed()) {
+				String columnName = facet.name() + "==" + facet.value();
+				Object value = cache.get(tableName, columnName);
+				if (value != null) {
+					if (result.isPresent() && result.get() != value) {
+						// One facet matched, but another did not.
+						result = Optional.empty();
+						break;
+					} else {
+						result = Optional.of(value);
+					}
+				}
+			}
 		}
 		if (!result.isPresent()) {
 			// Be sure to check all enclosing UnitOfWork caches as well, we may be nested.
 			if (parent != null) {
 				return parent.cacheLookup(facets);
-            }
+			}
 		}
 		return result;
 	}
@@ -185,9 +183,9 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			if (parent != null) {
 				parent.mergeCache(cache);
 			} else {
-			    session.mergeCache(cache);
-            }
-            elapsedTime_.stop();
+				session.mergeCache(cache);
+			}
+			elapsedTime_.stop();
 
 			// Apply all post-commit functions for
 			if (parent == null) {
@@ -213,23 +211,23 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		});
 		// log.record(txn::abort)
 		// cache.invalidateSince(txn::start time)
-        if (!hasAborted()) {
-            elapsedTime_.stop();
-            logTimers("aborted");
-        }
+		if (!hasAborted()) {
+			elapsedTime_.stop();
+			logTimers("aborted");
+		}
 	}
 
 	private void mergeCache(Table<String, String, Object> from) {
-        Table<String, String, Object> to = this.cache;
-        from.rowMap().forEach((rowKey, columnMap) -> {
-            columnMap.forEach((columnKey, value) -> {
-                if (to.contains(rowKey, columnKey)) {
-                    to.put(rowKey, columnKey, CacheUtil.merge(to.get(rowKey, columnKey), from.get(rowKey, columnKey)));
-                } else {
-                    to.put(rowKey, columnKey, from.get(rowKey, columnKey));
-                }
-            });
-        });
+		Table<String, String, Object> to = this.cache;
+		from.rowMap().forEach((rowKey, columnMap) -> {
+			columnMap.forEach((columnKey, value) -> {
+				if (to.contains(rowKey, columnKey)) {
+					to.put(rowKey, columnKey, CacheUtil.merge(to.get(rowKey, columnKey), from.get(rowKey, columnKey)));
+				} else {
+					to.put(rowKey, columnKey, from.get(rowKey, columnKey));
+				}
+			});
+		});
 	}
 
 	public String describeConflicts() {

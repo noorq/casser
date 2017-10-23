@@ -55,6 +55,8 @@ public final class SelectFirstTransformingOperation<R, E>
 		return delegate.transform(resultSet).findFirst().map(fn);
 	}
 
-    @Override
-    public boolean isSessionCacheable() { return delegate.isSessionCacheable(); }
+	@Override
+	public boolean isSessionCacheable() {
+		return delegate.isSessionCacheable();
+	}
 }

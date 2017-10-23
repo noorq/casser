@@ -42,6 +42,8 @@ public final class BoundOptionalOperation<E> extends AbstractOptionalOperation<E
 		return boundStatement;
 	}
 
-    @Override
-    public boolean isSessionCacheable() { return delegate.isSessionCacheable(); }
+	@Override
+	public boolean isSessionCacheable() {
+		return delegate.isSessionCacheable();
+	}
 }

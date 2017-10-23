@@ -41,8 +41,13 @@ public class Facet<T> {
 		return value;
 	}
 
-	public Facet setFixed() { fixed = true; return this; }
+	public Facet setFixed() {
+		fixed = true;
+		return this;
+	}
 
-	public boolean fixed() { return fixed; }
+	public boolean fixed() {
+		return fixed;
+	}
 
 }

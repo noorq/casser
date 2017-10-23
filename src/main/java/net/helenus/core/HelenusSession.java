@@ -29,11 +29,11 @@ import java.util.stream.Collectors;
 
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.*;
-
-import brave.Tracer;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Table;
+
+import brave.Tracer;
 import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
 import net.helenus.core.cache.UnboundFacet;
@@ -95,7 +95,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		this.metricRegistry = metricRegistry;
 		this.zipkinTracer = tracer;
 
-        this.sessionCache = CacheBuilder.newBuilder().maximumSize(MAX_CACHE_SIZE)
+		this.sessionCache = CacheBuilder.newBuilder().maximumSize(MAX_CACHE_SIZE)
 				.expireAfterAccess(MAX_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS).recordStats().build();
 
 		this.valueProvider = new RowColumnValueProvider(this.sessionRepository);
@@ -180,113 +180,112 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 	}
 
 	@Override
-    public Object checkCache(String tableName, List<Facet> facets) {
-        List<String[]> facetCombinations = CacheUtil.flattenFacets(facets);
-        Object result = null;
-        for (String[] combination : facetCombinations) {
-            String cacheKey = tableName + "." + Arrays.toString(combination);
-            result = sessionCache.getIfPresent(cacheKey);
-            if (result != null) {
-                return result;
-            }
-        }
-        return null;
+	public Object checkCache(String tableName, List<Facet> facets) {
+		List<String[]> facetCombinations = CacheUtil.flattenFacets(facets);
+		Object result = null;
+		for (String[] combination : facetCombinations) {
+			String cacheKey = tableName + "." + Arrays.toString(combination);
+			result = sessionCache.getIfPresent(cacheKey);
+			if (result != null) {
+				return result;
+			}
+		}
+		return null;
 	}
 
 	@Override
-    public void updateCache(Object pojo, List<Facet> facets) {
-        Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
-        List<Facet> boundFacets = new ArrayList<>();
-        for (Facet facet : facets) {
-            if (facet instanceof UnboundFacet) {
-                UnboundFacet unboundFacet = (UnboundFacet) facet;
-                UnboundFacet.Binder binder = unboundFacet.binder();
-                unboundFacet.getProperties().forEach(prop -> {
-                    if (valueMap == null) {
-                        Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
-                        binder.setValueForProperty(prop, value.toString());
-                    } else {
-                        binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
-                    }
-                });
-                if (binder.isBound()) {
-                    boundFacets.add(binder.bind());
-                }
-            } else {
-                boundFacets.add(facet);
-            }
-        }
-        String tableName = CacheUtil.schemaName(facets);
-        List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
-        Object value = sessionCache.getIfPresent(pojo);
-        Object mergedValue = null;
-        for (String[] combination : facetCombinations) {
-            String cacheKey = tableName + "." + Arrays.toString(combination);
-            if (value == null) {
-                sessionCache.put(cacheKey, pojo);
-            } else {
-                if (mergedValue == null) {
-                    mergedValue = pojo;
-                } else {
-                    mergedValue = CacheUtil.merge(value, pojo);
-                }
-                sessionCache.put(mergedValue, pojo);
-            }
-        }
+	public void updateCache(Object pojo, List<Facet> facets) {
+		Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
+		List<Facet> boundFacets = new ArrayList<>();
+		for (Facet facet : facets) {
+			if (facet instanceof UnboundFacet) {
+				UnboundFacet unboundFacet = (UnboundFacet) facet;
+				UnboundFacet.Binder binder = unboundFacet.binder();
+				unboundFacet.getProperties().forEach(prop -> {
+					if (valueMap == null) {
+						Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
+						binder.setValueForProperty(prop, value.toString());
+					} else {
+						binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
+					}
+				});
+				if (binder.isBound()) {
+					boundFacets.add(binder.bind());
+				}
+			} else {
+				boundFacets.add(facet);
+			}
+		}
+		String tableName = CacheUtil.schemaName(facets);
+		List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
+		Object value = sessionCache.getIfPresent(pojo);
+		Object mergedValue = null;
+		for (String[] combination : facetCombinations) {
+			String cacheKey = tableName + "." + Arrays.toString(combination);
+			if (value == null) {
+				sessionCache.put(cacheKey, pojo);
+			} else {
+				if (mergedValue == null) {
+					mergedValue = pojo;
+				} else {
+					mergedValue = CacheUtil.merge(value, pojo);
+				}
+				sessionCache.put(mergedValue, pojo);
+			}
+		}
 
-    }
+	}
 
-    @Override
-    public void mergeCache(Table<String, String, Object> uowCache) {
-	    List<Object> pojos = uowCache.values().stream().distinct()
-                .collect(Collectors.toList());
-	    for (Object pojo : pojos) {
-            HelenusEntity entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
-            Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
-	        if (entity.isCacheable()) {
-                List<Facet> boundFacets = new ArrayList<>();
-                for (Facet facet : entity.getFacets()) {
-                    if (facet instanceof UnboundFacet) {
-                        UnboundFacet unboundFacet = (UnboundFacet) facet;
-                        UnboundFacet.Binder binder = unboundFacet.binder();
-                        unboundFacet.getProperties().forEach(prop -> {
-                            if (valueMap == null) {
-                                Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
-                                binder.setValueForProperty(prop, value.toString());
-                            } else {
-                                binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
-                            }
-                        });
-                        if (binder.isBound()) {
-                            boundFacets.add(binder.bind());
-                        }
-                    } else {
-                        boundFacets.add(facet);
-                    }
-                }
-                String tableName = entity.getName().toCql();
-                // NOTE: should equal `String tableName = CacheUtil.schemaName(facets);`
-                List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
-                Object value = sessionCache.getIfPresent(pojo);
-                Object mergedValue = null;
-                for (String[] combination : facetCombinations) {
-                    String cacheKey = tableName + "." + Arrays.toString(combination);
-                    if (value == null) {
-                        sessionCache.put(cacheKey, pojo);
-                    } else {
-                        if (mergedValue == null) {
-                            mergedValue = pojo;
-                        } else {
-                            mergedValue = CacheUtil.merge(value, pojo);
-                        }
-                        sessionCache.put(mergedValue, pojo);
-                    }
-                }
-            }
-        }
-    }
+	@Override
+	public void mergeCache(Table<String, String, Object> uowCache) {
+		List<Object> pojos = uowCache.values().stream().distinct().collect(Collectors.toList());
+		for (Object pojo : pojos) {
+			HelenusEntity entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
+			Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
+			if (entity.isCacheable()) {
+				List<Facet> boundFacets = new ArrayList<>();
+				for (Facet facet : entity.getFacets()) {
+					if (facet instanceof UnboundFacet) {
+						UnboundFacet unboundFacet = (UnboundFacet) facet;
+						UnboundFacet.Binder binder = unboundFacet.binder();
+						unboundFacet.getProperties().forEach(prop -> {
+							if (valueMap == null) {
+								Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
+								binder.setValueForProperty(prop, value.toString());
+							} else {
+								binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
+							}
+						});
+						if (binder.isBound()) {
+							boundFacets.add(binder.bind());
+						}
+					} else {
+						boundFacets.add(facet);
+					}
+				}
+				String tableName = entity.getName().toCql();
+				// NOTE: should equal `String tableName = CacheUtil.schemaName(facets);`
+				List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
+				Object value = sessionCache.getIfPresent(pojo);
+				Object mergedValue = null;
+				for (String[] combination : facetCombinations) {
+					String cacheKey = tableName + "." + Arrays.toString(combination);
+					if (value == null) {
+						sessionCache.put(cacheKey, pojo);
+					} else {
+						if (mergedValue == null) {
+							mergedValue = pojo;
+						} else {
+							mergedValue = CacheUtil.merge(value, pojo);
+						}
+						sessionCache.put(mergedValue, pojo);
+					}
+				}
+			}
+		}
+	}
 
-    public Metadata getMetadata() {
+	public Metadata getMetadata() {
 		return metadata;
 	}
 
