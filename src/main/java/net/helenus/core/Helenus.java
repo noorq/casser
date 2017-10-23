@@ -184,7 +184,9 @@ public final class Helenus {
 				throw new HelenusMappingException("class is not an interface " + iface);
 			}
 
-			metadataForEntity.putIfAbsent(iface, metadata);
+			if (metadata != null) {
+                metadataForEntity.putIfAbsent(iface, metadata);
+            }
 			return entity(iface, metadata);
 		}
 

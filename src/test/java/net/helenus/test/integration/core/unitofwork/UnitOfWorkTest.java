@@ -69,6 +69,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 
     try (UnitOfWork uow = session.begin()) {
 
+      uow.setPurpose("testSelectAfterSelect");
+
       // This should read from the database and return a Widget.
       w1 =
           session.<Widget>select(widget).where(widget::id, eq(key)).single().sync(uow).orElse(null);

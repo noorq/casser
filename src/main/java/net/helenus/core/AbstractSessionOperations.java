@@ -18,6 +18,7 @@ package net.helenus.core;
 import java.io.PrintStream;
 import java.util.concurrent.Executor;
 
+import com.google.common.collect.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,7 @@ import net.helenus.support.HelenusException;
 
 public abstract class AbstractSessionOperations {
 
-	final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractSessionOperations.class);
 
 	public abstract Session currentSession();
 
@@ -87,8 +88,8 @@ public abstract class AbstractSessionOperations {
 	}
 
 	void log(Statement statement, boolean showValues) {
-		if (logger.isInfoEnabled()) {
-			logger.info("Execute statement " + statement);
+		if (LOG.isInfoEnabled()) {
+			LOG.info("Execute statement " + statement);
 		}
 		if (isShowCql()) {
 			if (statement instanceof BuiltStatement) {
@@ -115,6 +116,8 @@ public abstract class AbstractSessionOperations {
 	public MetricRegistry getMetricRegistry() {
 		return null;
 	}
+
+    public void mergeCache(Table<String, String, Object> cache) {}
 
 	RuntimeException translateException(RuntimeException e) {
 		if (e instanceof HelenusException) {

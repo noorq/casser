@@ -21,20 +21,26 @@ import java.io.Closeable;
 import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.*;
 
 import brave.Tracer;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Table;
+import net.helenus.core.cache.CacheUtil;
+import net.helenus.core.cache.Facet;
+import net.helenus.core.cache.UnboundFacet;
 import net.helenus.core.operation.*;
 import net.helenus.core.reflect.Drafted;
 import net.helenus.core.reflect.HelenusPropertyNode;
+import net.helenus.core.reflect.MapExportable;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.mapping.value.*;
@@ -64,6 +70,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 	private final SessionRepository sessionRepository;
 	private final Executor executor;
 	private final boolean dropSchemaOnClose;
+	private final Cache sessionCache;
 
 	private final RowColumnValueProvider valueProvider;
 	private final StatementColumnValuePreparer valuePreparer;
@@ -87,6 +94,9 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		this.unitOfWorkClass = unitOfWorkClass;
 		this.metricRegistry = metricRegistry;
 		this.zipkinTracer = tracer;
+
+        this.sessionCache = CacheBuilder.newBuilder().maximumSize(MAX_CACHE_SIZE)
+				.expireAfterAccess(MAX_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS).recordStats().build();
 
 		this.valueProvider = new RowColumnValueProvider(this.sessionRepository);
 		this.valuePreparer = new StatementColumnValuePreparer(this.sessionRepository);
@@ -169,7 +179,56 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		return defaultQueryIdempotency;
 	}
 
-	public Metadata getMetadata() {
+	@Override
+    public void mergeCache(Table<String, String, Object> uowCache) {
+	    List<Object> pojos = uowCache.values().stream().distinct()
+                .collect(Collectors.toList());
+	    for (Object pojo : pojos) {
+	        HelenusEntity entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
+            Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
+	        if (entity.isCacheable()) {
+	            List<Facet> boundFacets = new ArrayList<>();
+	            for (Facet facet : entity.getFacets()) {
+                    if (facet instanceof UnboundFacet) {
+                        UnboundFacet unboundFacet = (UnboundFacet) facet;
+                        UnboundFacet.Binder binder = unboundFacet.binder();
+                        unboundFacet.getProperties().forEach(prop -> {
+                            if (valueMap == null) {
+                                Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
+                                binder.setValueForProperty(prop, value.toString());
+                            } else {
+                                binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
+                            }
+                        });
+                        if (binder.isBound()) {
+                            boundFacets.add(binder.bind());
+                        }
+                    } else {
+                        boundFacets.add(facet);
+                    }
+                }
+                String tableName = entity.getName().toCql();
+                List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
+                Object value = sessionCache.getIfPresent(pojo);
+                Object mergedValue = null;
+                for (String[] combination : facetCombinations) {
+                    String cacheKey = tableName + "." + Arrays.toString(combination);
+                    if (value == null) {
+                        sessionCache.put(cacheKey, pojo);
+                    } else {
+                        if (mergedValue == null) {
+                            mergedValue = pojo;
+                        } else {
+                            mergedValue = CacheUtil.merge(value, pojo);
+                        }
+                        sessionCache.put(mergedValue, pojo);
+                    }
+                }
+            }
+        }
+    }
+
+    public Metadata getMetadata() {
 		return metadata;
 	}
 

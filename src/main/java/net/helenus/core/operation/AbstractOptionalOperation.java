@@ -91,7 +91,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 				cacheResult = checkCache(uow, facets);
 				if (cacheResult != null) {
 					result = Optional.of(cacheResult);
-				}
+                }
 			}
 
 			if (!result.isPresent()) {

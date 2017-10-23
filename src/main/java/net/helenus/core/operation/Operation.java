@@ -68,11 +68,16 @@ public abstract class Operation<E> {
 			}
 
 			Statement statement = options(buildStatement(cached));
-			Stopwatch timer = uow.getExecutionTimer();
-			timer.start();
+            Stopwatch timer = null;
+			if (uow != null) {
+                timer = uow.getExecutionTimer();
+                timer.start();
+            }
 			ResultSetFuture futureResultSet = session.executeAsync(statement, showValues);
 			ResultSet resultSet = futureResultSet.getUninterruptibly(); //TODO(gburd): (timeout, units);
-			timer.stop();
+
+			if (uow != null) timer.stop();
+
             return resultSet;
 
 		} finally {

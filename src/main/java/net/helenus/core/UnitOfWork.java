@@ -58,5 +58,7 @@ public interface UnitOfWork<X extends Exception> extends AutoCloseable {
 
 	void cacheUpdate(Object pojo, List<Facet> facets);
 
-	Stopwatch getExecutionTimer();
+    UnitOfWork setPurpose(String purpose);
+
+    Stopwatch getExecutionTimer();
 }

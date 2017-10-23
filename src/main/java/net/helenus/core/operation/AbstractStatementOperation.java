@@ -47,7 +47,8 @@ import net.helenus.support.HelenusException;
 
 public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>> extends Operation<E> {
 
-	final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractStatementOperation.class);
+
 	protected boolean enableCache = true;
 	protected boolean showValues = true;
 	protected TraceContext traceContext;
@@ -326,14 +327,14 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 			optionalCachedResult = uow.cacheLookup(facets);
 			if (optionalCachedResult.isPresent()) {
 				uowCacheHits.mark();
-				logger.info("UnitOfWork({}) cache hit using facets", uow.hashCode());
+				LOG.info("UnitOfWork({}) cache hit using facets", uow.hashCode());
 				result = (E) optionalCachedResult.get();
 			}
 		}
 
 		if (result == null) {
 			uowCacheMiss.mark();
-			logger.info("UnitOfWork({}) cache miss", uow.hashCode());
+			LOG.info("UnitOfWork({}) cache miss", uow.hashCode());
 		}
 
 		return result;
@@ -341,19 +342,19 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 
 	protected void updateCache(UnitOfWork<?> uow, E pojo, List<Facet> identifyingFacets) {
 		List<Facet> facets = new ArrayList<>();
-		Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
+        Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
 
 		for (Facet facet : identifyingFacets) {
 			if (facet instanceof UnboundFacet) {
 				UnboundFacet unboundFacet = (UnboundFacet) facet;
 				UnboundFacet.Binder binder = unboundFacet.binder();
 				unboundFacet.getProperties().forEach(prop -> {
-					if (valueMap == null) {
-						Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
-						binder.setValueForProperty(prop, value.toString());
-					} else {
-						binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
-					}
+                    if (valueMap == null) {
+                        Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
+                        binder.setValueForProperty(prop, value.toString());
+                    } else {
+                        binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
+                    }
 					facets.add(binder.bind());
 				});
 			} else {
