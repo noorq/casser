@@ -113,7 +113,7 @@ public final class HelenusMappingEntity implements HelenusEntity {
 
 		List<HelenusProperty> primaryKeyProperties = new ArrayList<>();
 		ImmutableList.Builder<Facet> facetsBuilder = ImmutableList.builder();
-		facetsBuilder.add(new Facet("table", name.toCql()));
+		facetsBuilder.add(new Facet("table", name.toCql()).setFixed());
 		for (HelenusProperty prop : orderedProps) {
 			switch (prop.getColumnType()) {
 				case PARTITION_KEY :

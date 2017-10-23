@@ -216,8 +216,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
                 boundFacets.add(facet);
             }
         }
-        Facet table = boundFacets.remove(0);
-        String tableName = table.value().toString();
+        String tableName = CacheUtil.schemaName(facets);
         List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
         Object value = sessionCache.getIfPresent(pojo);
         Object mergedValue = null;
@@ -265,9 +264,8 @@ public final class HelenusSession extends AbstractSessionOperations implements C
                         boundFacets.add(facet);
                     }
                 }
-                //String tableName = entity.getName().toCql();
-                Facet table = boundFacets.remove(0);
-                String tableName = table.value().toString();
+                String tableName = entity.getName().toCql();
+                // NOTE: should equal `String tableName = CacheUtil.schemaName(facets);`
                 List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
                 Object value = sessionCache.getIfPresent(pojo);
                 Object mergedValue = null;

@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import com.codahale.metrics.Timer;
 import com.datastax.driver.core.PreparedStatement;
@@ -38,6 +39,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
+import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
 
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
@@ -74,8 +76,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 
             if (enableCache) {
                 List<Facet> facets = bindFacetValues();
-                Facet table = facets.remove(0);
-                String tableName = table.value().toString();
+                String tableName = CacheUtil.schemaName(facets);
                 cacheResult = (E)sessionOps.checkCache(tableName, facets);
                 if (cacheResult != null) {
                     result = Optional.of(cacheResult);
@@ -122,8 +123,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 					result = Optional.of(cacheResult);
 					updateCache = false;
                 } else {
-                    Facet table = facets.remove(0);
-                    String tableName = table.value().toString();
+                    String tableName = CacheUtil.schemaName(facets);
 				    cacheResult = (E)sessionOps.checkCache(tableName, facets);
 				    if (cacheResult != null) {
 				        result = Optional.of(cacheResult);

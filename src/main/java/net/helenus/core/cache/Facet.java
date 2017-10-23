@@ -22,6 +22,7 @@ package net.helenus.core.cache;
 public class Facet<T> {
 	private final String name;
 	private T value;
+	private boolean fixed = false;
 
 	public Facet(String name) {
 		this.name = name;
@@ -39,5 +40,9 @@ public class Facet<T> {
 	public T value() {
 		return value;
 	}
+
+	public Facet setFixed() { fixed = true; return this; }
+
+	public boolean fixed() { return fixed; }
 
 }

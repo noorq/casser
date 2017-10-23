@@ -32,6 +32,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
+import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>>
@@ -68,8 +69,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
             if (enableCache) {
                 List<Facet> facets = bindFacetValues();
-                Facet table = facets.remove(0);
-                String tableName = table.value().toString();
+                String tableName = CacheUtil.schemaName(facets);
                 cacheResult = (E) sessionOps.checkCache(tableName, facets);
                 if (cacheResult != null) {
                     resultStream = Stream.of(cacheResult);

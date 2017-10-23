@@ -90,9 +90,11 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
     public void logTimers(String what) {
 	    double e = (double)elapsedTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
 	    double d = (double)databaseTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
-	    double f = ((double)databaseTime_.elapsed(TimeUnit.NANOSECONDS)) / ((double)elapsedTime_.elapsed(TimeUnit.NANOSECONDS)) * 100.0;
-        LOG.info(String.format("UOW(%s)%s %s (total: %.3fms db: %.3fms or %2.2f%% of total time)",
-                hashCode(), (purpose_ == null ? "" : " " + purpose_), what, e, d, f));
+	    double c = (double)cacheLookupTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
+        double fd = (d / (e - c)) * 100.0;
+        double fc = (c / (e - d)) * 100.0;
+        LOG.info(String.format("UOW(%s)%s %s (total: %.3fms cache: %.3fms %2.2f%% db: %.3fms %2.2f%%)",
+                hashCode(), (purpose_ == null ? "" : " " + purpose_), what, e, c, fc, d, fd));
     }
 
     private void applyPostCommitFunctions() {
@@ -106,21 +108,22 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 
 	@Override
 	public Optional<Object> cacheLookup(List<Facet> facets) {
-        Facet table = facets.remove(0);
-        String tableName = table.value().toString();
+        String tableName = CacheUtil.schemaName(facets);
 		Optional<Object> result = Optional.empty();
 		for (Facet facet : facets) {
-			String columnName = facet.name() + "==" + facet.value();
-			Object value = cache.get(tableName, columnName);
-			if (value != null) {
-				if (result.isPresent() && result.get() != value) {
-					// One facet matched, but another did not.
-					result = Optional.empty();
-					break;
-				} else {
-					result = Optional.of(value);
-				}
-			}
+		    if (!facet.fixed()) {
+                String columnName = facet.name() + "==" + facet.value();
+                Object value = cache.get(tableName, columnName);
+                if (value != null) {
+                    if (result.isPresent() && result.get() != value) {
+                        // One facet matched, but another did not.
+                        result = Optional.empty();
+                        break;
+                    } else {
+                        result = Optional.of(value);
+                    }
+                }
+            }
 		}
 		if (!result.isPresent()) {
 			// Be sure to check all enclosing UnitOfWork caches as well, we may be nested.

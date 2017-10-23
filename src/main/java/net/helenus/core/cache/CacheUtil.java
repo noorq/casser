@@ -31,6 +31,7 @@ public class CacheUtil {
 
     public static List<String[]> flattenFacets(List<Facet> facets) {
         List<String[]> combinations = CacheUtil.combinations(facets.stream()
+                .filter(facet -> !facet.fixed())
                 .filter(facet -> facet.value() != null)
                 .map(facet -> {
                     return facet.name() + "==" + facet.value();
@@ -40,6 +41,12 @@ public class CacheUtil {
 
     public static Object merge(Object to, Object from) {
         return to; // TODO(gburd): yeah...
+    }
+
+    public static String schemaName(List<Facet> facets) {
+        return facets.stream().filter(Facet::fixed)
+                .map(facet -> facet.value().toString())
+                .collect(Collectors.joining("."));
     }
 
 }
