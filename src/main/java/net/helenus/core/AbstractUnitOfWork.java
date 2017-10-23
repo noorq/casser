@@ -16,6 +16,7 @@
 package net.helenus.core;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.diffplug.common.base.Errors;
 import com.google.common.base.Stopwatch;
@@ -24,6 +25,7 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.google.common.collect.TreeTraverser;
 
+import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
 
 /** Encapsulates the concept of a "transaction" as a unit-of-work. */
@@ -98,7 +100,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			// Be sure to check all enclosing UnitOfWork caches as well, we may be nested.
 			if (parent != null) {
 				return parent.cacheLookup(facets);
-			}/* else {
+			} else {
 				Cache<String, Object> cache = session.getSessionCache();
 				String[] keys = flattenFacets(facets);
 				for (String key : keys) {
@@ -108,7 +110,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 						break;
 					}
 				}
-			}*/
+			}
 		}
 		return result;
 	}
@@ -121,6 +123,23 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			String columnName = facet.name() + "==" + facet.value();
 			cache.put(tableName, columnName, value);
 		}
+	}
+
+	private String[] flattenFacets(List<Facet> facets) {
+		Facet table = facets.remove(0);
+		String tableName = table.value().toString();
+
+		List<String[]> combinations = CacheUtil.combinations(facets.stream()
+				.map(facet -> {
+					return facet.name() + "==" + facet.value();
+				}).collect(Collectors.toList()).toArray(new String[facets.size()]));
+
+		int i = 0;
+		String[] results = new String[facets.size()];
+		for (String[] combination : combinations) {
+			results[i++] = tableName + "." + combination;
+		}
+		return results;
 	}
 
 	private Iterator<AbstractUnitOfWork<E>> getChildNodes() {

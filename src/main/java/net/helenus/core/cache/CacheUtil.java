@@ -5,7 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CacheUtil {
-    public static List<String[]> comb(String... items) {
+
+    public static List<String[]> combinations(String... items) {
         int n = items.length;
         if (n > 20 || n < 0) throw new IllegalArgumentException(n + " is out of range");
         long e = Math.round(Math.pow(2, n));
@@ -27,4 +28,5 @@ public class CacheUtil {
             }
         }
     }
+
 }
