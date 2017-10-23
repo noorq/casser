@@ -18,6 +18,7 @@ package net.helenus.core;
 import java.util.*;
 
 import com.diffplug.common.base.Errors;
+import com.google.common.base.Stopwatch;
 import com.google.common.cache.Cache;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
@@ -34,9 +35,9 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	private boolean aborted = false;
 	private boolean committed = false;
 
-    private String purpose_;
-    private Stopwatch elapsedTime_;
-    public Stopwatch databaseTime_;
+	private String purpose_;
+	private Stopwatch elapsedTime_;
+	public Stopwatch databaseTime_ = Stopwatch.createUnstarted();
 
 	// Cache:
 	private final Table<String, String, Object> cache = HashBasedTable.create();
@@ -49,6 +50,11 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	}
 
 	@Override
+	public Stopwatch getExecutionTimer() {
+		return databaseTime_;
+	}
+
+	@Override
 	public void addNestedUnitOfWork(UnitOfWork<E> uow) {
 		synchronized (nested) {
 			nested.add((AbstractUnitOfWork<E>) uow);
@@ -57,6 +63,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 
 	@Override
 	public UnitOfWork<E> begin() {
+		elapsedTime_.start();
 		// log.record(txn::start)
 		return this;
 	}
@@ -91,11 +98,17 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			// Be sure to check all enclosing UnitOfWork caches as well, we may be nested.
 			if (parent != null) {
 				return parent.cacheLookup(facets);
-			} else {
-			    Cache<String, Object> cache = session.getSessionCache();
-
-			    cache.getIfPresent(key)
-            }
+			}/* else {
+				Cache<String, Object> cache = session.getSessionCache();
+				String[] keys = flattenFacets(facets);
+				for (String key : keys) {
+					Object value = cache.getIfPresent(key);
+					if (value != null) {
+						result = Optional.of(value);
+						break;
+					}
+				}
+			}*/
 		}
 		return result;
 	}
@@ -150,10 +163,22 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			// Merge UOW cache into parent's cache.
 			if (parent != null) {
 				parent.mergeCache(cache);
-			} else {
-                Cache<String, Object> cache = session.getSessionCache();
-                cache.put
+			} /*else {
+			    Cache<String, Object> cache = session.getSessionCache();
+				Map<String, Object> rowMap = this.cache.rowMap();
+				for (String rowKey : rowMap.keySet()) {
+					String keys = flattenFacets(facets);
+					for (String key : keys) {
+						Object value = cache.getIfPresent(key);
+						if (value != null) {
+							result = Optional.of(value);
+							break;
+						}
+					}
+				}
+			    cache.put
             }
+			*/
 
 			// Apply all post-commit functions for
 			if (parent == null) {

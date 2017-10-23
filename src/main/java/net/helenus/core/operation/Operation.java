@@ -29,6 +29,7 @@ import com.datastax.driver.core.Statement;
 import brave.Span;
 import brave.Tracer;
 import brave.propagation.TraceContext;
+import com.google.common.base.Stopwatch;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.cache.Facet;
@@ -67,8 +68,13 @@ public abstract class Operation<E> {
 			}
 
 			Statement statement = options(buildStatement(cached));
+			Stopwatch timer = uow.getExecutionTimer();
+			timer.start();
 			ResultSetFuture futureResultSet = session.executeAsync(statement, showValues);
-            return futureResultSet.getUninterruptibly(); //TODO(gburd): (timeout, units);
+			ResultSet resultSet = futureResultSet.getUninterruptibly(); //TODO(gburd): (timeout, units);
+			timer.stop();
+            return resultSet;
+
 		} finally {
 
 			if (span != null) {

@@ -18,6 +18,7 @@ package net.helenus.core;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.base.Stopwatch;
 import net.helenus.core.cache.Facet;
 
 public interface UnitOfWork<X extends Exception> extends AutoCloseable {
@@ -56,4 +57,6 @@ public interface UnitOfWork<X extends Exception> extends AutoCloseable {
 	Optional<Object> cacheLookup(List<Facet> facets);
 
 	void cacheUpdate(Object pojo, List<Facet> facets);
+
+	Stopwatch getExecutionTimer();
 }
