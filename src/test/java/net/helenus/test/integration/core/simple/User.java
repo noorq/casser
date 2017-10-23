@@ -21,7 +21,6 @@ import net.helenus.mapping.annotation.PartitionKey;
 import net.helenus.mapping.annotation.Table;
 
 @Table("simple_users")
-@Cacheable
 public interface User {
 
   @PartitionKey

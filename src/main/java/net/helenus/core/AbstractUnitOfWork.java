@@ -213,8 +213,10 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		});
 		// log.record(txn::abort)
 		// cache.invalidateSince(txn::start time)
-        elapsedTime_.stop();
-        logTimers("aborted");
+        if (!hasAborted()) {
+            elapsedTime_.stop();
+            logTimers("aborted");
+        }
 	}
 
 	private void mergeCache(Table<String, String, Object> from) {

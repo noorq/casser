@@ -54,4 +54,7 @@ public final class SelectFirstTransformingOperation<R, E>
 	public Optional<R> transform(ResultSet resultSet) {
 		return delegate.transform(resultSet).findFirst().map(fn);
 	}
+
+    @Override
+    public boolean isSessionCacheable() { return delegate.isSessionCacheable(); }
 }

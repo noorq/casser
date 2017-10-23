@@ -104,4 +104,6 @@ public abstract class Operation<E> {
 		return null;
 	}
 
+	public boolean isSessionCacheable() { return false; }
+
 }

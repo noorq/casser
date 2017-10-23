@@ -59,4 +59,7 @@ public final class SelectFirstOperation<E> extends AbstractFilterOptionalOperati
 	public Optional<E> transform(ResultSet resultSet) {
 		return delegate.transform(resultSet).findFirst();
 	}
+
+    @Override
+    public boolean isSessionCacheable() { return delegate.isSessionCacheable(); }
 }

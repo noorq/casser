@@ -185,6 +185,9 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 		return this;
 	}
 
+    @Override
+    public boolean isSessionCacheable() { return isCacheable; }
+
 	@Override
 	public List<Facet> getFacets() {
 		HelenusEntity entity = props.get(0).getEntity();

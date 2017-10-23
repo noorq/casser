@@ -66,9 +66,9 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
         try {
             Stream<E> resultStream = null;
             E cacheResult = null;
-            boolean updateCache = true;
+            boolean updateCache = isSessionCacheable();
 
-            if (enableCache) {
+            if (enableCache && isSessionCacheable()) {
                 List<Facet> facets = bindFacetValues();
                 String tableName = CacheUtil.schemaName(facets);
                 cacheResult = (E) sessionOps.checkCache(tableName, facets);
@@ -89,13 +89,15 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
             }
 
             if (updateCache && resultStream != null) {
-                List<E> again = new ArrayList<>();
                 List<Facet> facets = getFacets();
-                resultStream.forEach(result -> {
-                    sessionOps.updateCache(result, facets);
-                    again.add(result);
-                });
-                resultStream = again.stream();
+                if (facets != null && facets.size() > 1) {
+                    List<E> again = new ArrayList<>();
+                    resultStream.forEach(result -> {
+                        sessionOps.updateCache(result, facets);
+                        again.add(result);
+                    });
+                    resultStream = again.stream();
+                }
             }
             return resultStream;
 

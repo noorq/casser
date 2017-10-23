@@ -43,4 +43,5 @@ public final class PreparedOperation<E> {
 	public String toString() {
 		return preparedStatement.getQueryString();
 	}
+
 }
