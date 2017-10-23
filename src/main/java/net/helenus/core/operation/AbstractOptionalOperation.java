@@ -25,6 +25,7 @@ import com.codahale.metrics.Timer;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.google.common.base.Function;
+import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -67,10 +68,36 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 	public Optional<E> sync() {//throws TimeoutException {
 		final Timer.Context context = requestLatency.time();
 		try {
-			ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout, queryTimeoutUnits,
-					showValues, false);
-			return transform(resultSet);
-		} finally {
+            Optional<E> result = Optional.empty();
+            E cacheResult = null;
+            boolean updateCache = true;
+
+            if (enableCache) {
+                List<Facet> facets = bindFacetValues();
+                Facet table = facets.remove(0);
+                String tableName = table.value().toString();
+                cacheResult = (E)sessionOps.checkCache(tableName, facets);
+                if (cacheResult != null) {
+                    result = Optional.of(cacheResult);
+                    updateCache = false;
+                }
+            }
+
+            if (!result.isPresent()) {
+                // Formulate the query and execute it against the Cassandra cluster.
+                ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout,
+                        queryTimeoutUnits,
+                        showValues, false);
+
+                // Transform the query result set into the desired shape.
+                result = transform(resultSet);
+            }
+
+            if (updateCache && result.isPresent()) {
+                sessionOps.updateCache(result.get(), getFacets());
+            }
+            return result;
+        } finally {
 			context.stop();
 		}
 	}
@@ -82,31 +109,41 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 		final Timer.Context context = requestLatency.time();
 		try {
 
-			Optional<E> result = Optional.empty();
-			E cacheResult = null;
-			String[] statementKeys = null;
+            Optional<E> result = Optional.empty();
+            E cacheResult = null;
+            boolean updateCache = true;
 
 			if (enableCache) {
-				List<Facet> facets = bindFacetValues();
+                Stopwatch timer = uow.getCacheLookupTimer();
+                timer.start();
+                List<Facet> facets = bindFacetValues();
 				cacheResult = checkCache(uow, facets);
 				if (cacheResult != null) {
 					result = Optional.of(cacheResult);
+					updateCache = false;
+                } else {
+                    Facet table = facets.remove(0);
+                    String tableName = table.value().toString();
+				    cacheResult = (E)sessionOps.checkCache(tableName, facets);
+				    if (cacheResult != null) {
+				        result = Optional.of(cacheResult);
+                    }
                 }
+                timer.stop();
 			}
 
 			if (!result.isPresent()) {
-				// Formulate the query and execute it against the Cassandra cluster.
+                // Formulate the query and execute it against the Cassandra cluster.
 				ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
 						showValues, true);
 
-				// Transform the query result set into the desired shape.
+                // Transform the query result set into the desired shape.
 				result = transform(resultSet);
 			}
 
-			// If we have a result, it wasn't from cache, and we're caching things then we
-			// need to put this result
-			// into the cache for future requests to find.
-			if (enableCache && cacheResult == null && result.isPresent()) {
+			// If we have a result, it wasn't from the UOW cache, and we're caching things then we
+			// need to put this result into the cache for future requests to find.
+            if (updateCache && result.isPresent()) {
 				updateCache(uow, result.get(), getFacets());
 			}
 

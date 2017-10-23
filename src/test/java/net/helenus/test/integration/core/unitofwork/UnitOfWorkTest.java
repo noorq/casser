@@ -57,7 +57,7 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 
   @Test
   public void testSelectAfterSelect() throws Exception {
-    Widget w1, w2;
+    Widget w1, w2, w3;
     UUID key = UUIDs.timeBased();
 
     // This should inserted Widget, but not cache it.
@@ -77,7 +77,7 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 
       // This should read from the cache and get the same instance of a Widget.
       w2 =
-          session.<Widget>select(widget).where(widget::id, eq(key)).single().sync(uow).orElse(null);
+              session.<Widget>select(widget).where(widget::id, eq(key)).single().sync(uow).orElse(null);
 
       uow.commit()
           .andThen(
@@ -85,6 +85,9 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
                 Assert.assertEquals(w1, w2);
               });
     }
+
+    w3 = session.<Widget>select(widget).where(widget::name, eq(w1.name())).single().sync().orElse(null);
+    Assert.assertEquals(w1, w3);
   }
 
   @Test

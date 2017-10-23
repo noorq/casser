@@ -180,15 +180,73 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 	}
 
 	@Override
+    public Object checkCache(String tableName, List<Facet> facets) {
+        List<String[]> facetCombinations = CacheUtil.flattenFacets(facets);
+        Object result = null;
+        for (String[] combination : facetCombinations) {
+            String cacheKey = tableName + "." + Arrays.toString(combination);
+            result = sessionCache.getIfPresent(cacheKey);
+            if (result != null) {
+                return result;
+            }
+        }
+        return null;
+	}
+
+	@Override
+    public void updateCache(Object pojo, List<Facet> facets) {
+        Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
+        List<Facet> boundFacets = new ArrayList<>();
+        for (Facet facet : facets) {
+            if (facet instanceof UnboundFacet) {
+                UnboundFacet unboundFacet = (UnboundFacet) facet;
+                UnboundFacet.Binder binder = unboundFacet.binder();
+                unboundFacet.getProperties().forEach(prop -> {
+                    if (valueMap == null) {
+                        Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
+                        binder.setValueForProperty(prop, value.toString());
+                    } else {
+                        binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
+                    }
+                });
+                if (binder.isBound()) {
+                    boundFacets.add(binder.bind());
+                }
+            } else {
+                boundFacets.add(facet);
+            }
+        }
+        Facet table = boundFacets.remove(0);
+        String tableName = table.value().toString();
+        List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
+        Object value = sessionCache.getIfPresent(pojo);
+        Object mergedValue = null;
+        for (String[] combination : facetCombinations) {
+            String cacheKey = tableName + "." + Arrays.toString(combination);
+            if (value == null) {
+                sessionCache.put(cacheKey, pojo);
+            } else {
+                if (mergedValue == null) {
+                    mergedValue = pojo;
+                } else {
+                    mergedValue = CacheUtil.merge(value, pojo);
+                }
+                sessionCache.put(mergedValue, pojo);
+            }
+        }
+
+    }
+
+    @Override
     public void mergeCache(Table<String, String, Object> uowCache) {
 	    List<Object> pojos = uowCache.values().stream().distinct()
                 .collect(Collectors.toList());
 	    for (Object pojo : pojos) {
-	        HelenusEntity entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
+            HelenusEntity entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
             Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
 	        if (entity.isCacheable()) {
-	            List<Facet> boundFacets = new ArrayList<>();
-	            for (Facet facet : entity.getFacets()) {
+                List<Facet> boundFacets = new ArrayList<>();
+                for (Facet facet : entity.getFacets()) {
                     if (facet instanceof UnboundFacet) {
                         UnboundFacet unboundFacet = (UnboundFacet) facet;
                         UnboundFacet.Binder binder = unboundFacet.binder();
@@ -207,7 +265,9 @@ public final class HelenusSession extends AbstractSessionOperations implements C
                         boundFacets.add(facet);
                     }
                 }
-                String tableName = entity.getName().toCql();
+                //String tableName = entity.getName().toCql();
+                Facet table = boundFacets.remove(0);
+                String tableName = table.value().toString();
                 List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
                 Object value = sessionCache.getIfPresent(pojo);
                 Object mergedValue = null;

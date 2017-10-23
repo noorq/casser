@@ -30,9 +30,6 @@ public class CacheUtil {
     }
 
     public static List<String[]> flattenFacets(List<Facet> facets) {
-        Facet table = facets.remove(0);
-        String tableName = table.value().toString();
-
         List<String[]> combinations = CacheUtil.combinations(facets.stream()
                 .filter(facet -> facet.value() != null)
                 .map(facet -> {

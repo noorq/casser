@@ -16,9 +16,12 @@
 package net.helenus.core;
 
 import java.io.PrintStream;
+import java.util.List;
 import java.util.concurrent.Executor;
 
+import com.google.common.cache.Cache;
 import com.google.common.collect.Table;
+import net.helenus.core.cache.Facet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,6 +128,10 @@ public abstract class AbstractSessionOperations {
 		}
 		throw new HelenusException(e);
 	}
+
+    public Object checkCache(String tableName, List<Facet> facets) { return null; }
+
+    public void updateCache(Object pojo, List<Facet> facets) { }
 
 	void printCql(String cql) {
 		getPrintStream().println(cql);

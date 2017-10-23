@@ -356,40 +356,6 @@ begin:
 -----------------
 
 
---- postCommitFunction
-        elapsedTime_.stop();
-        if (purpose_ != null) {
-            logTimers("committed");
-        }
-
---- abort
-            elapsedTime_.stop();
-            if (purpose_ != null) {
-                logTimers("aborted");
-            }
-
-
------------------
- else {
-				Cache<String, Object> cache = session.getSessionCache();
-				String[] keys = flattenFacets(facets);
-				for (String key : keys) {
-					Object value = cache.getIfPresent(key);
-					if (value != null) {
-						result = Optional.of(value);
-						break;
-					}
-				}
-			}
-
-
-----------------------
-
-
-
-
------------------------
-
 /*else {
 			    Cache<String, Object> cache = session.getSessionCache();
 				Map<String, Object> rowMap = this.cache.rowMap();

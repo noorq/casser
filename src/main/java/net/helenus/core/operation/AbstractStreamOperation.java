@@ -16,6 +16,7 @@
 package net.helenus.core.operation;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
@@ -25,6 +26,7 @@ import com.codahale.metrics.Timer;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.google.common.base.Function;
+import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -58,11 +60,42 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 	}
 
 	public Stream<E> sync() {//throws TimeoutException {
-		final Timer.Context context = requestLatency.time();
-		try {
-			ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout, queryTimeoutUnits,
-					showValues, false);
-			return transform(resultSet);
+        final Timer.Context context = requestLatency.time();
+        try {
+            Stream<E> resultStream = null;
+            E cacheResult = null;
+            boolean updateCache = true;
+
+            if (enableCache) {
+                List<Facet> facets = bindFacetValues();
+                Facet table = facets.remove(0);
+                String tableName = table.value().toString();
+                cacheResult = (E) sessionOps.checkCache(tableName, facets);
+                if (cacheResult != null) {
+                    resultStream = Stream.of(cacheResult);
+                    updateCache = false;
+                }
+            }
+
+            if (resultStream == null) {
+                // Formulate the query and execute it against the Cassandra cluster.
+                ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout,
+                        queryTimeoutUnits,
+                        showValues, false);
+
+                // Transform the query result set into the desired shape.
+                resultStream = transform(resultSet);
+            }
+
+            if (enableCache && resultStream != null) {
+                List<Facet> facets = getFacets();
+                resultStream.forEach(result -> {
+                    sessionOps.updateCache(result, facets);
+                });
+            }
+
+            return resultStream;
+
 		} finally {
 			context.stop();
 		}
@@ -74,30 +107,38 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
 		final Timer.Context context = requestLatency.time();
 		try {
-			Stream<E> result = null;
+			Stream<E> resultStream = null;
 			E cachedResult = null;
+			boolean updateCache = true;
 
 			if (enableCache) {
+                Stopwatch timer = uow.getCacheLookupTimer();
+                timer.start();
 				List<Facet> facets = bindFacetValues();
 				cachedResult = checkCache(uow, facets);
 				if (cachedResult != null) {
-					result = Stream.of(cachedResult);
+					resultStream = Stream.of(cachedResult);
+					updateCache = false;
 				}
+				timer.stop();
 			}
 
-			if (result == null) {
+			if (resultStream == null) {
 				ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
 						showValues, true);
-				result = transform(resultSet);
+				resultStream = transform(resultSet);
 			}
 
 			// If we have a result and we're caching then we need to put it into the cache
 			// for future requests to find.
-			if (enableCache && cachedResult != null) {
-				updateCache(uow, cachedResult, getFacets());
+			if (updateCache && resultStream != null) {
+                List<Facet> facets = getFacets();
+                resultStream.forEach(result -> {
+                    updateCache(uow, result, facets);
+                });
 			}
 
-			return result;
+			return resultStream;
 		} finally {
 			context.stop();
 		}

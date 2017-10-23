@@ -44,7 +44,8 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 
 	private String purpose_;
 	private Stopwatch elapsedTime_;
-	public Stopwatch databaseTime_ = Stopwatch.createUnstarted();
+	private Stopwatch databaseTime_ = Stopwatch.createUnstarted();
+	private Stopwatch cacheLookupTime_ = Stopwatch.createUnstarted();
 
 	// Cache:
 	private final Table<String, String, Object> cache = HashBasedTable.create();
@@ -56,12 +57,17 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		this.parent = parent;
 	}
 
-	@Override
-	public Stopwatch getExecutionTimer() {
-		return databaseTime_;
-	}
+    @Override
+    public Stopwatch getExecutionTimer() {
+        return databaseTime_;
+    }
 
-	@Override
+    @Override
+    public Stopwatch getCacheLookupTimer() {
+        return cacheLookupTime_;
+    }
+
+    @Override
 	public void addNestedUnitOfWork(UnitOfWork<E> uow) {
 		synchronized (nested) {
 			nested.add((AbstractUnitOfWork<E>) uow);
@@ -100,8 +106,8 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 
 	@Override
 	public Optional<Object> cacheLookup(List<Facet> facets) {
-		Facet table = facets.remove(0);
-		String tableName = table.value().toString();
+        Facet table = facets.remove(0);
+        String tableName = table.value().toString();
 		Optional<Object> result = Optional.empty();
 		for (Facet facet : facets) {
 			String columnName = facet.name() + "==" + facet.value();
@@ -120,7 +126,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			// Be sure to check all enclosing UnitOfWork caches as well, we may be nested.
 			if (parent != null) {
 				return parent.cacheLookup(facets);
-			}
+            }
 		}
 		return result;
 	}
