@@ -54,6 +54,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 	protected Integer limit = null;
 	protected boolean allowFiltering = false;
 	protected String alternateTableName = null;
+	protected boolean isCacheable = false;
 
 	@SuppressWarnings("unchecked")
 	public SelectOperation(AbstractSessionOperations sessionOperations) {
@@ -84,6 +85,8 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
 		entity.getOrderedProperties().stream().map(p -> new HelenusPropertyNode(p, Optional.empty()))
 				.forEach(p -> this.props.add(p));
+
+        isCacheable = entity.isCacheable();
 	}
 
 	public SelectOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity,
@@ -94,6 +97,8 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
 		entity.getOrderedProperties().stream().map(p -> new HelenusPropertyNode(p, Optional.empty()))
 				.forEach(p -> this.props.add(p));
+
+        isCacheable = entity.isCacheable();
 	}
 
 	public SelectOperation(AbstractSessionOperations sessionOperations, Function<Row, E> rowMapper,

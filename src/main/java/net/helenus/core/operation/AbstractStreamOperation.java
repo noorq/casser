@@ -15,6 +15,7 @@
  */
 package net.helenus.core.operation;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -87,13 +88,15 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
                 resultStream = transform(resultSet);
             }
 
-            if (enableCache && resultStream != null) {
+            if (updateCache && resultStream != null) {
+                List<E> again = new ArrayList<>();
                 List<Facet> facets = getFacets();
                 resultStream.forEach(result -> {
                     sessionOps.updateCache(result, facets);
+                    again.add(result);
                 });
+                resultStream = again.stream();
             }
-
             return resultStream;
 
 		} finally {
@@ -132,10 +135,13 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 			// If we have a result and we're caching then we need to put it into the cache
 			// for future requests to find.
 			if (updateCache && resultStream != null) {
+                List<E> again = new ArrayList<>();
                 List<Facet> facets = getFacets();
                 resultStream.forEach(result -> {
                     updateCache(uow, result, facets);
+                    again.add(result);
                 });
+                resultStream = again.stream();
 			}
 
 			return resultStream;
