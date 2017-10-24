@@ -17,6 +17,7 @@ package net.helenus.core;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,10 +44,13 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	private List<CommitThunk> postCommit = new ArrayList<CommitThunk>();
 	private boolean aborted = false;
 	private boolean committed = false;
-	private String purpose_;
-	private Stopwatch elapsedTime_;
-	private Stopwatch databaseTime_ = Stopwatch.createUnstarted();
-	private Stopwatch cacheLookupTime_ = Stopwatch.createUnstarted();
+	private String purpose;
+	private int cacheHits = 0;
+	private int cacheMisses = 0;
+	private int databaseLookups = 0;
+	private Stopwatch elapsedTime;
+	private Stopwatch databaseTime = Stopwatch.createUnstarted();
+	private Stopwatch cacheLookupTime = Stopwatch.createUnstarted();
 
 	protected AbstractUnitOfWork(HelenusSession session, AbstractUnitOfWork<E> parent) {
 		Objects.requireNonNull(session, "containing session cannot be null");
@@ -57,12 +61,12 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 
 	@Override
 	public Stopwatch getExecutionTimer() {
-		return databaseTime_;
+		return databaseTime;
 	}
 
 	@Override
 	public Stopwatch getCacheLookupTimer() {
-		return cacheLookupTime_;
+		return cacheLookupTime;
 	}
 
 	@Override
@@ -74,31 +78,43 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 
 	@Override
 	public UnitOfWork<E> begin() {
-		elapsedTime_ = Stopwatch.createStarted();
+		elapsedTime = Stopwatch.createStarted();
 		// log.record(txn::start)
 		return this;
 	}
 
 	@Override
 	public UnitOfWork setPurpose(String purpose) {
-		purpose_ = purpose;
+		this.purpose = purpose;
 		return this;
 	}
 
+	@Override
+    public void record(int cache, int ops) {
+	    if (cache > 0) {
+	        cacheHits += cache;
+        } else {
+	        cacheMisses += Math.abs(cache);
+        }
+        if (ops > 0) {
+	        databaseLookups += ops;
+        }
+    }
+
 	public void logTimers(String what) {
-
-	    cache hit, miss;
-        multiple calls, sometimes to db, sometimes to cache, sometimes both...
-        uow.setPurpose(getClass().getSimpleName() + "::" + Thread.currentThread().getStackTrace()[1].getMethodName());
-
-
-		double e = (double) elapsedTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
-		double d = (double) databaseTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
-		double c = (double) cacheLookupTime_.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
-		double fd = (d / (e - c)) * 100.0;
-		double fc = (c / (e - d)) * 100.0;
-		LOG.info(String.format("UOW(%s)%s %s (total: %.3fms cache: %.3fms %2.2f%% db: %.3fms %2.2f%%)", hashCode(),
-				(purpose_ == null ? "" : " " + purpose_), what, e, c, fc, d, fd));
+		double e = (double) elapsedTime.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
+		double d = (double) databaseTime.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
+		double c = (double) cacheLookupTime.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
+		double fd = (d / e) * 100.0;
+		double fc = (c / e) * 100.0;
+		double dat = d + c;
+		double daf = (dat / e) * 100;
+		String nested = this.nested.stream().map(uow -> String.valueOf(uow.hashCode())).collect(Collectors.joining(", "));
+		LOG.info(String.format("UOW(%s%s) %s (total: %.3fms cache: %.3fms %2.2f%% (%d hit, %d miss) %d database operation%s took %.3fms %2.2f%% [%.3fms %2.2f%%])%s",
+                hashCode(),
+                (this.nested.size() > 0 ? ", [" + nested + "]" : ""),
+				what, e, c, fc, cacheHits, cacheMisses, databaseLookups, (databaseLookups > 1) ? "s" : "",
+                d, fd, dat, daf, (purpose == null ? "" : " in " + purpose)));
 	}
 
 	private void applyPostCommitFunctions() {
@@ -191,7 +207,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			} else {
 				session.mergeCache(cache);
 			}
-			elapsedTime_.stop();
+			elapsedTime.stop();
 
 			// Apply all post-commit functions for
 			if (parent == null) {
@@ -218,7 +234,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		// log.record(txn::abort)
 		// cache.invalidateSince(txn::start time)
 		if (!hasAborted()) {
-			elapsedTime_.stop();
+			elapsedTime.stop();
 			logTimers("aborted");
 		}
 	}

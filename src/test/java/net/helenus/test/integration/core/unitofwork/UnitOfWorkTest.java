@@ -24,10 +24,7 @@ import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.annotation.Cacheable;
-import net.helenus.mapping.annotation.Column;
-import net.helenus.mapping.annotation.Index;
-import net.helenus.mapping.annotation.PartitionKey;
-import net.helenus.mapping.annotation.Table;
+import net.helenus.mapping.annotation.*;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -39,8 +36,8 @@ interface Widget {
   @PartitionKey
   UUID id();
 
-  @Column
   @Index
+  @Constraints.Distinct()
   String name();
 }
 

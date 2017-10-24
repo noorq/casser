@@ -21,10 +21,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import net.helenus.mapping.HelenusProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.RegularStatement;
@@ -43,6 +39,7 @@ import net.helenus.core.UnitOfWork;
 import net.helenus.core.cache.Facet;
 import net.helenus.core.cache.UnboundFacet;
 import net.helenus.core.reflect.MapExportable;
+import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.value.BeanColumnValueProvider;
 import net.helenus.support.HelenusException;
 
@@ -326,14 +323,14 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 			optionalCachedResult = uow.cacheLookup(facets);
 			if (optionalCachedResult.isPresent()) {
 				uowCacheHits.mark();
-                uow.setCacheHit(true);
+                uow.record(1, 0);
 				result = (E) optionalCachedResult.get();
 			}
 		}
 
 		if (result == null) {
 			uowCacheMiss.mark();
-            uow.setCacheHit(true);
+            uow.record(-1, 0);
 		}
 
 		return result;

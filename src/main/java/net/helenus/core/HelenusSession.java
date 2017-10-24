@@ -288,15 +288,30 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		return metadata;
 	}
 
-	public synchronized UnitOfWork begin() {
-		return begin(null);
+	public UnitOfWork begin() {
+	    return this.begin(null);
 	}
 
 	public synchronized UnitOfWork begin(UnitOfWork parent) {
+        StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+        int frame = 2;
+        if (trace[2].getMethodName().equals("begin")) {
+            frame = 3;
+        }
+        StringBuilder purpose = new StringBuilder()
+                .append(trace[frame].getClassName())
+                .append(".")
+                .append(trace[frame].getMethodName())
+                .append("(")
+                .append(trace[frame].getFileName())
+                .append(":")
+                .append(trace[frame].getLineNumber())
+                .append(")");
 		try {
 			Class<? extends UnitOfWork> clazz = unitOfWorkClass;
 			Constructor<? extends UnitOfWork> ctor = clazz.getConstructor(HelenusSession.class, UnitOfWork.class);
 			UnitOfWork uow = ctor.newInstance(this, parent);
+			uow.setPurpose(purpose.toString());
 			if (parent != null) {
 				parent.addNestedUnitOfWork(uow);
 			}
