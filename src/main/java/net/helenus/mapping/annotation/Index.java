@@ -66,9 +66,9 @@ public @interface Index {
 	 */
 	boolean caseSensitive() default true;
 
-    /**
-     *
-     * @return
-     */
-    boolean distinct() default false;
+	/**
+	 *
+	 * @return
+	 */
+	boolean distinct() default false;
 }

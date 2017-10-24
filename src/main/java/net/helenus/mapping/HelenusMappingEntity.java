@@ -15,11 +15,11 @@
  */
 package net.helenus.mapping;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import net.helenus.mapping.validator.DistinctValidator;
+import javax.validation.ConstraintValidator;
+
 import org.apache.commons.lang3.ClassUtils;
 
 import com.datastax.driver.core.DefaultMetadata;
@@ -33,9 +33,8 @@ import net.helenus.core.annotation.Cacheable;
 import net.helenus.core.cache.Facet;
 import net.helenus.core.cache.UnboundFacet;
 import net.helenus.mapping.annotation.*;
+import net.helenus.mapping.validator.DistinctValidator;
 import net.helenus.support.HelenusMappingException;
-
-import javax.validation.ConstraintValidator;
 
 public final class HelenusMappingEntity implements HelenusEntity {
 
@@ -129,11 +128,12 @@ public final class HelenusMappingEntity implements HelenusEntity {
 						facetsBuilder.add(new UnboundFacet(primaryKeyProperties));
 						primaryKeyProperties = null;
 					}
-                    for (ConstraintValidator<?,?> constraint : MappingUtil.getValidators(prop.getGetterMethod())) {
-                        if (constraint.getClass().isAssignableFrom(DistinctValidator.class));
-                        UnboundFacet facet = new UnboundFacet(prop);
-                        facetsBuilder.add(facet);
-                        break;
+					for (ConstraintValidator<?, ?> constraint : MappingUtil.getValidators(prop.getGetterMethod())) {
+						if (constraint.getClass().isAssignableFrom(DistinctValidator.class))
+							;
+						UnboundFacet facet = new UnboundFacet(prop);
+						facetsBuilder.add(facet);
+						break;
 					}
 			}
 		}

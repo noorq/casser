@@ -65,6 +65,6 @@ public interface UnitOfWork<X extends Exception> extends AutoCloseable {
 
 	Stopwatch getCacheLookupTimer();
 
-    void record(int cache, int ops);
+	void record(int cache, int ops);
 
 }

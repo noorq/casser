@@ -44,7 +44,7 @@ import net.helenus.mapping.value.BeanColumnValueProvider;
 import net.helenus.support.HelenusException;
 
 public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>> extends Operation<E> {
-    
+
 	protected boolean enableCache = true;
 	protected boolean showValues = true;
 	protected TraceContext traceContext;
@@ -323,14 +323,14 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 			optionalCachedResult = uow.cacheLookup(facets);
 			if (optionalCachedResult.isPresent()) {
 				uowCacheHits.mark();
-                uow.record(1, 0);
+				uow.record(1, 0);
 				result = (E) optionalCachedResult.get();
 			}
 		}
 
 		if (result == null) {
 			uowCacheMiss.mark();
-            uow.record(-1, 0);
+			uow.record(-1, 0);
 		}
 
 		return result;
@@ -344,19 +344,16 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 			if (facet instanceof UnboundFacet) {
 				UnboundFacet unboundFacet = (UnboundFacet) facet;
 				UnboundFacet.Binder binder = unboundFacet.binder();
-				List<HelenusProperty> properties = unboundFacet.getProperties();
-				if (properties != null) {
-                        properties.forEach(prop -> {
-                            if (valueMap == null) {
-                                Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
-                                binder.setValueForProperty(prop, value.toString());
-                            } else {
-                                binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
-                            }
-                        });
-                    if (binder.isBound()) {
-                        facets.add(binder.bind());
-                    }
+				for (HelenusProperty prop : unboundFacet.getProperties()) {
+					if (valueMap == null) {
+						Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
+						binder.setValueForProperty(prop, value.toString());
+					} else {
+						binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
+					}
+				}
+				if (binder.isBound()) {
+					facets.add(binder.bind());
 				}
 			} else {
 				facets.add(facet);

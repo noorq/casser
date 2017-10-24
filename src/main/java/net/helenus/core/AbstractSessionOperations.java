@@ -76,20 +76,20 @@ public abstract class AbstractSessionOperations {
 		}
 	}
 
-    public ResultSet execute(Statement statement, boolean showValues) {
-        return execute(statement, null, showValues);
-    }
-
-    public ResultSet execute(Statement statement, UnitOfWork uow, boolean showValues) {
-	    return executeAsync(statement, uow, showValues).getUninterruptibly();
+	public ResultSet execute(Statement statement, boolean showValues) {
+		return execute(statement, null, showValues);
 	}
 
-    public ResultSetFuture executeAsync(Statement statement, boolean showValues) {
-        return executeAsync(statement, null, showValues);
-    }
+	public ResultSet execute(Statement statement, UnitOfWork uow, boolean showValues) {
+		return executeAsync(statement, uow, showValues).getUninterruptibly();
+	}
 
-    public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, boolean showValues) {
-	    try {
+	public ResultSetFuture executeAsync(Statement statement, boolean showValues) {
+		return executeAsync(statement, null, showValues);
+	}
+
+	public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, boolean showValues) {
+		try {
 			log(statement, uow, showValues);
 			return currentSession().executeAsync(statement);
 		} catch (RuntimeException e) {
@@ -99,10 +99,10 @@ public abstract class AbstractSessionOperations {
 
 	void log(Statement statement, UnitOfWork uow, boolean showValues) {
 		if (LOG.isInfoEnabled()) {
-		    String uowString = "";
-		    if (uow != null) {
-                uowString = "within UOW(" + uow.hashCode() + "): ";
-            }
+			String uowString = "";
+			if (uow != null) {
+				uowString = "within UOW(" + uow.hashCode() + "): ";
+			}
 			LOG.info(String.format("Execute statement %s%s", uowString, statement));
 		}
 		if (isShowCql()) {

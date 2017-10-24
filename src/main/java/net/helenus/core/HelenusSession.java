@@ -27,6 +27,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.*;
 import com.google.common.cache.Cache;
@@ -42,6 +45,7 @@ import net.helenus.core.reflect.Drafted;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.core.reflect.MapExportable;
 import net.helenus.mapping.HelenusEntity;
+import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.mapping.value.*;
 import net.helenus.support.DslPropertyException;
@@ -51,14 +55,12 @@ import net.helenus.support.Fun.Tuple2;
 import net.helenus.support.Fun.Tuple6;
 import net.helenus.support.HelenusException;
 import net.helenus.support.HelenusMappingException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class HelenusSession extends AbstractSessionOperations implements Closeable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HelenusSession.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HelenusSession.class);
 
-    private final int MAX_CACHE_SIZE = 10000;
+	private final int MAX_CACHE_SIZE = 10000;
 	private final int MAX_CACHE_EXPIRE_SECONDS = 600;
 
 	private final Session session;
@@ -204,14 +206,14 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 			if (facet instanceof UnboundFacet) {
 				UnboundFacet unboundFacet = (UnboundFacet) facet;
 				UnboundFacet.Binder binder = unboundFacet.binder();
-				unboundFacet.getProperties().forEach(prop -> {
+				for (HelenusProperty prop : unboundFacet.getProperties()) {
 					if (valueMap == null) {
 						Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
 						binder.setValueForProperty(prop, value.toString());
 					} else {
 						binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
 					}
-				});
+				}
 				if (binder.isBound()) {
 					boundFacets.add(binder.bind());
 				}
@@ -293,34 +295,28 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 	}
 
 	public UnitOfWork begin() {
-	    return this.begin(null);
+		return this.begin(null);
 	}
 
 	public synchronized UnitOfWork begin(UnitOfWork parent) {
-	    StringBuilder purpose = null;
-	    if (LOG.isInfoEnabled()) {
-            StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-            int frame = 2;
-            if (trace[2].getMethodName().equals("begin")) {
-                frame = 3;
-            }
-            purpose = new StringBuilder()
-                    .append(trace[frame].getClassName())
-                    .append(".")
-                    .append(trace[frame].getMethodName())
-                    .append("(")
-                    .append(trace[frame].getFileName())
-                    .append(":")
-                    .append(trace[frame].getLineNumber())
-                    .append(")");
-        }
+		StringBuilder purpose = null;
+		if (LOG.isInfoEnabled()) {
+			StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+			int frame = 2;
+			if (trace[2].getMethodName().equals("begin")) {
+				frame = 3;
+			}
+			purpose = new StringBuilder().append(trace[frame].getClassName()).append(".")
+					.append(trace[frame].getMethodName()).append("(").append(trace[frame].getFileName()).append(":")
+					.append(trace[frame].getLineNumber()).append(")");
+		}
 		try {
 			Class<? extends UnitOfWork> clazz = unitOfWorkClass;
 			Constructor<? extends UnitOfWork> ctor = clazz.getConstructor(HelenusSession.class, UnitOfWork.class);
 			UnitOfWork uow = ctor.newInstance(this, parent);
-            if (LOG.isInfoEnabled()) {
-                uow.setPurpose(purpose.toString());
-            }
+			if (LOG.isInfoEnabled()) {
+				uow.setPurpose(purpose.toString());
+			}
 			if (parent != null) {
 				parent.addNestedUnitOfWork(uow);
 			}

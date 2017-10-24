@@ -222,59 +222,59 @@ public final class Constraints {
 	public @interface UpperCase {
 	}
 
-    /**
-     * Pattern annotation is LowerCase annotation is using to ensure that value is
-     * upper case before storing it
-     *
-     * <p>
-     * Can be used only for @java.lang.CharSequence
-     *
-     * <p>
-     * It does not have effect on selects and data retrieval operations
-     */
-    @Documented
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-    @Constraint(validatedBy = PatternValidator.class)
-    public @interface Pattern {
+	/**
+	 * Pattern annotation is LowerCase annotation is using to ensure that value is
+	 * upper case before storing it
+	 *
+	 * <p>
+	 * Can be used only for @java.lang.CharSequence
+	 *
+	 * <p>
+	 * It does not have effect on selects and data retrieval operations
+	 */
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+	@Constraint(validatedBy = PatternValidator.class)
+	public @interface Pattern {
 
-        /**
-         * User defined regex expression to check match of the value
-         *
-         * @return Java regex pattern
-         */
-        String value();
+		/**
+		 * User defined regex expression to check match of the value
+		 *
+		 * @return Java regex pattern
+		 */
+		String value();
 
-        /**
-         * Regex flags composition
-         *
-         * @return Java regex flags
-         */
-        int flags();
-    }
+		/**
+		 * Regex flags composition
+		 *
+		 * @return Java regex flags
+		 */
+		int flags();
+	}
 
-    /**
-     * Distinct annotation is used to signal, but not ensure that a value should be
-     * distinct in the database.
-     *
-     * <p>
-     * Can be used only for @java.lang.CharSequence
-     *
-     * <p>
-     * It does not have effect on selects and data retrieval operations
-     */
-    @Documented
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-    @Constraint(validatedBy = DistinctValidator.class)
-    public @interface Distinct {
+	/**
+	 * Distinct annotation is used to signal, but not ensure that a value should be
+	 * distinct in the database.
+	 *
+	 * <p>
+	 * Can be used only for @java.lang.CharSequence
+	 *
+	 * <p>
+	 * It does not have effect on selects and data retrieval operations
+	 */
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+	@Constraint(validatedBy = DistinctValidator.class)
+	public @interface Distinct {
 
-        /**
-         * User defined Enum to further restrict the items in the set.
-         *
-         * @return Java
-         */
-        Class<? extends Enum> value() default Enum.class;
+		/**
+		 * User defined Enum to further restrict the items in the set.
+		 *
+		 * @return Java
+		 */
+		Class<? extends Enum> value() default Enum.class;
 
-    }
+	}
 }

@@ -38,6 +38,7 @@ import net.helenus.core.cache.Facet;
 import net.helenus.core.cache.UnboundFacet;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
+import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.mapping.OrderingDirection;
 import net.helenus.mapping.value.ColumnValueProvider;
@@ -206,16 +207,18 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 			if (facet instanceof UnboundFacet) {
 				UnboundFacet unboundFacet = (UnboundFacet) facet;
 				UnboundFacet.Binder binder = unboundFacet.binder();
-				unboundFacet.getProperties().forEach(prop -> {
-					Filter filter = filters.get(prop);
-					if (filter != null) {
-						Object[] postulates = filter.postulateValues();
-						for (Object p : postulates) {
-							binder.setValueForProperty(prop, p.toString());
+				for (HelenusProperty prop : unboundFacet.getProperties()) {
+					if (filters != null) {
+						Filter filter = filters.get(prop);
+						if (filter != null) {
+							Object[] postulates = filter.postulateValues();
+							for (Object p : postulates) {
+								binder.setValueForProperty(prop, p.toString());
+							}
 						}
 					}
 
-				});
+				}
 				if (binder.isBound()) {
 					boundFacets.add(binder.bind());
 				}
