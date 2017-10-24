@@ -72,7 +72,12 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 				if (cacheResult != null) {
 					resultStream = Stream.of(cacheResult);
 					updateCache = false;
-				}
+					sessionCacheHits.mark();
+					cacheHits.mark();
+				} else {
+				    sessionCacheMiss.mark();
+				    cacheMiss.mark();
+                }
 			}
 
 			if (resultStream == null) {
@@ -113,15 +118,37 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 			boolean updateCache = true;
 
 			if (enableCache) {
-				Stopwatch timer = uow.getCacheLookupTimer();
-				timer.start();
-				List<Facet> facets = bindFacetValues();
-				cachedResult = checkCache(uow, facets);
-				if (cachedResult != null) {
-					resultStream = Stream.of(cachedResult);
-					updateCache = false;
-				}
-				timer.stop();
+				Stopwatch timer = Stopwatch.createStarted();
+				try {
+                    List<Facet> facets = bindFacetValues();
+                    cachedResult = checkCache(uow, facets);
+                    if (cachedResult != null) {
+                        resultStream = Stream.of(cachedResult);
+                        updateCache = false;
+                        uowCacheHits.mark();
+                        cacheHits.mark();
+                        uow.recordCacheAndDatabaseOperationCount(1, 0);
+                    } else {
+                        uowCacheMiss.mark();
+                        if (isSessionCacheable()) {
+                            String tableName = CacheUtil.schemaName(facets);
+                            cachedResult = (E) sessionOps.checkCache(tableName, facets);
+                            if (cachedResult != null) {
+                                resultStream = Stream.of(cachedResult);
+                                sessionCacheHits.mark();
+                                cacheHits.mark();
+                                uow.recordCacheAndDatabaseOperationCount(1, 0);
+                            } else {
+                                sessionCacheMiss.mark();
+                                cacheMiss.mark();
+                                uow.recordCacheAndDatabaseOperationCount(-1, 0);
+                            }
+                        }
+                    }
+                } finally {
+                    timer.stop();
+                    uow.addCacheLookupTime(timer);
+                }
 			}
 
 			if (resultStream == null) {

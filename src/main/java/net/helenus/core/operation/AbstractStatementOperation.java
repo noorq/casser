@@ -322,15 +322,8 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		if (!facets.isEmpty()) {
 			optionalCachedResult = uow.cacheLookup(facets);
 			if (optionalCachedResult.isPresent()) {
-				uowCacheHits.mark();
-				uow.record(1, 0);
 				result = (E) optionalCachedResult.get();
 			}
-		}
-
-		if (result == null) {
-			uowCacheMiss.mark();
-			uow.record(-1, 0);
 		}
 
 		return result;

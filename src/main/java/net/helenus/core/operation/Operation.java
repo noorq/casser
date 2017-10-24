@@ -36,15 +36,23 @@ import net.helenus.core.cache.Facet;
 public abstract class Operation<E> {
 
 	protected final AbstractSessionOperations sessionOps;
-	protected final Meter uowCacheHits;
-	protected final Meter uowCacheMiss;
+    protected final Meter uowCacheHits;
+    protected final Meter uowCacheMiss;
+    protected final Meter sessionCacheHits;
+    protected final Meter sessionCacheMiss;
+    protected final Meter cacheHits;
+    protected final Meter cacheMiss;
 	protected final Timer requestLatency;
 
 	Operation(AbstractSessionOperations sessionOperations) {
 		this.sessionOps = sessionOperations;
 		MetricRegistry metrics = sessionOperations.getMetricRegistry();
-		this.uowCacheHits = metrics.meter("net.helenus.UOW-cache-hits");
-		this.uowCacheMiss = metrics.meter("net.helenus.UOW-cache-miss");
+        this.uowCacheHits = metrics.meter("net.helenus.UOW-cache-hits");
+        this.uowCacheMiss = metrics.meter("net.helenus.UOW-cache-miss");
+        this.sessionCacheHits = metrics.meter("net.helenus.session-cache-hits");
+        this.sessionCacheMiss = metrics.meter("net.helenus.session-cache-miss");
+        this.cacheHits = metrics.meter("net.helenus.cache-hits");
+        this.cacheMiss = metrics.meter("net.helenus.cache-miss");
 		this.requestLatency = metrics.timer("net.helenus.request-latency");
 	}
 
@@ -67,20 +75,19 @@ public abstract class Operation<E> {
 			}
 
 			Statement statement = options(buildStatement(cached));
-			Stopwatch timer = null;
-			if (uow != null) {
-				timer = uow.getExecutionTimer();
-				timer.start();
-			}
-			ResultSetFuture futureResultSet = session.executeAsync(statement, uow, showValues);
-			if (uow != null)
-				uow.record(0, 1);
-			ResultSet resultSet = futureResultSet.getUninterruptibly(); // TODO(gburd): (timeout, units);
+			Stopwatch timer = Stopwatch.createStarted();
+			try {
+                ResultSetFuture futureResultSet = session.executeAsync(statement, uow, timer, showValues);
+                if (uow != null)
+                    uow.recordCacheAndDatabaseOperationCount(0, 1);
+                ResultSet resultSet = futureResultSet.getUninterruptibly(); // TODO(gburd): (timeout, units);
+                return resultSet;
 
-			if (uow != null)
-				timer.stop();
-
-			return resultSet;
+            } finally {
+			    timer.stop();
+                if (uow != null)
+                    uow.addDatabaseTime("Cassandra", timer);
+            }
 
 		} finally {
 

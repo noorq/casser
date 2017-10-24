@@ -46,8 +46,8 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	protected int cacheMisses = 0;
 	protected int databaseLookups = 0;
 	protected Stopwatch elapsedTime;
-	protected Stopwatch databaseTime = Stopwatch.createUnstarted();
-	protected Stopwatch cacheLookupTime = Stopwatch.createUnstarted();
+	protected Map<String, Double> databaseTime = new HashMap<>();
+	protected double cacheLookupTime = 0.0;
 	private List<CommitThunk> postCommit = new ArrayList<CommitThunk>();
 	private boolean aborted = false;
 	private boolean committed = false;
@@ -60,14 +60,19 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	}
 
 	@Override
-	public Stopwatch getExecutionTimer() {
-		return databaseTime;
-	}
+    public void addDatabaseTime(String name, Stopwatch amount) {
+	    Double time = databaseTime.get(name);
+	    if (time == null) {
+	        databaseTime.put(name, (double)amount.elapsed(TimeUnit.MICROSECONDS));
+        } else {
+	        databaseTime.put(name, time + amount.elapsed(TimeUnit.MICROSECONDS));
+        }
+    }
 
-	@Override
-	public Stopwatch getCacheLookupTimer() {
-		return cacheLookupTime;
-	}
+    @Override
+    public void addCacheLookupTime(Stopwatch amount) {
+	    cacheLookupTime += amount.elapsed(TimeUnit.MICROSECONDS);
+    }
 
 	@Override
 	public void addNestedUnitOfWork(UnitOfWork<E> uow) {
@@ -79,7 +84,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	@Override
 	public UnitOfWork<E> begin() {
 		elapsedTime = Stopwatch.createStarted();
-		// log.record(txn::start)
+		// log.recordCacheAndDatabaseOperationCount(txn::start)
 		return this;
 	}
 
@@ -90,7 +95,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	}
 
 	@Override
-	public void record(int cache, int ops) {
+	public void recordCacheAndDatabaseOperationCount(int cache, int ops) {
 		if (cache > 0) {
 			cacheHits += cache;
 		} else {
@@ -103,8 +108,8 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 
 	public String logTimers(String what) {
 		double e = (double) elapsedTime.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
-		double d = (double) databaseTime.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
-		double c = (double) cacheLookupTime.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
+		double d = databaseTime.containsKey("Cassandra") ? databaseTime.get("Cassandra") / 1000.0 : 0.0;
+		double c = cacheLookupTime / 1000.0;
 		double fd = (d / e) * 100.0;
 		double fc = (c / e) * 100.0;
 		double dat = d + c;
@@ -112,7 +117,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		String nested = this.nested.stream().map(uow -> String.valueOf(uow.hashCode()))
 				.collect(Collectors.joining(", "));
 		return String.format(Locale.US,
-				"UOW(%s%s) %s (total: %,.3fms cache: %,.3fms %,2.2f%% (%,d hit, %,d miss) %,d database operation%s took %,.3fms %,2.2f%% [%,.3fms %,2.2f%%])%s",
+				"UOW(%s%s) %s (total: %,.3fms cache: %,.3fms %,2.2f%% (%,d hit, %,d miss) %,d Cassandra operation%s took %,.3fms %,2.2f%% [%,.3fms %,2.2f%%])%s",
 				hashCode(), (this.nested.size() > 0 ? ", [" + nested + "]" : ""), what, e, c, fc, cacheHits,
 				cacheMisses, databaseLookups, (databaseLookups > 1) ? "s" : "", d, fd, dat, daf,
 				(purpose == null ? "" : " in " + purpose));
@@ -191,7 +196,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			}
 		}
 
-		// log.record(txn::provisionalCommit)
+		// log.recordCacheAndDatabaseOperationCount(txn::provisionalCommit)
 		// examine log for conflicts in read-set and write-set between begin and
 		// provisional commit
 		// if (conflict) { throw new ConflictingUnitOfWorkException(this) }
@@ -234,7 +239,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			uow.committed = false;
 			uow.aborted = true;
 		});
-		// log.record(txn::abort)
+		// log.recordCacheAndDatabaseOperationCount(txn::abort)
 		// cache.invalidateSince(txn::start time)
 		if (!hasAborted()) {
 			elapsedTime.stop();
