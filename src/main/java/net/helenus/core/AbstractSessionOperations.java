@@ -60,7 +60,7 @@ public abstract class AbstractSessionOperations {
 
 	public PreparedStatement prepare(RegularStatement statement) {
 		try {
-			log(statement, false);
+			log(statement, null, false);
 			return currentSession().prepare(statement);
 		} catch (RuntimeException e) {
 			throw translateException(e);
@@ -69,29 +69,41 @@ public abstract class AbstractSessionOperations {
 
 	public ListenableFuture<PreparedStatement> prepareAsync(RegularStatement statement) {
 		try {
-			log(statement, false);
+			log(statement, null, false);
 			return currentSession().prepareAsync(statement);
 		} catch (RuntimeException e) {
 			throw translateException(e);
 		}
 	}
 
-	public ResultSet execute(Statement statement, boolean showValues) {
-		return executeAsync(statement, showValues).getUninterruptibly();
+    public ResultSet execute(Statement statement, boolean showValues) {
+        return execute(statement, null, showValues);
+    }
+
+    public ResultSet execute(Statement statement, UnitOfWork uow, boolean showValues) {
+	    return executeAsync(statement, uow, showValues).getUninterruptibly();
 	}
 
-	public ResultSetFuture executeAsync(Statement statement, boolean showValues) {
-		try {
-			log(statement, showValues);
+    public ResultSetFuture executeAsync(Statement statement, boolean showValues) {
+        return executeAsync(statement, null, showValues);
+    }
+
+    public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, boolean showValues) {
+	    try {
+			log(statement, uow, showValues);
 			return currentSession().executeAsync(statement);
 		} catch (RuntimeException e) {
 			throw translateException(e);
 		}
 	}
 
-	void log(Statement statement, boolean showValues) {
+	void log(Statement statement, UnitOfWork uow, boolean showValues) {
 		if (LOG.isInfoEnabled()) {
-			LOG.info("Execute statement " + statement);
+		    String uowString = "";
+		    if (uow != null) {
+                uowString = "within UOW(" + uow.hashCode() + "): ";
+            }
+			LOG.info(String.format("Execute statement %s%s", uowString, statement));
 		}
 		if (isShowCql()) {
 			if (statement instanceof BuiltStatement) {

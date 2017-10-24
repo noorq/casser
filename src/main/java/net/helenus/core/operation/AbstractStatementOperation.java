@@ -353,8 +353,10 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
                             } else {
                                 binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
                             }
-                            facets.add(binder.bind());
                         });
+                    if (binder.isBound()) {
+                        facets.add(binder.bind());
+                    }
 				}
 			} else {
 				facets.add(facet);

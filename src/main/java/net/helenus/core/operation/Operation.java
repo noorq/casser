@@ -72,7 +72,7 @@ public abstract class Operation<E> {
 				timer = uow.getExecutionTimer();
 				timer.start();
 			}
-			ResultSetFuture futureResultSet = session.executeAsync(statement, showValues);
+			ResultSetFuture futureResultSet = session.executeAsync(statement, uow, showValues);
 			if (uow != null) uow.record(0, 1);
 			ResultSet resultSet = futureResultSet.getUninterruptibly(); // TODO(gburd): (timeout, units);
 

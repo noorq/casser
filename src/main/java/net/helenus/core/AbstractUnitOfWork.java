@@ -34,7 +34,7 @@ import net.helenus.core.cache.Facet;
 /** Encapsulates the concept of a "transaction" as a unit-of-work. */
 public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfWork<E>, AutoCloseable {
 
-	private static final Logger LOG = LoggerFactory.getLogger(AbstractUnitOfWork.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractUnitOfWork.class);
 
 	private final List<AbstractUnitOfWork<E>> nested = new ArrayList<>();
 	private final HelenusSession session;
@@ -44,13 +44,13 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	private List<CommitThunk> postCommit = new ArrayList<CommitThunk>();
 	private boolean aborted = false;
 	private boolean committed = false;
-	private String purpose;
-	private int cacheHits = 0;
-	private int cacheMisses = 0;
-	private int databaseLookups = 0;
-	private Stopwatch elapsedTime;
-	private Stopwatch databaseTime = Stopwatch.createUnstarted();
-	private Stopwatch cacheLookupTime = Stopwatch.createUnstarted();
+	protected String purpose;
+	protected int cacheHits = 0;
+	protected int cacheMisses = 0;
+	protected int databaseLookups = 0;
+	protected Stopwatch elapsedTime;
+	protected Stopwatch databaseTime = Stopwatch.createUnstarted();
+	protected Stopwatch cacheLookupTime = Stopwatch.createUnstarted();
 
 	protected AbstractUnitOfWork(HelenusSession session, AbstractUnitOfWork<E> parent) {
 		Objects.requireNonNull(session, "containing session cannot be null");
@@ -101,7 +101,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
         }
     }
 
-	public void logTimers(String what) {
+	public String logTimers(String what) {
 		double e = (double) elapsedTime.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
 		double d = (double) databaseTime.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
 		double c = (double) cacheLookupTime.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
@@ -110,11 +110,11 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		double dat = d + c;
 		double daf = (dat / e) * 100;
 		String nested = this.nested.stream().map(uow -> String.valueOf(uow.hashCode())).collect(Collectors.joining(", "));
-		LOG.info(String.format("UOW(%s%s) %s (total: %.3fms cache: %.3fms %2.2f%% (%d hit, %d miss) %d database operation%s took %.3fms %2.2f%% [%.3fms %2.2f%%])%s",
+		return String.format(Locale.US, "UOW(%s%s) %s (total: %,.3fms cache: %,.3fms %,2.2f%% (%,d hit, %,d miss) %,d database operation%s took %,.3fms %,2.2f%% [%,.3fms %,2.2f%%])%s",
                 hashCode(),
                 (this.nested.size() > 0 ? ", [" + nested + "]" : ""),
 				what, e, c, fc, cacheHits, cacheMisses, databaseLookups, (databaseLookups > 1) ? "s" : "",
-                d, fd, dat, daf, (purpose == null ? "" : " in " + purpose)));
+                d, fd, dat, daf, (purpose == null ? "" : " in " + purpose));
 	}
 
 	private void applyPostCommitFunctions() {
@@ -123,7 +123,9 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 				f.apply();
 			}
 		}
-		logTimers("committed");
+		if (LOG.isInfoEnabled()) {
+            LOG.info(logTimers("committed"));
+        }
 	}
 
 	@Override
@@ -235,7 +237,9 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		// cache.invalidateSince(txn::start time)
 		if (!hasAborted()) {
 			elapsedTime.stop();
-			logTimers("aborted");
+			if (LOG.isInfoEnabled()) {
+                LOG.info(logTimers("aborted"));
+            }
 		}
 	}
 

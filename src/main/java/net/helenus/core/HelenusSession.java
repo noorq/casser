@@ -51,10 +51,14 @@ import net.helenus.support.Fun.Tuple2;
 import net.helenus.support.Fun.Tuple6;
 import net.helenus.support.HelenusException;
 import net.helenus.support.HelenusMappingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class HelenusSession extends AbstractSessionOperations implements Closeable {
 
-	private final int MAX_CACHE_SIZE = 10000;
+    private static final Logger LOG = LoggerFactory.getLogger(HelenusSession.class);
+
+    private final int MAX_CACHE_SIZE = 10000;
 	private final int MAX_CACHE_EXPIRE_SECONDS = 600;
 
 	private final Session session;
@@ -293,25 +297,30 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 	}
 
 	public synchronized UnitOfWork begin(UnitOfWork parent) {
-        StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-        int frame = 2;
-        if (trace[2].getMethodName().equals("begin")) {
-            frame = 3;
+	    StringBuilder purpose = null;
+	    if (LOG.isInfoEnabled()) {
+            StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+            int frame = 2;
+            if (trace[2].getMethodName().equals("begin")) {
+                frame = 3;
+            }
+            purpose = new StringBuilder()
+                    .append(trace[frame].getClassName())
+                    .append(".")
+                    .append(trace[frame].getMethodName())
+                    .append("(")
+                    .append(trace[frame].getFileName())
+                    .append(":")
+                    .append(trace[frame].getLineNumber())
+                    .append(")");
         }
-        StringBuilder purpose = new StringBuilder()
-                .append(trace[frame].getClassName())
-                .append(".")
-                .append(trace[frame].getMethodName())
-                .append("(")
-                .append(trace[frame].getFileName())
-                .append(":")
-                .append(trace[frame].getLineNumber())
-                .append(")");
 		try {
 			Class<? extends UnitOfWork> clazz = unitOfWorkClass;
 			Constructor<? extends UnitOfWork> ctor = clazz.getConstructor(HelenusSession.class, UnitOfWork.class);
 			UnitOfWork uow = ctor.newInstance(this, parent);
-			uow.setPurpose(purpose.toString());
+            if (LOG.isInfoEnabled()) {
+                uow.setPurpose(purpose.toString());
+            }
 			if (parent != null) {
 				parent.addNestedUnitOfWork(uow);
 			}
