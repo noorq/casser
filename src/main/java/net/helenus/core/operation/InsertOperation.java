@@ -27,6 +27,7 @@ import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.Getter;
 import net.helenus.core.Helenus;
 import net.helenus.core.UnitOfWork;
+import net.helenus.core.cache.Facet;
 import net.helenus.core.reflect.DefaultPrimitiveTypes;
 import net.helenus.core.reflect.Drafted;
 import net.helenus.core.reflect.HelenusPropertyNode;
@@ -246,4 +247,14 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 		}
 		return result;
 	}
+
+	@Override
+	public List<Facet> getFacets() {
+		if (entity != null) {
+			return entity.getFacets();
+		} else {
+			return new ArrayList<Facet>();
+		}
+	}
+
 }

@@ -129,11 +129,11 @@ public final class HelenusMappingEntity implements HelenusEntity {
 						primaryKeyProperties = null;
 					}
 					for (ConstraintValidator<?, ?> constraint : MappingUtil.getValidators(prop.getGetterMethod())) {
-						if (constraint.getClass().isAssignableFrom(DistinctValidator.class))
-							;
-						UnboundFacet facet = new UnboundFacet(prop);
-						facetsBuilder.add(facet);
-						break;
+						if (constraint.getClass().isAssignableFrom(DistinctValidator.class)) {
+							UnboundFacet facet = new UnboundFacet(prop);
+							facetsBuilder.add(facet);
+							break;
+						}
 					}
 			}
 		}

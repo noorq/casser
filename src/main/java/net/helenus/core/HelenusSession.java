@@ -207,11 +207,15 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 				UnboundFacet unboundFacet = (UnboundFacet) facet;
 				UnboundFacet.Binder binder = unboundFacet.binder();
 				for (HelenusProperty prop : unboundFacet.getProperties()) {
+					Object value;
 					if (valueMap == null) {
-						Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
-						binder.setValueForProperty(prop, value.toString());
+						value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
+						if (value != null) {
+							binder.setValueForProperty(prop, value.toString());
+						}
 					} else {
-						binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
+						value = valueMap.get(prop.getPropertyName());
+						binder.setValueForProperty(prop, value.toString());
 					}
 				}
 				if (binder.isBound()) {

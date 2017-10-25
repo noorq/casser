@@ -18,15 +18,14 @@ package net.helenus.core;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Stopwatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Table;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -78,35 +77,35 @@ public abstract class AbstractSessionOperations {
 		}
 	}
 
-    public ResultSet execute(Statement statement, boolean showValues) {
-        return execute(statement, null, null, showValues);
-    }
+	public ResultSet execute(Statement statement, boolean showValues) {
+		return execute(statement, null, null, showValues);
+	}
 
-    public ResultSet execute(Statement statement, Stopwatch timer, boolean showValues) {
-        return execute(statement, null, timer, showValues);
-    }
+	public ResultSet execute(Statement statement, Stopwatch timer, boolean showValues) {
+		return execute(statement, null, timer, showValues);
+	}
 
-    public ResultSet execute(Statement statement, UnitOfWork uow, boolean showValues) {
-        return execute(statement, uow, null, showValues);
-    }
+	public ResultSet execute(Statement statement, UnitOfWork uow, boolean showValues) {
+		return execute(statement, uow, null, showValues);
+	}
 
-    public ResultSet execute(Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
+	public ResultSet execute(Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
 		return executeAsync(statement, uow, timer, showValues).getUninterruptibly();
 	}
 
-    public ResultSetFuture executeAsync(Statement statement, boolean showValues) {
-        return executeAsync(statement, null, null, showValues);
-    }
+	public ResultSetFuture executeAsync(Statement statement, boolean showValues) {
+		return executeAsync(statement, null, null, showValues);
+	}
 
-    public ResultSetFuture executeAsync(Statement statement, Stopwatch timer, boolean showValues) {
-        return executeAsync(statement, null, timer, showValues);
-    }
+	public ResultSetFuture executeAsync(Statement statement, Stopwatch timer, boolean showValues) {
+		return executeAsync(statement, null, timer, showValues);
+	}
 
-    public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, boolean showValues) {
-        return executeAsync(statement, uow, null, showValues);
-    }
+	public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, boolean showValues) {
+		return executeAsync(statement, uow, null, showValues);
+	}
 
-    public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
+	public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
 		try {
 			log(statement, uow, timer, showValues);
 			return currentSession().executeAsync(statement);
@@ -117,14 +116,14 @@ public abstract class AbstractSessionOperations {
 
 	void log(Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
 		if (LOG.isInfoEnabled()) {
-		    String timerString = "";
+			String timerString = "";
 			String uowString = "";
 			if (uow != null) {
 				uowString = (timer != null) ? " " : "" + "UOW(" + uow.hashCode() + ")";
 			}
 			if (timer != null) {
-			    timerString = String.format(" %s", timer.toString());
-            }
+				timerString = String.format(" %s", timer.toString());
+			}
 			LOG.info(String.format("CQL%s%s - %s", uowString, timerString, statement));
 		}
 		if (isShowCql()) {

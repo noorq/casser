@@ -31,10 +31,6 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> ex
 
 	public abstract E transform(ResultSet resultSet);
 
-	public boolean cacheable() {
-		return false;
-	}
-
 	public PreparedOperation<E> prepare() {
 		return new PreparedOperation<E>(prepareStatement(), this);
 	}

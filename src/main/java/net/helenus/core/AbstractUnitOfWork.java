@@ -60,19 +60,19 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	}
 
 	@Override
-    public void addDatabaseTime(String name, Stopwatch amount) {
-	    Double time = databaseTime.get(name);
-	    if (time == null) {
-	        databaseTime.put(name, (double)amount.elapsed(TimeUnit.MICROSECONDS));
-        } else {
-	        databaseTime.put(name, time + amount.elapsed(TimeUnit.MICROSECONDS));
-        }
-    }
+	public void addDatabaseTime(String name, Stopwatch amount) {
+		Double time = databaseTime.get(name);
+		if (time == null) {
+			databaseTime.put(name, (double) amount.elapsed(TimeUnit.MICROSECONDS));
+		} else {
+			databaseTime.put(name, time + amount.elapsed(TimeUnit.MICROSECONDS));
+		}
+	}
 
-    @Override
-    public void addCacheLookupTime(Stopwatch amount) {
-	    cacheLookupTime += amount.elapsed(TimeUnit.MICROSECONDS);
-    }
+	@Override
+	public void addCacheLookupTime(Stopwatch amount) {
+		cacheLookupTime += amount.elapsed(TimeUnit.MICROSECONDS);
+	}
 
 	@Override
 	public void addNestedUnitOfWork(UnitOfWork<E> uow) {

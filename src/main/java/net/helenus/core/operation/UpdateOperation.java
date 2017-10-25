@@ -25,6 +25,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
 
 import net.helenus.core.*;
+import net.helenus.core.cache.Facet;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusProperty;
@@ -579,4 +580,14 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		}
 		return result;
 	}
+
+	@Override
+	public List<Facet> getFacets() {
+		if (entity != null) {
+			return entity.getFacets();
+		} else {
+			return new ArrayList<Facet>();
+		}
+	}
+
 }
