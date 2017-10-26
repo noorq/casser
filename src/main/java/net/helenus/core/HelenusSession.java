@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import net.helenus.support.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,15 +48,15 @@ import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.mapping.value.*;
+import net.helenus.support.*;
 import net.helenus.support.Fun.Tuple1;
 import net.helenus.support.Fun.Tuple2;
 import net.helenus.support.Fun.Tuple6;
 
 public final class HelenusSession extends AbstractSessionOperations implements Closeable {
 
+	public static final Object deleted = new Object();
 	private static final Logger LOG = LoggerFactory.getLogger(HelenusSession.class);
-    public static final Object deleted = new Object();
-
 	private final int MAX_CACHE_SIZE = 10000;
 	private final int MAX_CACHE_EXPIRE_SECONDS = 600;
 
@@ -234,62 +233,62 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 				boundFacets.add(facet);
 			}
 		}
-        String tableName = CacheUtil.schemaName(facets);
-        List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
+		String tableName = CacheUtil.schemaName(facets);
+		List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
 		mergeAndUpdateCacheValues(pojo, tableName, facetCombinations);
 	}
 
 	@Override
-    public void mergeCache(Table<String, String, Either<Object, List<Facet>>> uowCache) {
+	public void mergeCache(Table<String, String, Either<Object, List<Facet>>> uowCache) {
 		List<Either<Object, List<Facet>>> items = uowCache.values().stream().distinct().collect(Collectors.toList());
 		for (Either<Object, List<Facet>> item : items) {
-		    if (item.isRight()) {
-                List<Facet> facets = item.getRight();
-                String tableName = CacheUtil.schemaName(facets);
-                List<String[]> combinations = CacheUtil.flattenFacets(facets);
-                for (String[] combination : combinations) {
-                    String cacheKey = tableName + "." + Arrays.toString(combination);
-                    sessionCache.invalidate(cacheKey);
-                }
-            } else {
-		        Object pojo = item.getLeft();
-                HelenusEntity entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
-                Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
-                if (entity.isCacheable()) {
-                    List<Facet> boundFacets = new ArrayList<>();
-                    for (Facet facet : entity.getFacets()) {
-                        if (facet instanceof UnboundFacet) {
-                            UnboundFacet unboundFacet = (UnboundFacet) facet;
-                            UnboundFacet.Binder binder = unboundFacet.binder();
-                            unboundFacet.getProperties().forEach(prop -> {
-                                if (valueMap == null) {
-                                    Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop,
-                                            false);
-                                    binder.setValueForProperty(prop, value.toString());
-                                } else {
-                                    binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
-                                }
-                            });
-                            if (binder.isBound()) {
-                                boundFacets.add(binder.bind());
-                            }
-                        } else {
-                            boundFacets.add(facet);
-                        }
-                    }
-                    // NOTE: should equal `String tableName = CacheUtil.schemaName(facets);`
-                    List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
-                    String tableName = CacheUtil.schemaName(boundFacets);
-                    mergeAndUpdateCacheValues(pojo, tableName, facetCombinations);
-                }
-            }
+			if (item.isRight()) {
+				List<Facet> facets = item.getRight();
+				String tableName = CacheUtil.schemaName(facets);
+				List<String[]> combinations = CacheUtil.flattenFacets(facets);
+				for (String[] combination : combinations) {
+					String cacheKey = tableName + "." + Arrays.toString(combination);
+					sessionCache.invalidate(cacheKey);
+				}
+			} else {
+				Object pojo = item.getLeft();
+				HelenusEntity entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
+				Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
+				if (entity.isCacheable()) {
+					List<Facet> boundFacets = new ArrayList<>();
+					for (Facet facet : entity.getFacets()) {
+						if (facet instanceof UnboundFacet) {
+							UnboundFacet unboundFacet = (UnboundFacet) facet;
+							UnboundFacet.Binder binder = unboundFacet.binder();
+							unboundFacet.getProperties().forEach(prop -> {
+								if (valueMap == null) {
+									Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop,
+											false);
+									binder.setValueForProperty(prop, value.toString());
+								} else {
+									binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
+								}
+							});
+							if (binder.isBound()) {
+								boundFacets.add(binder.bind());
+							}
+						} else {
+							boundFacets.add(facet);
+						}
+					}
+					// NOTE: should equal `String tableName = CacheUtil.schemaName(facets);`
+					List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
+					String tableName = CacheUtil.schemaName(boundFacets);
+					mergeAndUpdateCacheValues(pojo, tableName, facetCombinations);
+				}
+			}
 		}
 	}
 
 	private void mergeAndUpdateCacheValues(Object pojo, String tableName, List<String[]> facetCombinations) {
 		Object merged = null;
 		for (String[] combination : facetCombinations) {
-            String cacheKey = tableName + "." + Arrays.toString(combination);
+			String cacheKey = tableName + "." + Arrays.toString(combination);
 			Object value = sessionCache.getIfPresent(cacheKey);
 			if (value == null) {
 				sessionCache.put(cacheKey, pojo);

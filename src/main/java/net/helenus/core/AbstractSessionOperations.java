@@ -17,10 +17,8 @@ package net.helenus.core;
 
 import java.io.PrintStream;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Executor;
 
-import net.helenus.support.Either;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +33,7 @@ import net.helenus.core.cache.Facet;
 import net.helenus.core.operation.Operation;
 import net.helenus.mapping.value.ColumnValuePreparer;
 import net.helenus.mapping.value.ColumnValueProvider;
+import net.helenus.support.Either;
 import net.helenus.support.HelenusException;
 
 public abstract class AbstractSessionOperations {
@@ -116,13 +115,13 @@ public abstract class AbstractSessionOperations {
 		}
 	}
 
-    private void logStatement(Statement statement, boolean showValues) {
-        if (isShowCql()) {
-            printCql(Operation.queryString(statement, showValues));
-        } else if (LOG.isInfoEnabled()) {
-            LOG.info("CQL> " + Operation.queryString(statement, showValues));
-        }
-    }
+	private void logStatement(Statement statement, boolean showValues) {
+		if (isShowCql()) {
+			printCql(Operation.queryString(statement, showValues));
+		} else if (LOG.isInfoEnabled()) {
+			LOG.info("CQL> " + Operation.queryString(statement, showValues));
+		}
+	}
 
 	public Tracer getZipkinTracer() {
 		return null;
@@ -132,7 +131,8 @@ public abstract class AbstractSessionOperations {
 		return null;
 	}
 
-    public void mergeCache(Table<String, String, Either<Object, List<Facet>>> uowCache) { }
+	public void mergeCache(Table<String, String, Either<Object, List<Facet>>> uowCache) {
+	}
 
 	RuntimeException translateException(RuntimeException e) {
 		if (e instanceof HelenusException) {

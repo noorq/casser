@@ -15,14 +15,12 @@
  */
 package net.helenus.core;
 
+import static net.helenus.core.HelenusSession.deleted;
+
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import net.helenus.core.cache.UnboundFacet;
-import net.helenus.core.reflect.HelenusNamedProperty;
-import net.helenus.mapping.HelenusProperty;
-import net.helenus.support.Either;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +32,7 @@ import com.google.common.collect.TreeTraverser;
 
 import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
-
-import static net.helenus.core.HelenusSession.deleted;
+import net.helenus.support.Either;
 
 /** Encapsulates the concept of a "transaction" as a unit-of-work. */
 public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfWork<E>, AutoCloseable {
@@ -45,11 +42,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	private final List<AbstractUnitOfWork<E>> nested = new ArrayList<>();
 	private final HelenusSession session;
 	private final AbstractUnitOfWork<E> parent;
-    private List<CommitThunk> postCommit = new ArrayList<CommitThunk>();
-    private boolean aborted = false;
-    private boolean committed = false;
-
-    private final Table<String, String, Either<Object, List<Facet>>> cache = HashBasedTable.create();
+	private final Table<String, String, Either<Object, List<Facet>>> cache = HashBasedTable.create();
 	protected String purpose;
 	protected int cacheHits = 0;
 	protected int cacheMisses = 0;
@@ -57,6 +50,9 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	protected Stopwatch elapsedTime;
 	protected Map<String, Double> databaseTime = new HashMap<>();
 	protected double cacheLookupTime = 0.0;
+	private List<CommitThunk> postCommit = new ArrayList<CommitThunk>();
+	private boolean aborted = false;
+	private boolean committed = false;
 
 	protected AbstractUnitOfWork(HelenusSession session, AbstractUnitOfWork<E> parent) {
 		Objects.requireNonNull(session, "containing session cannot be null");
@@ -168,10 +164,10 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 				String columnName = facet.name() + "==" + facet.value();
 				Either<Object, List<Facet>> eitherValue = cache.get(tableName, columnName);
 				if (eitherValue != null) {
-                    Object value = deleted;
-                    if (eitherValue.isLeft()) {
-                        value = eitherValue.getLeft();
-                    }
+					Object value = deleted;
+					if (eitherValue.isLeft()) {
+						value = eitherValue.getLeft();
+					}
 					result = Optional.of(value);
 					break;
 				}
@@ -188,44 +184,44 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 
 	@Override
 	public List<Facet> cacheEvict(List<Facet> facets) {
-	    Either<Object, List<Facet>> deletedObjectFacets = Either.right(facets);
+		Either<Object, List<Facet>> deletedObjectFacets = Either.right(facets);
 		String tableName = CacheUtil.schemaName(facets);
 		Optional<Object> optionalValue = cacheLookup(facets);
 		if (optionalValue.isPresent()) {
-            Object value = optionalValue.get();
+			Object value = optionalValue.get();
 
-            for (Facet facet : facets) {
-                if (!facet.fixed()) {
-                    String columnKey = facet.name() + "==" + facet.value();
-                    // mark the value identified by the facet to `deleted`
-                    cache.put(tableName, columnKey, deletedObjectFacets);
-                }
-            }
-            // look for other row/col pairs that referenced the same object, mark them
-            // `deleted`
-            cache.columnKeySet().forEach(columnKey -> {
-                Either<Object, List<Facet>> eitherCachedValue = cache.get(tableName, columnKey);
-                if (eitherCachedValue.isLeft()) {
-                    Object cachedValue = eitherCachedValue.getLeft();
-                    if (cachedValue == value) {
-                        cache.put(tableName, columnKey, deletedObjectFacets);
-                        String[] parts = columnKey.split("==");
-                        facets.add(new Facet<String>(parts[0], parts[1]));
-                    }
-                }
-            });
-        }
-        return facets;
+			for (Facet facet : facets) {
+				if (!facet.fixed()) {
+					String columnKey = facet.name() + "==" + facet.value();
+					// mark the value identified by the facet to `deleted`
+					cache.put(tableName, columnKey, deletedObjectFacets);
+				}
+			}
+			// look for other row/col pairs that referenced the same object, mark them
+			// `deleted`
+			cache.columnKeySet().forEach(columnKey -> {
+				Either<Object, List<Facet>> eitherCachedValue = cache.get(tableName, columnKey);
+				if (eitherCachedValue.isLeft()) {
+					Object cachedValue = eitherCachedValue.getLeft();
+					if (cachedValue == value) {
+						cache.put(tableName, columnKey, deletedObjectFacets);
+						String[] parts = columnKey.split("==");
+						facets.add(new Facet<String>(parts[0], parts[1]));
+					}
+				}
+			});
+		}
+		return facets;
 	}
 
 	@Override
 	public void cacheUpdate(Object value, List<Facet> facets) {
 		String tableName = CacheUtil.schemaName(facets);
 		for (Facet facet : facets) {
-		    if (!facet.fixed()) {
-                String columnName = facet.name() + "==" + facet.value();
-                cache.put(tableName, columnName, Either.left(value));
-            }
+			if (!facet.fixed()) {
+				String columnName = facet.name() + "==" + facet.value();
+				cache.put(tableName, columnName, Either.left(value));
+			}
 		}
 	}
 
@@ -265,42 +261,42 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			aborted = false;
 
 			nested.forEach((uow) -> Errors.rethrow().wrap(uow::commit));
-            elapsedTime.stop();
+			elapsedTime.stop();
 
 			if (parent == null) {
-                // Apply all post-commit functions, this is the outter-most UnitOfWork.
+				// Apply all post-commit functions, this is the outter-most UnitOfWork.
 				traverser.postOrderTraversal(this).forEach(uow -> {
 					uow.applyPostCommitFunctions();
 				});
 
 				// Merge our cache into the session cache.
-                session.mergeCache(cache);
+				session.mergeCache(cache);
 
-                return new PostCommitFunction(this, null);
+				return new PostCommitFunction(this, null);
 			} else {
 
-                // Merge cache and statistics into parent if there is one.
-                parent.mergeCache(cache);
+				// Merge cache and statistics into parent if there is one.
+				parent.mergeCache(cache);
 
-                parent.cacheHits += cacheHits;
-                parent.cacheMisses += cacheMisses;
-                parent.databaseLookups += databaseLookups;
-                parent.cacheLookupTime += cacheLookupTime;
-                for (String name : databaseTime.keySet()) {
-                    if (parent.databaseTime.containsKey(name)) {
-                        double t = parent.databaseTime.get(name);
-                        parent.databaseTime.put(name, t + databaseTime.get(name));
-                    } else {
-                        parent.databaseTime.put(name, databaseTime.get(name));
-                    }
-                }
-            }
-        }
+				parent.cacheHits += cacheHits;
+				parent.cacheMisses += cacheMisses;
+				parent.databaseLookups += databaseLookups;
+				parent.cacheLookupTime += cacheLookupTime;
+				for (String name : databaseTime.keySet()) {
+					if (parent.databaseTime.containsKey(name)) {
+						double t = parent.databaseTime.get(name);
+						parent.databaseTime.put(name, t + databaseTime.get(name));
+					} else {
+						parent.databaseTime.put(name, databaseTime.get(name));
+					}
+				}
+			}
+		}
 		// else {
 		// Constructor<T> ctor = clazz.getConstructor(conflictExceptionClass);
 		// T object = ctor.newInstance(new Object[] { String message });
 		// }
-        return new PostCommitFunction(this, postCommit);
+		return new PostCommitFunction(this, postCommit);
 	}
 
 	/* Explicitly discard the work and mark it as as such in the log. */
@@ -325,8 +321,9 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		from.rowMap().forEach((rowKey, columnMap) -> {
 			columnMap.forEach((columnKey, value) -> {
 				if (to.contains(rowKey, columnKey)) {
-				    //TODO(gburd):...
-					to.put(rowKey, columnKey, Either.left(CacheUtil.merge(to.get(rowKey, columnKey).getLeft(), from.get(rowKey, columnKey).getLeft())));
+					// TODO(gburd):...
+					to.put(rowKey, columnKey, Either.left(CacheUtil.merge(to.get(rowKey, columnKey).getLeft(),
+							from.get(rowKey, columnKey).getLeft())));
 				} else {
 					to.put(rowKey, columnKey, from.get(rowKey, columnKey));
 				}

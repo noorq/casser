@@ -133,9 +133,9 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 	}
 
 	public List<Facet> bindFacetValues(List<Facet> facets) {
-	    if (facets == null) {
-	        return new ArrayList<Facet>();
-        }
+		if (facets == null) {
+			return new ArrayList<Facet>();
+		}
 		List<Facet> boundFacets = new ArrayList<>();
 		Map<HelenusProperty, Filter> filterMap = new HashMap<>(filters.size());
 		filters.forEach(f -> filterMap.put(f.getNode().getProperty(), f));
@@ -177,9 +177,9 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 	}
 
 	@Override
-    public List<Facet> getFacets() {
-	    return entity.getFacets();
-    }
+	public List<Facet> getFacets() {
+		return entity.getFacets();
+	}
 
 	@Override
 	public ResultSet sync(UnitOfWork uow) {// throws TimeoutException {
@@ -187,8 +187,8 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 			return sync();
 		}
 		ResultSet result = super.sync(uow);
-        List<Facet> facets = getFacets();
-        uow.cacheEvict(bindFacetValues(facets));
+		List<Facet> facets = getFacets();
+		uow.cacheEvict(bindFacetValues(facets));
 		return result;
 	}
 

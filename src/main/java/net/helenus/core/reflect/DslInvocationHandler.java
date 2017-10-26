@@ -64,37 +64,36 @@ public class DslInvocationHandler<E> implements InvocationHandler {
 
 	private HelenusEntity init(Metadata metadata) {
 		HelenusEntity entity = new HelenusMappingEntity(iface, metadata);
-        Collection<HelenusProperty> properties = entity.getOrderedProperties();
-        if (properties != null) {
-            for (HelenusProperty prop : properties) {
+		Collection<HelenusProperty> properties = entity.getOrderedProperties();
+		if (properties != null) {
+			for (HelenusProperty prop : properties) {
 
-                map.put(prop.getGetterMethod(), prop);
+				map.put(prop.getGetterMethod(), prop);
 
-                AbstractDataType type = prop.getDataType();
-                Class<?> javaType = prop.getJavaType();
+				AbstractDataType type = prop.getDataType();
+				Class<?> javaType = prop.getJavaType();
 
-                if (type instanceof UDTDataType && !UDTValue.class.isAssignableFrom(javaType)) {
+				if (type instanceof UDTDataType && !UDTValue.class.isAssignableFrom(javaType)) {
 
-                    Object childDsl = Helenus.dsl(javaType, classLoader,
-                            Optional.of(new HelenusPropertyNode(prop, parent)),
-                            metadata);
+					Object childDsl = Helenus.dsl(javaType, classLoader,
+							Optional.of(new HelenusPropertyNode(prop, parent)), metadata);
 
-                    udtMap.put(prop.getGetterMethod(), childDsl);
-                }
+					udtMap.put(prop.getGetterMethod(), childDsl);
+				}
 
-                if (type instanceof DTDataType) {
-                    DTDataType dataType = (DTDataType) type;
+				if (type instanceof DTDataType) {
+					DTDataType dataType = (DTDataType) type;
 
-                    if (dataType.getDataType() instanceof TupleType && !TupleValue.class.isAssignableFrom(javaType)) {
+					if (dataType.getDataType() instanceof TupleType && !TupleValue.class.isAssignableFrom(javaType)) {
 
-                        Object childDsl = Helenus.dsl(javaType, classLoader,
-                                Optional.of(new HelenusPropertyNode(prop, parent)), metadata);
+						Object childDsl = Helenus.dsl(javaType, classLoader,
+								Optional.of(new HelenusPropertyNode(prop, parent)), metadata);
 
-                        tupleMap.put(prop.getGetterMethod(), childDsl);
-                    }
-                }
-            }
-        }
+						tupleMap.put(prop.getGetterMethod(), childDsl);
+					}
+				}
+			}
+		}
 
 		return entity;
 	}

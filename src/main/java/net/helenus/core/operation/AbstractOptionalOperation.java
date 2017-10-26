@@ -15,6 +15,8 @@
  */
 package net.helenus.core.operation;
 
+import static net.helenus.core.HelenusSession.deleted;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -31,8 +33,6 @@ import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
-
-import static net.helenus.core.HelenusSession.deleted;
 
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
 		extends
@@ -118,41 +118,41 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 				try {
 					List<Facet> facets = bindFacetValues();
 					if (facets != null) {
-                        cachedResult = checkCache(uow, facets);
-                        if (cachedResult != null) {
-                            updateCache = false;
-                            result = Optional.of(cachedResult);
-                            uowCacheHits.mark();
-                            cacheHits.mark();
-                            uow.recordCacheAndDatabaseOperationCount(1, 0);
-                        } else {
-                            updateCache = true;
-                            uowCacheMiss.mark();
-                            if (isSessionCacheable()) {
-                                String tableName = CacheUtil.schemaName(facets);
-                                cachedResult = (E) sessionOps.checkCache(tableName, facets);
-                                if (cachedResult != null) {
-                                    result = Optional.of(cachedResult);
-                                    sessionCacheHits.mark();
-                                    cacheHits.mark();
-                                    uow.recordCacheAndDatabaseOperationCount(1, 0);
-                                } else {
-                                    sessionCacheMiss.mark();
-                                    cacheMiss.mark();
-                                    uow.recordCacheAndDatabaseOperationCount(-1, 0);
-                                }
-                            }
-                        }
-                    } else {
-					    updateCache = false;
-                    }
+						cachedResult = checkCache(uow, facets);
+						if (cachedResult != null) {
+							updateCache = false;
+							result = Optional.of(cachedResult);
+							uowCacheHits.mark();
+							cacheHits.mark();
+							uow.recordCacheAndDatabaseOperationCount(1, 0);
+						} else {
+							updateCache = true;
+							uowCacheMiss.mark();
+							if (isSessionCacheable()) {
+								String tableName = CacheUtil.schemaName(facets);
+								cachedResult = (E) sessionOps.checkCache(tableName, facets);
+								if (cachedResult != null) {
+									result = Optional.of(cachedResult);
+									sessionCacheHits.mark();
+									cacheHits.mark();
+									uow.recordCacheAndDatabaseOperationCount(1, 0);
+								} else {
+									sessionCacheMiss.mark();
+									cacheMiss.mark();
+									uow.recordCacheAndDatabaseOperationCount(-1, 0);
+								}
+							}
+						}
+					} else {
+						updateCache = false;
+					}
 				} finally {
 					timer.stop();
 					uow.addCacheLookupTime(timer);
 				}
 			} else {
-			    updateCache = false;
-            }
+				updateCache = false;
+			}
 
 			if (!result.isPresent()) {
 				// Formulate the query and execute it against the Cassandra cluster.
@@ -163,16 +163,16 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 				result = transform(resultSet);
 			}
 
-            if (result.get() == deleted) {
-                return Optional.empty();
-            } else {
-                // If we have a result, it wasn't from the UOW cache, and we're caching things
-                // then we need to put this result into the cache for future requests to find.
-                if (updateCache && result.isPresent()) {
-                    cacheUpdate(uow, result.get(), getFacets());
-                }
-                return result;
-            }
+			if (result.get() == deleted) {
+				return Optional.empty();
+			} else {
+				// If we have a result, it wasn't from the UOW cache, and we're caching things
+				// then we need to put this result into the cache for future requests to find.
+				if (updateCache && result.isPresent()) {
+					cacheUpdate(uow, result.get(), getFacets());
+				}
+				return result;
+			}
 		} finally {
 			context.stop();
 		}
