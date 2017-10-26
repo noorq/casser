@@ -15,20 +15,21 @@
  */
 package net.helenus.test.integration.core.tuple;
 
-import net.helenus.core.Helenus;
-import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
 import org.junit.Assert;
 import org.junit.Test;
 
+import net.helenus.core.Helenus;
+import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 public class DslTest extends AbstractEmbeddedCassandraTest {
 
-  @Test
-  public void testDslBeforeSessionInit() {
-    Assert.assertNotNull(Helenus.dsl(Album.class));
-  }
+	@Test
+	public void testDslBeforeSessionInit() {
+		Assert.assertNotNull(Helenus.dsl(Album.class));
+	}
 
-  @Test
-  public void testSessionInitAddingDslProxy() {
-    Assert.assertNotNull(Helenus.init(getSession()).showCql().add(Helenus.dsl(Album.class)));
-  }
+	@Test
+	public void testSessionInitAddingDslProxy() {
+		Assert.assertNotNull(Helenus.init(getSession()).showCql().add(Helenus.dsl(Album.class)));
+	}
 }

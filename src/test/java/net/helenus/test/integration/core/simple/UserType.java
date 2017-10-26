@@ -16,6 +16,5 @@
 package net.helenus.test.integration.core.simple;
 
 public enum UserType {
-  USER,
-  ADMIN;
+	USER, ADMIN;
 }

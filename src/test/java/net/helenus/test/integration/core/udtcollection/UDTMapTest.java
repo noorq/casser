@@ -18,136 +18,129 @@ package net.helenus.test.integration.core.udtcollection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
-import net.helenus.core.Query;
+
 import org.junit.Assert;
 import org.junit.Test;
 
+import net.helenus.core.Query;
+
 public class UDTMapTest extends UDTCollectionTest {
 
-  @Test
-  public void testMapCRUID() throws TimeoutException {
+	@Test
+	public void testMapCRUID() throws TimeoutException {
 
-    int id = 333;
+		int id = 333;
 
-    Map<Section, Author> writers = new HashMap<Section, Author>();
-    writers.put(new SectionImpl("first", 1), new AuthorImpl("Alex", "San Jose"));
-    writers.put(new SectionImpl("second", 2), new AuthorImpl("Bob", "San Francisco"));
+		Map<Section, Author> writers = new HashMap<Section, Author>();
+		writers.put(new SectionImpl("first", 1), new AuthorImpl("Alex", "San Jose"));
+		writers.put(new SectionImpl("second", 2), new AuthorImpl("Bob", "San Francisco"));
 
-    // CREATE
+		// CREATE
 
-    session.insert().value(book::id, id).value(book::writers, writers).sync();
+		session.insert().value(book::id, id).value(book::writers, writers).sync();
 
-    // READ
+		// READ
 
-    // read full object
+		// read full object
 
-    Book actual = session.<Book>select(book).where(book::id, Query.eq(id)).sync().findFirst().get();
-    Assert.assertEquals(id, actual.id());
-    assertEqualMaps(writers, actual.writers());
-    Assert.assertNull(actual.reviewers());
-    Assert.assertNull(actual.notes());
-    Assert.assertNull(actual.contents());
+		Book actual = session.<Book>select(book).where(book::id, Query.eq(id)).sync().findFirst().get();
+		Assert.assertEquals(id, actual.id());
+		assertEqualMaps(writers, actual.writers());
+		Assert.assertNull(actual.reviewers());
+		Assert.assertNull(actual.notes());
+		Assert.assertNull(actual.contents());
 
-    // read full map
+		// read full map
 
-    Map<Section, Author> actualMap =
-        session.select(book::writers).where(book::id, Query.eq(id)).sync().findFirst().get()._1;
-    assertEqualMaps(writers, actualMap);
+		Map<Section, Author> actualMap = session.select(book::writers).where(book::id, Query.eq(id)).sync().findFirst()
+				.get()._1;
+		assertEqualMaps(writers, actualMap);
 
-    // read single key-value in map
+		// read single key-value in map
 
-    String cql =
-        session
-            .select(Query.get(book::writers, new SectionImpl("first", 1)))
-            .where(book::id, Query.eq(id))
-            .cql();
+		String cql = session.select(Query.get(book::writers, new SectionImpl("first", 1))).where(book::id, Query.eq(id))
+				.cql();
 
-    System.out.println("Still not supporting cql = " + cql);
+		System.out.println("Still not supporting cql = " + cql);
 
-    // UPDATE
+		// UPDATE
 
-    Map<Section, Author> expected = new HashMap<Section, Author>();
-    expected.put(new SectionImpl("f", 1), new AuthorImpl("A", "SJ"));
-    expected.put(new SectionImpl("s", 1), new AuthorImpl("B", "SF"));
+		Map<Section, Author> expected = new HashMap<Section, Author>();
+		expected.put(new SectionImpl("f", 1), new AuthorImpl("A", "SJ"));
+		expected.put(new SectionImpl("s", 1), new AuthorImpl("B", "SF"));
 
-    session.update().set(book::writers, expected).where(book::id, Query.eq(id)).sync();
+		session.update().set(book::writers, expected).where(book::id, Query.eq(id)).sync();
 
-    actual = session.<Book>select(book).where(book::id, Query.eq(id)).sync().findFirst().get();
-    Assert.assertEquals(id, actual.id());
-    assertEqualMaps(expected, actual.writers());
+		actual = session.<Book>select(book).where(book::id, Query.eq(id)).sync().findFirst().get();
+		Assert.assertEquals(id, actual.id());
+		assertEqualMaps(expected, actual.writers());
 
-    // INSERT
+		// INSERT
 
-    // put operation
+		// put operation
 
-    Section third = new SectionImpl("t", 3);
-    Author unk = new AuthorImpl("Unk", "City 17");
+		Section third = new SectionImpl("t", 3);
+		Author unk = new AuthorImpl("Unk", "City 17");
 
-    expected.put(third, unk);
-    session.update().put(book::writers, third, unk).where(book::id, Query.eq(id)).sync();
+		expected.put(third, unk);
+		session.update().put(book::writers, third, unk).where(book::id, Query.eq(id)).sync();
 
-    actualMap =
-        session.select(book::writers).where(book::id, Query.eq(id)).sync().findFirst().get()._1;
-    assertEqualMaps(expected, actualMap);
+		actualMap = session.select(book::writers).where(book::id, Query.eq(id)).sync().findFirst().get()._1;
+		assertEqualMaps(expected, actualMap);
 
-    // putAll operation
-    expected.putAll(writers);
-    session.update().putAll(book::writers, writers).where(book::id, Query.eq(id)).sync();
+		// putAll operation
+		expected.putAll(writers);
+		session.update().putAll(book::writers, writers).where(book::id, Query.eq(id)).sync();
 
-    actualMap =
-        session.select(book::writers).where(book::id, Query.eq(id)).sync().findFirst().get()._1;
-    assertEqualMaps(expected, actualMap);
+		actualMap = session.select(book::writers).where(book::id, Query.eq(id)).sync().findFirst().get()._1;
+		assertEqualMaps(expected, actualMap);
 
-    // put existing
+		// put existing
 
-    expected.put(third, unk);
-    session.update().put(book::writers, third, unk).where(book::id, Query.eq(id)).sync();
+		expected.put(third, unk);
+		session.update().put(book::writers, third, unk).where(book::id, Query.eq(id)).sync();
 
-    actualMap =
-        session.select(book::writers).where(book::id, Query.eq(id)).sync().findFirst().get()._1;
-    assertEqualMaps(expected, actualMap);
+		actualMap = session.select(book::writers).where(book::id, Query.eq(id)).sync().findFirst().get()._1;
+		assertEqualMaps(expected, actualMap);
 
-    // DELETE
+		// DELETE
 
-    // remove single key
+		// remove single key
 
-    expected.remove(third);
-    session.update().put(book::writers, third, null).where(book::id, Query.eq(id)).sync();
+		expected.remove(third);
+		session.update().put(book::writers, third, null).where(book::id, Query.eq(id)).sync();
 
-    actualMap =
-        session.select(book::writers).where(book::id, Query.eq(id)).sync().findFirst().get()._1;
-    assertEqualMaps(expected, actualMap);
+		actualMap = session.select(book::writers).where(book::id, Query.eq(id)).sync().findFirst().get()._1;
+		assertEqualMaps(expected, actualMap);
 
-    // remove full map
+		// remove full map
 
-    session.update().set(book::writers, null).where(book::id, Query.eq(id)).sync();
+		session.update().set(book::writers, null).where(book::id, Query.eq(id)).sync();
 
-    actualMap =
-        session.select(book::writers).where(book::id, Query.eq(id)).sync().findFirst().get()._1;
-    Assert.assertNull(actualMap);
+		actualMap = session.select(book::writers).where(book::id, Query.eq(id)).sync().findFirst().get()._1;
+		Assert.assertNull(actualMap);
 
-    // remove object
+		// remove object
 
-    session.delete().where(book::id, Query.eq(id)).sync();
-    Long cnt = session.count().where(book::id, Query.eq(id)).sync();
-    Assert.assertEquals(Long.valueOf(0), cnt);
-  }
+		session.delete().where(book::id, Query.eq(id)).sync();
+		Long cnt = session.count().where(book::id, Query.eq(id)).sync();
+		Assert.assertEquals(Long.valueOf(0), cnt);
+	}
 
-  private void assertEqualMaps(Map<Section, Author> expected, Map<Section, Author> actual) {
+	private void assertEqualMaps(Map<Section, Author> expected, Map<Section, Author> actual) {
 
-    Assert.assertEquals(expected.size(), actual.size());
+		Assert.assertEquals(expected.size(), actual.size());
 
-    for (Section e : expected.keySet()) {
-      Section a =
-          actual.keySet().stream().filter(p -> p.title().equals(e.title())).findFirst().get();
-      Assert.assertEquals(e.title(), a.title());
-      Assert.assertEquals(e.page(), a.page());
+		for (Section e : expected.keySet()) {
+			Section a = actual.keySet().stream().filter(p -> p.title().equals(e.title())).findFirst().get();
+			Assert.assertEquals(e.title(), a.title());
+			Assert.assertEquals(e.page(), a.page());
 
-      Author ea = expected.get(e);
-      Author aa = actual.get(a);
+			Author ea = expected.get(e);
+			Author aa = actual.get(a);
 
-      Assert.assertEquals(ea.name(), aa.name());
-      Assert.assertEquals(ea.city(), aa.city());
-    }
-  }
+			Assert.assertEquals(ea.name(), aa.name());
+			Assert.assertEquals(ea.city(), aa.city());
+		}
+	}
 }

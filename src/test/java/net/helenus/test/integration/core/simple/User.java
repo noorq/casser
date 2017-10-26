@@ -15,7 +15,6 @@
  */
 package net.helenus.test.integration.core.simple;
 
-import net.helenus.core.annotation.Cacheable;
 import net.helenus.mapping.annotation.Column;
 import net.helenus.mapping.annotation.PartitionKey;
 import net.helenus.mapping.annotation.Table;
@@ -23,14 +22,14 @@ import net.helenus.mapping.annotation.Table;
 @Table("simple_users")
 public interface User {
 
-  @PartitionKey
-  Long id();
+	@PartitionKey
+	Long id();
 
-  @Username
-  @Column("override_name")
-  String name();
+	@Username
+	@Column("override_name")
+	String name();
 
-  Integer age();
+	Integer age();
 
-  UserType type();
+	UserType type();
 }

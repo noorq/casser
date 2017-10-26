@@ -18,72 +18,62 @@ package net.helenus.test.integration.core.draft;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import net.helenus.core.Helenus;
-import net.helenus.core.HelenusSession;
-import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import net.helenus.core.Helenus;
+import net.helenus.core.HelenusSession;
+import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 public class EntityDraftBuilderTest extends AbstractEmbeddedCassandraTest {
 
-  static Supply supply;
-  static HelenusSession session;
+	static Supply supply;
+	static HelenusSession session;
 
-  @BeforeClass
-  public static void beforeTest() {
-    session = Helenus.init(getSession()).showCql().add(Supply.class).autoCreateDrop().get();
-    supply = session.dsl(Supply.class);
-  }
+	@BeforeClass
+	public static void beforeTest() {
+		session = Helenus.init(getSession()).showCql().add(Supply.class).autoCreateDrop().get();
+		supply = session.dsl(Supply.class);
+	}
 
-  @Test
-  public void testFoo() throws Exception {
-    Supply.Draft draft = null;
+	@Test
+	public void testFoo() throws Exception {
+		Supply.Draft draft = null;
 
-    draft =
-        Supply.draft("APAC")
-            .code("WIDGET-002")
-            .description("Our second Widget!")
-            .demand(
-                new HashMap<String, Long>() {
-                  {
-                    put("APAC", 100L);
-                    put("EMEA", 10000L);
-                    put("NORAM", 2000000L);
-                  }
-                })
-            .shipments(
-                new HashSet<String>() {
-                  {
-                    add("HMS Puddle in transit to APAC, 100 units.");
-                    add("Frigate Jimmy in transit to EMEA, 10000 units.");
-                  }
-                })
-            .suppliers(
-                new ArrayList<String>() {
-                  {
-                    add("Puddle, Inc.");
-                    add("Jimmy Town, LTD.");
-                  }
-                });
+		draft = Supply.draft("APAC").code("WIDGET-002").description("Our second Widget!")
+				.demand(new HashMap<String, Long>() {
+					{
+						put("APAC", 100L);
+						put("EMEA", 10000L);
+						put("NORAM", 2000000L);
+					}
+				}).shipments(new HashSet<String>() {
+					{
+						add("HMS Puddle in transit to APAC, 100 units.");
+						add("Frigate Jimmy in transit to EMEA, 10000 units.");
+					}
+				}).suppliers(new ArrayList<String>() {
+					{
+						add("Puddle, Inc.");
+						add("Jimmy Town, LTD.");
+					}
+				});
 
-    Supply s1 = session.<Supply>insert(draft).sync();
+		Supply s1 = session.<Supply>insert(draft).sync();
 
-    // List
-    Supply s2 =
-        session
-            .<Supply>update(s1.update())
-            .prepend(supply::suppliers, "Pignose Supply, LLC.")
-            .sync();
-    Assert.assertEquals(s2.suppliers().get(0), "Pignose Supply, LLC.");
+		// List
+		Supply s2 = session.<Supply>update(s1.update()).prepend(supply::suppliers, "Pignose Supply, LLC.").sync();
+		Assert.assertEquals(s2.suppliers().get(0), "Pignose Supply, LLC.");
 
-    // Set
-    String shipment = "Pignose, on the way! (1M units)";
-    Supply s3 = session.<Supply>update(s2.update()).add(supply::shipments, shipment).sync();
-    Assert.assertTrue(s3.shipments().contains(shipment));
+		// Set
+		String shipment = "Pignose, on the way! (1M units)";
+		Supply s3 = session.<Supply>update(s2.update()).add(supply::shipments, shipment).sync();
+		Assert.assertTrue(s3.shipments().contains(shipment));
 
-    // Map
-    Supply s4 = session.<Supply>update(s3.update()).put(supply::demand, "NORAM", 10L).sync();
-    Assert.assertEquals((long) s4.demand().get("NORAM"), 10L);
-  }
+		// Map
+		Supply s4 = session.<Supply>update(s3.update()).put(supply::demand, "NORAM", 10L).sync();
+		Assert.assertEquals((long) s4.demand().get("NORAM"), 10L);
+	}
 }

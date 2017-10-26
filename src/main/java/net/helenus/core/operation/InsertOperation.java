@@ -236,6 +236,15 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 	}
 
 	@Override
+	public T sync() {// throws TimeoutException {
+		T result = super.sync();
+		if (entity.isCacheable() && result != null) {
+			sessionOps.updateCache(result, entity.getFacets());
+		}
+		return result;
+	}
+
+	@Override
 	public T sync(UnitOfWork uow) {// throws TimeoutException {
 		if (uow == null) {
 			return sync();
@@ -243,7 +252,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 		T result = super.sync(uow);
 		Class<?> iface = entity.getMappingInterface();
 		if (resultType == iface) {
-			updateCache(uow, result, entity.getFacets());
+			cacheUpdate(uow, result, entity.getFacets());
 		}
 		return result;
 	}

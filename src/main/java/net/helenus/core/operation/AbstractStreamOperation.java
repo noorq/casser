@@ -33,6 +33,8 @@ import net.helenus.core.UnitOfWork;
 import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
 
+import static net.helenus.core.HelenusSession.deleted;
+
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>>
 		extends
 			AbstractStatementOperation<E, O> {
@@ -115,41 +117,48 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 		try {
 			Stream<E> resultStream = null;
 			E cachedResult = null;
-			boolean updateCache = true;
+			final boolean updateCache;
 
 			if (enableCache) {
 				Stopwatch timer = Stopwatch.createStarted();
 				try {
 					List<Facet> facets = bindFacetValues();
-					cachedResult = checkCache(uow, facets);
-					if (cachedResult != null) {
-						resultStream = Stream.of(cachedResult);
-						updateCache = false;
-						uowCacheHits.mark();
-						cacheHits.mark();
-						uow.recordCacheAndDatabaseOperationCount(1, 0);
-					} else {
-						uowCacheMiss.mark();
-						if (isSessionCacheable()) {
-							String tableName = CacheUtil.schemaName(facets);
-							cachedResult = (E) sessionOps.checkCache(tableName, facets);
-							if (cachedResult != null) {
-								resultStream = Stream.of(cachedResult);
-								sessionCacheHits.mark();
-								cacheHits.mark();
-								uow.recordCacheAndDatabaseOperationCount(1, 0);
-							} else {
-								sessionCacheMiss.mark();
-								cacheMiss.mark();
-								uow.recordCacheAndDatabaseOperationCount(-1, 0);
-							}
-						}
-					}
+					if (facets != null) {
+                        cachedResult = checkCache(uow, facets);
+                        if (cachedResult != null) {
+                            updateCache = false;
+                            resultStream = Stream.of(cachedResult);
+                            uowCacheHits.mark();
+                            cacheHits.mark();
+                            uow.recordCacheAndDatabaseOperationCount(1, 0);
+                        } else {
+                            updateCache = true;
+                            uowCacheMiss.mark();
+                            if (isSessionCacheable()) {
+                                String tableName = CacheUtil.schemaName(facets);
+                                cachedResult = (E) sessionOps.checkCache(tableName, facets);
+                                if (cachedResult != null) {
+                                    resultStream = Stream.of(cachedResult);
+                                    sessionCacheHits.mark();
+                                    cacheHits.mark();
+                                    uow.recordCacheAndDatabaseOperationCount(1, 0);
+                                } else {
+                                    sessionCacheMiss.mark();
+                                    cacheMiss.mark();
+                                    uow.recordCacheAndDatabaseOperationCount(-1, 0);
+                                }
+                            }
+                        }
+                    } else {
+					    updateCache = false;
+                    }
 				} finally {
 					timer.stop();
 					uow.addCacheLookupTime(timer);
 				}
-			}
+			} else {
+			    updateCache = false;
+            }
 
 			if (resultStream == null) {
 				ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
@@ -159,17 +168,20 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
 			// If we have a result and we're caching then we need to put it into the cache
 			// for future requests to find.
-			if (updateCache && resultStream != null) {
-				List<E> again = new ArrayList<>();
-				List<Facet> facets = getFacets();
-				resultStream.forEach(result -> {
-					updateCache(uow, result, facets);
-					again.add(result);
-				});
-				resultStream = again.stream();
+			if (resultStream != null) {
+                List<E> again = new ArrayList<>();
+                List<Facet> facets = getFacets();
+                resultStream.forEach(result -> {
+                    if (result != deleted) {
+                        if (updateCache) {
+                            cacheUpdate(uow, result, facets);
+                        }
+                        again.add(result);
+                    }
+                });
+                resultStream = again.stream();
 			}
-
-			return resultStream;
+            return resultStream;
 		} finally {
 			context.stop();
 		}

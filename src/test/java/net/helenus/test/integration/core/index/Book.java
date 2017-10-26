@@ -23,13 +23,13 @@ import net.helenus.mapping.annotation.Table;
 @Table("books")
 public interface Book {
 
-  @PartitionKey(ordinal = 0)
-  long id();
+	@PartitionKey(ordinal = 0)
+	long id();
 
-  @Column(ordinal = 1)
-  @Index
-  String isbn();
+	@Column(ordinal = 1)
+	@Index
+	String isbn();
 
-  @Column(ordinal = 2)
-  String author();
+	@Column(ordinal = 2)
+	String author();
 }

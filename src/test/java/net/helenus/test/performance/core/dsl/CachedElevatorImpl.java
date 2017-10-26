@@ -16,74 +16,75 @@
 package net.helenus.test.performance.core.dsl;
 
 import java.util.Map;
+
 import net.helenus.core.reflect.MapExportable;
 
 public final class CachedElevatorImpl implements Elevator, MapExportable {
 
-  private final Map<String, Object> backingMap;
+	private final Map<String, Object> backingMap;
 
-  private int mask = 0;
+	private int mask = 0;
 
-  private int height;
-  private Double price;
-  private String name;
+	private int height;
+	private Double price;
+	private String name;
 
-  public CachedElevatorImpl(Map<String, Object> backingMap) {
-    this.backingMap = backingMap;
-  }
+	public CachedElevatorImpl(Map<String, Object> backingMap) {
+		this.backingMap = backingMap;
+	}
 
-  @Override
-  public int height() {
+	@Override
+	public int height() {
 
-    if ((mask & 1) == 0) {
+		if ((mask & 1) == 0) {
 
-      Object obj = backingMap.get("height");
-      if (obj != null) {
-        height = ((Integer) obj).intValue();
-      }
+			Object obj = backingMap.get("height");
+			if (obj != null) {
+				height = ((Integer) obj).intValue();
+			}
 
-      mask &= 1;
-    }
-    return height;
-  }
+			mask &= 1;
+		}
+		return height;
+	}
 
-  @Override
-  public Double price() {
+	@Override
+	public Double price() {
 
-    if ((mask & 2) == 0) {
+		if ((mask & 2) == 0) {
 
-      Object obj = backingMap.get("price");
-      if (obj != null) {
-        price = (Double) obj;
-      }
+			Object obj = backingMap.get("price");
+			if (obj != null) {
+				price = (Double) obj;
+			}
 
-      mask &= 2;
-    }
-    return price;
-  }
+			mask &= 2;
+		}
+		return price;
+	}
 
-  @Override
-  public String name() {
+	@Override
+	public String name() {
 
-    if ((mask & 4) == 0) {
+		if ((mask & 4) == 0) {
 
-      Object obj = backingMap.get("name");
-      if (obj != null) {
-        name = (String) obj;
-      }
+			Object obj = backingMap.get("name");
+			if (obj != null) {
+				name = (String) obj;
+			}
 
-      mask &= 4;
-    }
-    return name;
-  }
+			mask &= 4;
+		}
+		return name;
+	}
 
-  @Override
-  public Map<String, Object> toMap() {
-    return backingMap;
-  }
+	@Override
+	public Map<String, Object> toMap() {
+		return backingMap;
+	}
 
-  @Override
-  public String toString() {
-    return backingMap.toString();
-  }
+	@Override
+	public String toString() {
+		return backingMap.toString();
+	}
 }

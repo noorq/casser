@@ -15,407 +15,340 @@
  */
 package net.helenus.test.integration.core.collection;
 
-import static net.helenus.core.Query.eq;
-import static net.helenus.core.Query.get;
-import static net.helenus.core.Query.getIdx;
+import static net.helenus.core.Query.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
-import net.helenus.core.Helenus;
-import net.helenus.core.HelenusSession;
-import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import net.helenus.core.Helenus;
+import net.helenus.core.HelenusSession;
+import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 public class CollectionTest extends AbstractEmbeddedCassandraTest {
 
-  static Customer customer;
+	static Customer customer;
 
-  static HelenusSession session;
+	static HelenusSession session;
 
-  @BeforeClass
-  public static void beforeTest() {
-    session = Helenus.init(getSession()).showCql().add(Customer.class).autoCreateDrop().get();
-    customer = Helenus.dsl(Customer.class, session.getMetadata());
-  }
+	@BeforeClass
+	public static void beforeTest() {
+		session = Helenus.init(getSession()).showCql().add(Customer.class).autoCreateDrop().get();
+		customer = Helenus.dsl(Customer.class, session.getMetadata());
+	}
 
-  @Test
-  public void testPrint() {
-    System.out.println(customer);
-  }
+	@Test
+	public void testPrint() {
+		System.out.println(customer);
+	}
 
-  @Test
-  public void testSetCRUID() throws TimeoutException {
+	@Test
+	public void testSetCRUID() throws TimeoutException {
 
-    UUID id = UUID.randomUUID();
+		UUID id = UUID.randomUUID();
 
-    Set<String> aliases = new HashSet<String>();
-    aliases.add("Alex");
-    aliases.add("Albert");
+		Set<String> aliases = new HashSet<String>();
+		aliases.add("Alex");
+		aliases.add("Albert");
 
-    // CREATE
+		// CREATE
 
-    session.insert().value(customer::id, id).value(customer::aliases, aliases).sync();
+		session.insert().value(customer::id, id).value(customer::aliases, aliases).sync();
 
-    // READ
+		// READ
 
-    // read full object
+		// read full object
 
-    Customer actual =
-        session.<Customer>select(customer).where(customer::id, eq(id)).single().sync().orElse(null);
-    Assert.assertEquals(id, actual.id());
-    Assert.assertEquals(aliases, actual.aliases());
-    Assert.assertNull(actual.names());
-    Assert.assertNull(actual.properties());
+		Customer actual = session.<Customer>select(customer).where(customer::id, eq(id)).single().sync().orElse(null);
+		Assert.assertEquals(id, actual.id());
+		Assert.assertEquals(aliases, actual.aliases());
+		Assert.assertNull(actual.names());
+		Assert.assertNull(actual.properties());
 
-    // read full set
+		// read full set
 
-    Set<String> actualSet =
-        session.select(customer::aliases).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertEquals(aliases, actualSet);
+		Set<String> actualSet = session.select(customer::aliases).where(customer::id, eq(id)).sync().findFirst()
+				.get()._1;
+		Assert.assertEquals(aliases, actualSet);
 
-    // UPDATE
+		// UPDATE
 
-    Set<String> expected = new HashSet<String>();
-    expected.add("unknown");
+		Set<String> expected = new HashSet<String>();
+		expected.add("unknown");
 
-    session.update().set(customer::aliases, expected).where(customer::id, eq(id)).sync();
+		session.update().set(customer::aliases, expected).where(customer::id, eq(id)).sync();
 
-    actual =
-        session.<Customer>select(customer).where(customer::id, eq(id)).single().sync().orElse(null);
+		actual = session.<Customer>select(customer).where(customer::id, eq(id)).single().sync().orElse(null);
 
-    Assert.assertEquals(id, actual.id());
-    Assert.assertEquals(expected, actual.aliases());
+		Assert.assertEquals(id, actual.id());
+		Assert.assertEquals(expected, actual.aliases());
 
-    // INSERT
+		// INSERT
 
-    // add operation
+		// add operation
 
-    expected.add("add");
-    session.update().add(customer::aliases, "add").where(customer::id, eq(id)).sync();
+		expected.add("add");
+		session.update().add(customer::aliases, "add").where(customer::id, eq(id)).sync();
 
-    actualSet =
-        session.select(customer::aliases).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertEquals(expected, actualSet);
+		actualSet = session.select(customer::aliases).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualSet);
 
-    // addAll operation
-    expected.addAll(aliases);
-    session.update().addAll(customer::aliases, aliases).where(customer::id, eq(id)).sync();
+		// addAll operation
+		expected.addAll(aliases);
+		session.update().addAll(customer::aliases, aliases).where(customer::id, eq(id)).sync();
 
-    actualSet =
-        session.select(customer::aliases).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertEquals(expected, actualSet);
+		actualSet = session.select(customer::aliases).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualSet);
 
-    // DELETE
+		// DELETE
 
-    // remove single value
+		// remove single value
 
-    expected.remove("add");
-    session.update().remove(customer::aliases, "add").where(customer::id, eq(id)).sync();
+		expected.remove("add");
+		session.update().remove(customer::aliases, "add").where(customer::id, eq(id)).sync();
 
-    actualSet =
-        session.select(customer::aliases).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertEquals(expected, actualSet);
+		actualSet = session.select(customer::aliases).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualSet);
 
-    // remove values
+		// remove values
 
-    expected.removeAll(aliases);
-    session.update().removeAll(customer::aliases, aliases).where(customer::id, eq(id)).sync();
+		expected.removeAll(aliases);
+		session.update().removeAll(customer::aliases, aliases).where(customer::id, eq(id)).sync();
 
-    actualSet =
-        session.select(customer::aliases).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertEquals(expected, actualSet);
+		actualSet = session.select(customer::aliases).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualSet);
 
-    // remove full list
+		// remove full list
 
-    session.update().set(customer::aliases, null).where(customer::id, eq(id)).sync();
+		session.update().set(customer::aliases, null).where(customer::id, eq(id)).sync();
 
-    actualSet =
-        session.select(customer::aliases).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertNull(actualSet);
+		actualSet = session.select(customer::aliases).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertNull(actualSet);
 
-    // remove object
+		// remove object
 
-    session.delete().where(customer::id, eq(id)).sync();
-    Long cnt = session.count().where(customer::id, eq(id)).sync();
-    Assert.assertEquals(Long.valueOf(0), cnt);
-  }
+		session.delete().where(customer::id, eq(id)).sync();
+		Long cnt = session.count().where(customer::id, eq(id)).sync();
+		Assert.assertEquals(Long.valueOf(0), cnt);
+	}
 
-  @Test
-  public void testListCRUID() throws TimeoutException {
+	@Test
+	public void testListCRUID() throws TimeoutException {
 
-    UUID id = UUID.randomUUID();
+		UUID id = UUID.randomUUID();
 
-    List<String> names = new ArrayList<String>();
-    names.add("Alex");
-    names.add("Albert");
+		List<String> names = new ArrayList<String>();
+		names.add("Alex");
+		names.add("Albert");
 
-    // CREATE
+		// CREATE
 
-    session.insert().value(customer::id, id).value(customer::names, names).sync();
+		session.insert().value(customer::id, id).value(customer::names, names).sync();
 
-    // READ
+		// READ
 
-    // read full object
+		// read full object
 
-    Customer actual =
-        session.<Customer>select(customer).where(customer::id, eq(id)).single().sync().orElse(null);
+		Customer actual = session.<Customer>select(customer).where(customer::id, eq(id)).single().sync().orElse(null);
 
-    Assert.assertEquals(id, actual.id());
-    Assert.assertEquals(names, actual.names());
-    Assert.assertNull(actual.aliases());
-    Assert.assertNull(actual.properties());
+		Assert.assertEquals(id, actual.id());
+		Assert.assertEquals(names, actual.names());
+		Assert.assertNull(actual.aliases());
+		Assert.assertNull(actual.properties());
 
-    // read full list
+		// read full list
 
-    List<String> actualList =
-        session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertEquals(names, actualList);
+		List<String> actualList = session.select(customer::names).where(customer::id, eq(id)).sync().findFirst()
+				.get()._1;
+		Assert.assertEquals(names, actualList);
 
-    // read single value by index
+		// read single value by index
 
-    String cql = session.select(getIdx(customer::names, 1)).where(customer::id, eq(id)).cql();
+		String cql = session.select(getIdx(customer::names, 1)).where(customer::id, eq(id)).cql();
 
-    System.out.println("Still not supporting cql = " + cql);
+		System.out.println("Still not supporting cql = " + cql);
 
-    // UPDATE
+		// UPDATE
 
-    List<String> expected = new ArrayList<String>();
-    expected.add("unknown");
+		List<String> expected = new ArrayList<String>();
+		expected.add("unknown");
 
-    session.update().set(customer::names, expected).where(customer::id, eq(id)).sync();
+		session.update().set(customer::names, expected).where(customer::id, eq(id)).sync();
 
-    actual =
-        session.<Customer>select(customer).where(customer::id, eq(id)).single().sync().orElse(null);
+		actual = session.<Customer>select(customer).where(customer::id, eq(id)).single().sync().orElse(null);
 
-    Assert.assertEquals(id, actual.id());
-    Assert.assertEquals(expected, actual.names());
+		Assert.assertEquals(id, actual.id());
+		Assert.assertEquals(expected, actual.names());
 
-    // INSERT
+		// INSERT
 
-    // prepend operation
+		// prepend operation
 
-    expected.add(0, "prepend");
-    session.update().prepend(customer::names, "prepend").where(customer::id, eq(id)).sync();
+		expected.add(0, "prepend");
+		session.update().prepend(customer::names, "prepend").where(customer::id, eq(id)).sync();
 
-    actualList =
-        session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertEquals(expected, actualList);
+		actualList = session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualList);
 
-    // append operation
+		// append operation
 
-    expected.add("append");
-    session.update().append(customer::names, "append").where(customer::id, eq(id)).sync();
+		expected.add("append");
+		session.update().append(customer::names, "append").where(customer::id, eq(id)).sync();
 
-    actualList =
-        session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertEquals(expected, actualList);
+		actualList = session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualList);
 
-    // prependAll operation
-    expected.addAll(0, names);
-    session.update().prependAll(customer::names, names).where(customer::id, eq(id)).sync();
+		// prependAll operation
+		expected.addAll(0, names);
+		session.update().prependAll(customer::names, names).where(customer::id, eq(id)).sync();
 
-    actualList =
-        session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertEquals(expected, actualList);
+		actualList = session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualList);
 
-    // appendAll operation
-    expected.addAll(names);
-    session.update().appendAll(customer::names, names).where(customer::id, eq(id)).sync();
+		// appendAll operation
+		expected.addAll(names);
+		session.update().appendAll(customer::names, names).where(customer::id, eq(id)).sync();
 
-    actualList =
-        session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertEquals(expected, actualList);
+		actualList = session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualList);
 
-    // set by Index
+		// set by Index
 
-    expected.set(5, "inserted");
-    session.update().setIdx(customer::names, 5, "inserted").where(customer::id, eq(id)).sync();
+		expected.set(5, "inserted");
+		session.update().setIdx(customer::names, 5, "inserted").where(customer::id, eq(id)).sync();
 
-    actualList =
-        session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertEquals(expected, actualList);
+		actualList = session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualList);
 
-    // DELETE
+		// DELETE
 
-    // remove single value
+		// remove single value
 
-    expected.remove("inserted");
-    session.update().discard(customer::names, "inserted").where(customer::id, eq(id)).sync();
+		expected.remove("inserted");
+		session.update().discard(customer::names, "inserted").where(customer::id, eq(id)).sync();
 
-    actualList =
-        session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertEquals(expected, actualList);
+		actualList = session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualList);
 
-    // remove values
+		// remove values
 
-    expected.removeAll(names);
-    session.update().discardAll(customer::names, names).where(customer::id, eq(id)).sync();
+		expected.removeAll(names);
+		session.update().discardAll(customer::names, names).where(customer::id, eq(id)).sync();
 
-    actualList =
-        session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertEquals(expected, actualList);
+		actualList = session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualList);
 
-    // remove full list
+		// remove full list
 
-    session.update().set(customer::names, null).where(customer::id, eq(id)).sync();
+		session.update().set(customer::names, null).where(customer::id, eq(id)).sync();
 
-    actualList =
-        session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
-    Assert.assertNull(actualList);
+		actualList = session.select(customer::names).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertNull(actualList);
 
-    // remove object
+		// remove object
 
-    session.delete().where(customer::id, eq(id)).sync();
-    Long cnt = session.count().where(customer::id, eq(id)).sync();
-    Assert.assertEquals(Long.valueOf(0), cnt);
-  }
+		session.delete().where(customer::id, eq(id)).sync();
+		Long cnt = session.count().where(customer::id, eq(id)).sync();
+		Assert.assertEquals(Long.valueOf(0), cnt);
+	}
 
-  @Test
-  public void testMapCRUID() throws TimeoutException {
+	@Test
+	public void testMapCRUID() throws TimeoutException {
 
-    UUID id = UUID.randomUUID();
+		UUID id = UUID.randomUUID();
 
-    Map<String, String> props = new HashMap<String, String>();
-    props.put("key1", "value1");
-    props.put("key2", "value2");
+		Map<String, String> props = new HashMap<String, String>();
+		props.put("key1", "value1");
+		props.put("key2", "value2");
 
-    // CREATE
+		// CREATE
 
-    session.insert().value(customer::id, id).value(customer::properties, props).sync();
+		session.insert().value(customer::id, id).value(customer::properties, props).sync();
 
-    // READ
+		// READ
 
-    // read full object
+		// read full object
 
-    Customer actual =
-        session.<Customer>select(customer).where(customer::id, eq(id)).single().sync().orElse(null);
+		Customer actual = session.<Customer>select(customer).where(customer::id, eq(id)).single().sync().orElse(null);
 
-    Assert.assertEquals(id, actual.id());
-    Assert.assertEquals(props, actual.properties());
-    Assert.assertNull(actual.aliases());
-    Assert.assertNull(actual.names());
+		Assert.assertEquals(id, actual.id());
+		Assert.assertEquals(props, actual.properties());
+		Assert.assertNull(actual.aliases());
+		Assert.assertNull(actual.names());
 
-    // read full map
+		// read full map
 
-    Map<String, String> actualMap =
-        session
-            .select(customer::properties)
-            .where(customer::id, eq(id))
-            .sync()
-            .findFirst()
-            .get()
-            ._1;
-    Assert.assertEquals(props, actualMap);
+		Map<String, String> actualMap = session.select(customer::properties).where(customer::id, eq(id)).sync()
+				.findFirst().get()._1;
+		Assert.assertEquals(props, actualMap);
 
-    // read single key-value in map
+		// read single key-value in map
 
-    String cql =
-        session.select(get(customer::properties, "key1")).where(customer::id, eq(id)).cql();
+		String cql = session.select(get(customer::properties, "key1")).where(customer::id, eq(id)).cql();
 
-    System.out.println("Still not supporting cql = " + cql);
+		System.out.println("Still not supporting cql = " + cql);
 
-    // UPDATE
+		// UPDATE
 
-    Map<String, String> expected = new HashMap<String, String>();
-    expected.put("k1", "v1");
-    expected.put("k2", "v2");
+		Map<String, String> expected = new HashMap<String, String>();
+		expected.put("k1", "v1");
+		expected.put("k2", "v2");
 
-    session.update().set(customer::properties, expected).where(customer::id, eq(id)).sync();
+		session.update().set(customer::properties, expected).where(customer::id, eq(id)).sync();
 
-    actual =
-        session.<Customer>select(customer).where(customer::id, eq(id)).single().sync().orElse(null);
-    Assert.assertEquals(id, actual.id());
-    Assert.assertEquals(expected, actual.properties());
+		actual = session.<Customer>select(customer).where(customer::id, eq(id)).single().sync().orElse(null);
+		Assert.assertEquals(id, actual.id());
+		Assert.assertEquals(expected, actual.properties());
 
-    // INSERT
+		// INSERT
 
-    // put operation
+		// put operation
 
-    expected.put("k3", "v3");
-    session.update().put(customer::properties, "k3", "v3").where(customer::id, eq(id)).sync();
+		expected.put("k3", "v3");
+		session.update().put(customer::properties, "k3", "v3").where(customer::id, eq(id)).sync();
 
-    actualMap =
-        session
-            .select(customer::properties)
-            .where(customer::id, eq(id))
-            .sync()
-            .findFirst()
-            .get()
-            ._1;
-    Assert.assertEquals(expected, actualMap);
+		actualMap = session.select(customer::properties).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualMap);
 
-    // putAll operation
-    expected.putAll(props);
-    session.update().putAll(customer::properties, props).where(customer::id, eq(id)).sync();
+		// putAll operation
+		expected.putAll(props);
+		session.update().putAll(customer::properties, props).where(customer::id, eq(id)).sync();
 
-    actualMap =
-        session
-            .select(customer::properties)
-            .where(customer::id, eq(id))
-            .sync()
-            .findFirst()
-            .get()
-            ._1;
-    Assert.assertEquals(expected, actualMap);
+		actualMap = session.select(customer::properties).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualMap);
 
-    // put existing
+		// put existing
 
-    expected.put("k3", "v33");
-    session.update().put(customer::properties, "k3", "v33").where(customer::id, eq(id)).sync();
+		expected.put("k3", "v33");
+		session.update().put(customer::properties, "k3", "v33").where(customer::id, eq(id)).sync();
 
-    actualMap =
-        session
-            .select(customer::properties)
-            .where(customer::id, eq(id))
-            .sync()
-            .findFirst()
-            .get()
-            ._1;
-    Assert.assertEquals(expected, actualMap);
+		actualMap = session.select(customer::properties).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualMap);
 
-    // DELETE
+		// DELETE
 
-    // remove single key
+		// remove single key
 
-    expected.remove("k3");
-    session.update().put(customer::properties, "k3", null).where(customer::id, eq(id)).sync();
+		expected.remove("k3");
+		session.update().put(customer::properties, "k3", null).where(customer::id, eq(id)).sync();
 
-    actualMap =
-        session
-            .select(customer::properties)
-            .where(customer::id, eq(id))
-            .sync()
-            .findFirst()
-            .get()
-            ._1;
-    Assert.assertEquals(expected, actualMap);
+		actualMap = session.select(customer::properties).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertEquals(expected, actualMap);
 
-    // remove full map
+		// remove full map
 
-    session.update().set(customer::properties, null).where(customer::id, eq(id)).sync();
+		session.update().set(customer::properties, null).where(customer::id, eq(id)).sync();
 
-    actualMap =
-        session
-            .select(customer::properties)
-            .where(customer::id, eq(id))
-            .sync()
-            .findFirst()
-            .get()
-            ._1;
-    Assert.assertNull(actualMap);
+		actualMap = session.select(customer::properties).where(customer::id, eq(id)).sync().findFirst().get()._1;
+		Assert.assertNull(actualMap);
 
-    // remove object
+		// remove object
 
-    session.delete().where(customer::id, eq(id)).sync();
-    Long cnt = session.count().where(customer::id, eq(id)).sync();
-    Assert.assertEquals(Long.valueOf(0), cnt);
-  }
+		session.delete().where(customer::id, eq(id)).sync();
+		Long cnt = session.count().where(customer::id, eq(id)).sync();
+		Assert.assertEquals(Long.valueOf(0), cnt);
+	}
 }

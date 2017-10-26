@@ -107,4 +107,5 @@ public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperati
 		}
 		ifFilters.add(filter);
 	}
+
 }

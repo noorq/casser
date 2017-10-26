@@ -19,6 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.datastax.driver.core.RegularStatement;
+import com.datastax.driver.core.querybuilder.BuiltStatement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
@@ -36,6 +41,8 @@ import net.helenus.core.cache.Facet;
 
 public abstract class Operation<E> {
 
+	private static final Logger LOG = LoggerFactory.getLogger(Operation.class);
+
 	protected final AbstractSessionOperations sessionOps;
 	protected final Meter uowCacheHits;
 	protected final Meter uowCacheMiss;
@@ -46,16 +53,19 @@ public abstract class Operation<E> {
 	protected final Timer requestLatency;
 
 	Operation(AbstractSessionOperations sessionOperations) {
-		this.sessionOps = sessionOperations;
-		MetricRegistry metrics = sessionOperations.getMetricRegistry();
-		this.uowCacheHits = metrics.meter("net.helenus.UOW-cache-hits");
-		this.uowCacheMiss = metrics.meter("net.helenus.UOW-cache-miss");
-		this.sessionCacheHits = metrics.meter("net.helenus.session-cache-hits");
-		this.sessionCacheMiss = metrics.meter("net.helenus.session-cache-miss");
-		this.cacheHits = metrics.meter("net.helenus.cache-hits");
-		this.cacheMiss = metrics.meter("net.helenus.cache-miss");
-		this.requestLatency = metrics.timer("net.helenus.request-latency");
-	}
+        this.sessionOps = sessionOperations;
+        MetricRegistry metrics = sessionOperations.getMetricRegistry();
+        if (metrics == null) {
+            metrics = new MetricRegistry();
+        }
+        this.uowCacheHits = metrics.meter("net.helenus.UOW-cache-hits");
+        this.uowCacheMiss = metrics.meter("net.helenus.UOW-cache-miss");
+        this.sessionCacheHits = metrics.meter("net.helenus.session-cache-hits");
+        this.sessionCacheMiss = metrics.meter("net.helenus.session-cache-miss");
+        this.cacheHits = metrics.meter("net.helenus.cache-hits");
+        this.cacheMiss = metrics.meter("net.helenus.cache-miss");
+        this.requestLatency = metrics.timer("net.helenus.request-latency");
+    }
 
 	public ResultSet execute(AbstractSessionOperations session, UnitOfWork uow, TraceContext traceContext, long timeout,
 			TimeUnit units, boolean showValues, boolean cached) { // throws TimeoutException {
@@ -88,6 +98,7 @@ public abstract class Operation<E> {
 				timer.stop();
 				if (uow != null)
 					uow.addDatabaseTime("Cassandra", timer);
+				log(statement, uow, timer, showValues);
 			}
 
 		} finally {
@@ -95,6 +106,43 @@ public abstract class Operation<E> {
 			if (span != null) {
 				span.finish();
 			}
+		}
+	}
+
+    public static String queryString(Statement statement, boolean includeValues) {
+        String query = null;
+        if (statement instanceof BuiltStatement) {
+            BuiltStatement builtStatement = (BuiltStatement) statement;
+            if (includeValues) {
+                RegularStatement regularStatement = builtStatement.setForceNoValues(true);
+                query = regularStatement.getQueryString();
+            } else {
+                    query = builtStatement.getQueryString();
+                }
+            } else if (statement instanceof RegularStatement) {
+                RegularStatement regularStatement = (RegularStatement) statement;
+                query = regularStatement.getQueryString();
+            } else {
+            query = statement.toString();
+
+        }
+        return query;
+    }
+
+    void log(Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
+		if (LOG.isInfoEnabled()) {
+			String uowString = "";
+			if (uow != null) {
+				uowString = "UOW(" + uow.hashCode() + ")";
+			}
+            String timerString = "";
+			if (timer != null) {
+				timerString = String.format(" %s ", timer.toString());
+			}
+			LOG.info(String.format("%s%s%s",
+                    uowString,
+                    timerString,
+                    Operation.queryString(statement, false)));
 		}
 	}
 

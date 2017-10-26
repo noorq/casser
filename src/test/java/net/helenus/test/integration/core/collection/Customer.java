@@ -15,11 +15,13 @@
  */
 package net.helenus.test.integration.core.collection;
 
-import com.datastax.driver.core.DataType.Name;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import com.datastax.driver.core.DataType.Name;
+
 import net.helenus.mapping.annotation.PartitionKey;
 import net.helenus.mapping.annotation.Table;
 import net.helenus.mapping.annotation.Types;
@@ -27,15 +29,15 @@ import net.helenus.mapping.annotation.Types;
 @Table
 public interface Customer {
 
-  @PartitionKey
-  UUID id();
+	@PartitionKey
+	UUID id();
 
-  @Types.Set(Name.TEXT)
-  Set<String> aliases();
+	@Types.Set(Name.TEXT)
+	Set<String> aliases();
 
-  @Types.List(Name.TEXT)
-  List<String> names();
+	@Types.List(Name.TEXT)
+	List<String> names();
 
-  @Types.Map(key = Name.TEXT, value = Name.TEXT)
-  Map<String, String> properties();
+	@Types.Map(key = Name.TEXT, value = Name.TEXT)
+	Map<String, String> properties();
 }

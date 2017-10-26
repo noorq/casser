@@ -16,39 +16,35 @@
 package net.helenus.test.integration.core.index;
 
 import java.util.concurrent.TimeoutException;
-import net.helenus.core.Helenus;
-import net.helenus.core.HelenusSession;
-import net.helenus.core.Query;
-import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import net.helenus.core.Helenus;
+import net.helenus.core.HelenusSession;
+import net.helenus.core.Query;
+import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 public class SecondaryIndexTest extends AbstractEmbeddedCassandraTest {
 
-  Book book;
+	Book book;
 
-  HelenusSession session;
+	HelenusSession session;
 
-  @Before
-  public void beforeTest() {
-    session = Helenus.init(getSession()).showCql().add(Book.class).autoCreateDrop().get();
-    book = Helenus.dsl(Book.class, session.getMetadata());
-  }
+	@Before
+	public void beforeTest() {
+		session = Helenus.init(getSession()).showCql().add(Book.class).autoCreateDrop().get();
+		book = Helenus.dsl(Book.class, session.getMetadata());
+	}
 
-  @Test
-  public void test() throws TimeoutException {
+	@Test
+	public void test() throws TimeoutException {
 
-    session
-        .insert()
-        .value(book::id, 123L)
-        .value(book::isbn, "ABC")
-        .value(book::author, "Alex")
-        .sync();
+		session.insert().value(book::id, 123L).value(book::isbn, "ABC").value(book::author, "Alex").sync();
 
-    long actualId =
-        session.select(book::id).where(book::isbn, Query.eq("ABC")).sync().findFirst().get()._1;
+		long actualId = session.select(book::id).where(book::isbn, Query.eq("ABC")).sync().findFirst().get()._1;
 
-    Assert.assertEquals(123L, actualId);
-  }
+		Assert.assertEquals(123L, actualId);
+	}
 }

@@ -329,7 +329,7 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		return result;
 	}
 
-	protected void updateCache(UnitOfWork<?> uow, E pojo, List<Facet> identifyingFacets) {
+	protected void cacheUpdate(UnitOfWork<?> uow, E pojo, List<Facet> identifyingFacets) {
 		List<Facet> facets = new ArrayList<>();
 		Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
 

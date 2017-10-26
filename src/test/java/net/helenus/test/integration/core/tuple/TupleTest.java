@@ -17,157 +17,155 @@ package net.helenus.test.integration.core.tuple;
 
 import static net.helenus.core.Query.eq;
 
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.TupleType;
-import com.datastax.driver.core.TupleValue;
 import java.util.concurrent.TimeoutException;
-import net.helenus.core.Helenus;
-import net.helenus.core.HelenusSession;
-import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.TupleType;
+import com.datastax.driver.core.TupleValue;
+
+import net.helenus.core.Helenus;
+import net.helenus.core.HelenusSession;
+import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 public class TupleTest extends AbstractEmbeddedCassandraTest {
 
-  static Album album;
+	static Album album;
 
-  static HelenusSession session;
+	static HelenusSession session;
 
-  @BeforeClass
-  public static void beforeTest() {
-    Helenus.clearDslCache();
-    session = Helenus.init(getSession()).showCql().add(Album.class).autoCreateDrop().get();
-    album = Helenus.dsl(Album.class, session.getMetadata());
-  }
+	@BeforeClass
+	public static void beforeTest() {
+		Helenus.clearDslCache();
+		session = Helenus.init(getSession()).showCql().add(Album.class).autoCreateDrop().get();
+		album = Helenus.dsl(Album.class, session.getMetadata());
+	}
 
-  @Test
-  public void testPrint() {
-    System.out.println(album);
-  }
+	@Test
+	public void testPrint() {
+		System.out.println(album);
+	}
 
-  @Test
-  public void testCruid() throws TimeoutException {
+	@Test
+	public void testCruid() throws TimeoutException {
 
-    AlbumInformation info =
-        new AlbumInformation() {
+		AlbumInformation info = new AlbumInformation() {
 
-          @Override
-          public String about() {
-            return "Cassandra";
-          }
+			@Override
+			public String about() {
+				return "Cassandra";
+			}
 
-          @Override
-          public String place() {
-            return "San Jose";
-          }
-        };
+			@Override
+			public String place() {
+				return "San Jose";
+			}
+		};
 
-    // CREATE (C)
+		// CREATE (C)
 
-    session.insert().value(album::id, 123).value(album::info, info).sync();
+		session.insert().value(album::id, 123).value(album::info, info).sync();
 
-    // READ (R)
+		// READ (R)
 
-    AlbumInformation actual =
-        session.select(album::info).where(album::id, eq(123)).sync().findFirst().get()._1;
+		AlbumInformation actual = session.select(album::info).where(album::id, eq(123)).sync().findFirst().get()._1;
 
-    Assert.assertEquals(info.about(), actual.about());
-    Assert.assertEquals(info.place(), actual.place());
+		Assert.assertEquals(info.about(), actual.about());
+		Assert.assertEquals(info.place(), actual.place());
 
-    // UPDATE (U)
+		// UPDATE (U)
 
-    // unfortunately this is not working right now in Cassandra, can not update a single column in tuple :(
-    //session.update()
-    //	.set(album.info()::about, "Helenus")
-    //	.where(album::id, eq(123))
-    //  .sync();
+		// unfortunately this is not working right now in Cassandra, can not update a
+		// single column in tuple :(
+		// session.update()
+		// .set(album.info()::about, "Helenus")
+		// .where(album::id, eq(123))
+		// .sync();
 
-    AlbumInformation expected =
-        new AlbumInformation() {
+		AlbumInformation expected = new AlbumInformation() {
 
-          @Override
-          public String about() {
-            return "Helenus";
-          }
+			@Override
+			public String about() {
+				return "Helenus";
+			}
 
-          @Override
-          public String place() {
-            return "Santa Cruz";
-          }
-        };
+			@Override
+			public String place() {
+				return "Santa Cruz";
+			}
+		};
 
-    session.update().set(album::info, expected).where(album::id, eq(123)).sync();
+		session.update().set(album::info, expected).where(album::id, eq(123)).sync();
 
-    actual = session.select(album::info).where(album::id, eq(123)).sync().findFirst().get()._1;
+		actual = session.select(album::info).where(album::id, eq(123)).sync().findFirst().get()._1;
 
-    Assert.assertEquals(expected.about(), actual.about());
-    Assert.assertEquals(expected.place(), actual.place());
+		Assert.assertEquals(expected.about(), actual.about());
+		Assert.assertEquals(expected.place(), actual.place());
 
-    // INSERT (I)
-    // let's insert null ;)
+		// INSERT (I)
+		// let's insert null ;)
 
-    session.update().set(album::info, null).where(album::id, eq(123)).sync();
+		session.update().set(album::info, null).where(album::id, eq(123)).sync();
 
-    actual = session.select(album::info).where(album::id, eq(123)).sync().findFirst().get()._1;
-    Assert.assertNull(actual);
+		actual = session.select(album::info).where(album::id, eq(123)).sync().findFirst().get()._1;
+		Assert.assertNull(actual);
 
-    // DELETE (D)
-    session.delete().where(album::id, eq(123)).sync();
+		// DELETE (D)
+		session.delete().where(album::id, eq(123)).sync();
 
-    long cnt = session.select(album::info).where(album::id, eq(123)).sync().count();
-    Assert.assertEquals(0, cnt);
-  }
+		long cnt = session.select(album::info).where(album::id, eq(123)).sync().count();
+		Assert.assertEquals(0, cnt);
+	}
 
-  @Test
-  public void testNoMapping() throws TimeoutException {
+	@Test
+	public void testNoMapping() throws TimeoutException {
 
-    TupleType tupleType = session.getMetadata().newTupleType(DataType.text(), DataType.text());
-    TupleValue info = tupleType.newValue();
+		TupleType tupleType = session.getMetadata().newTupleType(DataType.text(), DataType.text());
+		TupleValue info = tupleType.newValue();
 
-    info.setString(0, "Cassandra");
-    info.setString(1, "San Jose");
+		info.setString(0, "Cassandra");
+		info.setString(1, "San Jose");
 
-    // CREATE (C)
+		// CREATE (C)
 
-    session.insert().value(album::id, 555).value(album::infoNoMapping, info).sync();
+		session.insert().value(album::id, 555).value(album::infoNoMapping, info).sync();
 
-    // READ (R)
+		// READ (R)
 
-    TupleValue actual =
-        session.select(album::infoNoMapping).where(album::id, eq(555)).sync().findFirst().get()._1;
+		TupleValue actual = session.select(album::infoNoMapping).where(album::id, eq(555)).sync().findFirst().get()._1;
 
-    Assert.assertEquals(info.getString(0), actual.getString(0));
-    Assert.assertEquals(info.getString(1), actual.getString(1));
+		Assert.assertEquals(info.getString(0), actual.getString(0));
+		Assert.assertEquals(info.getString(1), actual.getString(1));
 
-    // UPDATE (U)
+		// UPDATE (U)
 
-    TupleValue expected = tupleType.newValue();
+		TupleValue expected = tupleType.newValue();
 
-    expected.setString(0, "Helenus");
-    expected.setString(1, "Los Altos");
+		expected.setString(0, "Helenus");
+		expected.setString(1, "Los Altos");
 
-    session.update().set(album::infoNoMapping, expected).where(album::id, eq(555)).sync();
+		session.update().set(album::infoNoMapping, expected).where(album::id, eq(555)).sync();
 
-    actual =
-        session.select(album::infoNoMapping).where(album::id, eq(555)).sync().findFirst().get()._1;
+		actual = session.select(album::infoNoMapping).where(album::id, eq(555)).sync().findFirst().get()._1;
 
-    Assert.assertEquals(expected.getString(0), actual.getString(0));
-    Assert.assertEquals(expected.getString(1), actual.getString(1));
+		Assert.assertEquals(expected.getString(0), actual.getString(0));
+		Assert.assertEquals(expected.getString(1), actual.getString(1));
 
-    // INSERT (I)
-    // let's insert null ;)
+		// INSERT (I)
+		// let's insert null ;)
 
-    session.update().set(album::infoNoMapping, null).where(album::id, eq(555)).sync();
+		session.update().set(album::infoNoMapping, null).where(album::id, eq(555)).sync();
 
-    actual =
-        session.select(album::infoNoMapping).where(album::id, eq(555)).sync().findFirst().get()._1;
-    Assert.assertNull(actual);
+		actual = session.select(album::infoNoMapping).where(album::id, eq(555)).sync().findFirst().get()._1;
+		Assert.assertNull(actual);
 
-    // DELETE (D)
-    session.delete().where(album::id, eq(555)).sync();
+		// DELETE (D)
+		session.delete().where(album::id, eq(555)).sync();
 
-    long cnt = session.select(album::infoNoMapping).where(album::id, eq(555)).sync().count();
-    Assert.assertEquals(0, cnt);
-  }
+		long cnt = session.select(album::infoNoMapping).where(album::id, eq(555)).sync().count();
+		Assert.assertEquals(0, cnt);
+	}
 }

@@ -17,99 +17,101 @@ package net.helenus.test.performance.core.dsl;
 
 import java.util.HashMap;
 import java.util.Map;
-import net.helenus.core.Helenus;
+
 import org.junit.Test;
+
+import net.helenus.core.Helenus;
 
 public class MappingTest {
 
-  static Map<String, Object> fixture;
+	static Map<String, Object> fixture;
 
-  static {
-    fixture = new HashMap<String, Object>();
-    fixture.put("height", Integer.valueOf(55));
-    fixture.put("price", Double.valueOf(44.99));
-    fixture.put("name", "first");
-  }
+	static {
+		fixture = new HashMap<String, Object>();
+		fixture.put("height", Integer.valueOf(55));
+		fixture.put("price", Double.valueOf(44.99));
+		fixture.put("name", "first");
+	}
 
-  @Test
-  public void testReflectionConstructor() {
+	@Test
+	public void testReflectionConstructor() {
 
-    long t0 = System.currentTimeMillis();
+		long t0 = System.currentTimeMillis();
 
-    for (int i = 0; i != 100000; ++i) {
-      Helenus.map(Elevator.class, fixture);
-    }
+		for (int i = 0; i != 100000; ++i) {
+			Helenus.map(Elevator.class, fixture);
+		}
 
-    long t1 = System.currentTimeMillis() - t0;
+		long t1 = System.currentTimeMillis() - t0;
 
-    System.out.println("ReflectionConstructor = " + t1);
-  }
+		System.out.println("ReflectionConstructor = " + t1);
+	}
 
-  @Test
-  public void testReflectionAccess() {
+	@Test
+	public void testReflectionAccess() {
 
-    long t0 = System.currentTimeMillis();
+		long t0 = System.currentTimeMillis();
 
-    Elevator elevator = Helenus.map(Elevator.class, fixture);
+		Elevator elevator = Helenus.map(Elevator.class, fixture);
 
-    for (int i = 0; i != 100000; ++i) {
-      elevator.height();
-      elevator.price();
-      elevator.name();
-    }
+		for (int i = 0; i != 100000; ++i) {
+			elevator.height();
+			elevator.price();
+			elevator.name();
+		}
 
-    long t1 = System.currentTimeMillis() - t0;
+		long t1 = System.currentTimeMillis() - t0;
 
-    System.out.println("ReflectionAccess = " + t1);
-  }
+		System.out.println("ReflectionAccess = " + t1);
+	}
 
-  @Test
-  public void testJavaAccess() {
+	@Test
+	public void testJavaAccess() {
 
-    long t0 = System.currentTimeMillis();
+		long t0 = System.currentTimeMillis();
 
-    Elevator elevator = new ElevatorImpl(fixture);
+		Elevator elevator = new ElevatorImpl(fixture);
 
-    for (int i = 0; i != 100000; ++i) {
-      elevator.height();
-      elevator.price();
-      elevator.name();
-    }
+		for (int i = 0; i != 100000; ++i) {
+			elevator.height();
+			elevator.price();
+			elevator.name();
+		}
 
-    long t1 = System.currentTimeMillis() - t0;
+		long t1 = System.currentTimeMillis() - t0;
 
-    System.out.println("JavaAccess = " + t1);
-  }
+		System.out.println("JavaAccess = " + t1);
+	}
 
-  @Test
-  public void testJavaCachedAccess() {
+	@Test
+	public void testJavaCachedAccess() {
 
-    long t0 = System.currentTimeMillis();
+		long t0 = System.currentTimeMillis();
 
-    Elevator elevator = new CachedElevatorImpl(fixture);
+		Elevator elevator = new CachedElevatorImpl(fixture);
 
-    for (int i = 0; i != 100000; ++i) {
-      elevator.height();
-      elevator.price();
-      elevator.name();
-    }
+		for (int i = 0; i != 100000; ++i) {
+			elevator.height();
+			elevator.price();
+			elevator.name();
+		}
 
-    long t1 = System.currentTimeMillis() - t0;
+		long t1 = System.currentTimeMillis() - t0;
 
-    System.out.println("JavaCachedAccess = " + t1);
-  }
+		System.out.println("JavaCachedAccess = " + t1);
+	}
 
-  @Test
-  public void testJavaConstructor() {
+	@Test
+	public void testJavaConstructor() {
 
-    long t0 = System.currentTimeMillis();
+		long t0 = System.currentTimeMillis();
 
-    for (int i = 0; i != 100000; ++i) {
-      new ElevatorImpl(fixture);
-    }
+		for (int i = 0; i != 100000; ++i) {
+			new ElevatorImpl(fixture);
+		}
 
-    long t1 = System.currentTimeMillis() - t0;
+		long t1 = System.currentTimeMillis() - t0;
 
-    System.out.println("JavaConstructor = " + t1);
-  }
+		System.out.println("JavaConstructor = " + t1);
+	}
 }

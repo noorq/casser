@@ -16,50 +16,51 @@
 package net.helenus.test.performance.core.dsl;
 
 import java.util.Map;
+
 import net.helenus.core.reflect.MapExportable;
 
 public final class ElevatorImpl implements Elevator, MapExportable {
 
-  private final Map<String, Object> backingMap;
+	private final Map<String, Object> backingMap;
 
-  public ElevatorImpl(Map<String, Object> backingMap) {
-    this.backingMap = backingMap;
-  }
+	public ElevatorImpl(Map<String, Object> backingMap) {
+		this.backingMap = backingMap;
+	}
 
-  @Override
-  public int height() {
-    Object obj = backingMap.get("height");
-    if (obj != null) {
-      return ((Integer) obj).intValue();
-    }
-    return 0;
-  }
+	@Override
+	public int height() {
+		Object obj = backingMap.get("height");
+		if (obj != null) {
+			return ((Integer) obj).intValue();
+		}
+		return 0;
+	}
 
-  @Override
-  public Double price() {
-    Object obj = backingMap.get("price");
-    if (obj != null) {
-      return (Double) obj;
-    }
-    return null;
-  }
+	@Override
+	public Double price() {
+		Object obj = backingMap.get("price");
+		if (obj != null) {
+			return (Double) obj;
+		}
+		return null;
+	}
 
-  @Override
-  public String name() {
-    Object obj = backingMap.get("name");
-    if (obj != null) {
-      return (String) obj;
-    }
-    return null;
-  }
+	@Override
+	public String name() {
+		Object obj = backingMap.get("name");
+		if (obj != null) {
+			return (String) obj;
+		}
+		return null;
+	}
 
-  @Override
-  public Map<String, Object> toMap() {
-    return backingMap;
-  }
+	@Override
+	public Map<String, Object> toMap() {
+		return backingMap;
+	}
 
-  @Override
-  public String toString() {
-    return backingMap.toString();
-  }
+	@Override
+	public String toString() {
+		return backingMap.toString();
+	}
 }

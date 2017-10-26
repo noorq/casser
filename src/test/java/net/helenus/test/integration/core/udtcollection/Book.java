@@ -18,22 +18,23 @@ package net.helenus.test.integration.core.udtcollection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import net.helenus.mapping.annotation.PartitionKey;
 import net.helenus.mapping.annotation.Table;
 
 @Table
 public interface Book {
 
-  @PartitionKey
-  int id();
+	@PartitionKey
+	int id();
 
-  List<Author> authors();
+	List<Author> authors();
 
-  Set<Author> reviewers();
+	Set<Author> reviewers();
 
-  Map<Integer, Section> contents();
+	Map<Integer, Section> contents();
 
-  Map<Section, String> notes();
+	Map<Section, String> notes();
 
-  Map<Section, Author> writers();
+	Map<Section, Author> writers();
 }

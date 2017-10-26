@@ -15,118 +15,111 @@
  */
 package net.helenus.test.integration.core.usertype;
 
-import com.google.common.collect.Sets;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
-import net.helenus.core.Helenus;
-import net.helenus.core.HelenusSession;
-import net.helenus.core.Query;
-import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Sets;
+
+import net.helenus.core.Helenus;
+import net.helenus.core.HelenusSession;
+import net.helenus.core.Query;
+import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 public class InnerUserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 
-  static Customer customer;
-  static AddressInformation addressInformation;
+	static Customer customer;
+	static AddressInformation addressInformation;
 
-  static HelenusSession session;
+	static HelenusSession session;
 
-  @BeforeClass
-  public static void beforeTest() {
-    Helenus.clearDslCache();
-    session = Helenus.init(getSession()).showCql().add(Customer.class).autoCreateDrop().get();
-    customer = Helenus.dsl(Customer.class);
-    addressInformation = Helenus.dsl(AddressInformation.class);
-  }
+	@BeforeClass
+	public static void beforeTest() {
+		Helenus.clearDslCache();
+		session = Helenus.init(getSession()).showCql().add(Customer.class).autoCreateDrop().get();
+		customer = Helenus.dsl(Customer.class);
+		addressInformation = Helenus.dsl(AddressInformation.class);
+	}
 
-  @AfterClass
-  public static void afterTest() {
-    session.getSession().execute("DROP TABLE IF EXISTS customer;");
-    session.getSession().execute("DROP TYPE IF EXISTS address_information;");
-    //      SchemaUtil.dropUserType(session.getSessionRepository().findUserType("address_information")), true);
-  }
+	@AfterClass
+	public static void afterTest() {
+		session.getSession().execute("DROP TABLE IF EXISTS customer;");
+		session.getSession().execute("DROP TYPE IF EXISTS address_information;");
+		// SchemaUtil.dropUserType(session.getSessionRepository().findUserType("address_information")),
+		// true);
+	}
 
-  @Test
-  public void testPrint() {
-    System.out.println(addressInformation);
-    System.out.println(customer);
-  }
+	@Test
+	public void testPrint() {
+		System.out.println(addressInformation);
+		System.out.println(customer);
+	}
 
-  @Test
-  public void testCrud() throws TimeoutException {
+	@Test
+	public void testCrud() throws TimeoutException {
 
-    UUID id = UUID.randomUUID();
+		UUID id = UUID.randomUUID();
 
-    Address a =
-        new Address() {
+		Address a = new Address() {
 
-          @Override
-          public String street() {
-            return "1 st";
-          }
+			@Override
+			public String street() {
+				return "1 st";
+			}
 
-          @Override
-          public String city() {
-            return "San Jose";
-          }
+			@Override
+			public String city() {
+				return "San Jose";
+			}
 
-          @Override
-          public int zip() {
-            return 95131;
-          }
+			@Override
+			public int zip() {
+				return 95131;
+			}
 
-          @Override
-          public String country() {
-            return "USA";
-          }
+			@Override
+			public String country() {
+				return "USA";
+			}
 
-          @Override
-          public Set<String> phones() {
-            return Sets.newHashSet("14080000000");
-          }
-        };
+			@Override
+			public Set<String> phones() {
+				return Sets.newHashSet("14080000000");
+			}
+		};
 
-    AddressInformation ai =
-        new AddressInformation() {
+		AddressInformation ai = new AddressInformation() {
 
-          @Override
-          public Address address() {
-            return a;
-          }
-        };
+			@Override
+			public Address address() {
+				return a;
+			}
+		};
 
-    session.insert().value(customer::id, id).value(customer::addressInformation, ai).sync();
+		session.insert().value(customer::id, id).value(customer::addressInformation, ai).sync();
 
-    String cql =
-        session
-            .update()
-            .set(customer.addressInformation().address()::street, "3 st")
-            .where(customer::id, Query.eq(id))
-            .cql();
+		String cql = session.update().set(customer.addressInformation().address()::street, "3 st")
+				.where(customer::id, Query.eq(id)).cql();
 
-    //TODO: System.out.println("At the time when this test was written Cassandra did not support queries like this: " + cql);
+		// TODO: System.out.println("At the time when this test was written Cassandra
+		// did not support queries like this: " + cql);
 
-    session.update().set(customer::addressInformation, ai).where(customer::id, Query.eq(id)).sync();
+		session.update().set(customer::addressInformation, ai).where(customer::id, Query.eq(id)).sync();
 
-    String street =
-        session
-            .select(customer.addressInformation().address()::street)
-            .where(customer::id, Query.eq(id))
-            .sync()
-            .findFirst()
-            .get()
-            ._1;
+		String street = session.select(customer.addressInformation().address()::street)
+				.where(customer::id, Query.eq(id)).sync().findFirst().get()._1;
 
-    Assert.assertEquals("1 st", street);
+		Assert.assertEquals("1 st", street);
 
-    session.delete().where(customer::id, Query.eq(id)).sync();
+		session.delete().where(customer::id, Query.eq(id)).sync();
 
-    Long cnt = session.count().where(customer::id, Query.eq(id)).sync();
+		Long cnt = session.count().where(customer::id, Query.eq(id)).sync();
 
-    Assert.assertEquals(Long.valueOf(0), cnt);
-  }
+		Assert.assertEquals(Long.valueOf(0), cnt);
+	}
 }

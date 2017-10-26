@@ -15,6 +15,11 @@
  */
 package net.helenus.core.operation;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Delete;
@@ -23,8 +28,12 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.Filter;
+import net.helenus.core.UnitOfWork;
+import net.helenus.core.cache.Facet;
+import net.helenus.core.cache.UnboundFacet;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
+import net.helenus.mapping.HelenusProperty;
 import net.helenus.support.HelenusMappingException;
 
 public final class DeleteOperation extends AbstractFilterOperation<ResultSet, DeleteOperation> {
@@ -122,4 +131,65 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 					+ entity.getMappingInterface() + " or " + p.getEntity().getMappingInterface());
 		}
 	}
+
+	public List<Facet> bindFacetValues(List<Facet> facets) {
+	    if (facets == null) {
+	        return new ArrayList<Facet>();
+        }
+		List<Facet> boundFacets = new ArrayList<>();
+		Map<HelenusProperty, Filter> filterMap = new HashMap<>(filters.size());
+		filters.forEach(f -> filterMap.put(f.getNode().getProperty(), f));
+
+		for (Facet facet : facets) {
+			if (facet instanceof UnboundFacet) {
+				UnboundFacet unboundFacet = (UnboundFacet) facet;
+				UnboundFacet.Binder binder = unboundFacet.binder();
+				if (filters != null) {
+					for (HelenusProperty prop : unboundFacet.getProperties()) {
+
+						Filter filter = filterMap.get(prop);
+						if (filter != null) {
+							Object[] postulates = filter.postulateValues();
+							for (Object p : postulates) {
+								binder.setValueForProperty(prop, p.toString());
+							}
+						}
+					}
+
+				}
+				if (binder.isBound()) {
+					boundFacets.add(binder.bind());
+				}
+			} else {
+				boundFacets.add(facet);
+			}
+		}
+		return boundFacets;
+	}
+
+	@Override
+	public ResultSet sync() {// throws TimeoutException {
+		ResultSet result = super.sync();
+		if (entity.isCacheable()) {
+			sessionOps.cacheEvict(bindFacetValues());
+		}
+		return result;
+	}
+
+	@Override
+    public List<Facet> getFacets() {
+	    return entity.getFacets();
+    }
+
+	@Override
+	public ResultSet sync(UnitOfWork uow) {// throws TimeoutException {
+		if (uow == null) {
+			return sync();
+		}
+		ResultSet result = super.sync(uow);
+        List<Facet> facets = getFacets();
+        uow.cacheEvict(bindFacetValues(facets));
+		return result;
+	}
+
 }

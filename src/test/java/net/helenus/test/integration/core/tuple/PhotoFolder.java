@@ -21,9 +21,9 @@ import net.helenus.mapping.annotation.Tuple;
 @Tuple
 public interface PhotoFolder {
 
-  @Column(ordinal = 0)
-  String name();
+	@Column(ordinal = 0)
+	String name();
 
-  @Column(ordinal = 1)
-  Photo photo();
+	@Column(ordinal = 1)
+	Photo photo();
 }

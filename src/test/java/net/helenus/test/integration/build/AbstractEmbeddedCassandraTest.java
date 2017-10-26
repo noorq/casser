@@ -15,87 +15,83 @@
  */
 package net.helenus.test.integration.build;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.Session;
 import java.io.IOException;
 import java.util.UUID;
+
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.thrift.transport.TTransportException;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.KeyspaceMetadata;
+import com.datastax.driver.core.Session;
+
 /** AbstractEmbeddedCassandraTest */
 public abstract class AbstractEmbeddedCassandraTest {
 
-  private static Cluster cluster;
+	private static Cluster cluster;
 
-  private static String keyspace;
+	private static String keyspace;
 
-  private static Session session;
+	private static Session session;
 
-  private static boolean keep;
+	private static boolean keep;
 
-  public static boolean isConnected() {
-    return session != null;
-  }
+	public static boolean isConnected() {
+		return session != null;
+	}
 
-  public static Cluster getCluster() {
-    return cluster;
-  }
+	public static Cluster getCluster() {
+		return cluster;
+	}
 
-  public static Session getSession() {
-    return session;
-  }
+	public static Session getSession() {
+		return session;
+	}
 
-  public static String getKeyspace() {
-    return keyspace;
-  }
+	public static String getKeyspace() {
+		return keyspace;
+	}
 
-  public static void setKeep(boolean enable) {
-    keep = enable;
-  }
+	public static void setKeep(boolean enable) {
+		keep = enable;
+	}
 
-  @BeforeClass
-  public static void startCassandraEmbeddedServer()
-      throws TTransportException, IOException, InterruptedException, ConfigurationException {
-    keyspace = "test" + UUID.randomUUID().toString().replace("-", "");
-    EmbeddedCassandraServerHelper.startEmbeddedCassandra(
-        EmbeddedCassandraServerHelper.CASSANDRA_RNDPORT_YML_FILE);
+	@BeforeClass
+	public static void startCassandraEmbeddedServer()
+			throws TTransportException, IOException, InterruptedException, ConfigurationException {
+		keyspace = "test" + UUID.randomUUID().toString().replace("-", "");
+		EmbeddedCassandraServerHelper.startEmbeddedCassandra(EmbeddedCassandraServerHelper.CASSANDRA_RNDPORT_YML_FILE);
 
-    cluster =
-        Cluster.builder()
-            .addContactPoint(EmbeddedCassandraServerHelper.getHost())
-            .withPort(EmbeddedCassandraServerHelper.getNativeTransportPort())
-            .build();
+		cluster = Cluster.builder().addContactPoint(EmbeddedCassandraServerHelper.getHost())
+				.withPort(EmbeddedCassandraServerHelper.getNativeTransportPort()).build();
 
-    KeyspaceMetadata kmd = cluster.getMetadata().getKeyspace(keyspace);
-    if (kmd == null) {
-      session = cluster.connect();
+		KeyspaceMetadata kmd = cluster.getMetadata().getKeyspace(keyspace);
+		if (kmd == null) {
+			session = cluster.connect();
 
-      String cql =
-          "CREATE KEYSPACE "
-              + keyspace
-              + " WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}"
-              + " AND DURABLE_WRITES =  false;";
-      System.out.println(cql + "\n");
-      session.execute(cql);
+			String cql = "CREATE KEYSPACE " + keyspace
+					+ " WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1}"
+					+ " AND DURABLE_WRITES =  false;";
+			System.out.println(cql + "\n");
+			session.execute(cql);
 
-      cql = "USE " + keyspace + ";";
-      System.out.println(cql + "\n");
-      session.execute(cql);
-    } else {
-      session = cluster.connect(keyspace);
-    }
-  }
+			cql = "USE " + keyspace + ";";
+			System.out.println(cql + "\n");
+			session.execute(cql);
+		} else {
+			session = cluster.connect(keyspace);
+		}
+	}
 
-  @AfterClass
-  public static void after() {
-    if (!keep && isConnected()) {
-      session.close();
-      session = null;
-      EmbeddedCassandraServerHelper.cleanEmbeddedCassandra();
-    }
-  }
+	@AfterClass
+	public static void after() {
+		if (!keep && isConnected()) {
+			session.close();
+			session = null;
+			EmbeddedCassandraServerHelper.cleanEmbeddedCassandra();
+		}
+	}
 }

@@ -16,17 +16,21 @@
 package net.helenus.test.integration.core.unitofwork;
 
 import java.util.UUID;
-import net.helenus.mapping.annotation.*;
+
+import net.helenus.mapping.annotation.ClusteringColumn;
+import net.helenus.mapping.annotation.Column;
+import net.helenus.mapping.annotation.PartitionKey;
+import net.helenus.mapping.annotation.Table;
 
 @Table("fs")
 public interface FilesystemNode {
 
-  @PartitionKey
-  UUID inode();
+	@PartitionKey
+	UUID inode();
 
-  @ClusteringColumn
-  String name();
+	@ClusteringColumn
+	String name();
 
-  @Column
-  FileAttributes attr();
+	@Column
+	FileAttributes attr();
 }

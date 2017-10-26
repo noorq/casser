@@ -15,63 +15,64 @@
  */
 package net.helenus.test.unit.core.dsl;
 
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import net.helenus.core.Getter;
 import net.helenus.core.Helenus;
 import net.helenus.core.Query;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.support.DslPropertyException;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 public class CollectionsDlsTest {
 
-  static AccountWithCollections account;
+	static AccountWithCollections account;
 
-  @BeforeClass
-  public static void beforeTests() {
-    account = Helenus.dsl(AccountWithCollections.class);
-  }
+	@BeforeClass
+	public static void beforeTests() {
+		account = Helenus.dsl(AccountWithCollections.class);
+	}
 
-  @Test
-  public void testPrint() {
-    System.out.println(account);
-  }
+	@Test
+	public void testPrint() {
+		System.out.println(account);
+	}
 
-  @Test
-  public void testMapGet() {
+	@Test
+	public void testMapGet() {
 
-    String columnName = null;
+		String columnName = null;
 
-    Getter<String> getter = Query.get(account::properties, "key1");
+		Getter<String> getter = Query.get(account::properties, "key1");
 
-    try {
-      getter.get();
-    } catch (DslPropertyException e) {
+		try {
+			getter.get();
+		} catch (DslPropertyException e) {
 
-      HelenusPropertyNode node = e.getPropertyNode();
-      columnName = node.getColumnName();
-    }
+			HelenusPropertyNode node = e.getPropertyNode();
+			columnName = node.getColumnName();
+		}
 
-    Assert.assertEquals("\"properties\"[\"key1\"]", columnName);
-  }
+		Assert.assertEquals("\"properties\"[\"key1\"]", columnName);
+	}
 
-  @Test
-  public void testListGet() {
+	@Test
+	public void testListGet() {
 
-    String columnName = null;
+		String columnName = null;
 
-    Getter<String> getter = Query.getIdx(account::name, 2);
+		Getter<String> getter = Query.getIdx(account::name, 2);
 
-    try {
-      getter.get();
-    } catch (DslPropertyException e) {
+		try {
+			getter.get();
+		} catch (DslPropertyException e) {
 
-      HelenusPropertyNode node = e.getPropertyNode();
+			HelenusPropertyNode node = e.getPropertyNode();
 
-      columnName = node.getColumnName();
-    }
+			columnName = node.getColumnName();
+		}
 
-    Assert.assertEquals("\"name\"[\"2\"]", columnName);
-  }
+		Assert.assertEquals("\"name\"[\"2\"]", columnName);
+	}
 }

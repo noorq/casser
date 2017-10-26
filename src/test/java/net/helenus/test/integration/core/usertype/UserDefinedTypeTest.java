@@ -15,242 +15,204 @@
  */
 package net.helenus.test.integration.core.usertype;
 
-import com.datastax.driver.core.UDTValue;
-import com.datastax.driver.core.UserType;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
-import net.helenus.core.Helenus;
-import net.helenus.core.HelenusSession;
-import net.helenus.core.Query;
-import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.datastax.driver.core.UDTValue;
+import com.datastax.driver.core.UserType;
+
+import net.helenus.core.Helenus;
+import net.helenus.core.HelenusSession;
+import net.helenus.core.Query;
+import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 public class UserDefinedTypeTest extends AbstractEmbeddedCassandraTest {
 
-  static Address address;
-  static Account account;
+	static Address address;
+	static Account account;
 
-  static HelenusSession session;
+	static HelenusSession session;
 
-  public static class AccountImpl implements Account {
+	@BeforeClass
+	public static void beforeTest() {
+		session = Helenus.init(getSession()).showCql().add(Account.class).autoCreateDrop().get();
+		address = Helenus.dsl(Address.class);
+		account = Helenus.dsl(Account.class);
+	}
 
-    long id;
-    Address address;
-    UDTValue addressNoMapping;
+	@Test
+	public void testPrint() {
+		System.out.println(address);
+		System.out.println(account);
+	}
 
-    @Override
-    public long id() {
-      return id;
-    }
+	@Test
+	public void testMappingCRUID() throws TimeoutException {
 
-    @Override
-    public Address address() {
-      return address;
-    }
+		AddressImpl addr = new AddressImpl();
+		addr.street = "1 st";
+		addr.city = "San Jose";
 
-    @Override
-    public UDTValue addressNoMapping() {
-      return addressNoMapping;
-    }
-  }
+		AccountImpl acc = new AccountImpl();
+		acc.id = 123L;
+		acc.address = addr;
 
-  public static class AddressImpl implements Address {
+		// CREATE
 
-    String street;
-    String city;
-    int zip;
-    String country;
-    Set<String> phones;
+		session.upsert(acc).sync();
 
-    @Override
-    public String street() {
-      return street;
-    }
+		// READ
 
-    @Override
-    public String city() {
-      return city;
-    }
+		String streetName = session.select(account.address()::street).where(account::id, Query.eq(123L)).sync()
+				.findFirst().get()._1;
 
-    @Override
-    public int zip() {
-      return zip;
-    }
+		Assert.assertEquals("1 st", streetName);
 
-    @Override
-    public String country() {
-      return country;
-    }
+		// UPDATE
 
-    @Override
-    public Set<String> phones() {
-      return phones;
-    }
-  }
+		AddressImpl expected = new AddressImpl();
+		expected.street = "2 st";
+		expected.city = "San Francisco";
 
-  @BeforeClass
-  public static void beforeTest() {
-    session = Helenus.init(getSession()).showCql().add(Account.class).autoCreateDrop().get();
-    address = Helenus.dsl(Address.class);
-    account = Helenus.dsl(Account.class);
-  }
+		session.update().set(account::address, expected).where(account::id, Query.eq(123L)).sync();
 
-  @Test
-  public void testPrint() {
-    System.out.println(address);
-    System.out.println(account);
-  }
+		Address actual = session.select(account::address).where(account::id, Query.eq(123L)).sync().findFirst()
+				.get()._1;
 
-  @Test
-  public void testMappingCRUID() throws TimeoutException {
+		Assert.assertEquals(expected.street(), actual.street());
+		Assert.assertEquals(expected.city(), actual.city());
+		Assert.assertNull(actual.country());
+		Assert.assertEquals(0, actual.zip());
 
-    AddressImpl addr = new AddressImpl();
-    addr.street = "1 st";
-    addr.city = "San Jose";
+		// INSERT using UPDATE
+		session.update().set(account::address, null).where(account::id, Query.eq(123L)).sync();
 
-    AccountImpl acc = new AccountImpl();
-    acc.id = 123L;
-    acc.address = addr;
+		Address adrNull = session.select(account::address).where(account::id, Query.eq(123L)).sync().findFirst()
+				.get()._1;
+		Assert.assertNull(adrNull);
 
-    // CREATE
+		// DELETE
 
-    session.upsert(acc).sync();
+		session.delete().where(account::id, Query.eq(123L)).sync();
 
-    // READ
+		Long cnt = session.count().where(account::id, Query.eq(123L)).sync();
+		Assert.assertEquals(Long.valueOf(0), cnt);
+	}
 
-    String streetName =
-        session
-            .select(account.address()::street)
-            .where(account::id, Query.eq(123L))
-            .sync()
-            .findFirst()
-            .get()
-            ._1;
+	@Test
+	public void testNoMapping() throws TimeoutException {
 
-    Assert.assertEquals("1 st", streetName);
+		String ks = getSession().getLoggedKeyspace();
+		UserType addressType = getSession().getCluster().getMetadata().getKeyspace(ks).getUserType("address");
 
-    // UPDATE
+		UDTValue addressNoMapping = addressType.newValue();
+		addressNoMapping.setString("line_1", "1st street");
+		addressNoMapping.setString("city", "San Jose");
 
-    AddressImpl expected = new AddressImpl();
-    expected.street = "2 st";
-    expected.city = "San Francisco";
+		AccountImpl acc = new AccountImpl();
+		acc.id = 777L;
+		acc.addressNoMapping = addressNoMapping;
 
-    session.update().set(account::address, expected).where(account::id, Query.eq(123L)).sync();
+		// CREATE
 
-    Address actual =
-        session
-            .select(account::address)
-            .where(account::id, Query.eq(123L))
-            .sync()
-            .findFirst()
-            .get()
-            ._1;
+		session.upsert(acc).sync();
 
-    Assert.assertEquals(expected.street(), actual.street());
-    Assert.assertEquals(expected.city(), actual.city());
-    Assert.assertNull(actual.country());
-    Assert.assertEquals(0, actual.zip());
+		// READ
 
-    // INSERT using UPDATE
-    session.update().set(account::address, null).where(account::id, Query.eq(123L)).sync();
+		UDTValue found = session.select(account::addressNoMapping).where(account::id, Query.eq(777L)).sync().findFirst()
+				.get()._1;
 
-    Address adrNull =
-        session
-            .select(account::address)
-            .where(account::id, Query.eq(123L))
-            .sync()
-            .findFirst()
-            .get()
-            ._1;
-    Assert.assertNull(adrNull);
+		Assert.assertEquals(addressNoMapping.getType(), found.getType());
+		Assert.assertEquals(addressNoMapping.getString("line_1"), found.getString("line_1"));
+		Assert.assertEquals(addressNoMapping.getString("city"), found.getString("city"));
 
-    // DELETE
+		// UPDATE
 
-    session.delete().where(account::id, Query.eq(123L)).sync();
+		addressNoMapping = addressType.newValue();
+		addressNoMapping.setString("line_1", "Market street");
+		addressNoMapping.setString("city", "San Francisco");
 
-    Long cnt = session.count().where(account::id, Query.eq(123L)).sync();
-    Assert.assertEquals(Long.valueOf(0), cnt);
-  }
+		session.update().set(account::addressNoMapping, addressNoMapping).where(account::id, Query.eq(777L)).sync();
 
-  @Test
-  public void testNoMapping() throws TimeoutException {
+		found = session.select(account::addressNoMapping).where(account::id, Query.eq(777L)).sync().findFirst()
+				.get()._1;
 
-    String ks = getSession().getLoggedKeyspace();
-    UserType addressType =
-        getSession().getCluster().getMetadata().getKeyspace(ks).getUserType("address");
+		Assert.assertEquals(addressNoMapping.getType(), found.getType());
+		Assert.assertEquals(addressNoMapping.getString("line_1"), found.getString("line_1"));
+		Assert.assertEquals(addressNoMapping.getString("city"), found.getString("city"));
 
-    UDTValue addressNoMapping = addressType.newValue();
-    addressNoMapping.setString("line_1", "1st street");
-    addressNoMapping.setString("city", "San Jose");
+		// INSERT using UPDATE
+		session.update().set(account::addressNoMapping, null).where(account::id, Query.eq(777L)).sync();
 
-    AccountImpl acc = new AccountImpl();
-    acc.id = 777L;
-    acc.addressNoMapping = addressNoMapping;
+		found = session.select(account::addressNoMapping).where(account::id, Query.eq(777L)).sync().findFirst()
+				.get()._1;
+		Assert.assertNull(found);
 
-    // CREATE
+		// DELETE
 
-    session.upsert(acc).sync();
+		session.delete().where(account::id, Query.eq(777L)).sync();
 
-    // READ
+		Long cnt = session.count().where(account::id, Query.eq(777L)).sync();
+		Assert.assertEquals(Long.valueOf(0), cnt);
+	}
 
-    UDTValue found =
-        session
-            .select(account::addressNoMapping)
-            .where(account::id, Query.eq(777L))
-            .sync()
-            .findFirst()
-            .get()
-            ._1;
+	public static class AccountImpl implements Account {
 
-    Assert.assertEquals(addressNoMapping.getType(), found.getType());
-    Assert.assertEquals(addressNoMapping.getString("line_1"), found.getString("line_1"));
-    Assert.assertEquals(addressNoMapping.getString("city"), found.getString("city"));
+		long id;
+		Address address;
+		UDTValue addressNoMapping;
 
-    // UPDATE
+		@Override
+		public long id() {
+			return id;
+		}
 
-    addressNoMapping = addressType.newValue();
-    addressNoMapping.setString("line_1", "Market street");
-    addressNoMapping.setString("city", "San Francisco");
+		@Override
+		public Address address() {
+			return address;
+		}
 
-    session
-        .update()
-        .set(account::addressNoMapping, addressNoMapping)
-        .where(account::id, Query.eq(777L))
-        .sync();
+		@Override
+		public UDTValue addressNoMapping() {
+			return addressNoMapping;
+		}
+	}
 
-    found =
-        session
-            .select(account::addressNoMapping)
-            .where(account::id, Query.eq(777L))
-            .sync()
-            .findFirst()
-            .get()
-            ._1;
+	public static class AddressImpl implements Address {
 
-    Assert.assertEquals(addressNoMapping.getType(), found.getType());
-    Assert.assertEquals(addressNoMapping.getString("line_1"), found.getString("line_1"));
-    Assert.assertEquals(addressNoMapping.getString("city"), found.getString("city"));
+		String street;
+		String city;
+		int zip;
+		String country;
+		Set<String> phones;
 
-    // INSERT using UPDATE
-    session.update().set(account::addressNoMapping, null).where(account::id, Query.eq(777L)).sync();
+		@Override
+		public String street() {
+			return street;
+		}
 
-    found =
-        session
-            .select(account::addressNoMapping)
-            .where(account::id, Query.eq(777L))
-            .sync()
-            .findFirst()
-            .get()
-            ._1;
-    Assert.assertNull(found);
+		@Override
+		public String city() {
+			return city;
+		}
 
-    // DELETE
+		@Override
+		public int zip() {
+			return zip;
+		}
 
-    session.delete().where(account::id, Query.eq(777L)).sync();
+		@Override
+		public String country() {
+			return country;
+		}
 
-    Long cnt = session.count().where(account::id, Query.eq(777L)).sync();
-    Assert.assertEquals(Long.valueOf(0), cnt);
-  }
+		@Override
+		public Set<String> phones() {
+			return phones;
+		}
+	}
 }

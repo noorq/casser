@@ -17,9 +17,9 @@ package net.helenus.test.performance.core.dsl;
 
 public interface Elevator {
 
-  int height();
+	int height();
 
-  Double price();
+	Double price();
 
-  String name();
+	String name();
 }

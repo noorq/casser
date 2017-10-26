@@ -250,7 +250,8 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 						+ entity.getMappingInterface() + " or " + prop.getEntity().getMappingInterface());
 			}
 
-			if (cached) {
+			//TODO(gburd): writeTime and ttl will be useful on merge() but cause object identity to fail.
+			if (false && cached) {
 				switch (prop.getProperty().getColumnType()) {
 					case PARTITION_KEY :
 					case CLUSTERING_COLUMN :

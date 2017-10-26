@@ -19,152 +19,129 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import net.helenus.core.Helenus;
-import net.helenus.core.HelenusSession;
-import net.helenus.core.Query;
-import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import net.helenus.core.Helenus;
+import net.helenus.core.HelenusSession;
+import net.helenus.core.Query;
+import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+
 public class StaticColumnTest extends AbstractEmbeddedCassandraTest {
 
-  static HelenusSession session;
-  static Message message;
+	static HelenusSession session;
+	static Message message;
 
-  @BeforeClass
-  public static void beforeTest() {
-    session =
-        Helenus.init(getSession())
-            .showCql()
-            .addPackage(Message.class.getPackage().getName())
-            .autoCreateDrop()
-            .get();
-    message = Helenus.dsl(Message.class, session.getMetadata());
-  }
+	@BeforeClass
+	public static void beforeTest() {
+		session = Helenus.init(getSession()).showCql().addPackage(Message.class.getPackage().getName()).autoCreateDrop()
+				.get();
+		message = Helenus.dsl(Message.class, session.getMetadata());
+	}
 
-  @Test
-  public void testPrint() {
-    System.out.println(message);
-  }
+	@Test
+	public void testPrint() {
+		System.out.println(message);
+	}
 
-  private static class MessageImpl implements Message {
+	@Test
+	public void testCRUID() throws TimeoutException {
 
-    int id;
-    Date timestamp;
-    String from;
-    String to;
-    String msg;
+		MessageImpl msg = new MessageImpl();
+		msg.id = 123;
+		msg.timestamp = new Date();
+		msg.from = "Alex";
+		msg.to = "Bob";
+		msg.msg = "hi";
 
-    @Override
-    public int id() {
-      return id;
-    }
+		// CREATE
 
-    @Override
-    public Date timestamp() {
-      return timestamp;
-    }
+		session.insert(msg).sync();
 
-    @Override
-    public String from() {
-      return from;
-    }
+		msg.id = 123;
+		msg.to = "Craig";
 
-    @Override
-    public String to() {
-      return to;
-    }
+		session.insert(msg).sync();
 
-    @Override
-    public String message() {
-      return msg;
-    }
-  }
+		// READ
 
-  @Test
-  public void testCRUID() throws TimeoutException {
+		List<Message> actual = session.<Message>select(message).where(message::id, Query.eq(123)).sync()
+				.collect(Collectors.toList());
 
-    MessageImpl msg = new MessageImpl();
-    msg.id = 123;
-    msg.timestamp = new Date();
-    msg.from = "Alex";
-    msg.to = "Bob";
-    msg.msg = "hi";
+		Assert.assertEquals(2, actual.size());
 
-    // CREATE
+		Message toCraig = actual.stream().filter(m -> m.to().equals("Craig")).findFirst().get();
+		assertMessages(msg, toCraig);
 
-    session.insert(msg).sync();
+		// UPDATE
 
-    msg.id = 123;
-    msg.to = "Craig";
+		session.update().set(message::from, "Albert").where(message::id, Query.eq(123))
+				.onlyIf(message::from, Query.eq("Alex")).sync();
 
-    session.insert(msg).sync();
+		long cnt = session.select(message::from).where(message::id, Query.eq(123)).sync()
+				.filter(t -> t._1.equals("Albert")).count();
 
-    // READ
+		Assert.assertEquals(2, cnt);
 
-    List<Message> actual =
-        session
-            .<Message>select(message)
-            .where(message::id, Query.eq(123))
-            .sync()
-            .collect(Collectors.toList());
+		// INSERT
 
-    Assert.assertEquals(2, actual.size());
+		session.update().set(message::from, null).where(message::id, Query.eq(123)).sync();
 
-    Message toCraig = actual.stream().filter(m -> m.to().equals("Craig")).findFirst().get();
-    assertMessages(msg, toCraig);
+		session.select(message::from).where(message::id, Query.eq(123)).sync().map(t -> t._1)
+				.forEach(Assert::assertNull);
 
-    // UPDATE
+		session.update().set(message::from, "Alex").where(message::id, Query.eq(123))
+				.onlyIf(message::from, Query.eq(null)).sync();
 
-    session
-        .update()
-        .set(message::from, "Albert")
-        .where(message::id, Query.eq(123))
-        .onlyIf(message::from, Query.eq("Alex"))
-        .sync();
+		// DELETE
 
-    long cnt =
-        session
-            .select(message::from)
-            .where(message::id, Query.eq(123))
-            .sync()
-            .filter(t -> t._1.equals("Albert"))
-            .count();
+		session.delete().where(message::id, Query.eq(123)).sync();
 
-    Assert.assertEquals(2, cnt);
+		cnt = session.count().where(message::id, Query.eq(123)).sync();
+		Assert.assertEquals(0, cnt);
+	}
 
-    // INSERT
+	private void assertMessages(Message expected, Message actual) {
+		Assert.assertEquals(expected.id(), actual.id());
+		Assert.assertEquals(expected.from(), actual.from());
+		Assert.assertEquals(expected.timestamp(), actual.timestamp());
+		Assert.assertEquals(expected.to(), actual.to());
+		Assert.assertEquals(expected.message(), actual.message());
+	}
 
-    session.update().set(message::from, null).where(message::id, Query.eq(123)).sync();
+	private static class MessageImpl implements Message {
 
-    session
-        .select(message::from)
-        .where(message::id, Query.eq(123))
-        .sync()
-        .map(t -> t._1)
-        .forEach(Assert::assertNull);
+		int id;
+		Date timestamp;
+		String from;
+		String to;
+		String msg;
 
-    session
-        .update()
-        .set(message::from, "Alex")
-        .where(message::id, Query.eq(123))
-        .onlyIf(message::from, Query.eq(null))
-        .sync();
+		@Override
+		public int id() {
+			return id;
+		}
 
-    // DELETE
+		@Override
+		public Date timestamp() {
+			return timestamp;
+		}
 
-    session.delete().where(message::id, Query.eq(123)).sync();
+		@Override
+		public String from() {
+			return from;
+		}
 
-    cnt = session.count().where(message::id, Query.eq(123)).sync();
-    Assert.assertEquals(0, cnt);
-  }
+		@Override
+		public String to() {
+			return to;
+		}
 
-  private void assertMessages(Message expected, Message actual) {
-    Assert.assertEquals(expected.id(), actual.id());
-    Assert.assertEquals(expected.from(), actual.from());
-    Assert.assertEquals(expected.timestamp(), actual.timestamp());
-    Assert.assertEquals(expected.to(), actual.to());
-    Assert.assertEquals(expected.message(), actual.message());
-  }
+		@Override
+		public String message() {
+			return msg;
+		}
+	}
 }
