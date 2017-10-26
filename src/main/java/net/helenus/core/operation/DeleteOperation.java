@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
@@ -168,7 +169,7 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 	}
 
 	@Override
-	public ResultSet sync() {// throws TimeoutException {
+	public ResultSet sync() throws TimeoutException {
 		ResultSet result = super.sync();
 		if (entity.isCacheable()) {
 			sessionOps.cacheEvict(bindFacetValues());
@@ -182,7 +183,7 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 	}
 
 	@Override
-	public ResultSet sync(UnitOfWork<?> uow) {// throws TimeoutException {
+	public ResultSet sync(UnitOfWork uow) throws TimeoutException {
 		if (uow == null) {
 			return sync();
 		}

@@ -20,6 +20,8 @@ import static net.helenus.core.HelenusSession.deleted;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 import com.codahale.metrics.Timer;
@@ -60,7 +62,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 				});
 	}
 
-	public Stream<E> sync() {// throws TimeoutException {
+	public Stream<E> sync() throws TimeoutException {
 		final Timer.Context context = requestLatency.time();
 		try {
 			Stream<E> resultStream = null;
@@ -109,7 +111,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 		}
 	}
 
-	public Stream<E> sync(UnitOfWork<?> uow) {// throws TimeoutException {
+	public Stream<E> sync(UnitOfWork uow) throws TimeoutException {
 		if (uow == null)
 			return sync();
 
@@ -162,26 +164,26 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
 			// Check to see if we fetched the object from the cache
 			if (resultStream == null) {
-                ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
-                        showValues, true);
-                resultStream = transform(resultSet);
-            }
+				ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
+						showValues, true);
+				resultStream = transform(resultSet);
+			}
 
-            // If we have a result and we're caching then we need to put it into the cache
-            // for future requests to find.
-            if (resultStream != null) {
-                List<E> again = new ArrayList<>();
-                List<Facet> facets = getFacets();
-                resultStream.forEach(result -> {
-                    if (result != deleted) {
-                        if (updateCache) {
-                            cacheUpdate(uow, result, facets);
-                        }
-                        again.add(result);
-                    }
-                });
-                resultStream = again.stream();
-            }
+			// If we have a result and we're caching then we need to put it into the cache
+			// for future requests to find.
+			if (resultStream != null) {
+				List<E> again = new ArrayList<>();
+				List<Facet> facets = getFacets();
+				resultStream.forEach(result -> {
+					if (result != deleted) {
+						if (updateCache) {
+							cacheUpdate(uow, result, facets);
+						}
+						again.add(result);
+					}
+				});
+				resultStream = again.stream();
+			}
 
 			return resultStream;
 		} finally {
@@ -191,23 +193,23 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
 	public CompletableFuture<Stream<E>> async() {
 		return CompletableFuture.<Stream<E>>supplyAsync(() -> {
-			// try {
-			return sync();
-			// } catch (TimeoutException ex) {
-			// throw new CompletionException(ex);
-			// }
+			try {
+				return sync();
+			} catch (TimeoutException ex) {
+				throw new CompletionException(ex);
+			}
 		});
 	}
 
-	public CompletableFuture<Stream<E>> async(UnitOfWork<?> uow) {
+	public CompletableFuture<Stream<E>> async(UnitOfWork uow) {
 		if (uow == null)
 			return async();
 		return CompletableFuture.<Stream<E>>supplyAsync(() -> {
-			// try {
-			return sync();
-			// } catch (TimeoutException ex) {
-			// throw new CompletionException(ex);
-			// }
+			try {
+				return sync();
+			} catch (TimeoutException ex) {
+				throw new CompletionException(ex);
+			}
 		});
 	}
 }

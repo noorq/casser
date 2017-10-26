@@ -86,11 +86,11 @@ public abstract class AbstractSessionOperations {
 		return execute(statement, null, timer, showValues);
 	}
 
-	public ResultSet execute(Statement statement, UnitOfWork<?> uow, boolean showValues) {
+	public ResultSet execute(Statement statement, UnitOfWork uow, boolean showValues) {
 		return execute(statement, uow, null, showValues);
 	}
 
-	public ResultSet execute(Statement statement, UnitOfWork<?> uow, Stopwatch timer, boolean showValues) {
+	public ResultSet execute(Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
 		return executeAsync(statement, uow, timer, showValues).getUninterruptibly();
 	}
 
@@ -102,11 +102,11 @@ public abstract class AbstractSessionOperations {
 		return executeAsync(statement, null, timer, showValues);
 	}
 
-	public ResultSetFuture executeAsync(Statement statement, UnitOfWork<?> uow, boolean showValues) {
+	public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, boolean showValues) {
 		return executeAsync(statement, uow, null, showValues);
 	}
 
-	public ResultSetFuture executeAsync(Statement statement, UnitOfWork<?> uow, Stopwatch timer, boolean showValues) {
+	public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
 		try {
 			logStatement(statement, showValues);
 			return currentSession().executeAsync(statement);

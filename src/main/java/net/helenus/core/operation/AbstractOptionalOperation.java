@@ -20,6 +20,8 @@ import static net.helenus.core.HelenusSession.deleted;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeoutException;
 
 import com.codahale.metrics.Timer;
 import com.datastax.driver.core.PreparedStatement;
@@ -59,7 +61,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 				});
 	}
 
-	public Optional<E> sync() {// throws TimeoutException {
+	public Optional<E> sync() throws TimeoutException {
 		final Timer.Context context = requestLatency.time();
 		try {
 			Optional<E> result = Optional.empty();
@@ -102,7 +104,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 		}
 	}
 
-	public Optional<E> sync(UnitOfWork<?> uow) {// throws TimeoutException {
+	public Optional<E> sync(UnitOfWork<?> uow) throws TimeoutException {
 		if (uow == null)
 			return sync();
 
@@ -163,19 +165,19 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 				}
 			} else {
 
-                // Formulate the query and execute it against the Cassandra cluster.
-                ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
-                        showValues, true);
+				// Formulate the query and execute it against the Cassandra cluster.
+				ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
+						showValues, true);
 
-                // Transform the query result set into the desired shape.
-                result = transform(resultSet);
-            }
+				// Transform the query result set into the desired shape.
+				result = transform(resultSet);
+			}
 
-            // If we have a result, it wasn't from the UOW cache, and we're caching things
-            // then we need to put this result into the cache for future requests to find.
-            if (updateCache && result.isPresent() && result.get() != deleted) {
-                cacheUpdate(uow, result.get(), getFacets());
-            }
+			// If we have a result, it wasn't from the UOW cache, and we're caching things
+			// then we need to put this result into the cache for future requests to find.
+			if (updateCache && result.isPresent() && result.get() != deleted) {
+				cacheUpdate(uow, result.get(), getFacets());
+			}
 
 			return result;
 		} finally {
@@ -185,11 +187,11 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 
 	public CompletableFuture<Optional<E>> async() {
 		return CompletableFuture.<Optional<E>>supplyAsync(() -> {
-			// try {
-			return sync();
-			// } catch (TimeoutException ex) {
-			// throw new CompletionException(ex);
-			// }
+			try {
+				return sync();
+			} catch (TimeoutException ex) {
+				throw new CompletionException(ex);
+			}
 		});
 	}
 
@@ -197,11 +199,11 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 		if (uow == null)
 			return async();
 		return CompletableFuture.<Optional<E>>supplyAsync(() -> {
-			// try {
-			return sync();
-			// } catch (TimeoutException ex) {
-			// throw new CompletionException(ex);
-			// }
+			try {
+				return sync();
+			} catch (TimeoutException ex) {
+				throw new CompletionException(ex);
+			}
 		});
 	}
 }

@@ -16,6 +16,7 @@
 package net.helenus.core.operation;
 
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 
 import com.datastax.driver.core.ResultSet;
@@ -568,7 +569,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 	}
 
 	@Override
-	public E sync() {// throws TimeoutException {
+	public E sync() throws TimeoutException {
 		E result = super.sync();
 		if (entity.isCacheable() && draft != null) {
 			sessionOps.updateCache(result, getFacets());
@@ -577,7 +578,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 	}
 
 	@Override
-	public E sync(UnitOfWork<?> uow) {// throws TimeoutException {
+	public E sync(UnitOfWork uow) throws TimeoutException {
 		if (uow == null) {
 			return sync();
 		}

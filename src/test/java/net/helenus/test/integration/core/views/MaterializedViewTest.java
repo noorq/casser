@@ -55,12 +55,12 @@ public class MaterializedViewTest extends AbstractEmbeddedCassandraTest {
 				.get();
 		cyclist = session.dsl(Cyclist.class);
 
-		// try {
+		try {
 		session.insert(cyclist).value(cyclist::cid, UUID.randomUUID()).value(cyclist::age, 18)
 				.value(cyclist::birthday, dateFromString("1997-02-08")).value(cyclist::country, "Netherlands")
 				.value(cyclist::name, "Pascal EENKHOORN").sync();
-		// } catch (TimeoutException e) {
-		// }
+		} catch (TimeoutException e) {
+		}
 	}
 
 	@Test
