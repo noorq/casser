@@ -87,8 +87,8 @@ public abstract class Operation<E> {
 		return query;
 	}
 
-	public ResultSet execute(AbstractSessionOperations session, UnitOfWork uow, TraceContext traceContext, long timeout,
-			TimeUnit units, boolean showValues, boolean cached) { // throws TimeoutException {
+	public ResultSet execute(AbstractSessionOperations session, UnitOfWork<?> uow, TraceContext traceContext,
+			long timeout, TimeUnit units, boolean showValues, boolean cached) { // throws TimeoutException {
 
 		// Start recording in a Zipkin sub-span our execution time to perform this
 		// operation.
@@ -129,7 +129,7 @@ public abstract class Operation<E> {
 		}
 	}
 
-	void log(Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
+	void log(Statement statement, UnitOfWork<?> uow, Stopwatch timer, boolean showValues) {
 		if (LOG.isInfoEnabled()) {
 			String uowString = "";
 			if (uow != null) {

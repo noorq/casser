@@ -182,7 +182,7 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 	}
 
 	@Override
-	public ResultSet sync(UnitOfWork uow) {// throws TimeoutException {
+	public ResultSet sync(UnitOfWork<?> uow) {// throws TimeoutException {
 		if (uow == null) {
 			return sync();
 		}

@@ -577,7 +577,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 	}
 
 	@Override
-	public E sync(UnitOfWork uow) {// throws TimeoutException {
+	public E sync(UnitOfWork<?> uow) {// throws TimeoutException {
 		if (uow == null) {
 			return sync();
 		}

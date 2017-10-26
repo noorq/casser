@@ -46,7 +46,7 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> ex
 		}
 	}
 
-	public E sync(UnitOfWork uow) {// throws TimeoutException {
+	public E sync(UnitOfWork<?> uow) {// throws TimeoutException {
 		if (uow == null)
 			return sync();
 
@@ -71,7 +71,7 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>> ex
 		});
 	}
 
-	public CompletableFuture<E> async(UnitOfWork uow) {
+	public CompletableFuture<E> async(UnitOfWork<?> uow) {
 		if (uow == null)
 			return async();
 		return CompletableFuture.<E>supplyAsync(() -> {

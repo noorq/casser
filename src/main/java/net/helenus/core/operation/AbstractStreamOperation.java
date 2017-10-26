@@ -160,27 +160,29 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 				updateCache = false;
 			}
 
+			// Check to see if we fetched the object from the cache
 			if (resultStream == null) {
-				ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
-						showValues, true);
-				resultStream = transform(resultSet);
-			}
+                ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
+                        showValues, true);
+                resultStream = transform(resultSet);
+            }
 
-			// If we have a result and we're caching then we need to put it into the cache
-			// for future requests to find.
-			if (resultStream != null) {
-				List<E> again = new ArrayList<>();
-				List<Facet> facets = getFacets();
-				resultStream.forEach(result -> {
-					if (result != deleted) {
-						if (updateCache) {
-							cacheUpdate(uow, result, facets);
-						}
-						again.add(result);
-					}
-				});
-				resultStream = again.stream();
-			}
+            // If we have a result and we're caching then we need to put it into the cache
+            // for future requests to find.
+            if (resultStream != null) {
+                List<E> again = new ArrayList<>();
+                List<Facet> facets = getFacets();
+                resultStream.forEach(result -> {
+                    if (result != deleted) {
+                        if (updateCache) {
+                            cacheUpdate(uow, result, facets);
+                        }
+                        again.add(result);
+                    }
+                });
+                resultStream = again.stream();
+            }
+
 			return resultStream;
 		} finally {
 			context.stop();

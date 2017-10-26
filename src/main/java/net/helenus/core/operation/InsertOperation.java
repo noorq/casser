@@ -245,7 +245,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 	}
 
 	@Override
-	public T sync(UnitOfWork uow) {// throws TimeoutException {
+	public T sync(UnitOfWork<?> uow) {// throws TimeoutException {
 		if (uow == null) {
 			return sync();
 		}

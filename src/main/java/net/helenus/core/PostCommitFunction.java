@@ -5,10 +5,10 @@ import java.util.Objects;
 
 public class PostCommitFunction<T, R> implements java.util.function.Function<T, R> {
 
-	private final UnitOfWork uow;
+	private final UnitOfWork<?> uow;
 	private final List<CommitThunk> postCommit;
 
-	PostCommitFunction(UnitOfWork uow, List<CommitThunk> postCommit) {
+	PostCommitFunction(UnitOfWork<?> uow, List<CommitThunk> postCommit) {
 		this.uow = uow;
 		this.postCommit = postCommit;
 	}

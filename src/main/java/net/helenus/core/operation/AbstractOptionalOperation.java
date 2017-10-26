@@ -154,25 +154,30 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 				updateCache = false;
 			}
 
-			if (!result.isPresent()) {
-				// Formulate the query and execute it against the Cassandra cluster.
-				ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
-						showValues, true);
-
-				// Transform the query result set into the desired shape.
-				result = transform(resultSet);
-			}
-
-			if (result.get() == deleted) {
-				return Optional.empty();
-			} else {
-				// If we have a result, it wasn't from the UOW cache, and we're caching things
-				// then we need to put this result into the cache for future requests to find.
-				if (updateCache && result.isPresent()) {
-					cacheUpdate(uow, result.get(), getFacets());
+			// Check to see if we fetched the object from the cache
+			if (result.isPresent()) {
+				// If we fetched the `deleted` object then the result is null (really
+				// Optional.empty()).
+				if (result.get() == deleted) {
+					result = Optional.empty();
 				}
-				return result;
-			}
+			} else {
+
+                // Formulate the query and execute it against the Cassandra cluster.
+                ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
+                        showValues, true);
+
+                // Transform the query result set into the desired shape.
+                result = transform(resultSet);
+            }
+
+            // If we have a result, it wasn't from the UOW cache, and we're caching things
+            // then we need to put this result into the cache for future requests to find.
+            if (updateCache && result.isPresent() && result.get() != deleted) {
+                cacheUpdate(uow, result.get(), getFacets());
+            }
+
+			return result;
 		} finally {
 			context.stop();
 		}
