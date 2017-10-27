@@ -126,9 +126,9 @@ public final class SessionInitializer extends AbstractSessionOperations {
 	}
 
 	public SessionInitializer setSessionCache(SessionCache sessionCache) {
-	    this.sessionCache = sessionCache;
-	    return this;
-    }
+		this.sessionCache = sessionCache;
+		return this;
+	}
 
 	public ConsistencyLevel getDefaultConsistencyLevel() {
 		return consistencyLevel;
@@ -251,7 +251,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
 		initialize();
 		return new HelenusSession(session, usingKeyspace, registry, showCql, printStream, sessionRepository, executor,
 				autoDdl == AutoDdl.CREATE_DROP, consistencyLevel, idempotent, unitOfWorkClass, sessionCache,
-                metricRegistry, zipkinTracer);
+				metricRegistry, zipkinTracer);
 	}
 
 	private void initialize() {

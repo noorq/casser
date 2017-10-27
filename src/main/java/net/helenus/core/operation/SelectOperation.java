@@ -207,7 +207,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 			if (facet instanceof UnboundFacet) {
 				UnboundFacet unboundFacet = (UnboundFacet) facet;
 				UnboundFacet.Binder binder = unboundFacet.binder();
-                for (HelenusProperty prop : unboundFacet.getProperties()) {
+				for (HelenusProperty prop : unboundFacet.getProperties()) {
 					if (filters != null) {
 						Filter filter = filters.get(prop);
 						if (filter != null) {

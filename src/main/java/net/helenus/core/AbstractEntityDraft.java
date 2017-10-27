@@ -3,13 +3,15 @@ package net.helenus.core;
 import java.io.Serializable;
 import java.util.*;
 
+import net.helenus.mapping.value.ValueProviderMap;
+import org.apache.commons.lang3.SerializationUtils;
+
 import com.google.common.primitives.Primitives;
 
 import net.helenus.core.reflect.DefaultPrimitiveTypes;
 import net.helenus.core.reflect.Drafted;
 import net.helenus.core.reflect.MapExportable;
 import net.helenus.mapping.MappingUtil;
-import org.apache.commons.lang3.SerializationUtils;
 
 public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
@@ -38,31 +40,30 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 		T value = (T) backingMap.get(key);
 
 		if (value == null) {
-            value = (T) entityMap.get(key);
-            if (value == null) {
+			value = (T) entityMap.get(key);
+			if (value == null) {
 
-                if (Primitives.allPrimitiveTypes().contains(returnType)) {
+				if (Primitives.allPrimitiveTypes().contains(returnType)) {
 
-                    DefaultPrimitiveTypes type = DefaultPrimitiveTypes.lookup(returnType);
-                    if (type == null) {
-                        throw new RuntimeException("unknown primitive type " + returnType);
-                    }
+					DefaultPrimitiveTypes type = DefaultPrimitiveTypes.lookup(returnType);
+					if (type == null) {
+						throw new RuntimeException("unknown primitive type " + returnType);
+					}
 
-                    return (T) type.getDefaultValue();
-                }
-            } else {
-                // Collections fetched from the entityMap
-                if (value instanceof Collection) {
-                    try {
-                        value = MappingUtil.<T>clone(value);
-                    }
-                    catch (CloneNotSupportedException e) {
-                        //TODO(gburd): deep?shallow? copy of List, Map, Set to a mutable collection.
-                        value = (T)SerializationUtils.<Serializable>clone((Serializable)value);
-                    }
-                }
-            }
-        }
+					return (T) type.getDefaultValue();
+				}
+			} else {
+				// Collections fetched from the entityMap
+				if (value instanceof Collection) {
+					try {
+						value = MappingUtil.<T>clone(value);
+					} catch (CloneNotSupportedException e) {
+						// TODO(gburd): deep?shallow? copy of List, Map, Set to a mutable collection.
+						value = (T) SerializationUtils.<Serializable>clone((Serializable) value);
+					}
+				}
+			}
+		}
 
 		return value;
 	}

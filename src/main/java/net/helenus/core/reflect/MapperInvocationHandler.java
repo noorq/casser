@@ -21,7 +21,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Collections;
 import java.util.Map;
 
 import net.helenus.core.Helenus;
@@ -102,8 +101,8 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
 		}
 
 		if (MapExportable.TO_MAP_METHOD.equals(methodName)) {
-			//return Collections.unmodifiableMap(src);
-            return src;
+			// return Collections.unmodifiableMap(src);
+			return src;
 		}
 
 		Object value = src.get(methodName);

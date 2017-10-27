@@ -29,7 +29,6 @@ import com.datastax.driver.core.querybuilder.Update;
 import net.helenus.core.*;
 import net.helenus.core.cache.BoundFacet;
 import net.helenus.core.cache.Facet;
-import net.helenus.core.cache.UnboundFacet;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.core.reflect.MapExportable;
 import net.helenus.mapping.HelenusEntity;
@@ -62,26 +61,26 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		this.draftMap = draft.toMap();
 	}
 
-    public UpdateOperation(AbstractSessionOperations sessionOperations, Object pojo) {
-        super(sessionOperations);
-        this.draft = null;
-        this.draftMap = null;
-        this.pojo = pojo;
-        this.entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
-    }
+	public UpdateOperation(AbstractSessionOperations sessionOperations, Object pojo) {
+		super(sessionOperations);
+		this.draft = null;
+		this.draftMap = null;
+		this.pojo = pojo;
+		this.entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
+	}
 
-    public UpdateOperation(AbstractSessionOperations sessionOperations, HelenusPropertyNode p, Object v) {
-        super(sessionOperations);
-        this.draft = null;
-        this.draftMap = null;
+	public UpdateOperation(AbstractSessionOperations sessionOperations, HelenusPropertyNode p, Object v) {
+		super(sessionOperations);
+		this.draft = null;
+		this.draftMap = null;
 
-        Object value = sessionOps.getValuePreparer().prepareColumnValue(v, p.getProperty());
-        assignments.put(QueryBuilder.set(p.getColumnName(), value), new BoundFacet(p.getProperty(), v));
+		Object value = sessionOps.getValuePreparer().prepareColumnValue(v, p.getProperty());
+		assignments.put(QueryBuilder.set(p.getColumnName(), value), new BoundFacet(p.getProperty(), v));
 
-        addPropertyNode(p);
-    }
+		addPropertyNode(p);
+	}
 
-    public <V> UpdateOperation<E> set(Getter<V> getter, V v) {
+	public <V> UpdateOperation<E> set(Getter<V> getter, V v) {
 		Objects.requireNonNull(getter, "getter is empty");
 
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(getter);
@@ -91,23 +90,23 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		assignments.put(QueryBuilder.set(p.getColumnName(), value), new BoundFacet(prop, value));
 
 		if (draft != null) {
-            String key = prop.getPropertyName();
-		    if (draft.get(key, value.getClass()) != value) {
-		        draft.set(key, value);
-            }
-        }
+			String key = prop.getPropertyName();
+			if (draft.get(key, value.getClass()) != value) {
+				draft.set(key, value);
+			}
+		}
 
-        if (entity != null) {
-            if (entity.isCacheable() && pojo != null && pojo instanceof MapExportable) {
-                String key = prop.getPropertyName();
-                Map<String, Object> map = ((MapExportable) pojo).toMap();
-                if (!(map instanceof ValueProviderMap)) {
-                    if (map.get(key) != value) {
-                        map.put(key, value);
-                    }
-                }
-            }
-        }
+		if (entity != null) {
+			if (entity.isCacheable() && pojo != null && pojo instanceof MapExportable) {
+				String key = prop.getPropertyName();
+				Map<String, Object> map = ((MapExportable) pojo).toMap();
+				if (!(map instanceof ValueProviderMap)) {
+					if (map.get(key) != value) {
+						map.put(key, value);
+					}
+				}
+			}
+		}
 
 		addPropertyNode(p);
 
@@ -132,15 +131,15 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(counterGetter);
 
-        BoundFacet facet = null;
-        if (pojo != null) {
-            HelenusProperty prop = p.getProperty();
-            Long value = (Long)BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
-            facet = new BoundFacet(prop, value + delta);
-        } else if (draft != null) {
-            String key = p.getProperty().getPropertyName();
-            draftMap.put(key, (Long) draftMap.get(key) + delta);
-        }
+		BoundFacet facet = null;
+		if (pojo != null) {
+			HelenusProperty prop = p.getProperty();
+			Long value = (Long) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
+			facet = new BoundFacet(prop, value + delta);
+		} else if (draft != null) {
+			String key = p.getProperty().getPropertyName();
+			draftMap.put(key, (Long) draftMap.get(key) + delta);
+		}
 
 		assignments.put(QueryBuilder.incr(p.getColumnName(), delta), facet);
 
@@ -159,17 +158,17 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(counterGetter);
 
-        BoundFacet facet = null;
-        if (pojo != null) {
-            HelenusProperty prop = p.getProperty();
-            Long value = (Long) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
-            facet = new BoundFacet(prop, value - delta);
-        } else if (draft != null) {
-            String key = p.getProperty().getPropertyName();
-            draftMap.put(key, (Long) draftMap.get(key) - delta);
-        }
+		BoundFacet facet = null;
+		if (pojo != null) {
+			HelenusProperty prop = p.getProperty();
+			Long value = (Long) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
+			facet = new BoundFacet(prop, value - delta);
+		} else if (draft != null) {
+			String key = p.getProperty().getPropertyName();
+			draftMap.put(key, (Long) draftMap.get(key) - delta);
+		}
 
-        assignments.put(QueryBuilder.decr(p.getColumnName(), delta), facet);
+		assignments.put(QueryBuilder.decr(p.getColumnName(), delta), facet);
 
 		addPropertyNode(p);
 
@@ -191,19 +190,19 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
 		Object valueObj = prepareSingleListValue(p, value);
 
-        BoundFacet facet = null;
-        if (pojo != null) {
-            HelenusProperty prop = p.getProperty();
-            List<V> list = new ArrayList<V>((List<V>)BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-            list.add(0, value);
-            facet = new BoundFacet(prop, list);
-        } else if (draft != null) {
-            String key = p.getProperty().getPropertyName();
-            List<V> list = (List<V>) draftMap.get(key);
-            list.add(0, value);
-        }
+		BoundFacet facet = null;
+		if (pojo != null) {
+			HelenusProperty prop = p.getProperty();
+			List<V> list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+			list.add(0, value);
+			facet = new BoundFacet(prop, list);
+		} else if (draft != null) {
+			String key = p.getProperty().getPropertyName();
+			List<V> list = (List<V>) draftMap.get(key);
+			list.add(0, value);
+		}
 
-        assignments.put(QueryBuilder.prepend(p.getColumnName(), valueObj), facet);
+		assignments.put(QueryBuilder.prepend(p.getColumnName(), valueObj), facet);
 
 		addPropertyNode(p);
 
@@ -218,19 +217,19 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
 		List valueObj = prepareListValue(p, value);
 
-        BoundFacet facet = null;
-        if (pojo != null) {
-            HelenusProperty prop = p.getProperty();
-            List<V> list = new ArrayList<V>((List<V>)BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-            list.addAll(0, value);
-            facet = new BoundFacet(prop, list);
-        } else if (draft != null && value.size() > 0) {
-            String key = p.getProperty().getPropertyName();
-            List<V> list = (List<V>) draftMap.get(key);
-            list.addAll(0, value);
-        }
+		BoundFacet facet = null;
+		if (pojo != null) {
+			HelenusProperty prop = p.getProperty();
+			List<V> list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+			list.addAll(0, value);
+			facet = new BoundFacet(prop, list);
+		} else if (draft != null && value.size() > 0) {
+			String key = p.getProperty().getPropertyName();
+			List<V> list = (List<V>) draftMap.get(key);
+			list.addAll(0, value);
+		}
 
-        assignments.put(QueryBuilder.prependAll(p.getColumnName(), valueObj), facet);
+		assignments.put(QueryBuilder.prependAll(p.getColumnName(), valueObj), facet);
 
 		addPropertyNode(p);
 
@@ -245,28 +244,28 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
 		Object valueObj = prepareSingleListValue(p, value);
 
-        BoundFacet facet = null;
-        if (pojo != null || draft != null) {
-            List<V> list;
-            HelenusProperty prop = p.getProperty();
-            if (pojo != null) {
-                list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-            } else {
-                String key = p.getProperty().getPropertyName();
-                list = (List<V>) draftMap.get(key);
-            }
-            if (idx < 0) {
-                list.add(0, value);
-            } else if (idx > list.size()) {
-                list.add(list.size(), value);
-            } else {
-                list.add(idx, value);
-            }
-            list.add(0, value);
-            facet = new BoundFacet(prop, list);
-        }
+		BoundFacet facet = null;
+		if (pojo != null || draft != null) {
+			List<V> list;
+			HelenusProperty prop = p.getProperty();
+			if (pojo != null) {
+				list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+			} else {
+				String key = p.getProperty().getPropertyName();
+				list = (List<V>) draftMap.get(key);
+			}
+			if (idx < 0) {
+				list.add(0, value);
+			} else if (idx > list.size()) {
+				list.add(list.size(), value);
+			} else {
+				list.add(idx, value);
+			}
+			list.add(0, value);
+			facet = new BoundFacet(prop, list);
+		}
 
-        assignments.put(QueryBuilder.setIdx(p.getColumnName(), idx, valueObj), facet);
+		assignments.put(QueryBuilder.setIdx(p.getColumnName(), idx, valueObj), facet);
 
 		addPropertyNode(p);
 
@@ -281,18 +280,18 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
 		Object valueObj = prepareSingleListValue(p, value);
 
-        BoundFacet facet = null;
-        if (pojo != null) {
-            HelenusProperty prop = p.getProperty();
-            List<V> list = new ArrayList<V>((List<V>)BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-            list.add(value);
-            facet = new BoundFacet(prop, list);
-        } else if (draft != null) {
-            String key = p.getProperty().getPropertyName();
-            List<V> list = (List<V>) draftMap.get(key);
-            list.add(value);
-        }
-        assignments.put(QueryBuilder.append(p.getColumnName(), valueObj), facet);
+		BoundFacet facet = null;
+		if (pojo != null) {
+			HelenusProperty prop = p.getProperty();
+			List<V> list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+			list.add(value);
+			facet = new BoundFacet(prop, list);
+		} else if (draft != null) {
+			String key = p.getProperty().getPropertyName();
+			List<V> list = (List<V>) draftMap.get(key);
+			list.add(value);
+		}
+		assignments.put(QueryBuilder.append(p.getColumnName(), valueObj), facet);
 
 		addPropertyNode(p);
 
@@ -307,18 +306,18 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
 		List valueObj = prepareListValue(p, value);
 
-        BoundFacet facet = null;
-        if (pojo != null) {
-            HelenusProperty prop = p.getProperty();
-            List<V> list = new ArrayList<V>((List<V>)BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-            list.addAll(value);
-            facet = new BoundFacet(prop, list);
-        } else if (draft != null && value.size() > 0) {
-            String key = p.getProperty().getPropertyName();
-            List<V> list = (List<V>) draftMap.get(key);
-            list.addAll(value);
-        }
-        assignments.put(QueryBuilder.appendAll(p.getColumnName(), valueObj), facet);
+		BoundFacet facet = null;
+		if (pojo != null) {
+			HelenusProperty prop = p.getProperty();
+			List<V> list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+			list.addAll(value);
+			facet = new BoundFacet(prop, list);
+		} else if (draft != null && value.size() > 0) {
+			String key = p.getProperty().getPropertyName();
+			List<V> list = (List<V>) draftMap.get(key);
+			list.addAll(value);
+		}
+		assignments.put(QueryBuilder.appendAll(p.getColumnName(), valueObj), facet);
 
 		addPropertyNode(p);
 
@@ -333,18 +332,18 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
 		Object valueObj = prepareSingleListValue(p, value);
 
-        BoundFacet facet = null;
-        if (pojo != null) {
-            HelenusProperty prop = p.getProperty();
-            List<V> list = new ArrayList<V>((List<V>)BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-            list.remove(value);
-            facet = new BoundFacet(prop, list);
-        } else if (draft != null) {
-            String key = p.getProperty().getPropertyName();
-            List<V> list = (List<V>) draftMap.get(key);
-            list.remove(value);
-        }
-        assignments.put(QueryBuilder.discard(p.getColumnName(), valueObj), facet);
+		BoundFacet facet = null;
+		if (pojo != null) {
+			HelenusProperty prop = p.getProperty();
+			List<V> list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+			list.remove(value);
+			facet = new BoundFacet(prop, list);
+		} else if (draft != null) {
+			String key = p.getProperty().getPropertyName();
+			List<V> list = (List<V>) draftMap.get(key);
+			list.remove(value);
+		}
+		assignments.put(QueryBuilder.discard(p.getColumnName(), valueObj), facet);
 
 		addPropertyNode(p);
 
@@ -359,18 +358,18 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
 		List valueObj = prepareListValue(p, value);
 
-        BoundFacet facet = null;
-        if (pojo != null) {
-            HelenusProperty prop = p.getProperty();
-            List<V> list = new ArrayList<V>((List<V>)BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-            list.removeAll(value);
-            facet = new BoundFacet(prop, list);
-        } else if (draft != null) {
-            String key = p.getProperty().getPropertyName();
-            List<V> list = (List<V>) draftMap.get(key);
-            list.removeAll(value);
-        }
-        assignments.put(QueryBuilder.discardAll(p.getColumnName(), valueObj), facet);
+		BoundFacet facet = null;
+		if (pojo != null) {
+			HelenusProperty prop = p.getProperty();
+			List<V> list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+			list.removeAll(value);
+			facet = new BoundFacet(prop, list);
+		} else if (draft != null) {
+			String key = p.getProperty().getPropertyName();
+			List<V> list = (List<V>) draftMap.get(key);
+			list.removeAll(value);
+		}
+		assignments.put(QueryBuilder.discardAll(p.getColumnName(), valueObj), facet);
 
 		addPropertyNode(p);
 
@@ -421,18 +420,18 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
 		Object valueObj = prepareSingleSetValue(p, value);
 
-        BoundFacet facet = null;
-        if (pojo != null) {
-            HelenusProperty prop = p.getProperty();
-            Set<V> set = new HashSet<V>((Set<V>)BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-            set.add(value);
-            facet = new BoundFacet(prop, set);
-        } else if (draft != null) {
-            String key = p.getProperty().getPropertyName();
-            Set<V> set = (Set<V>) draftMap.get(key);
-            set.add(value);
-        }
-        assignments.put(QueryBuilder.add(p.getColumnName(), valueObj), facet);
+		BoundFacet facet = null;
+		if (pojo != null) {
+			HelenusProperty prop = p.getProperty();
+			Set<V> set = new HashSet<V>((Set<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+			set.add(value);
+			facet = new BoundFacet(prop, set);
+		} else if (draft != null) {
+			String key = p.getProperty().getPropertyName();
+			Set<V> set = (Set<V>) draftMap.get(key);
+			set.add(value);
+		}
+		assignments.put(QueryBuilder.add(p.getColumnName(), valueObj), facet);
 
 		addPropertyNode(p);
 
@@ -447,17 +446,17 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
 		Set valueObj = prepareSetValue(p, value);
 
-        BoundFacet facet = null;
-        if (pojo != null) {
-            HelenusProperty prop = p.getProperty();
-            Set<V> set = new HashSet<V>((Set<V>)BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-            set.addAll(value);
-            facet = new BoundFacet(prop, set);
-        } else if (draft != null) {
-            String key = p.getProperty().getPropertyName();
-            Set<V> set = (Set<V>) draftMap.get(key);
-            set.addAll(value);
-        }
+		BoundFacet facet = null;
+		if (pojo != null) {
+			HelenusProperty prop = p.getProperty();
+			Set<V> set = new HashSet<V>((Set<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+			set.addAll(value);
+			facet = new BoundFacet(prop, set);
+		} else if (draft != null) {
+			String key = p.getProperty().getPropertyName();
+			Set<V> set = (Set<V>) draftMap.get(key);
+			set.addAll(value);
+		}
 		assignments.put(QueryBuilder.addAll(p.getColumnName(), valueObj), facet);
 
 		addPropertyNode(p);
@@ -473,17 +472,17 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
 		Object valueObj = prepareSingleSetValue(p, value);
 
-        BoundFacet facet = null;
-        if (pojo != null) {
-            HelenusProperty prop = p.getProperty();
-            Set<V> set = new HashSet<V>((Set<V>)BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-            set.remove(value);
-            facet = new BoundFacet(prop, set);
-        } else if (draft != null) {
-            String key = p.getProperty().getPropertyName();
-            Set<V> set = (Set<V>) draftMap.get(key);
-            set.remove(value);
-        }
+		BoundFacet facet = null;
+		if (pojo != null) {
+			HelenusProperty prop = p.getProperty();
+			Set<V> set = new HashSet<V>((Set<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+			set.remove(value);
+			facet = new BoundFacet(prop, set);
+		} else if (draft != null) {
+			String key = p.getProperty().getPropertyName();
+			Set<V> set = (Set<V>) draftMap.get(key);
+			set.remove(value);
+		}
 		assignments.put(QueryBuilder.remove(p.getColumnName(), valueObj), facet);
 
 		addPropertyNode(p);
@@ -499,17 +498,17 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
 		Set valueObj = prepareSetValue(p, value);
 
-        BoundFacet facet = null;
-        if (pojo != null) {
-            HelenusProperty prop = p.getProperty();
-            Set<V> set = new HashSet<V>((Set<V>)BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-            set.removeAll(value);
-            facet = new BoundFacet(prop, set);
-        } else if (draft != null) {
-            String key = p.getProperty().getPropertyName();
-            Set<V> set = (Set<V>) draftMap.get(key);
-            set.removeAll(value);
-        }
+		BoundFacet facet = null;
+		if (pojo != null) {
+			HelenusProperty prop = p.getProperty();
+			Set<V> set = new HashSet<V>((Set<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+			set.removeAll(value);
+			facet = new BoundFacet(prop, set);
+		} else if (draft != null) {
+			String key = p.getProperty().getPropertyName();
+			Set<V> set = (Set<V>) draftMap.get(key);
+			set.removeAll(value);
+		}
 		assignments.put(QueryBuilder.removeAll(p.getColumnName(), valueObj), facet);
 
 		addPropertyNode(p);
@@ -560,14 +559,15 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(mapGetter);
 		HelenusProperty prop = p.getProperty();
 
-        BoundFacet facet = null;
-        if (pojo != null) {
-            Map<K, V> map = new HashMap<K, V>((Map<K, V>)BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-            map.put(key, value);
-            facet = new BoundFacet(prop, map);
-        } else if (draft != null) {
-            ((Map<K, V>) draftMap.get(prop.getPropertyName())).put(key, value);
-        }
+		BoundFacet facet = null;
+		if (pojo != null) {
+			Map<K, V> map = new HashMap<K, V>(
+					(Map<K, V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+			map.put(key, value);
+			facet = new BoundFacet(prop, map);
+		} else if (draft != null) {
+			((Map<K, V>) draftMap.get(prop.getPropertyName())).put(key, value);
+		}
 
 		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
 		if (converter.isPresent()) {
@@ -593,14 +593,15 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(mapGetter);
 		HelenusProperty prop = p.getProperty();
 
-        BoundFacet facet = null;
-        if (pojo != null) {
-            Map<K, V> newMap = new HashMap<K, V>((Map<K, V>)BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-            newMap.putAll(map);
-            facet = new BoundFacet(prop, newMap);
-        } else if (draft != null) {
-            ((Map<K, V>) draftMap.get(prop.getPropertyName())).putAll(map);
-        }
+		BoundFacet facet = null;
+		if (pojo != null) {
+			Map<K, V> newMap = new HashMap<K, V>(
+					(Map<K, V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+			newMap.putAll(map);
+			facet = new BoundFacet(prop, newMap);
+		} else if (draft != null) {
+			((Map<K, V>) draftMap.get(prop.getPropertyName())).putAll(map);
+		}
 
 		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
 		if (converter.isPresent()) {
@@ -687,13 +688,13 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 	public E sync() throws TimeoutException {
 		E result = super.sync();
 		if (entity.isCacheable()) {
-		    if (draft != null) {
-                sessionOps.updateCache(draft, bindFacetValues());
-            } else if (pojo != null) {
-                sessionOps.updateCache(pojo, bindFacetValues());
-            } else {
-                sessionOps.cacheEvict(bindFacetValues());
-            }
+			if (draft != null) {
+				sessionOps.updateCache(draft, bindFacetValues());
+			} else if (pojo != null) {
+				sessionOps.updateCache(pojo, bindFacetValues());
+			} else {
+				sessionOps.cacheEvict(bindFacetValues());
+			}
 		}
 		return result;
 	}
@@ -705,21 +706,21 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 		}
 		E result = super.sync(uow);
 		if (draft != null) {
-            cacheUpdate(uow, result, bindFacetValues());
-        } else if (pojo != null) {
-            cacheUpdate(uow, (E)pojo, bindFacetValues());
-        }
+			cacheUpdate(uow, result, bindFacetValues());
+		} else if (pojo != null) {
+			cacheUpdate(uow, (E) pojo, bindFacetValues());
+		}
 		return result;
 	}
 
-    @Override
-    public List<Facet> bindFacetValues() {
-        List<Facet> facets = bindFacetValues(entity.getFacets());
-        facets.addAll(assignments.values().stream().distinct().filter(o -> o != null).collect(Collectors.toList()));
-        return facets;
-    }
+	@Override
+	public List<Facet> bindFacetValues() {
+		List<Facet> facets = bindFacetValues(entity.getFacets());
+		facets.addAll(assignments.values().stream().distinct().filter(o -> o != null).collect(Collectors.toList()));
+		return facets;
+	}
 
-    @Override
+	@Override
 	public List<Facet> getFacets() {
 		if (entity != null) {
 			return entity.getFacets();

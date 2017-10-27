@@ -15,10 +15,7 @@
  */
 package net.helenus.core.operation;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import com.datastax.driver.core.ResultSet;
@@ -31,10 +28,8 @@ import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.Filter;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.cache.Facet;
-import net.helenus.core.cache.UnboundFacet;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusEntity;
-import net.helenus.mapping.HelenusProperty;
 import net.helenus.support.HelenusMappingException;
 
 public final class DeleteOperation extends AbstractFilterOperation<ResultSet, DeleteOperation> {
@@ -134,8 +129,8 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 	}
 
 	public List<Facet> bindFacetValues() {
-	    return bindFacetValues(getFacets());
-    }
+		return bindFacetValues(getFacets());
+	}
 
 	@Override
 	public ResultSet sync() throws TimeoutException {
@@ -156,9 +151,9 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 		return result;
 	}
 
-    @Override
-    public List<Facet> getFacets() {
-        return entity.getFacets();
-    }
+	@Override
+	public List<Facet> getFacets() {
+		return entity.getFacets();
+	}
 
 }

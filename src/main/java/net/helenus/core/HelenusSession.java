@@ -23,23 +23,20 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import net.helenus.core.cache.SessionCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.*;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Table;
 
 import brave.Tracer;
 import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
+import net.helenus.core.cache.SessionCache;
 import net.helenus.core.cache.UnboundFacet;
 import net.helenus.core.operation.*;
 import net.helenus.core.reflect.Drafted;
@@ -80,8 +77,8 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 	HelenusSession(Session session, String usingKeyspace, CodecRegistry registry, boolean showCql,
 			PrintStream printStream, SessionRepositoryBuilder sessionRepositoryBuilder, Executor executor,
 			boolean dropSchemaOnClose, ConsistencyLevel consistencyLevel, boolean defaultQueryIdempotency,
-			Class<? extends UnitOfWork> unitOfWorkClass, SessionCache sessionCache,
-            MetricRegistry metricRegistry, Tracer tracer) {
+			Class<? extends UnitOfWork> unitOfWorkClass, SessionCache sessionCache, MetricRegistry metricRegistry,
+			Tracer tracer) {
 		this.session = session;
 		this.registry = registry == null ? CodecRegistry.DEFAULT_INSTANCE : registry;
 		this.usingKeyspace = Objects.requireNonNull(usingKeyspace,
@@ -98,10 +95,10 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		this.zipkinTracer = tracer;
 
 		if (sessionCache == null) {
-            this.sessionCache = SessionCache.<String, Object>defaultCache();
-        } else {
-		    this.sessionCache = sessionCache;
-        }
+			this.sessionCache = SessionCache.<String, Object>defaultCache();
+		} else {
+			this.sessionCache = sessionCache;
+		}
 
 		this.valueProvider = new RowColumnValueProvider(this.sessionRepository);
 		this.valuePreparer = new StatementColumnValuePreparer(this.sessionRepository);
@@ -242,48 +239,49 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 
 	@Override
 	public void mergeCache(Table<String, String, Either<Object, List<Facet>>> uowCache) {
-        List<Object> items = uowCache.values().stream().filter(Either::isLeft).map(Either::getLeft).distinct().collect(Collectors.toList());
+		List<Object> items = uowCache.values().stream().filter(Either::isLeft).map(Either::getLeft).distinct()
+				.collect(Collectors.toList());
 		for (Object pojo : items) {
-            HelenusEntity entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
-            Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
-            if (entity.isCacheable()) {
-                List<Facet> boundFacets = new ArrayList<>();
-                for (Facet facet : entity.getFacets()) {
-                    if (facet instanceof UnboundFacet) {
-                        UnboundFacet unboundFacet = (UnboundFacet) facet;
-                        UnboundFacet.Binder binder = unboundFacet.binder();
-                        unboundFacet.getProperties().forEach(prop -> {
-                            if (valueMap == null) {
-                                Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
-                                binder.setValueForProperty(prop, value.toString());
-                            } else {
-                                binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
-                            }
-                        });
-                        if (binder.isBound()) {
-                            boundFacets.add(binder.bind());
-                        }
-                    } else {
-                        boundFacets.add(facet);
-                    }
-                }
-                // NOTE: should equal `String tableName = CacheUtil.schemaName(facets);`
-                List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
-                String tableName = CacheUtil.schemaName(boundFacets);
-                mergeAndUpdateCacheValues(pojo, tableName, facetCombinations);
-            }
-        }
+			HelenusEntity entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
+			Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
+			if (entity.isCacheable()) {
+				List<Facet> boundFacets = new ArrayList<>();
+				for (Facet facet : entity.getFacets()) {
+					if (facet instanceof UnboundFacet) {
+						UnboundFacet unboundFacet = (UnboundFacet) facet;
+						UnboundFacet.Binder binder = unboundFacet.binder();
+						unboundFacet.getProperties().forEach(prop -> {
+							if (valueMap == null) {
+								Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
+								binder.setValueForProperty(prop, value.toString());
+							} else {
+								binder.setValueForProperty(prop, valueMap.get(prop.getPropertyName()).toString());
+							}
+						});
+						if (binder.isBound()) {
+							boundFacets.add(binder.bind());
+						}
+					} else {
+						boundFacets.add(facet);
+					}
+				}
+				// NOTE: should equal `String tableName = CacheUtil.schemaName(facets);`
+				List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
+				String tableName = CacheUtil.schemaName(boundFacets);
+				mergeAndUpdateCacheValues(pojo, tableName, facetCombinations);
+			}
+		}
 
-        List<List<Facet>> deletedFacetSets = uowCache.values().stream().filter(Either::isRight).map(Either::getRight).collect(
-                Collectors.toList());
-        for (List<Facet> facets : deletedFacetSets) {
-            String tableName = CacheUtil.schemaName(facets);
-            List<String[]> combinations = CacheUtil.flattenFacets(facets);
-            for (String[] combination : combinations) {
-                String cacheKey = tableName + "." + Arrays.toString(combination);
-                sessionCache.invalidate(cacheKey);
-            }
-        }
+		List<List<Facet>> deletedFacetSets = uowCache.values().stream().filter(Either::isRight).map(Either::getRight)
+				.collect(Collectors.toList());
+		for (List<Facet> facets : deletedFacetSets) {
+			String tableName = CacheUtil.schemaName(facets);
+			List<String[]> combinations = CacheUtil.flattenFacets(facets);
+			for (String[] combination : combinations) {
+				String cacheKey = tableName + "." + Arrays.toString(combination);
+				sessionCache.invalidate(cacheKey);
+			}
+		}
 	}
 
 	private void mergeAndUpdateCacheValues(Object pojo, String tableName, List<String[]> facetCombinations) {
@@ -505,20 +503,20 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 	}
 
 	public <E> UpdateOperation<E> update(Object pojo) {
-        if (pojo instanceof MapExportable == false) {
-            throw new HelenusMappingException(
-                    "update of objects that don't implement MapExportable is not yet supported");
-        }
-        return new UpdateOperation<E>(this, pojo);
-    }
+		if (pojo instanceof MapExportable == false) {
+			throw new HelenusMappingException(
+					"update of objects that don't implement MapExportable is not yet supported");
+		}
+		return new UpdateOperation<E>(this, pojo);
+	}
 
 	public <E> UpdateOperation<E> update(Drafted<E> drafted) {
-        if (drafted instanceof AbstractEntityDraft == false) {
-            throw new HelenusMappingException(
-                    "update of draft objects that don't inherit from AbstractEntityDraft is not yet supported");
-        }
+		if (drafted instanceof AbstractEntityDraft == false) {
+			throw new HelenusMappingException(
+					"update of draft objects that don't inherit from AbstractEntityDraft is not yet supported");
+		}
 		AbstractEntityDraft<E> draft = (AbstractEntityDraft<E>) drafted;
-        UpdateOperation update = new UpdateOperation<E>(this, draft);
+		UpdateOperation update = new UpdateOperation<E>(this, draft);
 		Map<String, Object> map = draft.toMap();
 		Set<String> mutatedProperties = draft.mutated();
 		HelenusEntity entity = Helenus.entity(draft.getEntityClass());

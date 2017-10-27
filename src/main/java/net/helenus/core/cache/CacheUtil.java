@@ -1,15 +1,11 @@
 package net.helenus.core.cache;
 
-import net.helenus.core.Helenus;
-import net.helenus.core.reflect.MapExportable;
-import net.helenus.mapping.HelenusEntity;
-import net.helenus.mapping.MappingUtil;
-import net.helenus.mapping.value.BeanColumnValueProvider;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import net.helenus.core.reflect.MapExportable;
 
 public class CacheUtil {
 
@@ -45,22 +41,25 @@ public class CacheUtil {
 	}
 
 	public static Object merge(Object to, Object from) {
-        if (to == from) {
-            return to;
+		if (to == from) {
+			return to;
+		} else {
+		    return from;
         }
+/*
+		// TODO(gburd): take ttl and writeTime into account when merging.
+		Map<String, Object> toValueMap = to instanceof MapExportable ? ((MapExportable) to).toMap() : null;
+		Map<String, Object> fromValueMap = to instanceof MapExportable ? ((MapExportable) from).toMap() : null;
 
-        //TODO(gburd): take ttl and writeTime into account when merging.
-        Map<String, Object> toValueMap = to instanceof MapExportable ? ((MapExportable) to).toMap() : null;
-        Map<String, Object> fromValueMap = to instanceof MapExportable ? ((MapExportable) from).toMap() : null;
-
-        if (toValueMap != null && fromValueMap != null) {
-            for (String key : fromValueMap.keySet()) {
-                if (toValueMap.containsKey(key) && toValueMap.get(key) != fromValueMap.get(key)) {
-                    toValueMap.put(key, fromValueMap.get(key));
-                }
-            }
-        }
+		if (toValueMap != null && fromValueMap != null) {
+			for (String key : fromValueMap.keySet()) {
+				if (toValueMap.containsKey(key) && toValueMap.get(key) != fromValueMap.get(key)) {
+					toValueMap.put(key, fromValueMap.get(key));
+				}
+			}
+		}
 		return to;
+*/
 	}
 
 	public static String schemaName(List<Facet> facets) {

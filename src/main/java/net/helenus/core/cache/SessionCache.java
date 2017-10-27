@@ -16,21 +16,21 @@
 
 package net.helenus.core.cache;
 
-import com.google.common.cache.CacheBuilder;
-
 import java.util.concurrent.TimeUnit;
+
+import com.google.common.cache.CacheBuilder;
 
 public interface SessionCache<K, V> {
 
-    static <K, V> SessionCache<K, V> defaultCache() {
-        int MAX_CACHE_SIZE = 10000;
-        int MAX_CACHE_EXPIRE_SECONDS = 600;
-        return new GuavaCache<K, V>(CacheBuilder.newBuilder().maximumSize(MAX_CACHE_SIZE)
-                .expireAfterAccess(MAX_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS)
-                .expireAfterWrite(MAX_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS).recordStats().build());
-    }
+	static <K, V> SessionCache<K, V> defaultCache() {
+		int MAX_CACHE_SIZE = 10000;
+		int MAX_CACHE_EXPIRE_SECONDS = 600;
+		return new GuavaCache<K, V>(CacheBuilder.newBuilder().maximumSize(MAX_CACHE_SIZE)
+				.expireAfterAccess(MAX_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS)
+				.expireAfterWrite(MAX_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS).recordStats().build());
+	}
 
-    void invalidate(K key);
-    V get(K key);
-    void put(K key, V value);
+	void invalidate(K key);
+	V get(K key);
+	void put(K key, V value);
 }

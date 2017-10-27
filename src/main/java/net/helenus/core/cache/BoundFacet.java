@@ -25,10 +25,10 @@ public class BoundFacet extends Facet<String> {
 	private final Map<HelenusProperty, Object> properties;
 
 	public BoundFacet(HelenusProperty property, Object value) {
-        super(property.getPropertyName(), value == null ? null : value.toString());
-	    this.properties = new HashMap<HelenusProperty, Object>(1);
-	    this.properties.put(property, value);
-    }
+		super(property.getPropertyName(), value == null ? null : value.toString());
+		this.properties = new HashMap<HelenusProperty, Object>(1);
+		this.properties.put(property, value);
+	}
 
 	public BoundFacet(String name, Map<HelenusProperty, Object> properties) {
 		super(name,

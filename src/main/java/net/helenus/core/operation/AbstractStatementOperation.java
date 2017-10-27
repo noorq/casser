@@ -333,10 +333,10 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		List<Facet> facets = new ArrayList<>();
 		Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
 
-        for (Facet facet : identifyingFacets) {
-            if (facet instanceof UnboundFacet) {
-                UnboundFacet unboundFacet = (UnboundFacet) facet;
-                UnboundFacet.Binder binder = unboundFacet.binder();
+		for (Facet facet : identifyingFacets) {
+			if (facet instanceof UnboundFacet) {
+				UnboundFacet unboundFacet = (UnboundFacet) facet;
+				UnboundFacet.Binder binder = unboundFacet.binder();
 				for (HelenusProperty prop : unboundFacet.getProperties()) {
 					Object value;
 					if (valueMap == null) {
