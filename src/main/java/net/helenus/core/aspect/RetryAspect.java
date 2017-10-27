@@ -89,7 +89,7 @@ public class RetryAspect {
 			return retryAnnotation;
 		}
 
-		Class[] argClasses = new Class[pjp.getArgs().length];
+		Class<?>[] argClasses = new Class[pjp.getArgs().length];
 		for (int i = 0; i < pjp.getArgs().length; i++) {
 			argClasses[i] = pjp.getArgs()[i].getClass();
 		}

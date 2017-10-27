@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import net.helenus.core.cache.SessionCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +58,6 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 
 	public static final Object deleted = new Object();
 	private static final Logger LOG = LoggerFactory.getLogger(HelenusSession.class);
-	private final int MAX_CACHE_SIZE = 10000;
-	private final int MAX_CACHE_EXPIRE_SECONDS = 600;
 
 	private final Session session;
 	private final CodecRegistry registry;
@@ -71,7 +70,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 	private final SessionRepository sessionRepository;
 	private final Executor executor;
 	private final boolean dropSchemaOnClose;
-	private final Cache<String, Object> sessionCache;
+	private final SessionCache<String, Object> sessionCache;
 	private final RowColumnValueProvider valueProvider;
 	private final StatementColumnValuePreparer valuePreparer;
 	private final Metadata metadata;
@@ -81,7 +80,8 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 	HelenusSession(Session session, String usingKeyspace, CodecRegistry registry, boolean showCql,
 			PrintStream printStream, SessionRepositoryBuilder sessionRepositoryBuilder, Executor executor,
 			boolean dropSchemaOnClose, ConsistencyLevel consistencyLevel, boolean defaultQueryIdempotency,
-			Class<? extends UnitOfWork> unitOfWorkClass, MetricRegistry metricRegistry, Tracer tracer) {
+			Class<? extends UnitOfWork> unitOfWorkClass, SessionCache sessionCache,
+            MetricRegistry metricRegistry, Tracer tracer) {
 		this.session = session;
 		this.registry = registry == null ? CodecRegistry.DEFAULT_INSTANCE : registry;
 		this.usingKeyspace = Objects.requireNonNull(usingKeyspace,
@@ -97,9 +97,11 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		this.metricRegistry = metricRegistry;
 		this.zipkinTracer = tracer;
 
-		this.sessionCache = CacheBuilder.newBuilder().maximumSize(MAX_CACHE_SIZE)
-				.expireAfterAccess(MAX_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS)
-				.expireAfterWrite(MAX_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS).recordStats().build();
+		if (sessionCache == null) {
+            this.sessionCache = SessionCache.<String, Object>defaultCache();
+        } else {
+		    this.sessionCache = sessionCache;
+        }
 
 		this.valueProvider = new RowColumnValueProvider(this.sessionRepository);
 		this.valuePreparer = new StatementColumnValuePreparer(this.sessionRepository);
@@ -289,7 +291,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		Object merged = null;
 		for (String[] combination : facetCombinations) {
 			String cacheKey = tableName + "." + Arrays.toString(combination);
-			Object value = sessionCache.getIfPresent(cacheKey);
+			Object value = sessionCache.get(cacheKey);
 			if (value == null) {
 				sessionCache.put(cacheKey, pojo);
 			} else {
