@@ -27,6 +27,7 @@ import com.datastax.driver.core.*;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import brave.Tracer;
+import net.helenus.core.cache.SessionCache;
 import net.helenus.core.reflect.DslExportable;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusEntityType;
@@ -56,6 +57,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
 	private boolean dropUnusedIndexes = false;
 	private KeyspaceMetadata keyspaceMetadata;
 	private AutoDdl autoDdl = AutoDdl.UPDATE;
+	private SessionCache sessionCache = null;
 
 	SessionInitializer(Session session) {
 		this.session = Objects.requireNonNull(session, "empty session");
@@ -122,6 +124,11 @@ public final class SessionInitializer extends AbstractSessionOperations {
 		this.consistencyLevel = consistencyLevel;
 		return this;
 	}
+
+	public SessionInitializer setSessionCache(SessionCache sessionCache) {
+	    this.sessionCache = sessionCache;
+	    return this;
+    }
 
 	public ConsistencyLevel getDefaultConsistencyLevel() {
 		return consistencyLevel;
@@ -243,8 +250,8 @@ public final class SessionInitializer extends AbstractSessionOperations {
 	public synchronized HelenusSession get() {
 		initialize();
 		return new HelenusSession(session, usingKeyspace, registry, showCql, printStream, sessionRepository, executor,
-				autoDdl == AutoDdl.CREATE_DROP, consistencyLevel, idempotent, unitOfWorkClass, metricRegistry,
-				zipkinTracer);
+				autoDdl == AutoDdl.CREATE_DROP, consistencyLevel, idempotent, unitOfWorkClass, sessionCache,
+                metricRegistry, zipkinTracer);
 	}
 
 	private void initialize() {

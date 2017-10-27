@@ -36,6 +36,7 @@ import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.mapping.value.BeanColumnValueProvider;
+import net.helenus.mapping.value.ValueProviderMap;
 import net.helenus.support.HelenusMappingException;
 import net.helenus.support.Immutables;
 
@@ -66,6 +67,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
         this.draft = null;
         this.draftMap = null;
         this.pojo = pojo;
+        this.entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
     }
 
     public UpdateOperation(AbstractSessionOperations sessionOperations, HelenusPropertyNode p, Object v) {
@@ -95,11 +97,15 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
             }
         }
 
-        if (pojo != null && pojo instanceof MapExportable) {
-            String key = prop.getPropertyName();
-		    Map<String, Object> map = ((MapExportable)pojo).toMap();
-		    if (map.get(key) != value) {
-                map.put(key, value);
+        if (entity != null) {
+            if (entity.isCacheable() && pojo != null && pojo instanceof MapExportable) {
+                String key = prop.getPropertyName();
+                Map<String, Object> map = ((MapExportable) pojo).toMap();
+                if (!(map instanceof ValueProviderMap)) {
+                    if (map.get(key) != value) {
+                        map.put(key, value);
+                    }
+                }
             }
         }
 

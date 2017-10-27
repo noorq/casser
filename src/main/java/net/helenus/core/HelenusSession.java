@@ -190,7 +190,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 		Object result = null;
 		for (String[] combination : facetCombinations) {
 			String cacheKey = tableName + "." + Arrays.toString(combination);
-			result = sessionCache.getIfPresent(cacheKey);
+			result = sessionCache.get(cacheKey);
 			if (result != null) {
 				return result;
 			}
