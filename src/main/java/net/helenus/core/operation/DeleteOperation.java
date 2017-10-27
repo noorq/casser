@@ -133,40 +133,9 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 		}
 	}
 
-	public List<Facet> bindFacetValues(List<Facet> facets) {
-		if (facets == null) {
-			return new ArrayList<Facet>();
-		}
-		List<Facet> boundFacets = new ArrayList<>();
-		Map<HelenusProperty, Filter> filterMap = new HashMap<>(filters.size());
-		filters.forEach(f -> filterMap.put(f.getNode().getProperty(), f));
-
-		for (Facet facet : facets) {
-			if (facet instanceof UnboundFacet) {
-				UnboundFacet unboundFacet = (UnboundFacet) facet;
-				UnboundFacet.Binder binder = unboundFacet.binder();
-				if (filters != null) {
-					for (HelenusProperty prop : unboundFacet.getProperties()) {
-
-						Filter filter = filterMap.get(prop);
-						if (filter != null) {
-							Object[] postulates = filter.postulateValues();
-							for (Object p : postulates) {
-								binder.setValueForProperty(prop, p.toString());
-							}
-						}
-					}
-
-				}
-				if (binder.isBound()) {
-					boundFacets.add(binder.bind());
-				}
-			} else {
-				boundFacets.add(facet);
-			}
-		}
-		return boundFacets;
-	}
+	public List<Facet> bindFacetValues() {
+	    return bindFacetValues(getFacets());
+    }
 
 	@Override
 	public ResultSet sync() throws TimeoutException {
@@ -178,19 +147,18 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
 	}
 
 	@Override
-	public List<Facet> getFacets() {
-		return entity.getFacets();
-	}
-
-	@Override
 	public ResultSet sync(UnitOfWork uow) throws TimeoutException {
 		if (uow == null) {
 			return sync();
 		}
 		ResultSet result = super.sync(uow);
-		List<Facet> facets = getFacets();
-		uow.cacheEvict(bindFacetValues(facets));
+		uow.cacheEvict(bindFacetValues());
 		return result;
 	}
+
+    @Override
+    public List<Facet> getFacets() {
+        return entity.getFacets();
+    }
 
 }

@@ -45,7 +45,7 @@ import net.helenus.support.HelenusException;
 
 public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>> extends Operation<E> {
 
-	protected boolean enableCache = true;
+	protected boolean checkCache = true;
 	protected boolean showValues = true;
 	protected TraceContext traceContext;
 	long queryExecutionTimeout = 10;
@@ -66,13 +66,13 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 
 	public abstract Statement buildStatement(boolean cached);
 
-	public O ignoreCache(boolean enabled) {
-		enableCache = enabled;
+	public O uncached(boolean enabled) {
+		checkCache = enabled;
 		return (O) this;
 	}
 
-	public O ignoreCache() {
-		enableCache = true;
+	public O uncached() {
+		checkCache = false;
 		return (O) this;
 	}
 
@@ -333,10 +333,10 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 		List<Facet> facets = new ArrayList<>();
 		Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
 
-		for (Facet facet : identifyingFacets) {
-			if (facet instanceof UnboundFacet) {
-				UnboundFacet unboundFacet = (UnboundFacet) facet;
-				UnboundFacet.Binder binder = unboundFacet.binder();
+        for (Facet facet : identifyingFacets) {
+            if (facet instanceof UnboundFacet) {
+                UnboundFacet unboundFacet = (UnboundFacet) facet;
+                UnboundFacet.Binder binder = unboundFacet.binder();
 				for (HelenusProperty prop : unboundFacet.getProperties()) {
 					Object value;
 					if (valueMap == null) {

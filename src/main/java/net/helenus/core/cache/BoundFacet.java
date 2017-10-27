@@ -15,6 +15,7 @@
  */
 package net.helenus.core.cache;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -23,7 +24,13 @@ import net.helenus.mapping.HelenusProperty;
 public class BoundFacet extends Facet<String> {
 	private final Map<HelenusProperty, Object> properties;
 
-	BoundFacet(String name, Map<HelenusProperty, Object> properties) {
+	public BoundFacet(HelenusProperty property, Object value) {
+        super(property.getPropertyName(), value == null ? null : value.toString());
+	    this.properties = new HashMap<HelenusProperty, Object>(1);
+	    this.properties.put(property, value);
+    }
+
+	public BoundFacet(String name, Map<HelenusProperty, Object> properties) {
 		super(name,
 				(properties.keySet().size() > 1)
 						? "[" + String.join(", ",

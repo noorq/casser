@@ -69,7 +69,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 			E cacheResult = null;
 			boolean updateCache = isSessionCacheable();
 
-			if (enableCache && isSessionCacheable()) {
+			if (checkCache && isSessionCacheable()) {
 				List<Facet> facets = bindFacetValues();
 				String tableName = CacheUtil.schemaName(facets);
 				cacheResult = (E) sessionOps.checkCache(tableName, facets);
@@ -121,7 +121,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 			E cachedResult = null;
 			final boolean updateCache;
 
-			if (enableCache) {
+			if (checkCache) {
 				Stopwatch timer = Stopwatch.createStarted();
 				try {
 					List<Facet> facets = bindFacetValues();

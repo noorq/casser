@@ -140,41 +140,92 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 			});
 		}
 	}
-	@Test
-	public void testSelectAfterDeleted() throws Exception {
-		Widget w1, w2, w3, w4;
-		UUID key = UUIDs.timeBased();
 
-		// This should inserted Widget, but not cache it.
-		w1 = session.<Widget>insert(widget).value(widget::id, key).value(widget::name, RandomString.make(20)).sync();
+    @Test
+    public void testSelectAfterUpdated() throws Exception {
+        Widget w1, w2, w3, w4, w5, w6;
+        UUID key = UUIDs.timeBased();
 
-		try (UnitOfWork uow = session.begin()) {
+        // This should inserted Widget, but not cache it.
+        w1 = session.<Widget>insert(widget).value(widget::id, key).value(widget::name, RandomString.make(20)).sync();
 
-			// This should read from the database and return a Widget.
-			w2 = session.<Widget>select(widget).where(widget::id, eq(key)).single()
+        try (UnitOfWork uow = session.begin()) {
+
+            // This should read from the database and return a Widget.
+            w2 = session.<Widget>select(widget).where(widget::id, eq(key)).single()
                     .sync(uow).orElse(null);
+            Assert.assertEquals(w1, w2);
 
-			// This should remove the object from the cache.
-			session.delete(widget).where(widget::id, eq(key))
+            // This should remove the object from the cache.
+            //TODO(gburd): w3 = session.
+            session.<Widget>update(w2)
+                    .set(widget::name, "Bill")
+                    .where(widget::id, eq(key))
                     .sync(uow);
 
-			// This should fail to read from the cache.
-			w3 = session.<Widget>select(widget).where(widget::id, eq(key)).single()
+            // Fetch from session cache, should have old name.
+            w4 = session.<Widget>select(widget).where(widget::id, eq(key)).single()
+                    .sync().orElse(null);
+            Assert.assertEquals(w4, w2);
+            Assert.assertEquals(w4.name(), w1.name());
+
+            // This should skip the cache.
+            w5 = session.<Widget>select(widget).where(widget::id, eq(key)).single()
+                    .uncached()
+                    .sync().orElse(null);
+
+            Assert.assertNotEquals(w5, w2); // Not the same instance
+            Assert.assertTrue(w2.equals(w5)); // But they have the same values
+            Assert.assertFalse(w5.equals(w2)); // TODO(gburd): should also work
+            Assert.assertEquals(w5.name(), "Bill");
+
+            uow.commit().andThen(() -> {
+                Assert.assertEquals(w1, w2);
+            });
+        }
+
+        // The name changed, this should miss cache and not find anything in the database.
+        w6 = session.<Widget>select(widget).where(widget::name, eq(w1.name())).single()
+                .sync().orElse(null);
+        Assert.assertTrue(w2.equals(w5));
+    }
+
+
+    @Test
+    public void testSelectAfterDeleted() throws Exception {
+        Widget w1, w2, w3, w4;
+        UUID key = UUIDs.timeBased();
+
+        // This should inserted Widget, but not cache it.
+        w1 = session.<Widget>insert(widget).value(widget::id, key).value(widget::name, RandomString.make(20)).sync();
+
+        try (UnitOfWork uow = session.begin()) {
+
+            // This should read from the database and return a Widget.
+            w2 = session.<Widget>select(widget).where(widget::id, eq(key)).single()
                     .sync(uow).orElse(null);
 
-			Assert.assertEquals(w3, null);
+            // This should remove the object from the cache.
+            session.delete(widget).where(widget::id, eq(key))
+                    .sync(uow);
 
-			uow.commit().andThen(() -> {
-				Assert.assertEquals(w1, w2);
-				Assert.assertEquals(w3, null);
-			});
-		}
+            // This should fail to read from the cache.
+            w3 = session.<Widget>select(widget).where(widget::id, eq(key)).single()
+                    .sync(uow).orElse(null);
 
-		w4 = session.<Widget>select(widget).where(widget::name, eq(w1.name())).single()
+            Assert.assertEquals(w3, null);
+
+            uow.commit().andThen(() -> {
+                Assert.assertEquals(w1, w2);
+                Assert.assertEquals(w3, null);
+            });
+        }
+
+        w4 = session.<Widget>select(widget).where(widget::name, eq(w1.name())).single()
                 .sync().orElse(null);
 
-		Assert.assertEquals(w4, null);
-	}
+        Assert.assertEquals(w4, null);
+    }
 
 	/*
 	 * @Test public void testSelectAfterInsertProperlyCachesEntity() throws
@@ -200,7 +251,7 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 	 * 
 	 * // This should read the widget from the database, no object identity but
 	 * values should match. w4 = session.<Widget>select(widget) .where(widget::id,
-	 * eq(key)) .ignoreCache() .single() .sync() .orElse(null);
+	 * eq(key)) .uncached() .single() .sync() .orElse(null);
 	 * 
 	 * Assert.assertNotEquals(w1, w4); Assert.assertTrue(w1.equals(w4)); }
 	 */

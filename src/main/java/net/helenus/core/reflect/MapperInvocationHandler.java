@@ -102,7 +102,8 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
 		}
 
 		if (MapExportable.TO_MAP_METHOD.equals(methodName)) {
-			return Collections.unmodifiableMap(src);
+			//return Collections.unmodifiableMap(src);
+            return src;
 		}
 
 		Object value = src.get(methodName);

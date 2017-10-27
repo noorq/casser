@@ -44,7 +44,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 
 	private final List<Fun.Tuple2<HelenusPropertyNode, Object>> values = new ArrayList<Fun.Tuple2<HelenusPropertyNode, Object>>();
 	private final T pojo;
-	private final Class<?> resultType;
+    private final Class<?> resultType;
 	private HelenusEntity entity;
 	private boolean ifNotExists;
 
@@ -56,7 +56,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 
 		this.ifNotExists = ifNotExists;
 		this.pojo = null;
-		this.resultType = ResultSet.class;
+        this.resultType = ResultSet.class;
 	}
 
 	public InsertOperation(AbstractSessionOperations sessionOperations, Class<?> resultType, boolean ifNotExists) {
@@ -251,10 +251,14 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 			return sync();
 		}
 		T result = super.sync(uow);
-		Class<?> iface = entity.getMappingInterface();
-		if (resultType == iface) {
+        Class<?> iface = entity.getMappingInterface();
+        if (resultType == iface) {
 			cacheUpdate(uow, result, entity.getFacets());
-		}
+		} else {
+		    if (entity.isCacheable()) {
+                sessionOps.cacheEvict(bindFacetValues());
+            }
+        }
 		return result;
 	}
 

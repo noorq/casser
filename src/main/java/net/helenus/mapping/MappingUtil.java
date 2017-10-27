@@ -16,6 +16,7 @@
 package net.helenus.mapping;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -282,4 +283,43 @@ public final class MappingUtil {
 			return e.getPropertyNode();
 		}
 	}
+
+	// https://stackoverflow.com/a/4882306/366692
+    public static <T> T clone(T object)
+            throws CloneNotSupportedException {
+        Object clone = null;
+
+        // Use reflection, because there is no other way
+        try {
+            Method method = object.getClass().getMethod("clone");
+            clone = method.invoke(object);
+        } catch (InvocationTargetException e) {
+            rethrow(e.getCause());
+        } catch (Exception cause) {
+            rethrow(cause);
+        }
+        if (object.getClass().isInstance(clone)) {
+            @SuppressWarnings("unchecked") // clone class <= object class <= T
+                    T t = (T) clone;
+            return t;
+        } else {
+            throw new ClassCastException(clone.getClass().getName());
+        }
+    }
+
+    private static void rethrow(Throwable cause)
+            throws CloneNotSupportedException {
+        if (cause instanceof RuntimeException) {
+            throw (RuntimeException) cause;
+        }
+        if (cause instanceof Error) {
+            throw (Error) cause;
+        }
+        if (cause instanceof CloneNotSupportedException) {
+            throw (CloneNotSupportedException) cause;
+        }
+        CloneNotSupportedException e = new CloneNotSupportedException();
+        e.initCause(cause);
+        throw e;
+    }
 }
