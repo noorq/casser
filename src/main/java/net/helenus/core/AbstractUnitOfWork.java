@@ -92,9 +92,9 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	}
 
 	@Override
-    public String getPurpose() {
-	    return purpose;
-    }
+	public String getPurpose() {
+		return purpose;
+	}
 
 	@Override
 	public UnitOfWork setPurpose(String purpose) {
@@ -284,7 +284,9 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 
 				// Merge cache and statistics into parent if there is one.
 				parent.mergeCache(cache);
-                if (purpose != null) {parent.nestedPurposes.add(purpose);}
+				if (purpose != null) {
+					parent.nestedPurposes.add(purpose);
+				}
 				parent.cacheHits += cacheHits;
 				parent.cacheMisses += cacheMisses;
 				parent.databaseLookups += databaseLookups;
@@ -310,14 +312,14 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	public synchronized void abort() {
 		TreeTraverser<AbstractUnitOfWork<E>> traverser = TreeTraverser.using(node -> node::getChildNodes);
 		traverser.postOrderTraversal(this).forEach(uow -> {
-            uow.committed = false;
-            uow.aborted = true;
+			uow.committed = false;
+			uow.aborted = true;
 		});
 		// log.record(txn::abort)
 		// cache.invalidateSince(txn::start time)
 		if (!hasAborted()) {
-            committed = false;
-            aborted = true;
+			committed = false;
+			aborted = true;
 			elapsedTime.stop();
 			if (LOG.isInfoEnabled()) {
 				LOG.info(logTimers("aborted"));

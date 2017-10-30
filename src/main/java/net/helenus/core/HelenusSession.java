@@ -316,19 +316,19 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 			Constructor<? extends UnitOfWork> ctor = clazz.getConstructor(HelenusSession.class, UnitOfWork.class);
 			UnitOfWork uow = ctor.newInstance(this, parent);
 			if (LOG.isInfoEnabled() && uow.getPurpose() == null) {
-                StringBuilder purpose = null;
-                StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-                int frame = 2;
-                if (trace[2].getMethodName().equals("begin")) {
-                    frame = 3;
-                } else if (trace[2].getClassName().equals(unitOfWorkClass.getName())) {
-                    frame = 3;
-                }
-                purpose = new StringBuilder().append(trace[frame].getClassName()).append(".")
-                        .append(trace[frame].getMethodName()).append("(").append(trace[frame].getFileName()).append(":")
-                        .append(trace[frame].getLineNumber()).append(")");
-                uow.setPurpose(purpose.toString());
-            }
+				StringBuilder purpose = null;
+				StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+				int frame = 2;
+				if (trace[2].getMethodName().equals("begin")) {
+					frame = 3;
+				} else if (trace[2].getClassName().equals(unitOfWorkClass.getName())) {
+					frame = 3;
+				}
+				purpose = new StringBuilder().append(trace[frame].getClassName()).append(".")
+						.append(trace[frame].getMethodName()).append("(").append(trace[frame].getFileName()).append(":")
+						.append(trace[frame].getLineNumber()).append(")");
+				uow.setPurpose(purpose.toString());
+			}
 			if (parent != null) {
 				parent.addNestedUnitOfWork(uow);
 			}

@@ -55,19 +55,20 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
 				int.class);
 		constructor.setAccessible(true);
 
-		// Now we need to lookup and invoke special the default method on the interface class.
+		// Now we need to lookup and invoke special the default method on the interface
+		// class.
 		final Class<?> declaringClass = method.getDeclaringClass();
 		Object result = constructor.newInstance(declaringClass, MethodHandles.Lookup.PRIVATE)
 				.unreflectSpecial(method, declaringClass).bindTo(proxy).invokeWithArguments(args);
 		return result;
 	}
 
-    private Object writeReplace() {
-        return new SerializationProxy(this);
-    }
-    private void readObject(ObjectInputStream stream) throws InvalidObjectException {
-        throw new InvalidObjectException("Proxy required.");
-    }
+	private Object writeReplace() {
+		return new SerializationProxy(this);
+	}
+	private void readObject(ObjectInputStream stream) throws InvalidObjectException {
+		throw new InvalidObjectException("Proxy required.");
+	}
 
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -108,12 +109,12 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
 		}
 
 		if ("writeReplace".equals(methodName)) {
-		    return new SerializationProxy(this);
-        }
+			return new SerializationProxy(this);
+		}
 
-        if ("readObject".equals(methodName)) {
-            throw new InvalidObjectException("Proxy required.");
-        }
+		if ("readObject".equals(methodName)) {
+			throw new InvalidObjectException("Proxy required.");
+		}
 
 		if ("dsl".equals(methodName)) {
 			return Helenus.dsl(iface);
@@ -153,24 +154,24 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
 
 	static class SerializationProxy implements Serializable {
 
-        private static final long serialVersionUID = -5617583940055969353L;
+		private static final long serialVersionUID = -5617583940055969353L;
 
-        private final Class<?> iface;
-        private final Map<String, Object> src;
+		private final Class<?> iface;
+		private final Map<String, Object> src;
 
-        public SerializationProxy(MapperInvocationHandler mapper) {
-            this.iface = mapper.iface;
-            if (mapper.src instanceof ValueProviderMap) {
-                this.src = new HashMap<String, Object>(mapper.src.size());
-                this.src.putAll(src);
-            } else {
-                this.src = mapper.src;
-            }
-        }
+		public SerializationProxy(MapperInvocationHandler mapper) {
+			this.iface = mapper.iface;
+			if (mapper.src instanceof ValueProviderMap) {
+				this.src = new HashMap<String, Object>(mapper.src.size());
+				this.src.putAll(src);
+			} else {
+				this.src = mapper.src;
+			}
+		}
 
-        Object readResolve() throws ObjectStreamException {
-            return Helenus.map(iface, src);
-        }
+		Object readResolve() throws ObjectStreamException {
+			return Helenus.map(iface, src);
+		}
 
-    }
+	}
 }

@@ -3,7 +3,6 @@ package net.helenus.core;
 import java.io.Serializable;
 import java.util.*;
 
-import net.helenus.mapping.value.ValueProviderMap;
 import org.apache.commons.lang3.SerializationUtils;
 
 import com.google.common.primitives.Primitives;

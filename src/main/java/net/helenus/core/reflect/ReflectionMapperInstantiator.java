@@ -29,7 +29,8 @@ public enum ReflectionMapperInstantiator implements MapperInstantiator {
 	public <E> E instantiate(Class<E> iface, Map<String, Object> src, ClassLoader classLoader) {
 
 		MapperInvocationHandler<E> handler = new MapperInvocationHandler<E>(iface, src);
-		E proxy = (E) Proxy.newProxyInstance(classLoader, new Class[]{iface, MapExportable.class, Serializable.class}, handler);
+		E proxy = (E) Proxy.newProxyInstance(classLoader, new Class[]{iface, MapExportable.class, Serializable.class},
+				handler);
 		return proxy;
 	}
 }
