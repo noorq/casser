@@ -61,6 +61,7 @@ public interface UnitOfWork<X extends Exception> extends AutoCloseable {
 
 	List<Facet> cacheEvict(List<Facet> facets);
 
+	String getPurpose();
 	UnitOfWork setPurpose(String purpose);
 
 	void addDatabaseTime(String name, Stopwatch amount);
