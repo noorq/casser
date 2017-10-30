@@ -256,7 +256,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 			}
 		}
 
-		// log.recordCacheAndDatabaseOperationCount(txn::provisionalCommit)
+		// log.record(txn::provisionalCommit)
 		// examine log for conflicts in read-set and write-set between begin and
 		// provisional commit
 		// if (conflict) { throw new ConflictingUnitOfWorkException(this) }
@@ -310,12 +310,14 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	public synchronized void abort() {
 		TreeTraverser<AbstractUnitOfWork<E>> traverser = TreeTraverser.using(node -> node::getChildNodes);
 		traverser.postOrderTraversal(this).forEach(uow -> {
-			uow.committed = false;
-			uow.aborted = true;
+            uow.committed = false;
+            uow.aborted = true;
 		});
 		// log.record(txn::abort)
 		// cache.invalidateSince(txn::start time)
 		if (!hasAborted()) {
+            committed = false;
+            aborted = true;
 			elapsedTime.stop();
 			if (LOG.isInfoEnabled()) {
 				LOG.info(logTimers("aborted"));

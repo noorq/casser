@@ -321,6 +321,8 @@ public final class HelenusSession extends AbstractSessionOperations implements C
                 int frame = 2;
                 if (trace[2].getMethodName().equals("begin")) {
                     frame = 3;
+                } else if (trace[2].getClassName().equals(unitOfWorkClass.getName())) {
+                    frame = 3;
                 }
                 purpose = new StringBuilder().append(trace[frame].getClassName()).append(".")
                         .append(trace[frame].getMethodName()).append("(").append(trace[frame].getFileName()).append(":")
