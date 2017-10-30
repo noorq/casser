@@ -86,7 +86,9 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 
 	@Override
 	public synchronized UnitOfWork<E> begin() {
-		elapsedTime = Stopwatch.createStarted();
+		if (LOG.isInfoEnabled()) {
+			elapsedTime = Stopwatch.createStarted();
+		}
 		// log.record(txn::start)
 		return this;
 	}
@@ -317,13 +319,11 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		});
 		// log.record(txn::abort)
 		// cache.invalidateSince(txn::start time)
-		if (!hasAborted()) {
-			committed = false;
-			aborted = true;
-			elapsedTime.stop();
-			if (LOG.isInfoEnabled()) {
-				LOG.info(logTimers("aborted"));
+		if (LOG.isInfoEnabled()) {
+			if (elapsedTime.isRunning()) {
+				elapsedTime.stop();
 			}
+			LOG.info(logTimers("aborted"));
 		}
 	}
 

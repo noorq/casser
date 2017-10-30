@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import net.helenus.core.Helenus;
 import net.helenus.mapping.annotation.Transient;
@@ -64,7 +65,7 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
 	}
 
 	private Object writeReplace() {
-		return new SerializationProxy(this);
+		return new SerializationProxy<E>(this);
 	}
 	private void readObject(ObjectInputStream stream) throws InvalidObjectException {
 		throw new InvalidObjectException("Proxy required.");
@@ -152,25 +153,28 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
 		return value;
 	}
 
-	static class SerializationProxy implements Serializable {
+	static class SerializationProxy<E> implements Serializable {
 
 		private static final long serialVersionUID = -5617583940055969353L;
 
-		private final Class<?> iface;
+		private final Class<E> iface;
 		private final Map<String, Object> src;
 
 		public SerializationProxy(MapperInvocationHandler mapper) {
 			this.iface = mapper.iface;
 			if (mapper.src instanceof ValueProviderMap) {
 				this.src = new HashMap<String, Object>(mapper.src.size());
-				this.src.putAll(src);
+				Set<String> keys = mapper.src.keySet();
+				for (String key : keys) {
+					this.src.put(key, mapper.src.get(key));
+				}
 			} else {
 				this.src = mapper.src;
 			}
 		}
 
 		Object readResolve() throws ObjectStreamException {
-			return Helenus.map(iface, src);
+			return new MapperInvocationHandler(iface, src);
 		}
 
 	}
