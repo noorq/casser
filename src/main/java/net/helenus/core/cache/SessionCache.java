@@ -19,15 +19,36 @@ package net.helenus.core.cache;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public interface SessionCache<K, V> {
 
+	static final Logger LOG = LoggerFactory.getLogger(SessionCache.class);
+
 	static <K, V> SessionCache<K, V> defaultCache() {
-		int MAX_CACHE_SIZE = 10000;
-		int MAX_CACHE_EXPIRE_SECONDS = 600;
-		return new GuavaCache<K, V>(CacheBuilder.newBuilder().maximumSize(MAX_CACHE_SIZE)
-				.expireAfterAccess(MAX_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS)
-				.expireAfterWrite(MAX_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS).recordStats().build());
+		GuavaCache<K, V> cache;
+		RemovalListener<K, V> listener =
+				new RemovalListener<K, V>() {
+					@Override
+					public void onRemoval(RemovalNotification<K, V> n) {
+						if (n.wasEvicted()) {
+							String cause = n.getCause().name();
+							LOG.info(cause);
+						}
+					}
+				};
+
+		cache = new GuavaCache<K, V>(CacheBuilder.newBuilder()
+				.maximumSize(25_000)
+				.expireAfterAccess(5, TimeUnit.MINUTES)
+				.softValues()
+				.removalListener(listener)
+				.build());
+
+		return cache;
 	}
 
 	void invalidate(K key);

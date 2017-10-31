@@ -709,6 +709,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 			cacheUpdate(uow, result, bindFacetValues());
 		} else if (pojo != null) {
 			cacheUpdate(uow, (E) pojo, bindFacetValues());
+			return (E) pojo;
 		}
 		return result;
 	}

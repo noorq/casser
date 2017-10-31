@@ -156,9 +156,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
                     .sync(uow).orElse(null);
             Assert.assertEquals(w1, w2);
 
-            // This should remove the object from the cache.
-            //TODO(gburd): w3 = session.
-            session.<Widget>update(w2)
+            // This should remove the object from the session cache.
+            w3 = session.<Widget>update(w2)
                     .set(widget::name, "Bill")
                     .where(widget::id, eq(key))
                     .sync(uow);

@@ -24,6 +24,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -94,6 +95,9 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
 			if (otherObj instanceof MapExportable && src.equals(((MapExportable) otherObj).toMap())) {
 				return true;
 			}
+			if (src instanceof MapExportable && otherObj.equals(((MapExportable) src).toMap())) {
+				return true;
+			}
 			return false;
 		}
 
@@ -122,7 +126,7 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
 		}
 
 		if (MapExportable.TO_MAP_METHOD.equals(methodName)) {
-			return src; // return Collections.unmodifiableMap(src);
+			return src; //Collections.unmodifiableMap(src);
 		}
 
 		Object value = src.get(methodName);
