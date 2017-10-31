@@ -51,7 +51,7 @@ import net.helenus.support.Fun.Tuple1;
 import net.helenus.support.Fun.Tuple2;
 import net.helenus.support.Fun.Tuple6;
 
-public final class HelenusSession extends AbstractSessionOperations implements Closeable {
+public class HelenusSession extends AbstractSessionOperations implements Closeable {
 
 	public static final Object deleted = new Object();
 	private static final Logger LOG = LoggerFactory.getLogger(HelenusSession.class);
