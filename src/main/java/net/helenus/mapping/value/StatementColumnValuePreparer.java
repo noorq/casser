@@ -44,13 +44,10 @@ public final class StatementColumnValuePreparer implements ColumnValuePreparer {
 
 		HelenusValidator.INSTANCE.validate(prop, value);
 
-		if (value != null) {
+		Optional<Function<Object, Object>> converter = prop.getWriteConverter(repository);
 
-			Optional<Function<Object, Object>> converter = prop.getWriteConverter(repository);
-
-			if (converter.isPresent()) {
-				value = converter.get().apply(value);
-			}
+		if (converter.isPresent()) {
+			value = converter.get().apply(value);
 		}
 
 		return value;

@@ -124,10 +124,10 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		String database = "";
 		if (databaseTime.size() > 0) {
 			List<String> dbt = new ArrayList<>(databaseTime.size());
-			for (String name : databaseTime.keySet()) {
-				double t = databaseTime.get(name) / 1000.0;
+			for (Map.Entry<String, Double> dt : databaseTime.entrySet()) {
+				double t = dt.getValue() / 1000.0;
 				d += t;
-				dbt.add(String.format("%s took %,.3fms %,2.2f%%", name, t, (t / e) * 100.0));
+				dbt.add(String.format("%s took %,.3fms %,2.2f%%", dt.getKey(), t, (t / e) * 100.0));
 			}
 			double fd = (d / e) * 100.0;
 			database = String.format(", %d quer%s (%,.3fms %,2.2f%% - %s)", databaseLookups,
@@ -293,12 +293,13 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 				parent.cacheMisses += cacheMisses;
 				parent.databaseLookups += databaseLookups;
 				parent.cacheLookupTime += cacheLookupTime;
-				for (String name : databaseTime.keySet()) {
+				for (Map.Entry<String, Double> dt : databaseTime.entrySet()) {
+					String name = dt.getKey();
 					if (parent.databaseTime.containsKey(name)) {
 						double t = parent.databaseTime.get(name);
-						parent.databaseTime.put(name, t + databaseTime.get(name));
+						parent.databaseTime.put(name, t + dt.getValue());
 					} else {
-						parent.databaseTime.put(name, databaseTime.get(name));
+						parent.databaseTime.put(name, dt.getValue());
 					}
 				}
 			}

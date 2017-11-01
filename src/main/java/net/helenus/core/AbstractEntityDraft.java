@@ -150,8 +150,8 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 		Map<String, Object> combined;
 		if (entityMap != null && entityMap.size() > 0) {
 			combined = new HashMap<String, Object>(entityMap.size());
-			for (String key : entityMap.keySet()) {
-				combined.put(key, entityMap.get(key));
+			for (Map.Entry<String, Object> e : entityMap.entrySet()) {
+				combined.put(e.getKey(), e.getValue());
 			}
 		} else {
 			combined = new HashMap<String, Object>(backingMap.size());

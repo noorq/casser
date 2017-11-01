@@ -167,10 +167,6 @@ public final class SchemaUtil {
 			throw new HelenusMappingException("expected view entity " + entity);
 		}
 
-		if (entity == null) {
-			throw new HelenusMappingException("no entity or table to select data");
-		}
-
 		List<HelenusPropertyNode> props = new ArrayList<HelenusPropertyNode>();
 		entity.getOrderedProperties().stream().map(p -> new HelenusPropertyNode(p, Optional.empty()))
 				.forEach(p -> props.add(p));

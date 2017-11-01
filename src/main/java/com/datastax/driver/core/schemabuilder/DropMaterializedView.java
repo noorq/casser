@@ -4,7 +4,6 @@ import com.google.common.base.Optional;
 
 public class DropMaterializedView extends Drop {
 
-	private final String itemType = "MATERIALIZED VIEW";
 	private Optional<String> keyspaceName = Optional.absent();
 	private String itemName;
 	private boolean ifExists = true;
@@ -31,7 +30,7 @@ public class DropMaterializedView extends Drop {
 
 	@Override
 	public String buildInternal() {
-		StringBuilder dropStatement = new StringBuilder("DROP " + itemType + " ");
+		StringBuilder dropStatement = new StringBuilder("DROP MATERIALIZED VIEW ");
 		if (ifExists) {
 			dropStatement.append("IF EXISTS ");
 		}

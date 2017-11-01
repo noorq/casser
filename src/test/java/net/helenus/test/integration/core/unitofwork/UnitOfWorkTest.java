@@ -173,9 +173,9 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
                     .uncached()
                     .sync().orElse(null);
 
-            Assert.assertNotEquals(w5, w2); // Not the same instance
-            Assert.assertTrue(w2.equals(w5)); // But they have the same values
-            Assert.assertFalse(w5.equals(w2)); // TODO(gburd): should also work
+            Assert.assertNotEquals(w5, w2); // Not the same instance,
+            Assert.assertTrue(w2.equals(w5)); // but they have the same values,
+            Assert.assertFalse(w5.equals(w2)); // regardless of the order when comparing.
             Assert.assertEquals(w5.name(), "Bill");
 
             uow.commit().andThen(() -> {

@@ -335,8 +335,7 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 			return uow.begin();
 		} catch (NoSuchMethodException | InvocationTargetException | InstantiationException
 				| IllegalAccessException e) {
-			throw new HelenusException(
-					String.format("Unable to instantiate {} as a UnitOfWork.", unitOfWorkClass.getSimpleName()), e);
+			throw new HelenusException(String.format("Unable to instantiate %s as a UnitOfWork.", unitOfWorkClass.getSimpleName()), e);
 		}
 	}
 
@@ -698,6 +697,9 @@ public final class HelenusSession extends AbstractSessionOperations implements C
 			case UDT :
 				execute(SchemaUtil.dropUserType(entity), true);
 				break;
+
+			default:
+				throw new HelenusException("Unknown entity type.");
 		}
 	}
 }

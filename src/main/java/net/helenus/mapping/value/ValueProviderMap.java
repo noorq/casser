@@ -111,18 +111,31 @@ public final class ValueProviderMap implements Map<String, Object> {
 
 	@Override
 	public Set<java.util.Map.Entry<String, Object>> entrySet() {
-		throwShouldNeverCall("entrySet()");
-		return null;
+		return entity.getOrderedProperties()
+				.stream()
+				.map(p -> {
+					return new ValueProviderMap.Entry<String, Object>(p.getPropertyName(),
+							valueProvider.getColumnValue(source, -1, p, immutable));
+				}).collect(Collectors.toSet());
 	}
 
-	private void throwShouldNeverCall(String methodName) {
+	private static void throwShouldNeverCall(String methodName) {
 		throw new HelenusMappingException(String.format(
-				"the method {} should never be called on an instance of a Helenus ValueProviderMap", methodName));
+				"the method %s should never be called on an instance of a Helenus ValueProviderMap", methodName));
 	}
 
 	@Override
 	public String toString() {
 		return source.toString();
+	}
+
+	@Override
+	public int hashCode() {
+		int result = source.hashCode();
+		result = 31 * result + valueProvider.hashCode();
+		result = 31 * result + entity.hashCode();
+		result = 31 * result + (immutable ? 1 : 0);
+		return result;
 	}
 
 	@Override
@@ -135,10 +148,37 @@ public final class ValueProviderMap implements Map<String, Object> {
 		Map that = (Map) o;
 		if (this.size() != that.size())
 			return false;
-		for (String key : this.keySet())
-			if (!this.get(key).equals(that.get(key)))
+		for (Map.Entry<String, Object> e : this.entrySet())
+			if (!e.getValue().equals(that.get(e.getKey())))
 				return false;
 
 		return true;
+	}
+
+	public static class Entry<K, V> implements Map.Entry<K, V> {
+
+		private final K key;
+		private final V value;
+
+		public Entry(K key, V value) {
+			this.key = key;
+			this.value = value;
+		}
+
+		@Override
+		public K getKey() {
+			return key;
+		}
+
+		@Override
+		public V getValue() {
+			return value;
+		}
+
+		@Override
+		public V setValue(V value) {
+			throwShouldNeverCall("Entry.setValue()");
+			return null;
+		}
 	}
 }

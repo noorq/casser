@@ -8,7 +8,7 @@ public class CacheUtil {
 
 	public static List<String[]> combinations(List<String> items) {
 		int n = items.size();
-		if (n > 20 || n < 0)
+		if (n > 20)
 			throw new IllegalArgumentException(n + " is out of range");
 		long e = Math.round(Math.pow(2, n));
 		List<String[]> out = new ArrayList<String[]>((int) e - 1);
