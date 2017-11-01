@@ -234,7 +234,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 		}
 		String tableName = CacheUtil.schemaName(facets);
 		List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
-		mergeAndUpdateCacheValues(pojo, tableName, facetCombinations);
+		replaceCachedFacetValues(pojo, tableName, facetCombinations);
 	}
 
 	@Override
@@ -265,10 +265,9 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 						boundFacets.add(facet);
 					}
 				}
-				// NOTE: should equal `String tableName = CacheUtil.schemaName(facets);`
 				List<String[]> facetCombinations = CacheUtil.flattenFacets(boundFacets);
 				String tableName = CacheUtil.schemaName(boundFacets);
-				mergeAndUpdateCacheValues(pojo, tableName, facetCombinations);
+				replaceCachedFacetValues(pojo, tableName, facetCombinations);
 			}
 		}
 
@@ -284,21 +283,11 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 		}
 	}
 
-	private void mergeAndUpdateCacheValues(Object pojo, String tableName, List<String[]> facetCombinations) {
-		Object merged = null;
+	private void replaceCachedFacetValues(Object pojo, String tableName, List<String[]> facetCombinations) {
 		for (String[] combination : facetCombinations) {
 			String cacheKey = tableName + "." + Arrays.toString(combination);
-			Object value = sessionCache.get(cacheKey);
-			if (value == null) {
-				sessionCache.put(cacheKey, pojo);
-			} else {
-				if (merged == null) {
-					merged = pojo;
-				} else {
-					merged = CacheUtil.merge(value, pojo);
-				}
-				sessionCache.put(cacheKey, merged);
-			}
+            sessionCache.invalidate(cacheKey);
+            sessionCache.put(cacheKey, pojo);
 		}
 	}
 
