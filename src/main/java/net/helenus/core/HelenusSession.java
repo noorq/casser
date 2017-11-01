@@ -286,8 +286,8 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 	private void replaceCachedFacetValues(Object pojo, String tableName, List<String[]> facetCombinations) {
 		for (String[] combination : facetCombinations) {
 			String cacheKey = tableName + "." + Arrays.toString(combination);
-            sessionCache.invalidate(cacheKey);
-            sessionCache.put(cacheKey, pojo);
+			sessionCache.invalidate(cacheKey);
+			sessionCache.put(cacheKey, pojo);
 		}
 	}
 
@@ -306,22 +306,21 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 			UnitOfWork uow = ctor.newInstance(this, parent);
 			if (LOG.isInfoEnabled() && uow.getPurpose() == null) {
 				StringBuilder purpose = null;
-                int frame = 0;
+				int frame = 0;
 				StackTraceElement[] trace = Thread.currentThread().getStackTrace();
 				String targetClassName = HelenusSession.class.getName();
-                do { frame++; }	while (!trace[frame].getClassName().equals(targetClassName) && frame < trace.length);
-                do { frame++; }	while (trace[frame].getClassName().equals(targetClassName) && frame < trace.length);
-                if (frame < trace.length) {
-                    purpose = new StringBuilder().append(trace[frame].getClassName())
-                            .append(".")
-                            .append(trace[frame].getMethodName())
-                            .append("(")
-                            .append(trace[frame].getFileName())
-                            .append(":")
-                            .append(trace[frame].getLineNumber())
-                            .append(")");
-                    uow.setPurpose(purpose.toString());
-                }
+				do {
+					frame++;
+				} while (!trace[frame].getClassName().equals(targetClassName) && frame < trace.length);
+				do {
+					frame++;
+				} while (trace[frame].getClassName().equals(targetClassName) && frame < trace.length);
+				if (frame < trace.length) {
+					purpose = new StringBuilder().append(trace[frame].getClassName()).append(".")
+							.append(trace[frame].getMethodName()).append("(").append(trace[frame].getFileName())
+							.append(":").append(trace[frame].getLineNumber()).append(")");
+					uow.setPurpose(purpose.toString());
+				}
 			}
 			if (parent != null) {
 				parent.addNestedUnitOfWork(uow);
@@ -329,7 +328,8 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 			return uow.begin();
 		} catch (NoSuchMethodException | InvocationTargetException | InstantiationException
 				| IllegalAccessException e) {
-			throw new HelenusException(String.format("Unable to instantiate %s as a UnitOfWork.", unitOfWorkClass.getSimpleName()), e);
+			throw new HelenusException(
+					String.format("Unable to instantiate %s as a UnitOfWork.", unitOfWorkClass.getSimpleName()), e);
 		}
 	}
 
@@ -692,7 +692,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 				execute(SchemaUtil.dropUserType(entity), true);
 				break;
 
-			default:
+			default :
 				throw new HelenusException("Unknown entity type.");
 		}
 	}

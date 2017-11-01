@@ -39,6 +39,11 @@ public final class ValueProviderMap implements Map<String, Object> {
 		this.immutable = entity.getMappingInterface().isAssignableFrom(Drafted.class);
 	}
 
+	private static void throwShouldNeverCall(String methodName) {
+		throw new HelenusMappingException(String.format(
+				"the method %s should never be called on an instance of a Helenus ValueProviderMap", methodName));
+	}
+
 	@Override
 	public Object get(Object key) {
 		if (key instanceof String) {
@@ -111,17 +116,10 @@ public final class ValueProviderMap implements Map<String, Object> {
 
 	@Override
 	public Set<java.util.Map.Entry<String, Object>> entrySet() {
-		return entity.getOrderedProperties()
-				.stream()
-				.map(p -> {
-					return new ValueProviderMap.Entry<String, Object>(p.getPropertyName(),
-							valueProvider.getColumnValue(source, -1, p, immutable));
-				}).collect(Collectors.toSet());
-	}
-
-	private static void throwShouldNeverCall(String methodName) {
-		throw new HelenusMappingException(String.format(
-				"the method %s should never be called on an instance of a Helenus ValueProviderMap", methodName));
+		return entity.getOrderedProperties().stream().map(p -> {
+			return new ValueProviderMap.Entry<String, Object>(p.getPropertyName(),
+					valueProvider.getColumnValue(source, -1, p, immutable));
+		}).collect(Collectors.toSet());
 	}
 
 	@Override
