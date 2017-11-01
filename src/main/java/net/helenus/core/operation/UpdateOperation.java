@@ -91,8 +91,8 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 
 		if (draft != null) {
 			String key = prop.getPropertyName();
-			if (draft.get(key, value.getClass()) != value) {
-				draft.set(key, value);
+			if (draft.get(key, value.getClass()) != v) {
+				draft.set(key, v);
 			}
 		}
 
@@ -101,8 +101,8 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 				String key = prop.getPropertyName();
 				Map<String, Object> map = ((MapExportable) pojo).toMap();
 				if (!(map instanceof ValueProviderMap)) {
-					if (map.get(key) != value) {
-						map.put(key, value);
+					if (map.get(key) != v) {
+						map.put(key, v);
 					}
 				}
 			}
