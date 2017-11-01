@@ -306,17 +306,22 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 			UnitOfWork uow = ctor.newInstance(this, parent);
 			if (LOG.isInfoEnabled() && uow.getPurpose() == null) {
 				StringBuilder purpose = null;
+                int frame = 0;
 				StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-				int frame = 2;
-				if (trace[2].getMethodName().equals("begin")) {
-					frame = 3;
-				} else if (trace[2].getClassName().equals(unitOfWorkClass.getName())) {
-					frame = 3;
-				}
-				purpose = new StringBuilder().append(trace[frame].getClassName()).append(".")
-						.append(trace[frame].getMethodName()).append("(").append(trace[frame].getFileName()).append(":")
-						.append(trace[frame].getLineNumber()).append(")");
-				uow.setPurpose(purpose.toString());
+				String targetClassName = HelenusSession.class.getName();
+                do { frame++; }	while (!trace[frame].getClassName().equals(targetClassName) && frame < trace.length);
+                do { frame++; }	while (trace[frame].getClassName().equals(targetClassName) && frame < trace.length);
+                if (frame < trace.length) {
+                    purpose = new StringBuilder().append(trace[frame].getClassName())
+                            .append(".")
+                            .append(trace[frame].getMethodName())
+                            .append("(")
+                            .append(trace[frame].getFileName())
+                            .append(":")
+                            .append(trace[frame].getLineNumber())
+                            .append(")");
+                    uow.setPurpose(purpose.toString());
+                }
 			}
 			if (parent != null) {
 				parent.addNestedUnitOfWork(uow);
