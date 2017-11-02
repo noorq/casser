@@ -287,10 +287,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
 			Where where = select.where();
 
+            boolean isFirstIndex = true;
 			for (Filter<?> filter : filters.values()) {
 				where.and(filter.getClause(sessionOps.getValuePreparer()));
 				HelenusProperty prop = filter.getNode().getProperty();
-				boolean isFirstIndex = true;
 				if (allowFiltering == false) {
 					switch (prop.getColumnType()) {
 						case PARTITION_KEY :
