@@ -122,9 +122,10 @@ public abstract class Operation<E> {
 					ConsistencyLevel cl = ei.getAchievedConsistencyLevel();
 					int se = ei.getSpeculativeExecutions();
 					String warn = ei.getWarnings().stream().collect(Collectors.joining(", "));
-					String ri = String.format("%s %s %s %s %sd%s%s spec-retries: %d", "C* v" + qh.getCassandraVersion(),
-							qh.getAddress().toString(), qh.getDatacenter(), qh.getRack(),
-							(oh != null && !oh.equals("")) ? "[" + oh + "] " : "",
+					String ri = String.format("%s %s %s %s %s %s%sspec-retries: %d",
+							"server v" + qh.getCassandraVersion(), qh.getAddress().toString(),
+							(oh != null && !oh.equals("")) ? " [tried: " + oh + "]" : "", qh.getDatacenter(),
+							qh.getRack(),
 							(cl != null)
 									? (" consistency: " + cl.name() + (cl.isDCLocal() ? " DC " : "")
 											+ (cl.isSerial() ? " SC " : ""))

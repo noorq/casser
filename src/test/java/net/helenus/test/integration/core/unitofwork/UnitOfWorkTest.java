@@ -19,6 +19,7 @@ import static net.helenus.core.Query.eq;
 
 import java.util.UUID;
 
+import com.datastax.driver.core.ConsistencyLevel;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -54,7 +55,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 
 	@BeforeClass
 	public static void beforeTest() {
-		session = Helenus.init(getSession()).showCql().add(Widget.class).autoCreateDrop().get();
+		session = Helenus.init(getSession()).showCql().add(Widget.class).autoCreateDrop().consistencyLevel(
+                ConsistencyLevel.ONE).idempotentQueryExecution(true).get();
 		widget = session.dsl(Widget.class);
 	}
 
@@ -71,7 +73,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 			uow.setPurpose("testSelectAfterSelect");
 
 			// This should read from the database and return a Widget.
-			w2 = session.<Widget>select(widget).where(widget::id, eq(key)).single().sync(uow).orElse(null);
+			w2 = session.<Widget>select(widget).where(widget::id, eq(key)).single()
+                    .sync(uow).orElse(null);
 
 			// This should read from the cache and get the same instance of a Widget.
 			w3 = session.<Widget>select(widget).where(widget::id, eq(key)).single().sync(uow).orElse(null);
