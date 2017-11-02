@@ -24,6 +24,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -55,6 +57,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 
 	public static final Object deleted = new Object();
 	private static final Logger LOG = LoggerFactory.getLogger(HelenusSession.class);
+	private static final Pattern classNameRegex = Pattern.compile("^(?:\\w+\\.)+(?:(\\w+)|(\\w+)\\$.*)$");
 
 	private final Session session;
 	private final CodecRegistry registry;
@@ -299,6 +302,19 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 		return this.begin(null);
 	}
 
+	private String extractClassNameFromStackFrame(String classNameOnStack) {
+	    String name = null;
+        Matcher m = classNameRegex.matcher(classNameOnStack);
+        if (m.find()) {
+            name = (m.group(1) != null) ?
+                    m.group(1) :
+                    ((m.group(2) != null) ? m.group(2) : name);
+        } else {
+            name = classNameOnStack;
+        }
+        return name;
+    }
+
 	public synchronized UnitOfWork begin(UnitOfWork parent) {
 		try {
 			Class<? extends UnitOfWork> clazz = unitOfWorkClass;
@@ -308,13 +324,16 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 				StringBuilder purpose = null;
 				int frame = 0;
 				StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-				String targetClassName = HelenusSession.class.getName();
+				String targetClassName = HelenusSession.class.getSimpleName();
+				String stackClassName = null;
 				do {
 					frame++;
-				} while (!trace[frame].getClassName().equals(targetClassName) && frame < trace.length);
+                    stackClassName = extractClassNameFromStackFrame(trace[frame].getClassName());
+				} while (!stackClassName.equals(targetClassName) && frame < trace.length);
 				do {
 					frame++;
-				} while (trace[frame].getClassName().equals(targetClassName) && frame < trace.length);
+                    stackClassName = extractClassNameFromStackFrame(trace[frame].getClassName());
+				} while (stackClassName.equals(targetClassName) && frame < trace.length);
 				if (frame < trace.length) {
 					purpose = new StringBuilder().append(trace[frame].getClassName()).append(".")
 							.append(trace[frame].getMethodName()).append("(").append(trace[frame].getFileName())
