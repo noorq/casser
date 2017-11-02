@@ -287,7 +287,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
 			Where where = select.where();
 
-            boolean isFirstIndex = true;
+			boolean isFirstIndex = true;
 			for (Filter<?> filter : filters.values()) {
 				where.and(filter.getClause(sessionOps.getValuePreparer()));
 				HelenusProperty prop = filter.getNode().getProperty();
