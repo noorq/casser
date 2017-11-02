@@ -15,15 +15,13 @@
  */
 package net.helenus.mapping.javatype;
 
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.Metadata;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Optional;
 import java.util.function.Function;
-
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.Metadata;
-
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.IdentityName;
@@ -35,106 +33,107 @@ import net.helenus.support.HelenusMappingException;
 
 public abstract class AbstractJavaType {
 
-	public static boolean isCollectionType() {
-		return false;
-	}
+  public static boolean isCollectionType() {
+    return false;
+  }
 
-	static IdentityName resolveUDT(Types.UDT annotation) {
-		return IdentityName.of(annotation.value(), annotation.forceQuote());
-	}
+  static IdentityName resolveUDT(Types.UDT annotation) {
+    return IdentityName.of(annotation.value(), annotation.forceQuote());
+  }
 
-	static DataType resolveSimpleType(Method getter, DataType.Name typeName) {
-		DataType dataType = SimpleJavaTypes.getDataTypeByName(typeName);
-		if (dataType == null) {
-			throw new HelenusMappingException(
-					"only primitive types are allowed inside collections for the property " + getter);
-		}
-		return dataType;
-	}
+  static DataType resolveSimpleType(Method getter, DataType.Name typeName) {
+    DataType dataType = SimpleJavaTypes.getDataTypeByName(typeName);
+    if (dataType == null) {
+      throw new HelenusMappingException(
+          "only primitive types are allowed inside collections for the property " + getter);
+    }
+    return dataType;
+  }
 
-	static void ensureTypeArguments(Method getter, int args, int expected) {
-		if (args != expected) {
-			throw new HelenusMappingException(
-					"expected " + expected + " of typed arguments for the property " + getter);
-		}
-	}
+  static void ensureTypeArguments(Method getter, int args, int expected) {
+    if (args != expected) {
+      throw new HelenusMappingException(
+          "expected " + expected + " of typed arguments for the property " + getter);
+    }
+  }
 
-	static Either<DataType, IdentityName> autodetectParameterType(Method getter, Type type, Metadata metadata) {
+  static Either<DataType, IdentityName> autodetectParameterType(
+      Method getter, Type type, Metadata metadata) {
 
-		DataType dataType = null;
+    DataType dataType = null;
 
-		if (type instanceof Class<?>) {
+    if (type instanceof Class<?>) {
 
-			Class<?> javaType = (Class<?>) type;
-			dataType = SimpleJavaTypes.getDataTypeByJavaClass(javaType);
+      Class<?> javaType = (Class<?>) type;
+      dataType = SimpleJavaTypes.getDataTypeByJavaClass(javaType);
 
-			if (dataType != null) {
-				return Either.left(dataType);
-			}
+      if (dataType != null) {
+        return Either.left(dataType);
+      }
 
-			if (MappingUtil.isTuple(javaType)) {
-				dataType = TupleValueJavaType.toTupleType(javaType, metadata);
-				return Either.left(dataType);
-			}
+      if (MappingUtil.isTuple(javaType)) {
+        dataType = TupleValueJavaType.toTupleType(javaType, metadata);
+        return Either.left(dataType);
+      }
 
-			IdentityName udtName = MappingUtil.getUserDefinedTypeName(javaType, false);
+      IdentityName udtName = MappingUtil.getUserDefinedTypeName(javaType, false);
 
-			if (udtName != null) {
-				return Either.right(udtName);
-			}
-		}
+      if (udtName != null) {
+        return Either.right(udtName);
+      }
+    }
 
-		throw new HelenusMappingException(
-				"unknown parameter type " + type + " in the collection for the property " + getter);
-	}
+    throw new HelenusMappingException(
+        "unknown parameter type " + type + " in the collection for the property " + getter);
+  }
 
-	static Type[] getTypeParameters(Type genericJavaType) {
+  static Type[] getTypeParameters(Type genericJavaType) {
 
-		if (genericJavaType instanceof ParameterizedType) {
+    if (genericJavaType instanceof ParameterizedType) {
 
-			ParameterizedType type = (ParameterizedType) genericJavaType;
+      ParameterizedType type = (ParameterizedType) genericJavaType;
 
-			return type.getActualTypeArguments();
-		}
+      return type.getActualTypeArguments();
+    }
 
-		return new Type[]{};
-	}
+    return new Type[] {};
+  }
 
-	public abstract Class<?> getJavaClass();
+  public abstract Class<?> getJavaClass();
 
-	public boolean isApplicable(Class<?> javaClass) {
-		return false;
-	}
+  public boolean isApplicable(Class<?> javaClass) {
+    return false;
+  }
 
-	public abstract AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType,
-			Metadata metadata);
+  public abstract AbstractDataType resolveDataType(
+      Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata);
 
-	public Optional<Class<?>> getPrimitiveJavaClass() {
-		return Optional.empty();
-	}
+  public Optional<Class<?>> getPrimitiveJavaClass() {
+    return Optional.empty();
+  }
 
-	public Optional<Function<Object, Object>> resolveReadConverter(AbstractDataType dataType,
-			SessionRepository repository) {
-		return Optional.empty();
-	}
+  public Optional<Function<Object, Object>> resolveReadConverter(
+      AbstractDataType dataType, SessionRepository repository) {
+    return Optional.empty();
+  }
 
-	public Optional<Function<Object, Object>> resolveWriteConverter(AbstractDataType dataType,
-			SessionRepository repository) {
-		return Optional.empty();
-	}
+  public Optional<Function<Object, Object>> resolveWriteConverter(
+      AbstractDataType dataType, SessionRepository repository) {
+    return Optional.empty();
+  }
 
-	static class DataTypeInfo {
-		final DataType dataType;
-		final Class<?> typeArgument;
+  static class DataTypeInfo {
+    final DataType dataType;
+    final Class<?> typeArgument;
 
-		DataTypeInfo(DataType dataType) {
-			this.dataType = dataType;
-			this.typeArgument = null;
-		}
+    DataTypeInfo(DataType dataType) {
+      this.dataType = dataType;
+      this.typeArgument = null;
+    }
 
-		DataTypeInfo(DataType dataType, Class<?> typeArgument) {
-			this.dataType = dataType;
-			this.typeArgument = typeArgument;
-		}
-	}
+    DataTypeInfo(DataType dataType, Class<?> typeArgument) {
+      this.dataType = dataType;
+      this.typeArgument = typeArgument;
+    }
+  }
 }

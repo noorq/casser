@@ -21,6 +21,6 @@ import net.helenus.mapping.annotation.UDT;
 @UDT
 public interface File extends FilesystemNode {
 
-	@Column
-	byte[] data();
+  @Column
+  byte[] data();
 }

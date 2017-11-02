@@ -19,39 +19,37 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.Function;
-
 import javax.validation.ConstraintValidator;
-
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.type.AbstractDataType;
 
 public interface HelenusProperty {
 
-	HelenusEntity getEntity();
+  HelenusEntity getEntity();
 
-	String getPropertyName();
+  String getPropertyName();
 
-	Method getGetterMethod();
+  Method getGetterMethod();
 
-	IdentityName getColumnName();
+  IdentityName getColumnName();
 
-	Optional<IdentityName> getIndexName();
+  Optional<IdentityName> getIndexName();
 
-	boolean caseSensitiveIndex();
+  boolean caseSensitiveIndex();
 
-	Class<?> getJavaType();
+  Class<?> getJavaType();
 
-	AbstractDataType getDataType();
+  AbstractDataType getDataType();
 
-	ColumnType getColumnType();
+  ColumnType getColumnType();
 
-	int getOrdinal();
+  int getOrdinal();
 
-	OrderingDirection getOrdering();
+  OrderingDirection getOrdering();
 
-	Optional<Function<Object, Object>> getReadConverter(SessionRepository repository);
+  Optional<Function<Object, Object>> getReadConverter(SessionRepository repository);
 
-	Optional<Function<Object, Object>> getWriteConverter(SessionRepository repository);
+  Optional<Function<Object, Object>> getWriteConverter(SessionRepository repository);
 
-	ConstraintValidator<? extends Annotation, ?>[] getValidators();
+  ConstraintValidator<? extends Annotation, ?>[] getValidators();
 }

@@ -15,17 +15,15 @@
  */
 package net.helenus.core;
 
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Metadata;
+import com.datastax.driver.core.Session;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Metadata;
-import com.datastax.driver.core.Session;
-
 import net.helenus.config.DefaultHelenusSettings;
 import net.helenus.config.HelenusSettings;
 import net.helenus.core.reflect.DslExportable;
@@ -35,161 +33,166 @@ import net.helenus.support.HelenusMappingException;
 
 public final class Helenus {
 
-	private static final ConcurrentMap<Class<?>, Object> dslCache = new ConcurrentHashMap<Class<?>, Object>();
-	private static final ConcurrentMap<Class<?>, Metadata> metadataForEntity = new ConcurrentHashMap<Class<?>, Metadata>();
-	private static final Set<HelenusSession> sessions = new HashSet<HelenusSession>();
-	private static volatile HelenusSettings settings = new DefaultHelenusSettings();
-	private static volatile HelenusSession singleton;
+  private static final ConcurrentMap<Class<?>, Object> dslCache =
+      new ConcurrentHashMap<Class<?>, Object>();
+  private static final ConcurrentMap<Class<?>, Metadata> metadataForEntity =
+      new ConcurrentHashMap<Class<?>, Metadata>();
+  private static final Set<HelenusSession> sessions = new HashSet<HelenusSession>();
+  private static volatile HelenusSettings settings = new DefaultHelenusSettings();
+  private static volatile HelenusSession singleton;
 
-	private Helenus() {
-	}
+  private Helenus() {}
 
-	protected static void setSession(HelenusSession session) {
-		sessions.add(session);
-		singleton = session;
-	}
+  protected static void setSession(HelenusSession session) {
+    sessions.add(session);
+    singleton = session;
+  }
 
-	public static HelenusSession session() {
-		return singleton;
-	}
+  public static HelenusSession session() {
+    return singleton;
+  }
 
-	public static void shutdown() {
-		sessions.forEach((session) -> {
-			session.close();
-			sessions.remove(session);
-		});
-		dslCache.clear();
-	}
+  public static void shutdown() {
+    sessions.forEach(
+        (session) -> {
+          session.close();
+          sessions.remove(session);
+        });
+    dslCache.clear();
+  }
 
-	public static HelenusSettings settings() {
-		return settings;
-	}
+  public static HelenusSettings settings() {
+    return settings;
+  }
 
-	public static HelenusSettings settings(HelenusSettings overrideSettings) {
-		HelenusSettings old = settings;
-		settings = overrideSettings;
-		return old;
-	}
+  public static HelenusSettings settings(HelenusSettings overrideSettings) {
+    HelenusSettings old = settings;
+    settings = overrideSettings;
+    return old;
+  }
 
-	public static SessionInitializer connect(Cluster cluster) {
-		Session session = cluster.connect();
-		return new SessionInitializer(session);
-	}
+  public static SessionInitializer connect(Cluster cluster) {
+    Session session = cluster.connect();
+    return new SessionInitializer(session);
+  }
 
-	public static SessionInitializer connect(Cluster cluster, String keyspace) {
-		Session session = cluster.connect(keyspace);
-		return new SessionInitializer(session);
-	}
+  public static SessionInitializer connect(Cluster cluster, String keyspace) {
+    Session session = cluster.connect(keyspace);
+    return new SessionInitializer(session);
+  }
 
-	public static SessionInitializer init(Session session) {
+  public static SessionInitializer init(Session session) {
 
-		if (session == null) {
-			throw new IllegalArgumentException("empty session");
-		}
+    if (session == null) {
+      throw new IllegalArgumentException("empty session");
+    }
 
-		return new SessionInitializer(session);
-	}
+    return new SessionInitializer(session);
+  }
 
-	public static void clearDslCache() {
-		dslCache.clear();
-	}
+  public static void clearDslCache() {
+    dslCache.clear();
+  }
 
-	public static <E> E dsl(Class<E> iface) {
-		return dsl(iface, null);
-	}
+  public static <E> E dsl(Class<E> iface) {
+    return dsl(iface, null);
+  }
 
-	public static <E> E dsl(Class<E> iface, Metadata metadata) {
-		return dsl(iface, iface.getClassLoader(), Optional.empty(), metadata);
-	}
+  public static <E> E dsl(Class<E> iface, Metadata metadata) {
+    return dsl(iface, iface.getClassLoader(), Optional.empty(), metadata);
+  }
 
-	public static <E> E dsl(Class<E> iface, ClassLoader classLoader, Metadata metadata) {
-		return dsl(iface, classLoader, Optional.empty(), metadata);
-	}
+  public static <E> E dsl(Class<E> iface, ClassLoader classLoader, Metadata metadata) {
+    return dsl(iface, classLoader, Optional.empty(), metadata);
+  }
 
-	public static <E> E dsl(Class<E> iface, ClassLoader classLoader, Optional<HelenusPropertyNode> parent,
-			Metadata metadata) {
+  public static <E> E dsl(
+      Class<E> iface,
+      ClassLoader classLoader,
+      Optional<HelenusPropertyNode> parent,
+      Metadata metadata) {
 
-		Object instance = null;
+    Object instance = null;
 
-		if (!parent.isPresent()) {
-			instance = dslCache.get(iface);
-		}
+    if (!parent.isPresent()) {
+      instance = dslCache.get(iface);
+    }
 
-		if (instance == null) {
+    if (instance == null) {
 
-			instance = settings.getDslInstantiator().instantiate(iface, classLoader, parent, metadata);
+      instance = settings.getDslInstantiator().instantiate(iface, classLoader, parent, metadata);
 
-			if (!parent.isPresent()) {
+      if (!parent.isPresent()) {
 
-				Object c = dslCache.putIfAbsent(iface, instance);
-				if (c != null) {
-					instance = c;
-				}
-			}
-		}
+        Object c = dslCache.putIfAbsent(iface, instance);
+        if (c != null) {
+          instance = c;
+        }
+      }
+    }
 
-		return (E) instance;
-	}
+    return (E) instance;
+  }
 
-	public static <E> E map(Class<E> iface, Map<String, Object> src) {
-		return map(iface, src, iface.getClassLoader());
-	}
+  public static <E> E map(Class<E> iface, Map<String, Object> src) {
+    return map(iface, src, iface.getClassLoader());
+  }
 
-	public static <E> E map(Class<E> iface, Map<String, Object> src, ClassLoader classLoader) {
-		return settings.getMapperInstantiator().instantiate(iface, src, classLoader);
-	}
+  public static <E> E map(Class<E> iface, Map<String, Object> src, ClassLoader classLoader) {
+    return settings.getMapperInstantiator().instantiate(iface, src, classLoader);
+  }
 
-	public static HelenusEntity entity(Class<?> iface) {
-		Metadata metadata = metadataForEntity.get(iface);
-		if (metadata == null) {
-			HelenusSession session = session();
-			if (session != null) {
-				metadata = session.getMetadata();
-			}
-		}
-		return entity(iface, metadata);
-	}
+  public static HelenusEntity entity(Class<?> iface) {
+    Metadata metadata = metadataForEntity.get(iface);
+    if (metadata == null) {
+      HelenusSession session = session();
+      if (session != null) {
+        metadata = session.getMetadata();
+      }
+    }
+    return entity(iface, metadata);
+  }
 
-	public static HelenusEntity entity(Class<?> iface, Metadata metadata) {
+  public static HelenusEntity entity(Class<?> iface, Metadata metadata) {
 
-		Object dsl = dsl(iface, metadata);
+    Object dsl = dsl(iface, metadata);
 
-		DslExportable e = (DslExportable) dsl;
+    DslExportable e = (DslExportable) dsl;
 
-		return e.getHelenusMappingEntity();
-	}
+    return e.getHelenusMappingEntity();
+  }
 
-	public static HelenusEntity resolve(Object ifaceOrDsl) {
-		return resolve(ifaceOrDsl, metadataForEntity.get(ifaceOrDsl));
-	}
+  public static HelenusEntity resolve(Object ifaceOrDsl) {
+    return resolve(ifaceOrDsl, metadataForEntity.get(ifaceOrDsl));
+  }
 
-	public static HelenusEntity resolve(Object ifaceOrDsl, Metadata metadata) {
+  public static HelenusEntity resolve(Object ifaceOrDsl, Metadata metadata) {
 
-		if (ifaceOrDsl == null) {
-			throw new HelenusMappingException("ifaceOrDsl is null");
-		}
+    if (ifaceOrDsl == null) {
+      throw new HelenusMappingException("ifaceOrDsl is null");
+    }
 
-		if (ifaceOrDsl instanceof DslExportable) {
+    if (ifaceOrDsl instanceof DslExportable) {
 
-			DslExportable e = (DslExportable) ifaceOrDsl;
+      DslExportable e = (DslExportable) ifaceOrDsl;
 
-			return e.getHelenusMappingEntity();
-		}
+      return e.getHelenusMappingEntity();
+    }
 
-		if (ifaceOrDsl instanceof Class) {
+    if (ifaceOrDsl instanceof Class) {
 
-			Class<?> iface = (Class<?>) ifaceOrDsl;
+      Class<?> iface = (Class<?>) ifaceOrDsl;
 
-			if (!iface.isInterface()) {
-				throw new HelenusMappingException("class is not an interface " + iface);
-			}
+      if (!iface.isInterface()) {
+        throw new HelenusMappingException("class is not an interface " + iface);
+      }
 
-			if (metadata != null) {
-				metadataForEntity.putIfAbsent(iface, metadata);
-			}
-			return entity(iface, metadata);
-		}
+      if (metadata != null) {
+        metadataForEntity.putIfAbsent(iface, metadata);
+      }
+      return entity(iface, metadata);
+    }
 
-		throw new HelenusMappingException("unknown dsl object or mapping interface " + ifaceOrDsl);
-	}
+    throw new HelenusMappingException("unknown dsl object or mapping interface " + ifaceOrDsl);
+  }
 }

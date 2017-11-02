@@ -22,13 +22,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
-
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 // See: https://docs.datastax.com/en/cql/3.3/cql/cql_using/useCreateMV.html
 //      https://docs.datastax.com/en/cql/3.3/cql/cql_reference/cqlCreateMaterializedView.html
@@ -36,35 +34,50 @@ import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
 //      https://cassandra-zone.com/materialized-views/
 public class MaterializedViewTest extends AbstractEmbeddedCassandraTest {
 
-	static Cyclist cyclist;
-	static HelenusSession session;
+  static Cyclist cyclist;
+  static HelenusSession session;
 
-	static Date dateFromString(String dateInString) {
-		SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
-		try {
-			return formatter.parse(dateInString);
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+  static Date dateFromString(String dateInString) {
+    SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
+    try {
+      return formatter.parse(dateInString);
+    } catch (ParseException e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
 
-	@BeforeClass
-	public static void beforeTest() {
-		session = Helenus.init(getSession()).showCql().add(Cyclist.class).add(CyclistsByAge.class).autoCreateDrop()
-				.get();
-		cyclist = session.dsl(Cyclist.class);
+  @BeforeClass
+  public static void beforeTest() {
+    session =
+        Helenus.init(getSession())
+            .showCql()
+            .add(Cyclist.class)
+            .add(CyclistsByAge.class)
+            .autoCreateDrop()
+            .get();
+    cyclist = session.dsl(Cyclist.class);
 
-		try {
-		session.insert(cyclist).value(cyclist::cid, UUID.randomUUID()).value(cyclist::age, 18)
-				.value(cyclist::birthday, dateFromString("1997-02-08")).value(cyclist::country, "Netherlands")
-				.value(cyclist::name, "Pascal EENKHOORN").sync();
-		} catch (TimeoutException e) {
-		}
-	}
+    try {
+      session
+          .insert(cyclist)
+          .value(cyclist::cid, UUID.randomUUID())
+          .value(cyclist::age, 18)
+          .value(cyclist::birthday, dateFromString("1997-02-08"))
+          .value(cyclist::country, "Netherlands")
+          .value(cyclist::name, "Pascal EENKHOORN")
+          .sync();
+    } catch (TimeoutException e) {
+    }
+  }
 
-	@Test
-	public void testMv() throws TimeoutException {
-		session.select(Cyclist.class).from(CyclistsByAge.class).where(cyclist::age, eq(18)).allowFiltering().sync();
-	}
+  @Test
+  public void testMv() throws TimeoutException {
+    session
+        .select(Cyclist.class)
+        .from(CyclistsByAge.class)
+        .where(cyclist::age, eq(18))
+        .allowFiltering()
+        .sync();
+  }
 }

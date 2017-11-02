@@ -15,19 +15,16 @@
  */
 package net.helenus.mapping.convert.tuple;
 
-import java.util.function.Function;
-
 import com.datastax.driver.core.TupleValue;
-
+import java.util.function.Function;
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.convert.ProxyValueReader;
 import net.helenus.mapping.value.TupleColumnValueProvider;
 
 public final class TupleValueToEntityConverter extends ProxyValueReader<TupleValue>
-		implements
-			Function<TupleValue, Object> {
+    implements Function<TupleValue, Object> {
 
-	public TupleValueToEntityConverter(Class<?> iface, SessionRepository repository) {
-		super(iface, new TupleColumnValueProvider(repository));
-	}
+  public TupleValueToEntityConverter(Class<?> iface, SessionRepository repository) {
+    super(iface, new TupleColumnValueProvider(repository));
+  }
 }

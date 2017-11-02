@@ -15,28 +15,30 @@
  */
 package net.helenus.mapping.convert.udt;
 
+import com.datastax.driver.core.UserType;
 import java.util.Map;
 import java.util.function.Function;
-
-import com.datastax.driver.core.UserType;
-
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.convert.UDTValueWriter;
 import net.helenus.support.Transformers;
 
 public final class MapToUDTMapConverter implements Function<Object, Object> {
 
-	final UDTValueWriter keyWriter;
-	final UDTValueWriter valueWriter;
+  final UDTValueWriter keyWriter;
+  final UDTValueWriter valueWriter;
 
-	public MapToUDTMapConverter(Class<?> keyClass, UserType keyType, Class<?> valueClass, UserType valueType,
-			SessionRepository repository) {
-		this.keyWriter = new UDTValueWriter(keyClass, keyType, repository);
-		this.valueWriter = new UDTValueWriter(valueClass, valueType, repository);
-	}
+  public MapToUDTMapConverter(
+      Class<?> keyClass,
+      UserType keyType,
+      Class<?> valueClass,
+      UserType valueType,
+      SessionRepository repository) {
+    this.keyWriter = new UDTValueWriter(keyClass, keyType, repository);
+    this.valueWriter = new UDTValueWriter(valueClass, valueType, repository);
+  }
 
-	@Override
-	public Object apply(Object t) {
-		return Transformers.transformMap((Map<Object, Object>) t, keyWriter, valueWriter);
-	}
+  @Override
+  public Object apply(Object t) {
+    return Transformers.transformMap((Map<Object, Object>) t, keyWriter, valueWriter);
+  }
 }

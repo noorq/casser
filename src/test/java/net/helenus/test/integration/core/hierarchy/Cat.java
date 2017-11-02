@@ -22,7 +22,7 @@ import net.helenus.mapping.annotation.Table;
 @Table("cats")
 public interface Cat extends Mammal {
 
-	@Column(ordinal = 0)
-	@Index(caseSensitive = false)
-	String nickname();
+  @Column(ordinal = 0)
+  @Index(caseSensitive = false)
+  String nickname();
 }

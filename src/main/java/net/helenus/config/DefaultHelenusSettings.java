@@ -17,7 +17,6 @@ package net.helenus.config;
 
 import java.lang.reflect.Method;
 import java.util.function.Function;
-
 import net.helenus.core.DslInstantiator;
 import net.helenus.core.MapperInstantiator;
 import net.helenus.core.reflect.ReflectionDslInstantiator;
@@ -26,23 +25,23 @@ import net.helenus.mapping.convert.CamelCaseToUnderscoreConverter;
 
 public class DefaultHelenusSettings implements HelenusSettings {
 
-	@Override
-	public Function<String, String> getPropertyToColumnConverter() {
-		return CamelCaseToUnderscoreConverter.INSTANCE;
-	}
+  @Override
+  public Function<String, String> getPropertyToColumnConverter() {
+    return CamelCaseToUnderscoreConverter.INSTANCE;
+  }
 
-	@Override
-	public Function<Method, Boolean> getGetterMethodDetector() {
-		return GetterMethodDetector.INSTANCE;
-	}
+  @Override
+  public Function<Method, Boolean> getGetterMethodDetector() {
+    return GetterMethodDetector.INSTANCE;
+  }
 
-	@Override
-	public DslInstantiator getDslInstantiator() {
-		return ReflectionDslInstantiator.INSTANCE;
-	}
+  @Override
+  public DslInstantiator getDslInstantiator() {
+    return ReflectionDslInstantiator.INSTANCE;
+  }
 
-	@Override
-	public MapperInstantiator getMapperInstantiator() {
-		return ReflectionMapperInstantiator.INSTANCE;
-	}
+  @Override
+  public MapperInstantiator getMapperInstantiator() {
+    return ReflectionMapperInstantiator.INSTANCE;
+  }
 }

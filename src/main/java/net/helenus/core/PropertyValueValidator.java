@@ -19,5 +19,5 @@ import net.helenus.mapping.HelenusProperty;
 
 public interface PropertyValueValidator {
 
-	void validate(HelenusProperty prop, Object value);
+  void validate(HelenusProperty prop, Object value);
 }

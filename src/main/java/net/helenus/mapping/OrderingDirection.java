@@ -18,28 +18,28 @@ package net.helenus.mapping;
 import net.helenus.support.HelenusMappingException;
 
 public enum OrderingDirection {
-	ASC("ASC"),
+  ASC("ASC"),
 
-	DESC("DESC");
+  DESC("DESC");
 
-	private final String cql;
+  private final String cql;
 
-	private OrderingDirection(String cql) {
-		this.cql = cql;
-	}
+  private OrderingDirection(String cql) {
+    this.cql = cql;
+  }
 
-	public static OrderingDirection parseString(String name) {
+  public static OrderingDirection parseString(String name) {
 
-		if (ASC.cql.equalsIgnoreCase(name)) {
-			return ASC;
-		} else if (DESC.cql.equalsIgnoreCase(name)) {
-			return DESC;
-		}
+    if (ASC.cql.equalsIgnoreCase(name)) {
+      return ASC;
+    } else if (DESC.cql.equalsIgnoreCase(name)) {
+      return DESC;
+    }
 
-		throw new HelenusMappingException("invalid ordering direction name " + name);
-	}
+    throw new HelenusMappingException("invalid ordering direction name " + name);
+  }
 
-	public String cql() {
-		return cql;
-	}
+  public String cql() {
+    return cql;
+  }
 }

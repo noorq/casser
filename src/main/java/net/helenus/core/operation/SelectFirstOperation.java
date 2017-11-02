@@ -15,53 +15,52 @@
  */
 package net.helenus.core.operation;
 
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.querybuilder.BuiltStatement;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.querybuilder.BuiltStatement;
-
 import net.helenus.core.cache.Facet;
 
-public final class SelectFirstOperation<E> extends AbstractFilterOptionalOperation<E, SelectFirstOperation<E>> {
+public final class SelectFirstOperation<E>
+    extends AbstractFilterOptionalOperation<E, SelectFirstOperation<E>> {
 
-	private final SelectOperation<E> delegate;
+  private final SelectOperation<E> delegate;
 
-	public SelectFirstOperation(SelectOperation<E> delegate) {
-		super(delegate.sessionOps);
+  public SelectFirstOperation(SelectOperation<E> delegate) {
+    super(delegate.sessionOps);
 
-		this.delegate = delegate;
-		this.filters = delegate.filters;
-		this.ifFilters = delegate.ifFilters;
-	}
+    this.delegate = delegate;
+    this.filters = delegate.filters;
+    this.ifFilters = delegate.ifFilters;
+  }
 
-	public <R> SelectFirstTransformingOperation<R, E> map(Function<E, R> fn) {
-		return new SelectFirstTransformingOperation<R, E>(delegate, fn);
-	}
+  public <R> SelectFirstTransformingOperation<R, E> map(Function<E, R> fn) {
+    return new SelectFirstTransformingOperation<R, E>(delegate, fn);
+  }
 
-	@Override
-	public BuiltStatement buildStatement(boolean cached) {
-		return delegate.buildStatement(cached);
-	}
+  @Override
+  public BuiltStatement buildStatement(boolean cached) {
+    return delegate.buildStatement(cached);
+  }
 
-	@Override
-	public List<Facet> getFacets() {
-		return delegate.getFacets();
-	}
+  @Override
+  public List<Facet> getFacets() {
+    return delegate.getFacets();
+  }
 
-	@Override
-	public List<Facet> bindFacetValues() {
-		return delegate.bindFacetValues();
-	}
+  @Override
+  public List<Facet> bindFacetValues() {
+    return delegate.bindFacetValues();
+  }
 
-	@Override
-	public Optional<E> transform(ResultSet resultSet) {
-		return delegate.transform(resultSet).findFirst();
-	}
+  @Override
+  public Optional<E> transform(ResultSet resultSet) {
+    return delegate.transform(resultSet).findFirst();
+  }
 
-	@Override
-	public boolean isSessionCacheable() {
-		return delegate.isSessionCacheable();
-	}
+  @Override
+  public boolean isSessionCacheable() {
+    return delegate.isSessionCacheable();
+  }
 }

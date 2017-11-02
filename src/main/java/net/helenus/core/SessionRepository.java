@@ -15,31 +15,30 @@
  */
 package net.helenus.core;
 
-import java.util.Collection;
-
 import com.datastax.driver.core.UserType;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Collection;
 import net.helenus.mapping.HelenusEntity;
 
 public final class SessionRepository {
 
-	private final ImmutableMap<String, UserType> userTypeMap;
+  private final ImmutableMap<String, UserType> userTypeMap;
 
-	private final ImmutableMap<Class<?>, HelenusEntity> entityMap;
+  private final ImmutableMap<Class<?>, HelenusEntity> entityMap;
 
-	public SessionRepository(SessionRepositoryBuilder builder) {
+  public SessionRepository(SessionRepositoryBuilder builder) {
 
-		userTypeMap = ImmutableMap.<String, UserType>builder().putAll(builder.getUserTypeMap()).build();
+    userTypeMap = ImmutableMap.<String, UserType>builder().putAll(builder.getUserTypeMap()).build();
 
-		entityMap = ImmutableMap.<Class<?>, HelenusEntity>builder().putAll(builder.getEntityMap()).build();
-	}
+    entityMap =
+        ImmutableMap.<Class<?>, HelenusEntity>builder().putAll(builder.getEntityMap()).build();
+  }
 
-	public UserType findUserType(String name) {
-		return userTypeMap.get(name.toLowerCase());
-	}
+  public UserType findUserType(String name) {
+    return userTypeMap.get(name.toLowerCase());
+  }
 
-	public Collection<HelenusEntity> entities() {
-		return entityMap.values();
-	}
+  public Collection<HelenusEntity> entities() {
+    return entityMap.values();
+  }
 }

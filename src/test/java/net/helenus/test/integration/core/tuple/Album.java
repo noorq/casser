@@ -17,7 +17,6 @@ package net.helenus.test.integration.core.tuple;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.TupleValue;
-
 import net.helenus.mapping.annotation.Column;
 import net.helenus.mapping.annotation.PartitionKey;
 import net.helenus.mapping.annotation.Table;
@@ -26,12 +25,12 @@ import net.helenus.mapping.annotation.Types;
 @Table
 public interface Album {
 
-	@PartitionKey(ordinal = 1)
-	int id();
+  @PartitionKey(ordinal = 1)
+  int id();
 
-	AlbumInformation info();
+  AlbumInformation info();
 
-	@Types.Tuple({DataType.Name.TEXT, DataType.Name.TEXT})
-	@Column(ordinal = 1)
-	TupleValue infoNoMapping();
+  @Types.Tuple({DataType.Name.TEXT, DataType.Name.TEXT})
+  @Column(ordinal = 1)
+  TupleValue infoNoMapping();
 }

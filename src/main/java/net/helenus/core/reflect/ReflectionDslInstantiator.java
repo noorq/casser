@@ -15,22 +15,25 @@
  */
 package net.helenus.core.reflect;
 
+import com.datastax.driver.core.Metadata;
 import java.lang.reflect.Proxy;
 import java.util.Optional;
-
-import com.datastax.driver.core.Metadata;
-
 import net.helenus.core.DslInstantiator;
 
 public enum ReflectionDslInstantiator implements DslInstantiator {
-	INSTANCE;
+  INSTANCE;
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public <E> E instantiate(Class<E> iface, ClassLoader classLoader, Optional<HelenusPropertyNode> parent,
-			Metadata metadata) {
-		DslInvocationHandler<E> handler = new DslInvocationHandler<E>(iface, classLoader, parent, metadata);
-		E proxy = (E) Proxy.newProxyInstance(classLoader, new Class[]{iface, DslExportable.class}, handler);
-		return proxy;
-	}
+  @Override
+  @SuppressWarnings("unchecked")
+  public <E> E instantiate(
+      Class<E> iface,
+      ClassLoader classLoader,
+      Optional<HelenusPropertyNode> parent,
+      Metadata metadata) {
+    DslInvocationHandler<E> handler =
+        new DslInvocationHandler<E>(iface, classLoader, parent, metadata);
+    E proxy =
+        (E) Proxy.newProxyInstance(classLoader, new Class[] {iface, DslExportable.class}, handler);
+    return proxy;
+  }
 }

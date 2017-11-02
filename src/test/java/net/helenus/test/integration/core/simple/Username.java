@@ -16,12 +16,10 @@
 package net.helenus.test.integration.core.simple;
 
 import java.lang.annotation.*;
-
 import net.helenus.mapping.annotation.Constraints;
 
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Constraints.LowerCase
-public @interface Username {
-}
+public @interface Username {}

@@ -15,143 +15,139 @@
  */
 package net.helenus.core;
 
-import java.io.PrintStream;
-import java.util.List;
-import java.util.concurrent.Executor;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import brave.Tracer;
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.*;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Table;
 import com.google.common.util.concurrent.ListenableFuture;
-
-import brave.Tracer;
+import java.io.PrintStream;
+import java.util.List;
+import java.util.concurrent.Executor;
 import net.helenus.core.cache.Facet;
 import net.helenus.core.operation.Operation;
 import net.helenus.mapping.value.ColumnValuePreparer;
 import net.helenus.mapping.value.ColumnValueProvider;
 import net.helenus.support.Either;
 import net.helenus.support.HelenusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractSessionOperations {
 
-	private static final Logger LOG = LoggerFactory.getLogger(AbstractSessionOperations.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractSessionOperations.class);
 
-	public abstract Session currentSession();
+  public abstract Session currentSession();
 
-	public abstract String usingKeyspace();
+  public abstract String usingKeyspace();
 
-	public abstract boolean isShowCql();
+  public abstract boolean isShowCql();
 
-	public abstract PrintStream getPrintStream();
+  public abstract PrintStream getPrintStream();
 
-	public abstract Executor getExecutor();
+  public abstract Executor getExecutor();
 
-	public abstract SessionRepository getSessionRepository();
+  public abstract SessionRepository getSessionRepository();
 
-	public abstract ColumnValueProvider getValueProvider();
+  public abstract ColumnValueProvider getValueProvider();
 
-	public abstract ColumnValuePreparer getValuePreparer();
+  public abstract ColumnValuePreparer getValuePreparer();
 
-	public abstract ConsistencyLevel getDefaultConsistencyLevel();
+  public abstract ConsistencyLevel getDefaultConsistencyLevel();
 
-	public abstract boolean getDefaultQueryIdempotency();
+  public abstract boolean getDefaultQueryIdempotency();
 
-	public PreparedStatement prepare(RegularStatement statement) {
-		try {
-			logStatement(statement, false);
-			return currentSession().prepare(statement);
-		} catch (RuntimeException e) {
-			throw translateException(e);
-		}
-	}
+  public PreparedStatement prepare(RegularStatement statement) {
+    try {
+      logStatement(statement, false);
+      return currentSession().prepare(statement);
+    } catch (RuntimeException e) {
+      throw translateException(e);
+    }
+  }
 
-	public ListenableFuture<PreparedStatement> prepareAsync(RegularStatement statement) {
-		try {
-			logStatement(statement, false);
-			return currentSession().prepareAsync(statement);
-		} catch (RuntimeException e) {
-			throw translateException(e);
-		}
-	}
+  public ListenableFuture<PreparedStatement> prepareAsync(RegularStatement statement) {
+    try {
+      logStatement(statement, false);
+      return currentSession().prepareAsync(statement);
+    } catch (RuntimeException e) {
+      throw translateException(e);
+    }
+  }
 
-	public ResultSet execute(Statement statement, boolean showValues) {
-		return execute(statement, null, null, showValues);
-	}
+  public ResultSet execute(Statement statement, boolean showValues) {
+    return execute(statement, null, null, showValues);
+  }
 
-	public ResultSet execute(Statement statement, Stopwatch timer, boolean showValues) {
-		return execute(statement, null, timer, showValues);
-	}
+  public ResultSet execute(Statement statement, Stopwatch timer, boolean showValues) {
+    return execute(statement, null, timer, showValues);
+  }
 
-	public ResultSet execute(Statement statement, UnitOfWork uow, boolean showValues) {
-		return execute(statement, uow, null, showValues);
-	}
+  public ResultSet execute(Statement statement, UnitOfWork uow, boolean showValues) {
+    return execute(statement, uow, null, showValues);
+  }
 
-	public ResultSet execute(Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
-		return executeAsync(statement, uow, timer, showValues).getUninterruptibly();
-	}
+  public ResultSet execute(
+      Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
+    return executeAsync(statement, uow, timer, showValues).getUninterruptibly();
+  }
 
-	public ResultSetFuture executeAsync(Statement statement, boolean showValues) {
-		return executeAsync(statement, null, null, showValues);
-	}
+  public ResultSetFuture executeAsync(Statement statement, boolean showValues) {
+    return executeAsync(statement, null, null, showValues);
+  }
 
-	public ResultSetFuture executeAsync(Statement statement, Stopwatch timer, boolean showValues) {
-		return executeAsync(statement, null, timer, showValues);
-	}
+  public ResultSetFuture executeAsync(Statement statement, Stopwatch timer, boolean showValues) {
+    return executeAsync(statement, null, timer, showValues);
+  }
 
-	public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, boolean showValues) {
-		return executeAsync(statement, uow, null, showValues);
-	}
+  public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, boolean showValues) {
+    return executeAsync(statement, uow, null, showValues);
+  }
 
-	public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
-		try {
-			logStatement(statement, showValues);
-			return currentSession().executeAsync(statement);
-		} catch (RuntimeException e) {
-			throw translateException(e);
-		}
-	}
+  public ResultSetFuture executeAsync(
+      Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
+    try {
+      logStatement(statement, showValues);
+      return currentSession().executeAsync(statement);
+    } catch (RuntimeException e) {
+      throw translateException(e);
+    }
+  }
 
-	private void logStatement(Statement statement, boolean showValues) {
-		if (isShowCql()) {
-			printCql(Operation.queryString(statement, showValues));
-		} else if (LOG.isDebugEnabled()) {
-			LOG.info("CQL> " + Operation.queryString(statement, showValues));
-		}
-	}
+  private void logStatement(Statement statement, boolean showValues) {
+    if (isShowCql()) {
+      printCql(Operation.queryString(statement, showValues));
+    } else if (LOG.isDebugEnabled()) {
+      LOG.info("CQL> " + Operation.queryString(statement, showValues));
+    }
+  }
 
-	public Tracer getZipkinTracer() {
-		return null;
-	}
+  public Tracer getZipkinTracer() {
+    return null;
+  }
 
-	public MetricRegistry getMetricRegistry() {
-		return null;
-	}
+  public MetricRegistry getMetricRegistry() {
+    return null;
+  }
 
-	public void mergeCache(Table<String, String, Either<Object, List<Facet>>> uowCache) {
-	}
+  public void mergeCache(Table<String, String, Either<Object, List<Facet>>> uowCache) {}
 
-	RuntimeException translateException(RuntimeException e) {
-		if (e instanceof HelenusException) {
-			return e;
-		}
-		throw new HelenusException(e);
-	}
+  RuntimeException translateException(RuntimeException e) {
+    if (e instanceof HelenusException) {
+      return e;
+    }
+    throw new HelenusException(e);
+  }
 
-	public Object checkCache(String tableName, List<Facet> facets) {
-		return null;
-	}
+  public Object checkCache(String tableName, List<Facet> facets) {
+    return null;
+  }
 
-	public void updateCache(Object pojo, List<Facet> facets) {
-	}
+  public void updateCache(Object pojo, List<Facet> facets) {}
 
-	void printCql(String cql) {
-		getPrintStream().println(cql);
-	}
+  void printCql(String cql) {
+    getPrintStream().println(cql);
+  }
 
-	public void cacheEvict(List<Facet> facets) {
-	}
+  public void cacheEvict(List<Facet> facets) {}
 }

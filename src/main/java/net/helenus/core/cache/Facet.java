@@ -16,38 +16,35 @@
 
 package net.helenus.core.cache;
 
-/**
- * An Entity is identifiable via one or more Facets
- */
+/** An Entity is identifiable via one or more Facets */
 public class Facet<T> {
-	private final String name;
-	private T value;
-	private boolean fixed = false;
+  private final String name;
+  private T value;
+  private boolean fixed = false;
 
-	public Facet(String name) {
-		this.name = name;
-	}
+  public Facet(String name) {
+    this.name = name;
+  }
 
-	public Facet(String name, T value) {
-		this.name = name;
-		this.value = value;
-	}
+  public Facet(String name, T value) {
+    this.name = name;
+    this.value = value;
+  }
 
-	public String name() {
-		return name;
-	}
+  public String name() {
+    return name;
+  }
 
-	public T value() {
-		return value;
-	}
+  public T value() {
+    return value;
+  }
 
-	public Facet setFixed() {
-		fixed = true;
-		return this;
-	}
+  public Facet setFixed() {
+    fixed = true;
+    return this;
+  }
 
-	public boolean fixed() {
-		return fixed;
-	}
-
+  public boolean fixed() {
+    return fixed;
+  }
 }

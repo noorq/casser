@@ -20,19 +20,19 @@ import com.datastax.driver.core.CodecRegistry;
 /** A built CREATE TABLE statement. */
 public class CreateTable extends Create {
 
-	public CreateTable(String keyspaceName, String tableName) {
-		super(keyspaceName, tableName);
-	}
+  public CreateTable(String keyspaceName, String tableName) {
+    super(keyspaceName, tableName);
+  }
 
-	public CreateTable(String tableName) {
-		super(tableName);
-	}
+  public CreateTable(String tableName) {
+    super(tableName);
+  }
 
-	public String getQueryString(CodecRegistry codecRegistry) {
-		return buildInternal();
-	}
+  public String getQueryString(CodecRegistry codecRegistry) {
+    return buildInternal();
+  }
 
-	public String toString() {
-		return buildInternal();
-	}
+  public String toString() {
+    return buildInternal();
+  }
 }

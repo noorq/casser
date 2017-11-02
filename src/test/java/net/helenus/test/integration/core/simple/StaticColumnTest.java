@@ -19,129 +19,152 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.core.Query;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class StaticColumnTest extends AbstractEmbeddedCassandraTest {
 
-	static HelenusSession session;
-	static Message message;
+  static HelenusSession session;
+  static Message message;
 
-	@BeforeClass
-	public static void beforeTest() {
-		session = Helenus.init(getSession()).showCql().addPackage(Message.class.getPackage().getName()).autoCreateDrop()
-				.get();
-		message = Helenus.dsl(Message.class, session.getMetadata());
-	}
+  @BeforeClass
+  public static void beforeTest() {
+    session =
+        Helenus.init(getSession())
+            .showCql()
+            .addPackage(Message.class.getPackage().getName())
+            .autoCreateDrop()
+            .get();
+    message = Helenus.dsl(Message.class, session.getMetadata());
+  }
 
-	@Test
-	public void testPrint() {
-		System.out.println(message);
-	}
+  @Test
+  public void testPrint() {
+    System.out.println(message);
+  }
 
-	@Test
-	public void testCRUID() throws TimeoutException {
+  @Test
+  public void testCRUID() throws TimeoutException {
 
-		MessageImpl msg = new MessageImpl();
-		msg.id = 123;
-		msg.timestamp = new Date();
-		msg.from = "Alex";
-		msg.to = "Bob";
-		msg.msg = "hi";
+    MessageImpl msg = new MessageImpl();
+    msg.id = 123;
+    msg.timestamp = new Date();
+    msg.from = "Alex";
+    msg.to = "Bob";
+    msg.msg = "hi";
 
-		// CREATE
+    // CREATE
 
-		session.insert(msg).sync();
+    session.insert(msg).sync();
 
-		msg.id = 123;
-		msg.to = "Craig";
+    msg.id = 123;
+    msg.to = "Craig";
 
-		session.insert(msg).sync();
+    session.insert(msg).sync();
 
-		// READ
+    // READ
 
-		List<Message> actual = session.<Message>select(message).where(message::id, Query.eq(123)).sync()
-				.collect(Collectors.toList());
+    List<Message> actual =
+        session
+            .<Message>select(message)
+            .where(message::id, Query.eq(123))
+            .sync()
+            .collect(Collectors.toList());
 
-		Assert.assertEquals(2, actual.size());
+    Assert.assertEquals(2, actual.size());
 
-		Message toCraig = actual.stream().filter(m -> m.to().equals("Craig")).findFirst().get();
-		assertMessages(msg, toCraig);
+    Message toCraig = actual.stream().filter(m -> m.to().equals("Craig")).findFirst().get();
+    assertMessages(msg, toCraig);
 
-		// UPDATE
+    // UPDATE
 
-		session.update().set(message::from, "Albert").where(message::id, Query.eq(123))
-				.onlyIf(message::from, Query.eq("Alex")).sync();
+    session
+        .update()
+        .set(message::from, "Albert")
+        .where(message::id, Query.eq(123))
+        .onlyIf(message::from, Query.eq("Alex"))
+        .sync();
 
-		long cnt = session.select(message::from).where(message::id, Query.eq(123)).sync()
-				.filter(t -> t._1.equals("Albert")).count();
+    long cnt =
+        session
+            .select(message::from)
+            .where(message::id, Query.eq(123))
+            .sync()
+            .filter(t -> t._1.equals("Albert"))
+            .count();
 
-		Assert.assertEquals(2, cnt);
+    Assert.assertEquals(2, cnt);
 
-		// INSERT
+    // INSERT
 
-		session.update().set(message::from, null).where(message::id, Query.eq(123)).sync();
+    session.update().set(message::from, null).where(message::id, Query.eq(123)).sync();
 
-		session.select(message::from).where(message::id, Query.eq(123)).sync().map(t -> t._1)
-				.forEach(Assert::assertNull);
+    session
+        .select(message::from)
+        .where(message::id, Query.eq(123))
+        .sync()
+        .map(t -> t._1)
+        .forEach(Assert::assertNull);
 
-		session.update().set(message::from, "Alex").where(message::id, Query.eq(123))
-				.onlyIf(message::from, Query.eq(null)).sync();
+    session
+        .update()
+        .set(message::from, "Alex")
+        .where(message::id, Query.eq(123))
+        .onlyIf(message::from, Query.eq(null))
+        .sync();
 
-		// DELETE
+    // DELETE
 
-		session.delete().where(message::id, Query.eq(123)).sync();
+    session.delete().where(message::id, Query.eq(123)).sync();
 
-		cnt = session.count().where(message::id, Query.eq(123)).sync();
-		Assert.assertEquals(0, cnt);
-	}
+    cnt = session.count().where(message::id, Query.eq(123)).sync();
+    Assert.assertEquals(0, cnt);
+  }
 
-	private void assertMessages(Message expected, Message actual) {
-		Assert.assertEquals(expected.id(), actual.id());
-		Assert.assertEquals(expected.from(), actual.from());
-		Assert.assertEquals(expected.timestamp(), actual.timestamp());
-		Assert.assertEquals(expected.to(), actual.to());
-		Assert.assertEquals(expected.message(), actual.message());
-	}
+  private void assertMessages(Message expected, Message actual) {
+    Assert.assertEquals(expected.id(), actual.id());
+    Assert.assertEquals(expected.from(), actual.from());
+    Assert.assertEquals(expected.timestamp(), actual.timestamp());
+    Assert.assertEquals(expected.to(), actual.to());
+    Assert.assertEquals(expected.message(), actual.message());
+  }
 
-	private static class MessageImpl implements Message {
+  private static class MessageImpl implements Message {
 
-		int id;
-		Date timestamp;
-		String from;
-		String to;
-		String msg;
+    int id;
+    Date timestamp;
+    String from;
+    String to;
+    String msg;
 
-		@Override
-		public int id() {
-			return id;
-		}
+    @Override
+    public int id() {
+      return id;
+    }
 
-		@Override
-		public Date timestamp() {
-			return timestamp;
-		}
+    @Override
+    public Date timestamp() {
+      return timestamp;
+    }
 
-		@Override
-		public String from() {
-			return from;
-		}
+    @Override
+    public String from() {
+      return from;
+    }
 
-		@Override
-		public String to() {
-			return to;
-		}
+    @Override
+    public String to() {
+      return to;
+    }
 
-		@Override
-		public String message() {
-			return msg;
-		}
-	}
+    @Override
+    public String message() {
+      return msg;
+    }
+  }
 }

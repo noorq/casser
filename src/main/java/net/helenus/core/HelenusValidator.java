@@ -16,33 +16,32 @@
 package net.helenus.core;
 
 import java.lang.annotation.Annotation;
-
 import javax.validation.ConstraintValidator;
-
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.support.HelenusException;
 import net.helenus.support.HelenusMappingException;
 
 public enum HelenusValidator implements PropertyValueValidator {
-	INSTANCE;
+  INSTANCE;
 
-	public void validate(HelenusProperty prop, Object value) {
+  public void validate(HelenusProperty prop, Object value) {
 
-		for (ConstraintValidator<? extends Annotation, ?> validator : prop.getValidators()) {
+    for (ConstraintValidator<? extends Annotation, ?> validator : prop.getValidators()) {
 
-			ConstraintValidator typeless = (ConstraintValidator) validator;
+      ConstraintValidator typeless = (ConstraintValidator) validator;
 
-			boolean valid = false;
+      boolean valid = false;
 
-			try {
-				valid = typeless.isValid(value, null);
-			} catch (ClassCastException e) {
-				throw new HelenusMappingException("validator was used for wrong type '" + value + "' in " + prop, e);
-			}
+      try {
+        valid = typeless.isValid(value, null);
+      } catch (ClassCastException e) {
+        throw new HelenusMappingException(
+            "validator was used for wrong type '" + value + "' in " + prop, e);
+      }
 
-			if (!valid) {
-				throw new HelenusException("wrong value '" + value + "' for " + prop);
-			}
-		}
-	}
+      if (!valid) {
+        throw new HelenusException("wrong value '" + value + "' for " + prop);
+      }
+    }
+  }
 }

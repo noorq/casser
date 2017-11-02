@@ -1,8 +1,5 @@
 package net.helenus.test.integration.core;
 
-import org.junit.Before;
-import org.junit.Test;
-
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusValidator;
 import net.helenus.mapping.HelenusEntity;
@@ -13,40 +10,42 @@ import net.helenus.mapping.annotation.Table;
 import net.helenus.support.HelenusException;
 import net.helenus.support.HelenusMappingException;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+import org.junit.Before;
+import org.junit.Test;
 
 public class HelenusValidatorTest extends AbstractEmbeddedCassandraTest {
 
-	HelenusEntity entity;
-	HelenusProperty prop;
+  HelenusEntity entity;
+  HelenusProperty prop;
 
-	@Before
-	public void begin() {
-		Helenus.init(getSession()).singleton();
+  @Before
+  public void begin() {
+    Helenus.init(getSession()).singleton();
 
-		entity = Helenus.entity(ModelForValidation.class);
+    entity = Helenus.entity(ModelForValidation.class);
 
-		prop = entity.getProperty("id");
-	}
+    prop = entity.getProperty("id");
+  }
 
-	@Test(expected = HelenusMappingException.class)
-	public void testWrongType() {
-		HelenusValidator.INSTANCE.validate(prop, Integer.valueOf(123));
-	}
+  @Test(expected = HelenusMappingException.class)
+  public void testWrongType() {
+    HelenusValidator.INSTANCE.validate(prop, Integer.valueOf(123));
+  }
 
-	@Test(expected = HelenusException.class)
-	public void testWrongValue() {
-		HelenusValidator.INSTANCE.validate(prop, "123");
-	}
+  @Test(expected = HelenusException.class)
+  public void testWrongValue() {
+    HelenusValidator.INSTANCE.validate(prop, "123");
+  }
 
-	public void testOk() {
-		HelenusValidator.INSTANCE.validate(prop, "a@b.c");
-	}
+  public void testOk() {
+    HelenusValidator.INSTANCE.validate(prop, "a@b.c");
+  }
 
-	@Table
-	interface ModelForValidation {
+  @Table
+  interface ModelForValidation {
 
-		@Constraints.Email
-		@PartitionKey
-		String id();
-	}
+    @Constraints.Email
+    @PartitionKey
+    String id();
+  }
 }

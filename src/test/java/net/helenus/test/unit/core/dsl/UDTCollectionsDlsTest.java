@@ -17,42 +17,40 @@ package net.helenus.test.unit.core.dsl;
 
 import java.util.HashMap;
 import java.util.Map;
-
+import net.helenus.core.Helenus;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.helenus.core.Helenus;
-
 public class UDTCollectionsDlsTest {
 
-	@Test
-	public void testMap() {
+  @Test
+  public void testMap() {
 
-		Map<Rocket, String> comments = new HashMap<Rocket, String>();
+    Map<Rocket, String> comments = new HashMap<Rocket, String>();
 
-		Map<String, Object> firstMap = new HashMap<String, Object>();
-		firstMap.put("length", 100);
-		firstMap.put("price", 100.0);
+    Map<String, Object> firstMap = new HashMap<String, Object>();
+    firstMap.put("length", 100);
+    firstMap.put("price", 100.0);
 
-		Rocket first = Helenus.map(Rocket.class, firstMap);
+    Rocket first = Helenus.map(Rocket.class, firstMap);
 
-		Map<String, Object> secondMap = new HashMap<String, Object>();
-		secondMap.put("length", 50);
-		secondMap.put("price", 70.0);
+    Map<String, Object> secondMap = new HashMap<String, Object>();
+    secondMap.put("length", 50);
+    secondMap.put("price", 70.0);
 
-		Rocket second = Helenus.map(Rocket.class, secondMap);
+    Rocket second = Helenus.map(Rocket.class, secondMap);
 
-		Assert.assertEquals(first.hashCode(), first.hashCode());
-		Assert.assertEquals(second.hashCode(), second.hashCode());
+    Assert.assertEquals(first.hashCode(), first.hashCode());
+    Assert.assertEquals(second.hashCode(), second.hashCode());
 
-		Assert.assertFalse(first.equals(second));
-		Assert.assertTrue(first.equals(first));
-		Assert.assertTrue(second.equals(second));
+    Assert.assertFalse(first.equals(second));
+    Assert.assertTrue(first.equals(first));
+    Assert.assertTrue(second.equals(second));
 
-		comments.put(first, "fast");
-		comments.put(second, "nice");
+    comments.put(first, "fast");
+    comments.put(second, "nice");
 
-		Assert.assertEquals("fast", comments.get(first));
-		Assert.assertEquals("nice", comments.get(second));
-	}
+    Assert.assertEquals("fast", comments.get(first));
+    Assert.assertEquals("nice", comments.get(second));
+  }
 }

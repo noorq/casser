@@ -18,16 +18,17 @@ package net.helenus.mapping;
 import java.util.Comparator;
 
 public enum TypeAndOrdinalColumnComparator implements Comparator<HelenusProperty> {
-	INSTANCE;
+  INSTANCE;
 
-	public int compare(HelenusProperty thisVal, HelenusProperty anotherVal) {
+  public int compare(HelenusProperty thisVal, HelenusProperty anotherVal) {
 
-		int c = Integer.compare(thisVal.getColumnType().ordinal(), anotherVal.getColumnType().ordinal());
+    int c =
+        Integer.compare(thisVal.getColumnType().ordinal(), anotherVal.getColumnType().ordinal());
 
-		if (c == 0) {
-			c = Integer.compare(thisVal.getOrdinal(), anotherVal.getOrdinal());
-		}
+    if (c == 0) {
+      c = Integer.compare(thisVal.getOrdinal(), anotherVal.getOrdinal());
+    }
 
-		return c;
-	}
+    return c;
+  }
 }

@@ -17,12 +17,8 @@ package net.helenus.mapping.annotation;
 
 import java.lang.annotation.*;
 
-/**
- * Transient annotation is used to mark properties that are need not be mapped
- * to the database.
- */
+/** Transient annotation is used to mark properties that are need not be mapped to the database. */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.ANNOTATION_TYPE})
-public @interface Transient {
-}
+public @interface Transient {}

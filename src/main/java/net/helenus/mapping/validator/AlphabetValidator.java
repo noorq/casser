@@ -16,39 +16,38 @@
 package net.helenus.mapping.validator;
 
 import java.util.Arrays;
-
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-
 import net.helenus.mapping.annotation.Constraints;
 
-public final class AlphabetValidator implements ConstraintValidator<Constraints.Alphabet, CharSequence> {
+public final class AlphabetValidator
+    implements ConstraintValidator<Constraints.Alphabet, CharSequence> {
 
-	char[] alphabet;
+  char[] alphabet;
 
-	@Override
-	public void initialize(Constraints.Alphabet constraintAnnotation) {
-		alphabet = constraintAnnotation.value().toCharArray();
-		Arrays.sort(alphabet);
-	}
+  @Override
+  public void initialize(Constraints.Alphabet constraintAnnotation) {
+    alphabet = constraintAnnotation.value().toCharArray();
+    Arrays.sort(alphabet);
+  }
 
-	@Override
-	public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
+  @Override
+  public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
 
-		if (value == null) {
-			return true;
-		}
+    if (value == null) {
+      return true;
+    }
 
-		final int len = value.length();
-		for (int i = 0; i != len; ++i) {
+    final int len = value.length();
+    for (int i = 0; i != len; ++i) {
 
-			char ch = value.charAt(i);
+      char ch = value.charAt(i);
 
-			if (Arrays.binarySearch(alphabet, ch) < 0) {
-				return false;
-			}
-		}
+      if (Arrays.binarySearch(alphabet, ch) < 0) {
+        return false;
+      }
+    }
 
-		return true;
-	}
+    return true;
+  }
 }

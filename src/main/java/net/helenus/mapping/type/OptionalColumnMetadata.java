@@ -19,7 +19,7 @@ import com.datastax.driver.core.DataType;
 
 public interface OptionalColumnMetadata {
 
-	String getName();
+  String getName();
 
-	DataType getType();
+  DataType getType();
 }

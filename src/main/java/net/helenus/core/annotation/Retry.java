@@ -21,14 +21,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.concurrent.TimeoutException;
-
 import net.helenus.core.ConflictingUnitOfWorkException;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Retry {
 
-	Class<? extends Exception>[] on() default {ConflictingUnitOfWorkException.class, TimeoutException.class};
+  Class<? extends Exception>[] on() default {
+    ConflictingUnitOfWorkException.class, TimeoutException.class
+  };
 
-	int times() default 3;
+  int times() default 3;
 }

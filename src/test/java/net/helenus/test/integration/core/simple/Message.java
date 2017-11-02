@@ -16,25 +16,24 @@
 package net.helenus.test.integration.core.simple;
 
 import java.util.Date;
-
 import net.helenus.mapping.annotation.*;
 
 @Table
 public interface Message {
 
-	@PartitionKey
-	int id();
+  @PartitionKey
+  int id();
 
-	@ClusteringColumn
-	@Types.Timeuuid
-	Date timestamp();
+  @ClusteringColumn
+  @Types.Timeuuid
+  Date timestamp();
 
-	@StaticColumn(forceQuote = true)
-	String from();
+  @StaticColumn(forceQuote = true)
+  String from();
 
-	@Column(forceQuote = true)
-	String to();
+  @Column(forceQuote = true)
+  String to();
 
-	@Column
-	String message();
+  @Column
+  String message();
 }

@@ -15,17 +15,15 @@
  */
 package net.helenus.core.operation;
 
-import java.util.*;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.querybuilder.Assignment;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Update;
-
+import java.util.*;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import net.helenus.core.*;
 import net.helenus.core.cache.BoundFacet;
 import net.helenus.core.cache.Facet;
@@ -42,697 +40,733 @@ import net.helenus.support.Immutables;
 
 public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateOperation<E>> {
 
-	private final Map<Assignment, BoundFacet> assignments = new HashMap<>();
-	private final AbstractEntityDraft<E> draft;
-	private final Map<String, Object> draftMap;
-	private HelenusEntity entity = null;
-	private Object pojo;
-	private int[] ttl;
-	private long[] timestamp;
-
-	public UpdateOperation(AbstractSessionOperations sessionOperations) {
-		super(sessionOperations);
-		this.draft = null;
-		this.draftMap = null;
-	}
-
-	public UpdateOperation(AbstractSessionOperations sessionOperations, AbstractEntityDraft<E> draft) {
-		super(sessionOperations);
-		this.draft = draft;
-		this.draftMap = draft.toMap();
-	}
-
-	public UpdateOperation(AbstractSessionOperations sessionOperations, Object pojo) {
-		super(sessionOperations);
-		this.draft = null;
-		this.draftMap = null;
-		this.pojo = pojo;
-		this.entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
-	}
-
-	public UpdateOperation(AbstractSessionOperations sessionOperations, HelenusPropertyNode p, Object v) {
-		super(sessionOperations);
-		this.draft = null;
-		this.draftMap = null;
-
-		Object value = sessionOps.getValuePreparer().prepareColumnValue(v, p.getProperty());
-		assignments.put(QueryBuilder.set(p.getColumnName(), value), new BoundFacet(p.getProperty(), v));
-
-		addPropertyNode(p);
-	}
-
-	public <V> UpdateOperation<E> set(Getter<V> getter, V v) {
-		Objects.requireNonNull(getter, "getter is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(getter);
-		HelenusProperty prop = p.getProperty();
-
-		Object value = sessionOps.getValuePreparer().prepareColumnValue(v, prop);
-		assignments.put(QueryBuilder.set(p.getColumnName(), value), new BoundFacet(prop, value));
-
-		if (draft != null) {
-			String key = prop.getPropertyName();
-			if (draft.get(key, value.getClass()) != v) {
-				draft.set(key, v);
-			}
-		}
-
-		if (entity != null) {
-			if (entity.isCacheable() && pojo != null && pojo instanceof MapExportable) {
-				String key = prop.getPropertyName();
-				Map<String, Object> map = ((MapExportable) pojo).toMap();
-				if (!(map instanceof ValueProviderMap)) {
-					if (map.get(key) != v) {
-						map.put(key, v);
-					}
-				}
-			}
-		}
-
-		addPropertyNode(p);
-
-		return this;
-	}
-
-	/*
-	 *
-	 *
-	 * COUNTER
-	 *
-	 *
-	 */
-
-	public <V> UpdateOperation<E> increment(Getter<V> counterGetter) {
-		return increment(counterGetter, 1L);
-	}
-
-	public <V> UpdateOperation<E> increment(Getter<V> counterGetter, long delta) {
-
-		Objects.requireNonNull(counterGetter, "counterGetter is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(counterGetter);
-
-		BoundFacet facet = null;
-		if (pojo != null) {
-			HelenusProperty prop = p.getProperty();
-			Long value = (Long) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
-			facet = new BoundFacet(prop, value + delta);
-		} else if (draft != null) {
-			String key = p.getProperty().getPropertyName();
-			draftMap.put(key, (Long) draftMap.get(key) + delta);
-		}
-
-		assignments.put(QueryBuilder.incr(p.getColumnName(), delta), facet);
+  private final Map<Assignment, BoundFacet> assignments = new HashMap<>();
+  private final AbstractEntityDraft<E> draft;
+  private final Map<String, Object> draftMap;
+  private HelenusEntity entity = null;
+  private Object pojo;
+  private int[] ttl;
+  private long[] timestamp;
+
+  public UpdateOperation(AbstractSessionOperations sessionOperations) {
+    super(sessionOperations);
+    this.draft = null;
+    this.draftMap = null;
+  }
+
+  public UpdateOperation(
+      AbstractSessionOperations sessionOperations, AbstractEntityDraft<E> draft) {
+    super(sessionOperations);
+    this.draft = draft;
+    this.draftMap = draft.toMap();
+  }
+
+  public UpdateOperation(AbstractSessionOperations sessionOperations, Object pojo) {
+    super(sessionOperations);
+    this.draft = null;
+    this.draftMap = null;
+    this.pojo = pojo;
+    this.entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
+  }
+
+  public UpdateOperation(
+      AbstractSessionOperations sessionOperations, HelenusPropertyNode p, Object v) {
+    super(sessionOperations);
+    this.draft = null;
+    this.draftMap = null;
+
+    Object value = sessionOps.getValuePreparer().prepareColumnValue(v, p.getProperty());
+    assignments.put(QueryBuilder.set(p.getColumnName(), value), new BoundFacet(p.getProperty(), v));
+
+    addPropertyNode(p);
+  }
+
+  public <V> UpdateOperation<E> set(Getter<V> getter, V v) {
+    Objects.requireNonNull(getter, "getter is empty");
+
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(getter);
+    HelenusProperty prop = p.getProperty();
+
+    Object value = sessionOps.getValuePreparer().prepareColumnValue(v, prop);
+    assignments.put(QueryBuilder.set(p.getColumnName(), value), new BoundFacet(prop, value));
+
+    if (draft != null) {
+      String key = prop.getPropertyName();
+      if (draft.get(key, value.getClass()) != v) {
+        draft.set(key, v);
+      }
+    }
+
+    if (entity != null) {
+      if (entity.isCacheable() && pojo != null && pojo instanceof MapExportable) {
+        String key = prop.getPropertyName();
+        Map<String, Object> map = ((MapExportable) pojo).toMap();
+        if (!(map instanceof ValueProviderMap)) {
+          if (map.get(key) != v) {
+            map.put(key, v);
+          }
+        }
+      }
+    }
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  /*
+   *
+   *
+   * COUNTER
+   *
+   *
+   */
+
+  public <V> UpdateOperation<E> increment(Getter<V> counterGetter) {
+    return increment(counterGetter, 1L);
+  }
+
+  public <V> UpdateOperation<E> increment(Getter<V> counterGetter, long delta) {
+
+    Objects.requireNonNull(counterGetter, "counterGetter is empty");
+
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(counterGetter);
+
+    BoundFacet facet = null;
+    if (pojo != null) {
+      HelenusProperty prop = p.getProperty();
+      Long value = (Long) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
+      facet = new BoundFacet(prop, value + delta);
+    } else if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      draftMap.put(key, (Long) draftMap.get(key) + delta);
+    }
 
-		addPropertyNode(p);
+    assignments.put(QueryBuilder.incr(p.getColumnName(), delta), facet);
 
-		return this;
-	}
+    addPropertyNode(p);
 
-	public <V> UpdateOperation<E> decrement(Getter<V> counterGetter) {
-		return decrement(counterGetter, 1L);
-	}
+    return this;
+  }
 
-	public <V> UpdateOperation<E> decrement(Getter<V> counterGetter, long delta) {
+  public <V> UpdateOperation<E> decrement(Getter<V> counterGetter) {
+    return decrement(counterGetter, 1L);
+  }
 
-		Objects.requireNonNull(counterGetter, "counterGetter is empty");
+  public <V> UpdateOperation<E> decrement(Getter<V> counterGetter, long delta) {
 
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(counterGetter);
+    Objects.requireNonNull(counterGetter, "counterGetter is empty");
 
-		BoundFacet facet = null;
-		if (pojo != null) {
-			HelenusProperty prop = p.getProperty();
-			Long value = (Long) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
-			facet = new BoundFacet(prop, value - delta);
-		} else if (draft != null) {
-			String key = p.getProperty().getPropertyName();
-			draftMap.put(key, (Long) draftMap.get(key) - delta);
-		}
-
-		assignments.put(QueryBuilder.decr(p.getColumnName(), delta), facet);
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(counterGetter);
 
-		addPropertyNode(p);
-
-		return this;
-	}
+    BoundFacet facet = null;
+    if (pojo != null) {
+      HelenusProperty prop = p.getProperty();
+      Long value = (Long) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
+      facet = new BoundFacet(prop, value - delta);
+    } else if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      draftMap.put(key, (Long) draftMap.get(key) - delta);
+    }
+
+    assignments.put(QueryBuilder.decr(p.getColumnName(), delta), facet);
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  /*
+   *
+   *
+   * LIST
+   *
+   */
+
+  public <V> UpdateOperation<E> prepend(Getter<List<V>> listGetter, V value) {
 
-	/*
-	 *
-	 *
-	 * LIST
-	 *
-	 */
+    Objects.requireNonNull(listGetter, "listGetter is empty");
+    Objects.requireNonNull(value, "value is empty");
 
-	public <V> UpdateOperation<E> prepend(Getter<List<V>> listGetter, V value) {
-
-		Objects.requireNonNull(listGetter, "listGetter is empty");
-		Objects.requireNonNull(value, "value is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
-		Object valueObj = prepareSingleListValue(p, value);
-
-		BoundFacet facet = null;
-		if (pojo != null) {
-			HelenusProperty prop = p.getProperty();
-			List<V> list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-			list.add(0, value);
-			facet = new BoundFacet(prop, list);
-		} else if (draft != null) {
-			String key = p.getProperty().getPropertyName();
-			List<V> list = (List<V>) draftMap.get(key);
-			list.add(0, value);
-		}
-
-		assignments.put(QueryBuilder.prepend(p.getColumnName(), valueObj), facet);
-
-		addPropertyNode(p);
-
-		return this;
-	}
-
-	public <V> UpdateOperation<E> prependAll(Getter<List<V>> listGetter, List<V> value) {
-
-		Objects.requireNonNull(listGetter, "listGetter is empty");
-		Objects.requireNonNull(value, "value is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
-		List valueObj = prepareListValue(p, value);
-
-		BoundFacet facet = null;
-		if (pojo != null) {
-			HelenusProperty prop = p.getProperty();
-			List<V> list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-			list.addAll(0, value);
-			facet = new BoundFacet(prop, list);
-		} else if (draft != null && value.size() > 0) {
-			String key = p.getProperty().getPropertyName();
-			List<V> list = (List<V>) draftMap.get(key);
-			list.addAll(0, value);
-		}
-
-		assignments.put(QueryBuilder.prependAll(p.getColumnName(), valueObj), facet);
-
-		addPropertyNode(p);
-
-		return this;
-	}
-
-	public <V> UpdateOperation<E> setIdx(Getter<List<V>> listGetter, int idx, V value) {
-
-		Objects.requireNonNull(listGetter, "listGetter is empty");
-		Objects.requireNonNull(value, "value is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
-		Object valueObj = prepareSingleListValue(p, value);
-
-		BoundFacet facet = null;
-		if (pojo != null || draft != null) {
-			List<V> list;
-			HelenusProperty prop = p.getProperty();
-			if (pojo != null) {
-				list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-			} else {
-				String key = p.getProperty().getPropertyName();
-				list = (List<V>) draftMap.get(key);
-			}
-			if (idx < 0) {
-				list.add(0, value);
-			} else if (idx > list.size()) {
-				list.add(list.size(), value);
-			} else {
-				list.add(idx, value);
-			}
-			list.add(0, value);
-			facet = new BoundFacet(prop, list);
-		}
-
-		assignments.put(QueryBuilder.setIdx(p.getColumnName(), idx, valueObj), facet);
-
-		addPropertyNode(p);
-
-		return this;
-	}
-
-	public <V> UpdateOperation<E> append(Getter<List<V>> listGetter, V value) {
-
-		Objects.requireNonNull(listGetter, "listGetter is empty");
-		Objects.requireNonNull(value, "value is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
-		Object valueObj = prepareSingleListValue(p, value);
-
-		BoundFacet facet = null;
-		if (pojo != null) {
-			HelenusProperty prop = p.getProperty();
-			List<V> list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-			list.add(value);
-			facet = new BoundFacet(prop, list);
-		} else if (draft != null) {
-			String key = p.getProperty().getPropertyName();
-			List<V> list = (List<V>) draftMap.get(key);
-			list.add(value);
-		}
-		assignments.put(QueryBuilder.append(p.getColumnName(), valueObj), facet);
-
-		addPropertyNode(p);
-
-		return this;
-	}
-
-	public <V> UpdateOperation<E> appendAll(Getter<List<V>> listGetter, List<V> value) {
-
-		Objects.requireNonNull(listGetter, "listGetter is empty");
-		Objects.requireNonNull(value, "value is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
-		List valueObj = prepareListValue(p, value);
-
-		BoundFacet facet = null;
-		if (pojo != null) {
-			HelenusProperty prop = p.getProperty();
-			List<V> list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-			list.addAll(value);
-			facet = new BoundFacet(prop, list);
-		} else if (draft != null && value.size() > 0) {
-			String key = p.getProperty().getPropertyName();
-			List<V> list = (List<V>) draftMap.get(key);
-			list.addAll(value);
-		}
-		assignments.put(QueryBuilder.appendAll(p.getColumnName(), valueObj), facet);
-
-		addPropertyNode(p);
-
-		return this;
-	}
-
-	public <V> UpdateOperation<E> discard(Getter<List<V>> listGetter, V value) {
-
-		Objects.requireNonNull(listGetter, "listGetter is empty");
-		Objects.requireNonNull(value, "value is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
-		Object valueObj = prepareSingleListValue(p, value);
-
-		BoundFacet facet = null;
-		if (pojo != null) {
-			HelenusProperty prop = p.getProperty();
-			List<V> list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-			list.remove(value);
-			facet = new BoundFacet(prop, list);
-		} else if (draft != null) {
-			String key = p.getProperty().getPropertyName();
-			List<V> list = (List<V>) draftMap.get(key);
-			list.remove(value);
-		}
-		assignments.put(QueryBuilder.discard(p.getColumnName(), valueObj), facet);
-
-		addPropertyNode(p);
-
-		return this;
-	}
-
-	public <V> UpdateOperation<E> discardAll(Getter<List<V>> listGetter, List<V> value) {
-
-		Objects.requireNonNull(listGetter, "listGetter is empty");
-		Objects.requireNonNull(value, "value is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
-		List valueObj = prepareListValue(p, value);
-
-		BoundFacet facet = null;
-		if (pojo != null) {
-			HelenusProperty prop = p.getProperty();
-			List<V> list = new ArrayList<V>((List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-			list.removeAll(value);
-			facet = new BoundFacet(prop, list);
-		} else if (draft != null) {
-			String key = p.getProperty().getPropertyName();
-			List<V> list = (List<V>) draftMap.get(key);
-			list.removeAll(value);
-		}
-		assignments.put(QueryBuilder.discardAll(p.getColumnName(), valueObj), facet);
-
-		addPropertyNode(p);
-
-		return this;
-	}
-
-	private Object prepareSingleListValue(HelenusPropertyNode p, Object value) {
-		HelenusProperty prop = p.getProperty();
-
-		Object valueObj = value;
-
-		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
-		if (converter.isPresent()) {
-			List convertedList = (List) converter.get().apply(Immutables.listOf(value));
-			valueObj = convertedList.get(0);
-		}
-
-		return valueObj;
-	}
-
-	private List prepareListValue(HelenusPropertyNode p, List value) {
-
-		HelenusProperty prop = p.getProperty();
-
-		List valueObj = value;
-
-		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
-		if (converter.isPresent()) {
-			valueObj = (List) converter.get().apply(value);
-		}
-
-		return valueObj;
-	}
-
-	/*
-	 *
-	 *
-	 * SET
-	 *
-	 *
-	 */
-
-	public <V> UpdateOperation<E> add(Getter<Set<V>> setGetter, V value) {
-
-		Objects.requireNonNull(setGetter, "setGetter is empty");
-		Objects.requireNonNull(value, "value is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
-		Object valueObj = prepareSingleSetValue(p, value);
-
-		BoundFacet facet = null;
-		if (pojo != null) {
-			HelenusProperty prop = p.getProperty();
-			Set<V> set = new HashSet<V>((Set<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-			set.add(value);
-			facet = new BoundFacet(prop, set);
-		} else if (draft != null) {
-			String key = p.getProperty().getPropertyName();
-			Set<V> set = (Set<V>) draftMap.get(key);
-			set.add(value);
-		}
-		assignments.put(QueryBuilder.add(p.getColumnName(), valueObj), facet);
-
-		addPropertyNode(p);
-
-		return this;
-	}
-
-	public <V> UpdateOperation<E> addAll(Getter<Set<V>> setGetter, Set<V> value) {
-
-		Objects.requireNonNull(setGetter, "setGetter is empty");
-		Objects.requireNonNull(value, "value is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
-		Set valueObj = prepareSetValue(p, value);
-
-		BoundFacet facet = null;
-		if (pojo != null) {
-			HelenusProperty prop = p.getProperty();
-			Set<V> set = new HashSet<V>((Set<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-			set.addAll(value);
-			facet = new BoundFacet(prop, set);
-		} else if (draft != null) {
-			String key = p.getProperty().getPropertyName();
-			Set<V> set = (Set<V>) draftMap.get(key);
-			set.addAll(value);
-		}
-		assignments.put(QueryBuilder.addAll(p.getColumnName(), valueObj), facet);
-
-		addPropertyNode(p);
-
-		return this;
-	}
-
-	public <V> UpdateOperation<E> remove(Getter<Set<V>> setGetter, V value) {
-
-		Objects.requireNonNull(setGetter, "setGetter is empty");
-		Objects.requireNonNull(value, "value is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
-		Object valueObj = prepareSingleSetValue(p, value);
-
-		BoundFacet facet = null;
-		if (pojo != null) {
-			HelenusProperty prop = p.getProperty();
-			Set<V> set = new HashSet<V>((Set<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-			set.remove(value);
-			facet = new BoundFacet(prop, set);
-		} else if (draft != null) {
-			String key = p.getProperty().getPropertyName();
-			Set<V> set = (Set<V>) draftMap.get(key);
-			set.remove(value);
-		}
-		assignments.put(QueryBuilder.remove(p.getColumnName(), valueObj), facet);
-
-		addPropertyNode(p);
-
-		return this;
-	}
-
-	public <V> UpdateOperation<E> removeAll(Getter<Set<V>> setGetter, Set<V> value) {
-
-		Objects.requireNonNull(setGetter, "setGetter is empty");
-		Objects.requireNonNull(value, "value is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
-		Set valueObj = prepareSetValue(p, value);
-
-		BoundFacet facet = null;
-		if (pojo != null) {
-			HelenusProperty prop = p.getProperty();
-			Set<V> set = new HashSet<V>((Set<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-			set.removeAll(value);
-			facet = new BoundFacet(prop, set);
-		} else if (draft != null) {
-			String key = p.getProperty().getPropertyName();
-			Set<V> set = (Set<V>) draftMap.get(key);
-			set.removeAll(value);
-		}
-		assignments.put(QueryBuilder.removeAll(p.getColumnName(), valueObj), facet);
-
-		addPropertyNode(p);
-
-		return this;
-	}
-
-	private Object prepareSingleSetValue(HelenusPropertyNode p, Object value) {
-
-		HelenusProperty prop = p.getProperty();
-		Object valueObj = value;
-
-		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
-		if (converter.isPresent()) {
-			Set convertedSet = (Set) converter.get().apply(Immutables.setOf(value));
-			valueObj = convertedSet.iterator().next();
-		}
-
-		return valueObj;
-	}
-
-	private Set prepareSetValue(HelenusPropertyNode p, Set value) {
-
-		HelenusProperty prop = p.getProperty();
-		Set valueObj = value;
-
-		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
-		if (converter.isPresent()) {
-			valueObj = (Set) converter.get().apply(value);
-		}
-
-		return valueObj;
-	}
-
-	/*
-	 *
-	 *
-	 * MAP
-	 *
-	 *
-	 */
-
-	public <K, V> UpdateOperation<E> put(Getter<Map<K, V>> mapGetter, K key, V value) {
-
-		Objects.requireNonNull(mapGetter, "mapGetter is empty");
-		Objects.requireNonNull(key, "key is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(mapGetter);
-		HelenusProperty prop = p.getProperty();
-
-		BoundFacet facet = null;
-		if (pojo != null) {
-			Map<K, V> map = new HashMap<K, V>(
-					(Map<K, V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-			map.put(key, value);
-			facet = new BoundFacet(prop, map);
-		} else if (draft != null) {
-			((Map<K, V>) draftMap.get(prop.getPropertyName())).put(key, value);
-		}
-
-		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
-		if (converter.isPresent()) {
-			Map<Object, Object> convertedMap = (Map<Object, Object>) converter.get()
-					.apply(Immutables.mapOf(key, value));
-			for (Map.Entry<Object, Object> e : convertedMap.entrySet()) {
-				assignments.put(QueryBuilder.put(p.getColumnName(), e.getKey(), e.getValue()), facet);
-			}
-		} else {
-			assignments.put(QueryBuilder.put(p.getColumnName(), key, value), facet);
-		}
-
-		addPropertyNode(p);
-
-		return this;
-	}
-
-	public <K, V> UpdateOperation<E> putAll(Getter<Map<K, V>> mapGetter, Map<K, V> map) {
-
-		Objects.requireNonNull(mapGetter, "mapGetter is empty");
-		Objects.requireNonNull(map, "map is empty");
-
-		HelenusPropertyNode p = MappingUtil.resolveMappingProperty(mapGetter);
-		HelenusProperty prop = p.getProperty();
-
-		BoundFacet facet = null;
-		if (pojo != null) {
-			Map<K, V> newMap = new HashMap<K, V>(
-					(Map<K, V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
-			newMap.putAll(map);
-			facet = new BoundFacet(prop, newMap);
-		} else if (draft != null) {
-			((Map<K, V>) draftMap.get(prop.getPropertyName())).putAll(map);
-		}
-
-		Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
-		if (converter.isPresent()) {
-			Map convertedMap = (Map) converter.get().apply(map);
-			assignments.put(QueryBuilder.putAll(p.getColumnName(), convertedMap), facet);
-		} else {
-			assignments.put(QueryBuilder.putAll(p.getColumnName(), map), facet);
-		}
-
-		addPropertyNode(p);
-
-		return this;
-	}
-
-	@Override
-	public BuiltStatement buildStatement(boolean cached) {
-
-		if (entity == null) {
-			throw new HelenusMappingException("empty update operation");
-		}
-
-		Update update = QueryBuilder.update(entity.getName().toCql());
-
-		for (Assignment assignment : assignments.keySet()) {
-			update.with(assignment);
-		}
-
-		if (filters != null && !filters.isEmpty()) {
-
-			for (Filter<?> filter : filters) {
-				update.where(filter.getClause(sessionOps.getValuePreparer()));
-			}
-		}
-
-		if (ifFilters != null && !ifFilters.isEmpty()) {
-
-			for (Filter<?> filter : ifFilters) {
-				update.onlyIf(filter.getClause(sessionOps.getValuePreparer()));
-			}
-		}
-
-		if (this.ttl != null) {
-			update.using(QueryBuilder.ttl(this.ttl[0]));
-		}
-
-		if (this.timestamp != null) {
-			update.using(QueryBuilder.timestamp(this.timestamp[0]));
-		}
-
-		return update;
-	}
-
-	@Override
-	public E transform(ResultSet resultSet) {
-		if ((ifFilters != null && !ifFilters.isEmpty()) && (resultSet.wasApplied() == false)) {
-			throw new HelenusException("Statement was not applied due to consistency constraints");
-		}
-
-		if (draft != null) {
-			return Helenus.map(draft.getEntityClass(), draft.toMap(draftMap));
-		} else {
-			return (E) resultSet;
-		}
-	}
-
-	public UpdateOperation<E> usingTtl(int ttl) {
-		this.ttl = new int[1];
-		this.ttl[0] = ttl;
-		return this;
-	}
-
-	public UpdateOperation<E> usingTimestamp(long timestamp) {
-		this.timestamp = new long[1];
-		this.timestamp[0] = timestamp;
-		return this;
-	}
-
-	private void addPropertyNode(HelenusPropertyNode p) {
-		if (entity == null) {
-			entity = p.getEntity();
-		} else if (entity != p.getEntity()) {
-			throw new HelenusMappingException("you can update columns only in single entity "
-					+ entity.getMappingInterface() + " or " + p.getEntity().getMappingInterface());
-		}
-	}
-
-	@Override
-	public E sync() throws TimeoutException {
-		E result = super.sync();
-		if (entity.isCacheable()) {
-			if (draft != null) {
-				sessionOps.updateCache(draft, bindFacetValues());
-			} else if (pojo != null) {
-				sessionOps.updateCache(pojo, bindFacetValues());
-			} else {
-				sessionOps.cacheEvict(bindFacetValues());
-			}
-		}
-		return result;
-	}
-
-	@Override
-	public E sync(UnitOfWork uow) throws TimeoutException {
-		if (uow == null) {
-			return sync();
-		}
-		E result = super.sync(uow);
-		if (draft != null) {
-			cacheUpdate(uow, result, bindFacetValues());
-		} else if (pojo != null) {
-			cacheUpdate(uow, (E) pojo, bindFacetValues());
-			return (E) pojo;
-		}
-		return result;
-	}
-
-	@Override
-	public List<Facet> bindFacetValues() {
-		List<Facet> facets = bindFacetValues(entity.getFacets());
-		facets.addAll(assignments.values().stream().distinct().filter(o -> o != null).collect(Collectors.toList()));
-		return facets;
-	}
-
-	@Override
-	public List<Facet> getFacets() {
-		if (entity != null) {
-			return entity.getFacets();
-		} else {
-			return new ArrayList<Facet>();
-		}
-	}
-
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
+    Object valueObj = prepareSingleListValue(p, value);
+
+    BoundFacet facet = null;
+    if (pojo != null) {
+      HelenusProperty prop = p.getProperty();
+      List<V> list =
+          new ArrayList<V>(
+              (List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+      list.add(0, value);
+      facet = new BoundFacet(prop, list);
+    } else if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      List<V> list = (List<V>) draftMap.get(key);
+      list.add(0, value);
+    }
+
+    assignments.put(QueryBuilder.prepend(p.getColumnName(), valueObj), facet);
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  public <V> UpdateOperation<E> prependAll(Getter<List<V>> listGetter, List<V> value) {
+
+    Objects.requireNonNull(listGetter, "listGetter is empty");
+    Objects.requireNonNull(value, "value is empty");
+
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
+    List valueObj = prepareListValue(p, value);
+
+    BoundFacet facet = null;
+    if (pojo != null) {
+      HelenusProperty prop = p.getProperty();
+      List<V> list =
+          new ArrayList<V>(
+              (List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+      list.addAll(0, value);
+      facet = new BoundFacet(prop, list);
+    } else if (draft != null && value.size() > 0) {
+      String key = p.getProperty().getPropertyName();
+      List<V> list = (List<V>) draftMap.get(key);
+      list.addAll(0, value);
+    }
+
+    assignments.put(QueryBuilder.prependAll(p.getColumnName(), valueObj), facet);
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  public <V> UpdateOperation<E> setIdx(Getter<List<V>> listGetter, int idx, V value) {
+
+    Objects.requireNonNull(listGetter, "listGetter is empty");
+    Objects.requireNonNull(value, "value is empty");
+
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
+    Object valueObj = prepareSingleListValue(p, value);
+
+    BoundFacet facet = null;
+    if (pojo != null || draft != null) {
+      List<V> list;
+      HelenusProperty prop = p.getProperty();
+      if (pojo != null) {
+        list =
+            new ArrayList<V>(
+                (List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+      } else {
+        String key = p.getProperty().getPropertyName();
+        list = (List<V>) draftMap.get(key);
+      }
+      if (idx < 0) {
+        list.add(0, value);
+      } else if (idx > list.size()) {
+        list.add(list.size(), value);
+      } else {
+        list.add(idx, value);
+      }
+      list.add(0, value);
+      facet = new BoundFacet(prop, list);
+    }
+
+    assignments.put(QueryBuilder.setIdx(p.getColumnName(), idx, valueObj), facet);
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  public <V> UpdateOperation<E> append(Getter<List<V>> listGetter, V value) {
+
+    Objects.requireNonNull(listGetter, "listGetter is empty");
+    Objects.requireNonNull(value, "value is empty");
+
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
+    Object valueObj = prepareSingleListValue(p, value);
+
+    BoundFacet facet = null;
+    if (pojo != null) {
+      HelenusProperty prop = p.getProperty();
+      List<V> list =
+          new ArrayList<V>(
+              (List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+      list.add(value);
+      facet = new BoundFacet(prop, list);
+    } else if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      List<V> list = (List<V>) draftMap.get(key);
+      list.add(value);
+    }
+    assignments.put(QueryBuilder.append(p.getColumnName(), valueObj), facet);
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  public <V> UpdateOperation<E> appendAll(Getter<List<V>> listGetter, List<V> value) {
+
+    Objects.requireNonNull(listGetter, "listGetter is empty");
+    Objects.requireNonNull(value, "value is empty");
+
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
+    List valueObj = prepareListValue(p, value);
+
+    BoundFacet facet = null;
+    if (pojo != null) {
+      HelenusProperty prop = p.getProperty();
+      List<V> list =
+          new ArrayList<V>(
+              (List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+      list.addAll(value);
+      facet = new BoundFacet(prop, list);
+    } else if (draft != null && value.size() > 0) {
+      String key = p.getProperty().getPropertyName();
+      List<V> list = (List<V>) draftMap.get(key);
+      list.addAll(value);
+    }
+    assignments.put(QueryBuilder.appendAll(p.getColumnName(), valueObj), facet);
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  public <V> UpdateOperation<E> discard(Getter<List<V>> listGetter, V value) {
+
+    Objects.requireNonNull(listGetter, "listGetter is empty");
+    Objects.requireNonNull(value, "value is empty");
+
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
+    Object valueObj = prepareSingleListValue(p, value);
+
+    BoundFacet facet = null;
+    if (pojo != null) {
+      HelenusProperty prop = p.getProperty();
+      List<V> list =
+          new ArrayList<V>(
+              (List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+      list.remove(value);
+      facet = new BoundFacet(prop, list);
+    } else if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      List<V> list = (List<V>) draftMap.get(key);
+      list.remove(value);
+    }
+    assignments.put(QueryBuilder.discard(p.getColumnName(), valueObj), facet);
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  public <V> UpdateOperation<E> discardAll(Getter<List<V>> listGetter, List<V> value) {
+
+    Objects.requireNonNull(listGetter, "listGetter is empty");
+    Objects.requireNonNull(value, "value is empty");
+
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(listGetter);
+    List valueObj = prepareListValue(p, value);
+
+    BoundFacet facet = null;
+    if (pojo != null) {
+      HelenusProperty prop = p.getProperty();
+      List<V> list =
+          new ArrayList<V>(
+              (List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+      list.removeAll(value);
+      facet = new BoundFacet(prop, list);
+    } else if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      List<V> list = (List<V>) draftMap.get(key);
+      list.removeAll(value);
+    }
+    assignments.put(QueryBuilder.discardAll(p.getColumnName(), valueObj), facet);
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  private Object prepareSingleListValue(HelenusPropertyNode p, Object value) {
+    HelenusProperty prop = p.getProperty();
+
+    Object valueObj = value;
+
+    Optional<Function<Object, Object>> converter =
+        prop.getWriteConverter(sessionOps.getSessionRepository());
+    if (converter.isPresent()) {
+      List convertedList = (List) converter.get().apply(Immutables.listOf(value));
+      valueObj = convertedList.get(0);
+    }
+
+    return valueObj;
+  }
+
+  private List prepareListValue(HelenusPropertyNode p, List value) {
+
+    HelenusProperty prop = p.getProperty();
+
+    List valueObj = value;
+
+    Optional<Function<Object, Object>> converter =
+        prop.getWriteConverter(sessionOps.getSessionRepository());
+    if (converter.isPresent()) {
+      valueObj = (List) converter.get().apply(value);
+    }
+
+    return valueObj;
+  }
+
+  /*
+   *
+   *
+   * SET
+   *
+   *
+   */
+
+  public <V> UpdateOperation<E> add(Getter<Set<V>> setGetter, V value) {
+
+    Objects.requireNonNull(setGetter, "setGetter is empty");
+    Objects.requireNonNull(value, "value is empty");
+
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
+    Object valueObj = prepareSingleSetValue(p, value);
+
+    BoundFacet facet = null;
+    if (pojo != null) {
+      HelenusProperty prop = p.getProperty();
+      Set<V> set =
+          new HashSet<V>((Set<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+      set.add(value);
+      facet = new BoundFacet(prop, set);
+    } else if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      Set<V> set = (Set<V>) draftMap.get(key);
+      set.add(value);
+    }
+    assignments.put(QueryBuilder.add(p.getColumnName(), valueObj), facet);
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  public <V> UpdateOperation<E> addAll(Getter<Set<V>> setGetter, Set<V> value) {
+
+    Objects.requireNonNull(setGetter, "setGetter is empty");
+    Objects.requireNonNull(value, "value is empty");
+
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
+    Set valueObj = prepareSetValue(p, value);
+
+    BoundFacet facet = null;
+    if (pojo != null) {
+      HelenusProperty prop = p.getProperty();
+      Set<V> set =
+          new HashSet<V>((Set<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+      set.addAll(value);
+      facet = new BoundFacet(prop, set);
+    } else if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      Set<V> set = (Set<V>) draftMap.get(key);
+      set.addAll(value);
+    }
+    assignments.put(QueryBuilder.addAll(p.getColumnName(), valueObj), facet);
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  public <V> UpdateOperation<E> remove(Getter<Set<V>> setGetter, V value) {
+
+    Objects.requireNonNull(setGetter, "setGetter is empty");
+    Objects.requireNonNull(value, "value is empty");
+
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
+    Object valueObj = prepareSingleSetValue(p, value);
+
+    BoundFacet facet = null;
+    if (pojo != null) {
+      HelenusProperty prop = p.getProperty();
+      Set<V> set =
+          new HashSet<V>((Set<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+      set.remove(value);
+      facet = new BoundFacet(prop, set);
+    } else if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      Set<V> set = (Set<V>) draftMap.get(key);
+      set.remove(value);
+    }
+    assignments.put(QueryBuilder.remove(p.getColumnName(), valueObj), facet);
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  public <V> UpdateOperation<E> removeAll(Getter<Set<V>> setGetter, Set<V> value) {
+
+    Objects.requireNonNull(setGetter, "setGetter is empty");
+    Objects.requireNonNull(value, "value is empty");
+
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(setGetter);
+    Set valueObj = prepareSetValue(p, value);
+
+    BoundFacet facet = null;
+    if (pojo != null) {
+      HelenusProperty prop = p.getProperty();
+      Set<V> set =
+          new HashSet<V>((Set<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+      set.removeAll(value);
+      facet = new BoundFacet(prop, set);
+    } else if (draft != null) {
+      String key = p.getProperty().getPropertyName();
+      Set<V> set = (Set<V>) draftMap.get(key);
+      set.removeAll(value);
+    }
+    assignments.put(QueryBuilder.removeAll(p.getColumnName(), valueObj), facet);
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  private Object prepareSingleSetValue(HelenusPropertyNode p, Object value) {
+
+    HelenusProperty prop = p.getProperty();
+    Object valueObj = value;
+
+    Optional<Function<Object, Object>> converter =
+        prop.getWriteConverter(sessionOps.getSessionRepository());
+    if (converter.isPresent()) {
+      Set convertedSet = (Set) converter.get().apply(Immutables.setOf(value));
+      valueObj = convertedSet.iterator().next();
+    }
+
+    return valueObj;
+  }
+
+  private Set prepareSetValue(HelenusPropertyNode p, Set value) {
+
+    HelenusProperty prop = p.getProperty();
+    Set valueObj = value;
+
+    Optional<Function<Object, Object>> converter =
+        prop.getWriteConverter(sessionOps.getSessionRepository());
+    if (converter.isPresent()) {
+      valueObj = (Set) converter.get().apply(value);
+    }
+
+    return valueObj;
+  }
+
+  /*
+   *
+   *
+   * MAP
+   *
+   *
+   */
+
+  public <K, V> UpdateOperation<E> put(Getter<Map<K, V>> mapGetter, K key, V value) {
+
+    Objects.requireNonNull(mapGetter, "mapGetter is empty");
+    Objects.requireNonNull(key, "key is empty");
+
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(mapGetter);
+    HelenusProperty prop = p.getProperty();
+
+    BoundFacet facet = null;
+    if (pojo != null) {
+      Map<K, V> map =
+          new HashMap<K, V>(
+              (Map<K, V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+      map.put(key, value);
+      facet = new BoundFacet(prop, map);
+    } else if (draft != null) {
+      ((Map<K, V>) draftMap.get(prop.getPropertyName())).put(key, value);
+    }
+
+    Optional<Function<Object, Object>> converter =
+        prop.getWriteConverter(sessionOps.getSessionRepository());
+    if (converter.isPresent()) {
+      Map<Object, Object> convertedMap =
+          (Map<Object, Object>) converter.get().apply(Immutables.mapOf(key, value));
+      for (Map.Entry<Object, Object> e : convertedMap.entrySet()) {
+        assignments.put(QueryBuilder.put(p.getColumnName(), e.getKey(), e.getValue()), facet);
+      }
+    } else {
+      assignments.put(QueryBuilder.put(p.getColumnName(), key, value), facet);
+    }
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  public <K, V> UpdateOperation<E> putAll(Getter<Map<K, V>> mapGetter, Map<K, V> map) {
+
+    Objects.requireNonNull(mapGetter, "mapGetter is empty");
+    Objects.requireNonNull(map, "map is empty");
+
+    HelenusPropertyNode p = MappingUtil.resolveMappingProperty(mapGetter);
+    HelenusProperty prop = p.getProperty();
+
+    BoundFacet facet = null;
+    if (pojo != null) {
+      Map<K, V> newMap =
+          new HashMap<K, V>(
+              (Map<K, V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop));
+      newMap.putAll(map);
+      facet = new BoundFacet(prop, newMap);
+    } else if (draft != null) {
+      ((Map<K, V>) draftMap.get(prop.getPropertyName())).putAll(map);
+    }
+
+    Optional<Function<Object, Object>> converter =
+        prop.getWriteConverter(sessionOps.getSessionRepository());
+    if (converter.isPresent()) {
+      Map convertedMap = (Map) converter.get().apply(map);
+      assignments.put(QueryBuilder.putAll(p.getColumnName(), convertedMap), facet);
+    } else {
+      assignments.put(QueryBuilder.putAll(p.getColumnName(), map), facet);
+    }
+
+    addPropertyNode(p);
+
+    return this;
+  }
+
+  @Override
+  public BuiltStatement buildStatement(boolean cached) {
+
+    if (entity == null) {
+      throw new HelenusMappingException("empty update operation");
+    }
+
+    Update update = QueryBuilder.update(entity.getName().toCql());
+
+    for (Assignment assignment : assignments.keySet()) {
+      update.with(assignment);
+    }
+
+    if (filters != null && !filters.isEmpty()) {
+
+      for (Filter<?> filter : filters) {
+        update.where(filter.getClause(sessionOps.getValuePreparer()));
+      }
+    }
+
+    if (ifFilters != null && !ifFilters.isEmpty()) {
+
+      for (Filter<?> filter : ifFilters) {
+        update.onlyIf(filter.getClause(sessionOps.getValuePreparer()));
+      }
+    }
+
+    if (this.ttl != null) {
+      update.using(QueryBuilder.ttl(this.ttl[0]));
+    }
+
+    if (this.timestamp != null) {
+      update.using(QueryBuilder.timestamp(this.timestamp[0]));
+    }
+
+    return update;
+  }
+
+  @Override
+  public E transform(ResultSet resultSet) {
+    if ((ifFilters != null && !ifFilters.isEmpty()) && (resultSet.wasApplied() == false)) {
+      throw new HelenusException("Statement was not applied due to consistency constraints");
+    }
+
+    if (draft != null) {
+      return Helenus.map(draft.getEntityClass(), draft.toMap(draftMap));
+    } else {
+      return (E) resultSet;
+    }
+  }
+
+  public UpdateOperation<E> usingTtl(int ttl) {
+    this.ttl = new int[1];
+    this.ttl[0] = ttl;
+    return this;
+  }
+
+  public UpdateOperation<E> usingTimestamp(long timestamp) {
+    this.timestamp = new long[1];
+    this.timestamp[0] = timestamp;
+    return this;
+  }
+
+  private void addPropertyNode(HelenusPropertyNode p) {
+    if (entity == null) {
+      entity = p.getEntity();
+    } else if (entity != p.getEntity()) {
+      throw new HelenusMappingException(
+          "you can update columns only in single entity "
+              + entity.getMappingInterface()
+              + " or "
+              + p.getEntity().getMappingInterface());
+    }
+  }
+
+  @Override
+  public E sync() throws TimeoutException {
+    E result = super.sync();
+    if (entity.isCacheable()) {
+      if (draft != null) {
+        sessionOps.updateCache(draft, bindFacetValues());
+      } else if (pojo != null) {
+        sessionOps.updateCache(pojo, bindFacetValues());
+      } else {
+        sessionOps.cacheEvict(bindFacetValues());
+      }
+    }
+    return result;
+  }
+
+  @Override
+  public E sync(UnitOfWork uow) throws TimeoutException {
+    if (uow == null) {
+      return sync();
+    }
+    E result = super.sync(uow);
+    if (draft != null) {
+      cacheUpdate(uow, result, bindFacetValues());
+    } else if (pojo != null) {
+      cacheUpdate(uow, (E) pojo, bindFacetValues());
+      return (E) pojo;
+    }
+    return result;
+  }
+
+  @Override
+  public List<Facet> bindFacetValues() {
+    List<Facet> facets = bindFacetValues(entity.getFacets());
+    facets.addAll(
+        assignments
+            .values()
+            .stream()
+            .distinct()
+            .filter(o -> o != null)
+            .collect(Collectors.toList()));
+    return facets;
+  }
+
+  @Override
+  public List<Facet> getFacets() {
+    if (entity != null) {
+      return entity.getFacets();
+    } else {
+      return new ArrayList<Facet>();
+    }
+  }
 }

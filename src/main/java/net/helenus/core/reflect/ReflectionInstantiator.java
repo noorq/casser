@@ -19,15 +19,14 @@ import net.helenus.support.HelenusMappingException;
 
 public final class ReflectionInstantiator {
 
-	private ReflectionInstantiator() {
-	}
+  private ReflectionInstantiator() {}
 
-	public static <T> T instantiateClass(Class<T> clazz) {
+  public static <T> T instantiateClass(Class<T> clazz) {
 
-		try {
-			return clazz.newInstance();
-		} catch (InstantiationException | IllegalAccessException e) {
-			throw new HelenusMappingException("invalid class " + clazz, e);
-		}
-	}
+    try {
+      return clazz.newInstance();
+    } catch (InstantiationException | IllegalAccessException e) {
+      throw new HelenusMappingException("invalid class " + clazz, e);
+    }
+  }
 }

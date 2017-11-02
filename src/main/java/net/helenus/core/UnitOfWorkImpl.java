@@ -19,8 +19,8 @@ import net.helenus.support.HelenusException;
 
 class UnitOfWorkImpl extends AbstractUnitOfWork<HelenusException> {
 
-	@SuppressWarnings("unchecked")
-	public UnitOfWorkImpl(HelenusSession session, UnitOfWork parent) {
-		super(session, (AbstractUnitOfWork<HelenusException>) parent);
-	}
+  @SuppressWarnings("unchecked")
+  public UnitOfWorkImpl(HelenusSession session, UnitOfWork parent) {
+    super(session, (AbstractUnitOfWork<HelenusException>) parent);
+  }
 }

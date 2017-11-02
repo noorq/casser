@@ -15,53 +15,52 @@
  */
 package net.helenus.mapping.value;
 
-import java.nio.ByteBuffer;
-import java.util.Optional;
-import java.util.function.Function;
-
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
-
+import java.nio.ByteBuffer;
+import java.util.Optional;
+import java.util.function.Function;
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.HelenusProperty;
 
 public final class UDTColumnValueProvider implements ColumnValueProvider {
 
-	private final SessionRepository repository;
+  private final SessionRepository repository;
 
-	public UDTColumnValueProvider(SessionRepository repository) {
-		this.repository = repository;
-	}
+  public UDTColumnValueProvider(SessionRepository repository) {
+    this.repository = repository;
+  }
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public <V> V getColumnValue(Object sourceObj, int columnIndexUnused, HelenusProperty property, boolean immutable) {
+  @Override
+  @SuppressWarnings("unchecked")
+  public <V> V getColumnValue(
+      Object sourceObj, int columnIndexUnused, HelenusProperty property, boolean immutable) {
 
-		UDTValue source = (UDTValue) sourceObj;
+    UDTValue source = (UDTValue) sourceObj;
 
-		UserType userType = source.getType();
+    UserType userType = source.getType();
 
-		String name = property.getColumnName().getName();
+    String name = property.getColumnName().getName();
 
-		ByteBuffer bytes = source.getBytesUnsafe(name);
-		if (bytes == null) {
-			return null;
-		}
+    ByteBuffer bytes = source.getBytesUnsafe(name);
+    if (bytes == null) {
+      return null;
+    }
 
-		DataType fieldType = userType.getFieldType(name);
-		Object value = codecFor(fieldType).deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);
+    DataType fieldType = userType.getFieldType(name);
+    Object value = codecFor(fieldType).deserialize(bytes, ProtocolVersion.NEWEST_SUPPORTED);
 
-		if (value != null) {
+    if (value != null) {
 
-			Optional<Function<Object, Object>> converter = property.getReadConverter(repository);
+      Optional<Function<Object, Object>> converter = property.getReadConverter(repository);
 
-			if (converter.isPresent()) {
-				value = converter.get().apply(value);
-			}
-		}
+      if (converter.isPresent()) {
+        value = converter.get().apply(value);
+      }
+    }
 
-		return (V) value;
-	}
+    return (V) value;
+  }
 }

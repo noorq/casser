@@ -17,19 +17,18 @@ package net.helenus.mapping.validator;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-
 import net.helenus.mapping.annotation.Constraints;
 
-public final class DistinctValidator implements ConstraintValidator<Constraints.Distinct, CharSequence> {
+public final class DistinctValidator
+    implements ConstraintValidator<Constraints.Distinct, CharSequence> {
 
-	@Override
-	public void initialize(Constraints.Distinct constraintAnnotation) {
-	}
+  @Override
+  public void initialize(Constraints.Distinct constraintAnnotation) {}
 
-	@Override
-	public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
-		// TODO(gburd): if there is an Enum type supplied, check that value is valid
-		// Enum.name()
-		return true;
-	}
+  @Override
+  public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
+    // TODO(gburd): if there is an Enum type supplied, check that value is valid
+    // Enum.name()
+    return true;
+  }
 }

@@ -17,19 +17,18 @@ package net.helenus.test.integration.core.compound;
 
 import java.util.Date;
 import java.util.UUID;
-
 import net.helenus.mapping.annotation.*;
 
 @Table
 public interface Timeline {
 
-	@PartitionKey(ordinal = 0)
-	UUID userId();
+  @PartitionKey(ordinal = 0)
+  UUID userId();
 
-	@ClusteringColumn(ordinal = 1)
-	@Types.Timeuuid
-	Date timestamp();
+  @ClusteringColumn(ordinal = 1)
+  @Types.Timeuuid
+  Date timestamp();
 
-	@Column(ordinal = 2)
-	String text();
+  @Column(ordinal = 2)
+  String text();
 }

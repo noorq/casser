@@ -15,10 +15,8 @@
  */
 package net.helenus.test.integration.core.usertype;
 
-import java.util.Set;
-
 import com.datastax.driver.core.DataType;
-
+import java.util.Set;
 import net.helenus.mapping.annotation.Column;
 import net.helenus.mapping.annotation.Types;
 import net.helenus.mapping.annotation.UDT;
@@ -26,19 +24,19 @@ import net.helenus.mapping.annotation.UDT;
 @UDT("address")
 public interface Address {
 
-	@Column(ordinal = 0, value = "line_1")
-	String street();
+  @Column(ordinal = 0, value = "line_1")
+  String street();
 
-	@Column
-	String city();
+  @Column
+  String city();
 
-	@Column
-	int zip();
+  @Column
+  int zip();
 
-	@Column
-	String country();
+  @Column
+  String country();
 
-	@Column
-	@Types.Set(DataType.Name.TEXT)
-	Set<String> phones();
+  @Column
+  @Types.Set(DataType.Name.TEXT)
+  Set<String> phones();
 }

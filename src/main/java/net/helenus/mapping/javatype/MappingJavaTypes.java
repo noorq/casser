@@ -15,17 +15,15 @@
  */
 package net.helenus.mapping.javatype;
 
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.Metadata;
+import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.Optional;
-
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.Metadata;
-import com.google.common.collect.ImmutableMap;
-
 import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.type.AbstractDataType;
 import net.helenus.mapping.type.DTDataType;
@@ -33,189 +31,189 @@ import net.helenus.support.HelenusMappingException;
 
 public final class MappingJavaTypes {
 
-	private static final EnumJavaType ENUM_JAVA_TYPE = new EnumJavaType();
-	private static final UDTValueJavaType UDT_VALUE_JAVA_TYPE = new UDTValueJavaType();
-	private static final TupleValueJavaType TUPLE_VALUE_JAVA_TYPE = new TupleValueJavaType();
+  private static final EnumJavaType ENUM_JAVA_TYPE = new EnumJavaType();
+  private static final UDTValueJavaType UDT_VALUE_JAVA_TYPE = new UDTValueJavaType();
+  private static final TupleValueJavaType TUPLE_VALUE_JAVA_TYPE = new TupleValueJavaType();
 
-	private static final ImmutableMap<Class<?>, AbstractJavaType> knownTypes;
+  private static final ImmutableMap<Class<?>, AbstractJavaType> knownTypes;
 
-	static {
-		ImmutableMap.Builder<Class<?>, AbstractJavaType> builder = ImmutableMap.builder();
+  static {
+    ImmutableMap.Builder<Class<?>, AbstractJavaType> builder = ImmutableMap.builder();
 
-		add(builder, new BooleanJavaType());
-		add(builder, new BigDecimalJavaType());
-		add(builder, new BigIntegerJavaType());
-		add(builder, new DoubleJavaType());
-		add(builder, new FloatJavaType());
-		add(builder, new IntegerJavaType());
-		add(builder, new InetAddressJavaType());
+    add(builder, new BooleanJavaType());
+    add(builder, new BigDecimalJavaType());
+    add(builder, new BigIntegerJavaType());
+    add(builder, new DoubleJavaType());
+    add(builder, new FloatJavaType());
+    add(builder, new IntegerJavaType());
+    add(builder, new InetAddressJavaType());
 
-		add(builder, new ByteBufferJavaType());
-		add(builder, new ByteArrayJavaType());
-		add(builder, new DateJavaType());
-		add(builder, new UUIDJavaType());
-		add(builder, new LongJavaType());
-		add(builder, new StringJavaType());
-		add(builder, ENUM_JAVA_TYPE);
-		add(builder, new ListJavaType());
-		add(builder, new SetJavaType());
-		add(builder, new MapJavaType());
-		add(builder, TUPLE_VALUE_JAVA_TYPE);
-		add(builder, UDT_VALUE_JAVA_TYPE);
+    add(builder, new ByteBufferJavaType());
+    add(builder, new ByteArrayJavaType());
+    add(builder, new DateJavaType());
+    add(builder, new UUIDJavaType());
+    add(builder, new LongJavaType());
+    add(builder, new StringJavaType());
+    add(builder, ENUM_JAVA_TYPE);
+    add(builder, new ListJavaType());
+    add(builder, new SetJavaType());
+    add(builder, new MapJavaType());
+    add(builder, TUPLE_VALUE_JAVA_TYPE);
+    add(builder, UDT_VALUE_JAVA_TYPE);
 
-		knownTypes = builder.build();
-	}
+    knownTypes = builder.build();
+  }
 
-	private MappingJavaTypes() {
-	}
+  private MappingJavaTypes() {}
 
-	private static void add(ImmutableMap.Builder<Class<?>, AbstractJavaType> builder, AbstractJavaType jt) {
+  private static void add(
+      ImmutableMap.Builder<Class<?>, AbstractJavaType> builder, AbstractJavaType jt) {
 
-		builder.put(jt.getJavaClass(), jt);
+    builder.put(jt.getJavaClass(), jt);
 
-		Optional<Class<?>> primitiveJavaClass = jt.getPrimitiveJavaClass();
-		if (primitiveJavaClass.isPresent()) {
-			builder.put(primitiveJavaClass.get(), jt);
-		}
-	}
+    Optional<Class<?>> primitiveJavaClass = jt.getPrimitiveJavaClass();
+    if (primitiveJavaClass.isPresent()) {
+      builder.put(primitiveJavaClass.get(), jt);
+    }
+  }
 
-	public static AbstractJavaType resolveJavaType(Class<?> javaClass) {
+  public static AbstractJavaType resolveJavaType(Class<?> javaClass) {
 
-		AbstractJavaType ajt = knownTypes.get(javaClass);
-		if (ajt != null) {
-			return ajt;
-		}
+    AbstractJavaType ajt = knownTypes.get(javaClass);
+    if (ajt != null) {
+      return ajt;
+    }
 
-		if (Enum.class.isAssignableFrom(javaClass)) {
-			return ENUM_JAVA_TYPE;
-		}
+    if (Enum.class.isAssignableFrom(javaClass)) {
+      return ENUM_JAVA_TYPE;
+    }
 
-		if (TUPLE_VALUE_JAVA_TYPE.isApplicable(javaClass)) {
-			return TUPLE_VALUE_JAVA_TYPE;
-		}
+    if (TUPLE_VALUE_JAVA_TYPE.isApplicable(javaClass)) {
+      return TUPLE_VALUE_JAVA_TYPE;
+    }
 
-		if (UDT_VALUE_JAVA_TYPE.isApplicable(javaClass)) {
-			return UDT_VALUE_JAVA_TYPE;
-		}
+    if (UDT_VALUE_JAVA_TYPE.isApplicable(javaClass)) {
+      return UDT_VALUE_JAVA_TYPE;
+    }
 
-		throw new HelenusMappingException("unknown java type " + javaClass);
-	}
+    throw new HelenusMappingException("unknown java type " + javaClass);
+  }
 
-	public static final class BooleanJavaType extends AbstractJavaType {
+  public static final class BooleanJavaType extends AbstractJavaType {
 
-		@Override
-		public Class<?> getJavaClass() {
-			return Boolean.class;
-		}
+    @Override
+    public Class<?> getJavaClass() {
+      return Boolean.class;
+    }
 
-		@Override
-		public Optional<Class<?>> getPrimitiveJavaClass() {
-			return Optional.of(boolean.class);
-		}
+    @Override
+    public Optional<Class<?>> getPrimitiveJavaClass() {
+      return Optional.of(boolean.class);
+    }
 
-		@Override
-		public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType,
-				Metadata metadata) {
-			return new DTDataType(columnType, DataType.cboolean());
-		}
-	}
+    @Override
+    public AbstractDataType resolveDataType(
+        Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+      return new DTDataType(columnType, DataType.cboolean());
+    }
+  }
 
-	public static final class BigDecimalJavaType extends AbstractJavaType {
+  public static final class BigDecimalJavaType extends AbstractJavaType {
 
-		@Override
-		public Class<?> getJavaClass() {
-			return BigDecimal.class;
-		}
+    @Override
+    public Class<?> getJavaClass() {
+      return BigDecimal.class;
+    }
 
-		@Override
-		public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType,
-				Metadata metadata) {
-			return new DTDataType(columnType, DataType.decimal());
-		}
-	}
+    @Override
+    public AbstractDataType resolveDataType(
+        Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+      return new DTDataType(columnType, DataType.decimal());
+    }
+  }
 
-	public static final class BigIntegerJavaType extends AbstractJavaType {
+  public static final class BigIntegerJavaType extends AbstractJavaType {
 
-		@Override
-		public Class<?> getJavaClass() {
-			return BigInteger.class;
-		}
+    @Override
+    public Class<?> getJavaClass() {
+      return BigInteger.class;
+    }
 
-		@Override
-		public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType,
-				Metadata metadata) {
-			return new DTDataType(columnType, DataType.varint());
-		}
-	}
+    @Override
+    public AbstractDataType resolveDataType(
+        Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+      return new DTDataType(columnType, DataType.varint());
+    }
+  }
 
-	public static final class DoubleJavaType extends AbstractJavaType {
+  public static final class DoubleJavaType extends AbstractJavaType {
 
-		@Override
-		public Class<?> getJavaClass() {
-			return Double.class;
-		}
+    @Override
+    public Class<?> getJavaClass() {
+      return Double.class;
+    }
 
-		@Override
-		public Optional<Class<?>> getPrimitiveJavaClass() {
-			return Optional.of(double.class);
-		}
+    @Override
+    public Optional<Class<?>> getPrimitiveJavaClass() {
+      return Optional.of(double.class);
+    }
 
-		@Override
-		public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType,
-				Metadata metadata) {
-			return new DTDataType(columnType, DataType.cdouble());
-		}
-	}
+    @Override
+    public AbstractDataType resolveDataType(
+        Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+      return new DTDataType(columnType, DataType.cdouble());
+    }
+  }
 
-	public static final class FloatJavaType extends AbstractJavaType {
+  public static final class FloatJavaType extends AbstractJavaType {
 
-		@Override
-		public Class<?> getJavaClass() {
-			return Float.class;
-		}
+    @Override
+    public Class<?> getJavaClass() {
+      return Float.class;
+    }
 
-		@Override
-		public Optional<Class<?>> getPrimitiveJavaClass() {
-			return Optional.of(float.class);
-		}
+    @Override
+    public Optional<Class<?>> getPrimitiveJavaClass() {
+      return Optional.of(float.class);
+    }
 
-		@Override
-		public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType,
-				Metadata metadata) {
-			return new DTDataType(columnType, DataType.cfloat());
-		}
-	}
+    @Override
+    public AbstractDataType resolveDataType(
+        Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+      return new DTDataType(columnType, DataType.cfloat());
+    }
+  }
 
-	public static final class IntegerJavaType extends AbstractJavaType {
+  public static final class IntegerJavaType extends AbstractJavaType {
 
-		@Override
-		public Class<?> getJavaClass() {
-			return Integer.class;
-		}
+    @Override
+    public Class<?> getJavaClass() {
+      return Integer.class;
+    }
 
-		@Override
-		public Optional<Class<?>> getPrimitiveJavaClass() {
-			return Optional.of(int.class);
-		}
+    @Override
+    public Optional<Class<?>> getPrimitiveJavaClass() {
+      return Optional.of(int.class);
+    }
 
-		@Override
-		public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType,
-				Metadata metadata) {
-			return new DTDataType(columnType, DataType.cint());
-		}
-	}
+    @Override
+    public AbstractDataType resolveDataType(
+        Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+      return new DTDataType(columnType, DataType.cint());
+    }
+  }
 
-	public static final class InetAddressJavaType extends AbstractJavaType {
+  public static final class InetAddressJavaType extends AbstractJavaType {
 
-		@Override
-		public Class<?> getJavaClass() {
-			return InetAddress.class;
-		}
+    @Override
+    public Class<?> getJavaClass() {
+      return InetAddress.class;
+    }
 
-		@Override
-		public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType,
-				Metadata metadata) {
-			return new DTDataType(columnType, DataType.inet());
-		}
-	}
+    @Override
+    public AbstractDataType resolveDataType(
+        Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+      return new DTDataType(columnType, DataType.inet());
+    }
+  }
 }

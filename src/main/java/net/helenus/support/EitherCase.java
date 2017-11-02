@@ -16,5 +16,6 @@
 package net.helenus.support;
 
 public enum EitherCase {
-	LEFT, RIGHT;
+  LEFT,
+  RIGHT;
 }

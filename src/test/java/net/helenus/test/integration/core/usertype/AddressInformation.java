@@ -6,6 +6,6 @@ import net.helenus.mapping.annotation.UDT;
 @UDT
 public interface AddressInformation {
 
-	@Column
-	Address address();
+  @Column
+  Address address();
 }

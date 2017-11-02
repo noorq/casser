@@ -20,5 +20,5 @@ import net.helenus.mapping.annotation.Tuple;
 @Tuple
 public interface Photo {
 
-	byte[] blob();
+  byte[] blob();
 }

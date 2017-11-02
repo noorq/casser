@@ -15,45 +15,44 @@
  */
 package net.helenus.mapping.convert;
 
-import java.nio.ByteBuffer;
-import java.util.function.Function;
-
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.UserType;
-
+import java.nio.ByteBuffer;
+import java.util.function.Function;
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.value.UDTColumnValuePreparer;
 
-public class UDTValueWriter extends AbstractEntityValueWriter<UDTValue> implements Function<Object, UDTValue> {
+public class UDTValueWriter extends AbstractEntityValueWriter<UDTValue>
+    implements Function<Object, UDTValue> {
 
-	final UserType userType;
-	final UDTColumnValuePreparer valuePreparer;
+  final UserType userType;
+  final UDTColumnValuePreparer valuePreparer;
 
-	public UDTValueWriter(Class<?> iface, UserType userType, SessionRepository repository) {
-		super(iface);
+  public UDTValueWriter(Class<?> iface, UserType userType, SessionRepository repository) {
+    super(iface);
 
-		this.userType = userType;
-		this.valuePreparer = new UDTColumnValuePreparer(userType, repository);
-	}
+    this.userType = userType;
+    this.valuePreparer = new UDTColumnValuePreparer(userType, repository);
+  }
 
-	@Override
-	void writeColumn(UDTValue udtValue, Object value, HelenusProperty prop) {
+  @Override
+  void writeColumn(UDTValue udtValue, Object value, HelenusProperty prop) {
 
-		ByteBuffer bytes = (ByteBuffer) valuePreparer.prepareColumnValue(value, prop);
+    ByteBuffer bytes = (ByteBuffer) valuePreparer.prepareColumnValue(value, prop);
 
-		if (bytes != null) {
-			udtValue.setBytesUnsafe(prop.getColumnName().getName(), bytes);
-		}
-	}
+    if (bytes != null) {
+      udtValue.setBytesUnsafe(prop.getColumnName().getName(), bytes);
+    }
+  }
 
-	@Override
-	public UDTValue apply(Object source) {
-		if (source != null) {
-			UDTValue outValue = userType.newValue();
-			write(outValue, source);
-			return outValue;
-		}
-		return null;
-	}
+  @Override
+  public UDTValue apply(Object source) {
+    if (source != null) {
+      UDTValue outValue = userType.newValue();
+      write(outValue, source);
+      return outValue;
+    }
+    return null;
+  }
 }

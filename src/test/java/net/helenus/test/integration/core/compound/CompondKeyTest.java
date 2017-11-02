@@ -17,89 +17,92 @@ package net.helenus.test.integration.core.compound;
 
 import java.util.Date;
 import java.util.UUID;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.core.Operator;
 import net.helenus.core.Query;
 import net.helenus.support.Mutable;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 public class CompondKeyTest extends AbstractEmbeddedCassandraTest {
 
-	Timeline timeline;
+  Timeline timeline;
 
-	HelenusSession session;
+  HelenusSession session;
 
-	@Before
-	public void beforeTest() {
-		session = Helenus.init(getSession()).showCql().add(Timeline.class).autoCreateDrop().get();
-		timeline = Helenus.dsl(Timeline.class, session.getMetadata());
-	}
+  @Before
+  public void beforeTest() {
+    session = Helenus.init(getSession()).showCql().add(Timeline.class).autoCreateDrop().get();
+    timeline = Helenus.dsl(Timeline.class, session.getMetadata());
+  }
 
-	@Test
-	public void test() throws Exception {
+  @Test
+  public void test() throws Exception {
 
-		UUID userId = UUID.randomUUID();
-		long postTime = System.currentTimeMillis() - 100000L;
+    UUID userId = UUID.randomUUID();
+    long postTime = System.currentTimeMillis() - 100000L;
 
-		session.showCql(false);
+    session.showCql(false);
 
-		for (int i = 0; i != 100; ++i) {
+    for (int i = 0; i != 100; ++i) {
 
-			TimelineImpl post = new TimelineImpl();
-			post.userId = userId;
-			post.timestamp = new Date(postTime + 1000L * i);
-			post.text = "hello";
+      TimelineImpl post = new TimelineImpl();
+      post.userId = userId;
+      post.timestamp = new Date(postTime + 1000L * i);
+      post.text = "hello";
 
-			session.upsert(post).sync();
-		}
+      session.upsert(post).sync();
+    }
 
-		session.showCql(true);
+    session.showCql(true);
 
-		final Mutable<Date> d = new Mutable<Date>(null);
-		final Mutable<Integer> c = new Mutable<Integer>(0);
+    final Mutable<Date> d = new Mutable<Date>(null);
+    final Mutable<Integer> c = new Mutable<Integer>(0);
 
-		session.select(timeline::userId, timeline::timestamp, timeline::text)
-				.where(timeline::userId, Operator.EQ, userId).orderBy(Query.desc(timeline::timestamp)).limit(5).sync()
-				.forEach(t -> {
+    session
+        .select(timeline::userId, timeline::timestamp, timeline::text)
+        .where(timeline::userId, Operator.EQ, userId)
+        .orderBy(Query.desc(timeline::timestamp))
+        .limit(5)
+        .sync()
+        .forEach(
+            t -> {
 
-					// System.out.println(t);
-					c.set(c.get() + 1);
+              // System.out.println(t);
+              c.set(c.get() + 1);
 
-					Date cd = d.get();
-					if (cd != null) {
-						Assert.assertTrue(cd.after(t._2));
-					}
-					d.set(t._2);
-				});
+              Date cd = d.get();
+              if (cd != null) {
+                Assert.assertTrue(cd.after(t._2));
+              }
+              d.set(t._2);
+            });
 
-		Assert.assertEquals(Integer.valueOf(5), c.get());
-	}
+    Assert.assertEquals(Integer.valueOf(5), c.get());
+  }
 
-	public static class TimelineImpl implements Timeline {
+  public static class TimelineImpl implements Timeline {
 
-		UUID userId;
-		Date timestamp;
-		String text;
+    UUID userId;
+    Date timestamp;
+    String text;
 
-		@Override
-		public UUID userId() {
-			return userId;
-		}
+    @Override
+    public UUID userId() {
+      return userId;
+    }
 
-		@Override
-		public Date timestamp() {
-			return timestamp;
-		}
+    @Override
+    public Date timestamp() {
+      return timestamp;
+    }
 
-		@Override
-		public String text() {
-			return text;
-		}
-	}
+    @Override
+    public String text() {
+      return text;
+    }
+  }
 }

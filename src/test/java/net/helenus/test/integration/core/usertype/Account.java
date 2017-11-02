@@ -16,7 +16,6 @@
 package net.helenus.test.integration.core.usertype;
 
 import com.datastax.driver.core.UDTValue;
-
 import net.helenus.mapping.annotation.Column;
 import net.helenus.mapping.annotation.PartitionKey;
 import net.helenus.mapping.annotation.Table;
@@ -25,13 +24,13 @@ import net.helenus.mapping.annotation.Types;
 @Table
 public interface Account {
 
-	@PartitionKey(ordinal = 0)
-	long id();
+  @PartitionKey(ordinal = 0)
+  long id();
 
-	@Column
-	Address address();
+  @Column
+  Address address();
 
-	@Types.UDT("address")
-	@Column
-	UDTValue addressNoMapping();
+  @Types.UDT("address")
+  @Column
+  UDTValue addressNoMapping();
 }

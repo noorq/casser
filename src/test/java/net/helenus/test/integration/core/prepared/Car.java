@@ -16,7 +16,6 @@
 package net.helenus.test.integration.core.prepared;
 
 import java.math.BigDecimal;
-
 import net.helenus.core.annotation.Cacheable;
 import net.helenus.mapping.annotation.PartitionKey;
 import net.helenus.mapping.annotation.Table;
@@ -25,13 +24,13 @@ import net.helenus.mapping.annotation.Table;
 @Cacheable
 public interface Car {
 
-	@PartitionKey(ordinal = 0)
-	String make();
+  @PartitionKey(ordinal = 0)
+  String make();
 
-	@PartitionKey(ordinal = 1)
-	String model();
+  @PartitionKey(ordinal = 1)
+  String model();
 
-	int year();
+  int year();
 
-	BigDecimal price();
+  BigDecimal price();
 }

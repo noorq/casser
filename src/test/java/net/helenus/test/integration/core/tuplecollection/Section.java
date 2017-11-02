@@ -21,9 +21,9 @@ import net.helenus.mapping.annotation.Tuple;
 @Tuple
 public interface Section {
 
-	@Column(ordinal = 0)
-	String title();
+  @Column(ordinal = 0)
+  String title();
 
-	@Column(ordinal = 1)
-	int page();
+  @Column(ordinal = 1)
+  int page();
 }

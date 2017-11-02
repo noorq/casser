@@ -18,19 +18,20 @@ package net.helenus.core.reflect;
 import java.io.Serializable;
 import java.lang.reflect.Proxy;
 import java.util.Map;
-
 import net.helenus.core.MapperInstantiator;
 
 public enum ReflectionMapperInstantiator implements MapperInstantiator {
-	INSTANCE;
+  INSTANCE;
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public <E> E instantiate(Class<E> iface, Map<String, Object> src, ClassLoader classLoader) {
+  @Override
+  @SuppressWarnings("unchecked")
+  public <E> E instantiate(Class<E> iface, Map<String, Object> src, ClassLoader classLoader) {
 
-		MapperInvocationHandler<E> handler = new MapperInvocationHandler<E>(iface, src);
-		E proxy = (E) Proxy.newProxyInstance(classLoader, new Class[]{iface, MapExportable.class, Serializable.class},
-				handler);
-		return proxy;
-	}
+    MapperInvocationHandler<E> handler = new MapperInvocationHandler<E>(iface, src);
+    E proxy =
+        (E)
+            Proxy.newProxyInstance(
+                classLoader, new Class[] {iface, MapExportable.class, Serializable.class}, handler);
+    return proxy;
+  }
 }

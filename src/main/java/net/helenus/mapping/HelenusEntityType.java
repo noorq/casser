@@ -16,5 +16,8 @@
 package net.helenus.mapping;
 
 public enum HelenusEntityType {
-	TABLE, VIEW, TUPLE, UDT;
+  TABLE,
+  VIEW,
+  TUPLE,
+  UDT;
 }

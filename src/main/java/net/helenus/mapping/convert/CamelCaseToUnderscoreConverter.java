@@ -15,20 +15,19 @@
  */
 package net.helenus.mapping.convert;
 
+import com.google.common.base.CaseFormat;
 import java.util.function.Function;
 
-import com.google.common.base.CaseFormat;
-
 public enum CamelCaseToUnderscoreConverter implements Function<String, String> {
-	INSTANCE;
+  INSTANCE;
 
-	@Override
-	public String apply(String source) {
+  @Override
+  public String apply(String source) {
 
-		if (source == null) {
-			throw new IllegalArgumentException("empty parameter");
-		}
+    if (source == null) {
+      throw new IllegalArgumentException("empty parameter");
+    }
 
-		return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, source);
-	}
+    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, source);
+  }
 }

@@ -23,17 +23,17 @@ import net.helenus.mapping.annotation.Transient;
 @InheritedTable
 public interface Animal {
 
-	@PartitionKey(ordinal = 0)
-	int id();
+  @PartitionKey(ordinal = 0)
+  int id();
 
-	@Column(ordinal = 1)
-	boolean eatable();
+  @Column(ordinal = 1)
+  boolean eatable();
 
-	@Column
-	boolean warmBlodded();
+  @Column
+  boolean warmBlodded();
 
-	@Transient
-	default Animal me() {
-		return this;
-	}
+  @Transient
+  default Animal me() {
+    return this;
+  }
 }

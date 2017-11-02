@@ -18,14 +18,13 @@ package net.helenus.mapping.value;
 import com.datastax.driver.core.CodecRegistry;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.TypeCodec;
-
 import net.helenus.mapping.HelenusProperty;
 
 public interface ColumnValuePreparer {
 
-	Object prepareColumnValue(Object source, HelenusProperty prop);
+  Object prepareColumnValue(Object source, HelenusProperty prop);
 
-	default <T> TypeCodec<T> codecFor(DataType type) {
-		return CodecRegistry.DEFAULT_INSTANCE.codecFor(type);
-	}
+  default <T> TypeCodec<T> codecFor(DataType type) {
+    return CodecRegistry.DEFAULT_INSTANCE.codecFor(type);
+  }
 }

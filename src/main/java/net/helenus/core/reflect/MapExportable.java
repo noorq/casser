@@ -19,7 +19,7 @@ import java.util.Map;
 
 public interface MapExportable {
 
-	public static final String TO_MAP_METHOD = "toMap";
+  public static final String TO_MAP_METHOD = "toMap";
 
-	Map<String, Object> toMap();
+  Map<String, Object> toMap();
 }

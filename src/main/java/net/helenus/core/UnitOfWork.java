@@ -15,60 +15,57 @@
  */
 package net.helenus.core;
 
+import com.google.common.base.Stopwatch;
 import java.util.List;
 import java.util.Optional;
-
-import com.google.common.base.Stopwatch;
-
 import net.helenus.core.cache.Facet;
 
 public interface UnitOfWork<X extends Exception> extends AutoCloseable {
 
-	/**
-	 * Marks the beginning of a transactional section of work. Will write a
-	 * recordCacheAndDatabaseOperationCount to the shared write-ahead log.
-	 *
-	 * @return the handle used to commit or abort the work.
-	 */
-	UnitOfWork<X> begin();
+  /**
+   * Marks the beginning of a transactional section of work. Will write a
+   * recordCacheAndDatabaseOperationCount to the shared write-ahead log.
+   *
+   * @return the handle used to commit or abort the work.
+   */
+  UnitOfWork<X> begin();
 
-	void addNestedUnitOfWork(UnitOfWork<X> uow);
+  void addNestedUnitOfWork(UnitOfWork<X> uow);
 
-	/**
-	 * Checks to see if the work performed between calling begin and now can be
-	 * committed or not.
-	 *
-	 * @return a function from which to chain work that only happens when commit is
-	 *         successful
-	 * @throws X
-	 *             when the work overlaps with other concurrent writers.
-	 */
-	PostCommitFunction<Void, Void> commit() throws X;
+  /**
+   * Checks to see if the work performed between calling begin and now can be committed or not.
+   *
+   * @return a function from which to chain work that only happens when commit is successful
+   * @throws X when the work overlaps with other concurrent writers.
+   */
+  PostCommitFunction<Void, Void> commit() throws X;
 
-	/**
-	 * Explicitly abort the work within this unit of work. Any nested aborted unit
-	 * of work will trigger the entire unit of work to commit.
-	 */
-	void abort();
+  /**
+   * Explicitly abort the work within this unit of work. Any nested aborted unit of work will
+   * trigger the entire unit of work to commit.
+   */
+  void abort();
 
-	boolean hasAborted();
+  boolean hasAborted();
 
-	boolean hasCommitted();
+  boolean hasCommitted();
 
-	Optional<Object> cacheLookup(List<Facet> facets);
+  Optional<Object> cacheLookup(List<Facet> facets);
 
-	void cacheUpdate(Object pojo, List<Facet> facets);
+  void cacheUpdate(Object pojo, List<Facet> facets);
 
-	List<Facet> cacheEvict(List<Facet> facets);
+  List<Facet> cacheEvict(List<Facet> facets);
 
-	String getPurpose();
-	UnitOfWork setPurpose(String purpose);
-	void setInfo(String info);
+  String getPurpose();
 
-	void addDatabaseTime(String name, Stopwatch amount);
-	void addCacheLookupTime(Stopwatch amount);
+  UnitOfWork setPurpose(String purpose);
 
-	// Cache > 0 means "cache hit", < 0 means cache miss.
-	void recordCacheAndDatabaseOperationCount(int cache, int database);
+  void setInfo(String info);
 
+  void addDatabaseTime(String name, Stopwatch amount);
+
+  void addCacheLookupTime(Stopwatch amount);
+
+  // Cache > 0 means "cache hit", < 0 means cache miss.
+  void recordCacheAndDatabaseOperationCount(int cache, int database);
 }

@@ -5,25 +5,25 @@ import java.util.Objects;
 
 public class PostCommitFunction<T, R> implements java.util.function.Function<T, R> {
 
-	private final UnitOfWork uow;
-	private final List<CommitThunk> postCommit;
+  private final UnitOfWork uow;
+  private final List<CommitThunk> postCommit;
 
-	PostCommitFunction(UnitOfWork uow, List<CommitThunk> postCommit) {
-		this.uow = uow;
-		this.postCommit = postCommit;
-	}
+  PostCommitFunction(UnitOfWork uow, List<CommitThunk> postCommit) {
+    this.uow = uow;
+    this.postCommit = postCommit;
+  }
 
-	public void andThen(CommitThunk after) {
-		Objects.requireNonNull(after);
-		if (postCommit == null) {
-			after.apply();
-		} else {
-			postCommit.add(after);
-		}
-	}
+  public void andThen(CommitThunk after) {
+    Objects.requireNonNull(after);
+    if (postCommit == null) {
+      after.apply();
+    } else {
+      postCommit.add(after);
+    }
+  }
 
-	@Override
-	public R apply(T t) {
-		return null;
-	}
+  @Override
+  public R apply(T t) {
+    return null;
+  }
 }

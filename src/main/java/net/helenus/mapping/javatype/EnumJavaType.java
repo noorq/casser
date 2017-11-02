@@ -15,14 +15,12 @@
  */
 package net.helenus.mapping.javatype;
 
+import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.Metadata;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Optional;
 import java.util.function.Function;
-
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.Metadata;
-
 import net.helenus.core.SessionRepository;
 import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.convert.EnumToStringConverter;
@@ -33,31 +31,33 @@ import net.helenus.mapping.type.DTDataType;
 
 public final class EnumJavaType extends AbstractJavaType {
 
-	@Override
-	public Class<?> getJavaClass() {
-		return Enum.class;
-	}
+  @Override
+  public Class<?> getJavaClass() {
+    return Enum.class;
+  }
 
-	@Override
-	public AbstractDataType resolveDataType(Method getter, Type genericJavaType, ColumnType columnType,
-			Metadata metadata) {
-		return new DTDataType(columnType, DataType.ascii(), (Class<?>) genericJavaType);
-	}
+  @Override
+  public AbstractDataType resolveDataType(
+      Method getter, Type genericJavaType, ColumnType columnType, Metadata metadata) {
+    return new DTDataType(columnType, DataType.ascii(), (Class<?>) genericJavaType);
+  }
 
-	@Override
-	public Optional<Function<Object, Object>> resolveReadConverter(AbstractDataType dataType,
-			SessionRepository repository) {
+  @Override
+  public Optional<Function<Object, Object>> resolveReadConverter(
+      AbstractDataType dataType, SessionRepository repository) {
 
-		DTDataType dt = (DTDataType) dataType;
+    DTDataType dt = (DTDataType) dataType;
 
-		return Optional
-				.of(TypedConverter.create(String.class, Enum.class, new StringToEnumConverter(dt.getJavaClass())));
-	}
+    return Optional.of(
+        TypedConverter.create(
+            String.class, Enum.class, new StringToEnumConverter(dt.getJavaClass())));
+  }
 
-	@Override
-	public Optional<Function<Object, Object>> resolveWriteConverter(AbstractDataType dataType,
-			SessionRepository repository) {
+  @Override
+  public Optional<Function<Object, Object>> resolveWriteConverter(
+      AbstractDataType dataType, SessionRepository repository) {
 
-		return Optional.of(TypedConverter.create(Enum.class, String.class, EnumToStringConverter.INSTANCE));
-	}
+    return Optional.of(
+        TypedConverter.create(Enum.class, String.class, EnumToStringConverter.INSTANCE));
+  }
 }

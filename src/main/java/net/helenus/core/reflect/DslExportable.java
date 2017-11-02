@@ -16,18 +16,17 @@
 package net.helenus.core.reflect;
 
 import com.datastax.driver.core.Metadata;
-
 import net.helenus.mapping.HelenusEntity;
 
 public interface DslExportable {
 
-	String GET_ENTITY_METHOD = "getHelenusMappingEntity";
-	String GET_PARENT_METHOD = "getParentDslHelenusPropertyNode";
-	String SET_METADATA_METHOD = "setCassandraMetadataForHelenusSession";
+  String GET_ENTITY_METHOD = "getHelenusMappingEntity";
+  String GET_PARENT_METHOD = "getParentDslHelenusPropertyNode";
+  String SET_METADATA_METHOD = "setCassandraMetadataForHelenusSession";
 
-	HelenusEntity getHelenusMappingEntity();
+  HelenusEntity getHelenusMappingEntity();
 
-	HelenusPropertyNode getParentDslHelenusPropertyNode();
+  HelenusPropertyNode getParentDslHelenusPropertyNode();
 
-	void setCassandraMetadataForHelenusSession(Metadata metadata);
+  void setCassandraMetadataForHelenusSession(Metadata metadata);
 }

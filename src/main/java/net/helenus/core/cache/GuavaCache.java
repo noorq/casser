@@ -20,25 +20,24 @@ import com.google.common.cache.Cache;
 
 public class GuavaCache<K, V> implements SessionCache<K, V> {
 
-	final Cache<K, V> cache;
+  final Cache<K, V> cache;
 
-	GuavaCache(Cache<K, V> cache) {
-		this.cache = cache;
-	}
+  GuavaCache(Cache<K, V> cache) {
+    this.cache = cache;
+  }
 
-	@Override
-	public void invalidate(K key) {
-		cache.invalidate(key);
-	}
+  @Override
+  public void invalidate(K key) {
+    cache.invalidate(key);
+  }
 
-	@Override
-	public V get(K key) {
-		return cache.getIfPresent(key);
-	}
+  @Override
+  public V get(K key) {
+    return cache.getIfPresent(key);
+  }
 
-	@Override
-	public void put(K key, V value) {
-		cache.put(key, value);
-	}
-
+  @Override
+  public void put(K key, V value) {
+    cache.put(key, value);
+  }
 }

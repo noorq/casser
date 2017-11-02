@@ -19,56 +19,55 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import net.helenus.core.SchemaUtil;
 import net.helenus.mapping.HelenusProperty;
 
 public class UnboundFacet extends Facet<String> {
 
-	private final List<HelenusProperty> properties;
+  private final List<HelenusProperty> properties;
 
-	public UnboundFacet(List<HelenusProperty> properties) {
-		super(SchemaUtil.createPrimaryKeyPhrase(properties));
-		this.properties = properties;
-	}
+  public UnboundFacet(List<HelenusProperty> properties) {
+    super(SchemaUtil.createPrimaryKeyPhrase(properties));
+    this.properties = properties;
+  }
 
-	public UnboundFacet(HelenusProperty property) {
-		super(property.getPropertyName());
-		properties = new ArrayList<HelenusProperty>();
-		properties.add(property);
-	}
+  public UnboundFacet(HelenusProperty property) {
+    super(property.getPropertyName());
+    properties = new ArrayList<HelenusProperty>();
+    properties.add(property);
+  }
 
-	public List<HelenusProperty> getProperties() {
-		return properties;
-	}
+  public List<HelenusProperty> getProperties() {
+    return properties;
+  }
 
-	public Binder binder() {
-		return new Binder(name(), properties);
-	}
+  public Binder binder() {
+    return new Binder(name(), properties);
+  }
 
-	public static class Binder {
+  public static class Binder {
 
-		private final String name;
-		private final List<HelenusProperty> properties = new ArrayList<HelenusProperty>();
-		private Map<HelenusProperty, Object> boundProperties = new HashMap<HelenusProperty, Object>();
+    private final String name;
+    private final List<HelenusProperty> properties = new ArrayList<HelenusProperty>();
+    private Map<HelenusProperty, Object> boundProperties = new HashMap<HelenusProperty, Object>();
 
-		Binder(String name, List<HelenusProperty> properties) {
-			this.name = name;
-			this.properties.addAll(properties);
-		}
+    Binder(String name, List<HelenusProperty> properties) {
+      this.name = name;
+      this.properties.addAll(properties);
+    }
 
-		public Binder setValueForProperty(HelenusProperty prop, Object value) {
-			properties.remove(prop);
-			boundProperties.put(prop, value);
-			return this;
-		}
+    public Binder setValueForProperty(HelenusProperty prop, Object value) {
+      properties.remove(prop);
+      boundProperties.put(prop, value);
+      return this;
+    }
 
-		public boolean isBound() {
-			return properties.isEmpty();
-		}
+    public boolean isBound() {
+      return properties.isEmpty();
+    }
 
-		public BoundFacet bind() {
-			return new BoundFacet(name, boundProperties);
-		}
-	}
+    public BoundFacet bind() {
+      return new BoundFacet(name, boundProperties);
+    }
+  }
 }

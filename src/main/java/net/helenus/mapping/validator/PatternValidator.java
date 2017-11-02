@@ -16,28 +16,27 @@
 package net.helenus.mapping.validator;
 
 import java.util.regex.Pattern;
-
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-
 import net.helenus.mapping.annotation.Constraints;
 
-public final class PatternValidator implements ConstraintValidator<Constraints.Pattern, CharSequence> {
+public final class PatternValidator
+    implements ConstraintValidator<Constraints.Pattern, CharSequence> {
 
-	private Pattern pattern;
+  private Pattern pattern;
 
-	@Override
-	public void initialize(Constraints.Pattern constraintAnnotation) {
-		pattern = Pattern.compile(constraintAnnotation.value(), constraintAnnotation.flags());
-	}
+  @Override
+  public void initialize(Constraints.Pattern constraintAnnotation) {
+    pattern = Pattern.compile(constraintAnnotation.value(), constraintAnnotation.flags());
+  }
 
-	@Override
-	public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
+  @Override
+  public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
 
-		if (value == null) {
-			return true;
-		}
+    if (value == null) {
+      return true;
+    }
 
-		return pattern.matcher(value).matches();
-	}
+    return pattern.matcher(value).matches();
+  }
 }
