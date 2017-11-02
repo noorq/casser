@@ -291,21 +291,23 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 				where.and(filter.getClause(sessionOps.getValuePreparer()));
 				HelenusProperty prop = filter.getNode().getProperty();
 				boolean isFirstIndex = true;
-				switch (prop.getColumnType()) {
-					case PARTITION_KEY :
-					case CLUSTERING_COLUMN :
-						break;
-					default :
-						// When using non-Cassandra-standard 2i types or when using more than one
-						// indexed column or non-indexed columns the query must include ALLOW FILTERING.
-						if (prop.caseSensitiveIndex()) {
-							allowFiltering = true;
-						} else if (prop.getIndexName() != null) {
-							allowFiltering |= !isFirstIndex;
-							isFirstIndex = false;
-						} else {
-							allowFiltering = true;
-						}
+				if (allowFiltering == false) {
+					switch (prop.getColumnType()) {
+						case PARTITION_KEY :
+						case CLUSTERING_COLUMN :
+							break;
+						default :
+							// When using non-Cassandra-standard 2i types or when using more than one
+							// indexed column or non-indexed columns the query must include ALLOW FILTERING.
+							if (prop.caseSensitiveIndex()) {
+								allowFiltering = true;
+							} else if (prop.getIndexName() != null) {
+								allowFiltering |= !isFirstIndex;
+								isFirstIndex = false;
+							} else {
+								allowFiltering = true;
+							}
+					}
 				}
 			}
 		}
