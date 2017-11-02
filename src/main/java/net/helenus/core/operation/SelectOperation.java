@@ -246,7 +246,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 						+ entity.getMappingInterface() + " or " + prop.getEntity().getMappingInterface());
 			}
 
-			// TODO(gburd): writeTime and ttl will be useful on merge() but cause object
+            // TODO(gburd): writeTime and ttl will be useful on merge() but cause object
 			// identity to fail.
 			if (false && cached) {
 				switch (prop.getProperty().getColumnType()) {
@@ -289,7 +289,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
 			for (Filter<?> filter : filters.values()) {
 				where.and(filter.getClause(sessionOps.getValuePreparer()));
-			}
+                if (filter.getNode().getProperty().caseSensitiveIndex()) {
+                    allowFiltering = true;
+                }
+            }
 		}
 
 		if (ifFilters != null && !ifFilters.isEmpty()) {
