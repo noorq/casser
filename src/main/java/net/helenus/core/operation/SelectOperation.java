@@ -239,10 +239,6 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 			String columnName = prop.getColumnName();
 			selection = selection.column(columnName);
 
-			if (prop.getProperty().caseSensitiveIndex()) {
-				allowFiltering = true;
-			}
-
 			if (entity == null) {
 				entity = prop.getEntity();
 			} else if (entity != prop.getEntity()) {

@@ -63,6 +63,7 @@ public interface UnitOfWork<X extends Exception> extends AutoCloseable {
 
 	String getPurpose();
 	UnitOfWork setPurpose(String purpose);
+	void setInfo(String info);
 
 	void addDatabaseTime(String name, Stopwatch amount);
 	void addCacheLookupTime(Stopwatch amount);

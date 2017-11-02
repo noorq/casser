@@ -190,15 +190,15 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
     }
 
 
-    @Test
-    public void testSelectAfterDeleted() throws Exception {
-        Widget w1, w2, w3, w4;
-        UUID key = UUIDs.timeBased();
+	@Test
+	public void testSelectAfterDeleted() throws Exception {
+		Widget w1, w2, w3, w4;
+		UUID key = UUIDs.timeBased();
 
-        // This should inserted Widget, but not cache it.
-        w1 = session.<Widget>insert(widget).value(widget::id, key).value(widget::name, RandomString.make(20)).sync();
+		// This should inserted Widget, but not cache it.
+		w1 = session.<Widget>insert(widget).value(widget::id, key).value(widget::name, RandomString.make(20)).sync();
 
-        try (UnitOfWork uow = session.begin()) {
+		try (UnitOfWork uow = session.begin()) {
 
             // This should read from the database and return a Widget.
             w2 = session.<Widget>select(widget).where(widget::id, eq(key)).single()
@@ -225,7 +225,21 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 
         Assert.assertEquals(w4, null);
     }
+/*
+	@Test
+	public void testInsertNoOp() throws Exception {
+		Widget w1, w2;
+		UUID key = UUIDs.timeBased();
 
+
+		try (UnitOfWork uow = session.begin()) {
+			// This should inserted Widget, but not cache it.
+			w1 = session.<Widget>insert(widget).value(widget::id, key).value(widget::name, RandomString.make(20)).sync(uow);
+			w2 = session.<Widget>insert(w1).value(widget::id, key).sync(uow);
+		}
+		Assert.assertEquals(w1, w2);
+	}
+*/
 	/*
 	 * @Test public void testSelectAfterInsertProperlyCachesEntity() throws
 	 * Exception { Widget w1, w2, w3, w4; UUID key = UUIDs.timeBased();

@@ -24,14 +24,14 @@ import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
-import net.helenus.core.AbstractSessionOperations;
-import net.helenus.core.Getter;
-import net.helenus.core.Helenus;
-import net.helenus.core.UnitOfWork;
+import net.helenus.core.*;
+import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
+import net.helenus.core.cache.UnboundFacet;
 import net.helenus.core.reflect.DefaultPrimitiveTypes;
 import net.helenus.core.reflect.Drafted;
 import net.helenus.core.reflect.HelenusPropertyNode;
+import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
@@ -163,6 +163,10 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 
 	@Override
 	public T transform(ResultSet resultSet) {
+		if ((ifNotExists == true) && (resultSet.wasApplied() == false)) {
+			throw new HelenusException("Statement was not applied due to consistency constraints");
+		}
+
 		Class<?> iface = entity.getMappingInterface();
 		if (resultType == iface) {
 			if (values.size() > 0) {
@@ -207,9 +211,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 				// Lastly, create a new proxy object for the entity and return the new instance.
 				return (T) Helenus.map(iface, backingMap);
 			}
-			// Oddly, this insert didn't change any value so simply return the pojo.
-			// TODO(gburd): this pojo is the result of a Draft.build() call which will not
-			// preserve object identity (o1 == o2), ... fix me.
+			// Oddly, this insert didn't change anything so simply return the pojo.
 			return (T) pojo;
 		}
 		return (T) resultSet;
@@ -251,6 +253,15 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 			return sync();
 		}
 		T result = super.sync(uow);
+		if (result != null && pojo != null && !(pojo == result) && pojo.equals(result)) {
+			// To preserve object identity we need to find this object in cache
+			// because it was unchanged by the INSERT but pojo in this case was
+			// the result of a draft.build().
+			T cachedValue = (T) uow.cacheLookup(bindFacetValues());
+			if (cachedValue != null) {
+				result = cachedValue;
+			}
+		}
 		Class<?> iface = entity.getMappingInterface();
 		if (resultType == iface) {
 			cacheUpdate(uow, result, entity.getFacets());
@@ -260,6 +271,36 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public List<Facet> bindFacetValues() {
+		List<Facet> facets = getFacets();
+		if (facets == null || facets.size() == 0) {
+			return new ArrayList<Facet>();
+		}
+		List<Facet> boundFacets = new ArrayList<>();
+		Map<HelenusProperty, Object> valuesMap = new HashMap<>(values.size());
+		values.forEach(t -> valuesMap.put(t._1.getProperty(), t._2));
+
+		for (Facet facet : facets) {
+			if (facet instanceof UnboundFacet) {
+				UnboundFacet unboundFacet = (UnboundFacet) facet;
+				UnboundFacet.Binder binder = unboundFacet.binder();
+				for (HelenusProperty prop : unboundFacet.getProperties()) {
+					Object value = valuesMap.get(prop);
+					if (value != null) {
+						binder.setValueForProperty(prop, value.toString());
+					}
+				}
+				if (binder.isBound()) {
+					boundFacets.add(binder.bind());
+				}
+			} else {
+				boundFacets.add(facet);
+			}
+		}
+		return boundFacets;
 	}
 
 	@Override

@@ -65,6 +65,6 @@ public class MaterializedViewTest extends AbstractEmbeddedCassandraTest {
 
 	@Test
 	public void testMv() throws TimeoutException {
-		session.select(Cyclist.class).from(CyclistsByAge.class).where(cyclist::age, eq(18)).sync();
+		session.select(Cyclist.class).from(CyclistsByAge.class).where(cyclist::age, eq(18)).allowFiltering().sync();
 	}
 }

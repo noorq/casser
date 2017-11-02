@@ -169,3 +169,17 @@ begin:
 			    cache.put
             }
 			*/
+------------------
+
+InsertOperation
+
+
+		Class<?> iface = entity.getMappingInterface();
+		boolean includesNonIdentityValues = values.stream().map(t -> {
+					ColumnType type = t._1.getProperty().getColumnType();
+					return !((type == ColumnType.PARTITION_KEY) || (type == ColumnType.CLUSTERING_COLUMN));
+				})
+				.reduce(false, (acc, t) -> acc || t);
+		if (resultType == iface) {
+			if (values.size() > 0 && includesNonIdentityValues) {
+				boolean immutable = iface.isAssignableFrom(Drafted.class);

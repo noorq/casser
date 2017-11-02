@@ -118,7 +118,7 @@ public abstract class AbstractSessionOperations {
 	private void logStatement(Statement statement, boolean showValues) {
 		if (isShowCql()) {
 			printCql(Operation.queryString(statement, showValues));
-		} else if (LOG.isInfoEnabled()) {
+		} else if (LOG.isDebugEnabled()) {
 			LOG.info("CQL> " + Operation.queryString(statement, showValues));
 		}
 	}

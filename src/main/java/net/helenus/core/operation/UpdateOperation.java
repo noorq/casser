@@ -36,6 +36,7 @@ import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.mapping.value.BeanColumnValueProvider;
 import net.helenus.mapping.value.ValueProviderMap;
+import net.helenus.support.HelenusException;
 import net.helenus.support.HelenusMappingException;
 import net.helenus.support.Immutables;
 
@@ -656,6 +657,10 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 
 	@Override
 	public E transform(ResultSet resultSet) {
+		if ((ifFilters != null && !ifFilters.isEmpty()) && (resultSet.wasApplied() == false)) {
+			throw new HelenusException("Statement was not applied due to consistency constraints");
+		}
+
 		if (draft != null) {
 			return Helenus.map(draft.getEntityClass(), draft.toMap(draftMap));
 		} else {

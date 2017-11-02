@@ -45,6 +45,7 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	private final Table<String, String, Either<Object, List<Facet>>> cache = HashBasedTable.create();
 	protected String purpose;
 	protected List<String> nestedPurposes = new ArrayList<String>();
+	protected String info;
 	protected int cacheHits = 0;
 	protected int cacheMisses = 0;
 	protected int databaseLookups = 0;
@@ -105,6 +106,11 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 	}
 
 	@Override
+	public void setInfo(String info) {
+		this.info = info;
+	}
+
+	@Override
 	public void recordCacheAndDatabaseOperationCount(int cache, int ops) {
 		if (cache > 0) {
 			cacheHits += cache;
@@ -147,9 +153,10 @@ public abstract class AbstractUnitOfWork<E extends Exception> implements UnitOfW
 		}
 		String x = nestedPurposes.stream().distinct().collect(Collectors.joining(", "));
 		String n = nested.stream().map(uow -> String.valueOf(uow.hashCode())).collect(Collectors.joining(", "));
-		String s = String.format(Locale.US, "UOW(%s%s) %s in %,.3fms%s%s%s%s%s", hashCode(),
+		String s = String.format(Locale.US, "UOW(%s%s) %s in %,.3fms%s%s%s%s%s%s", hashCode(),
 				(nested.size() > 0 ? ", [" + n + "]" : ""), what, e, cache, database, da,
-				(purpose == null ? "" : " " + purpose), (nestedPurposes.isEmpty()) ? "" : ", " + x);
+				(purpose == null ? "" : " " + purpose), (nestedPurposes.isEmpty()) ? "" : ", " + x,
+				(info == null) ? "" : " " + info);
 		return s;
 	}
 
