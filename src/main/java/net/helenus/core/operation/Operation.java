@@ -16,21 +16,19 @@
 package net.helenus.core.operation;
 
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import com.datastax.driver.core.*;
-import net.helenus.support.HelenusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.datastax.driver.core.*;
 import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.google.common.base.Stopwatch;
 
@@ -40,6 +38,7 @@ import brave.propagation.TraceContext;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.cache.Facet;
+import net.helenus.support.HelenusException;
 
 public abstract class Operation<E> {
 
@@ -118,27 +117,26 @@ public abstract class Operation<E> {
 				if (LOG.isDebugEnabled()) {
 					ExecutionInfo ei = resultSet.getExecutionInfo();
 					Host qh = ei.getQueriedHost();
-					String oh = ei.getTriedHosts().stream().map(Host::getAddress).map(InetAddress::toString).collect(Collectors.joining(", "));
+					String oh = ei.getTriedHosts().stream().map(Host::getAddress).map(InetAddress::toString)
+							.collect(Collectors.joining(", "));
 					ConsistencyLevel cl = ei.getAchievedConsistencyLevel();
 					int se = ei.getSpeculativeExecutions();
 					String warn = ei.getWarnings().stream().collect(Collectors.joining(", "));
-					String ri = String.format("%s %s %s %s %sd%s%s spec-retries: %d",
-							"C* v" + qh.getCassandraVersion(),
-							qh.getAddress().toString(),
-							qh.getDatacenter(),
-							qh.getRack(),
+					String ri = String.format("%s %s %s %s %sd%s%s spec-retries: %d", "C* v" + qh.getCassandraVersion(),
+							qh.getAddress().toString(), qh.getDatacenter(), qh.getRack(),
 							(oh != null && !oh.equals("")) ? "[" + oh + "] " : "",
-							(cl != null) ? (" consistency: " + cl.name() +
-									(cl.isDCLocal() ? " DC " : "") +
-									(cl.isSerial() ? " SC " : "")) : "",
-							(warn != null && !warn.equals("")) ? ": " + warn : "",
-							se);
+							(cl != null)
+									? (" consistency: " + cl.name() + (cl.isDCLocal() ? " DC " : "")
+											+ (cl.isSerial() ? " SC " : ""))
+									: "",
+							(warn != null && !warn.equals("")) ? ": " + warn : "", se);
 					if (uow != null)
 						uow.setInfo(ri);
 					else
 						LOG.debug(ri);
 				}
-				if (!resultSet.wasApplied() && !(columnDefinitions.size() > 1 || !columnDefinitions.contains("[applied]"))) {
+				if (!resultSet.wasApplied()
+						&& !(columnDefinitions.size() > 1 || !columnDefinitions.contains("[applied]"))) {
 					throw new HelenusException("Operation Failed");
 				}
 				return resultSet;

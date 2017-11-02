@@ -303,17 +303,15 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 	}
 
 	private String extractClassNameFromStackFrame(String classNameOnStack) {
-	    String name = null;
-        Matcher m = classNameRegex.matcher(classNameOnStack);
-        if (m.find()) {
-            name = (m.group(1) != null) ?
-                    m.group(1) :
-                    ((m.group(2) != null) ? m.group(2) : name);
-        } else {
-            name = classNameOnStack;
-        }
-        return name;
-    }
+		String name = null;
+		Matcher m = classNameRegex.matcher(classNameOnStack);
+		if (m.find()) {
+			name = (m.group(1) != null) ? m.group(1) : ((m.group(2) != null) ? m.group(2) : name);
+		} else {
+			name = classNameOnStack;
+		}
+		return name;
+	}
 
 	public synchronized UnitOfWork begin(UnitOfWork parent) {
 		try {
@@ -328,11 +326,11 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 				String stackClassName = null;
 				do {
 					frame++;
-                    stackClassName = extractClassNameFromStackFrame(trace[frame].getClassName());
+					stackClassName = extractClassNameFromStackFrame(trace[frame].getClassName());
 				} while (!stackClassName.equals(targetClassName) && frame < trace.length);
 				do {
 					frame++;
-                    stackClassName = extractClassNameFromStackFrame(trace[frame].getClassName());
+					stackClassName = extractClassNameFromStackFrame(trace[frame].getClassName());
 				} while (stackClassName.equals(targetClassName) && frame < trace.length);
 				if (frame < trace.length) {
 					purpose = new StringBuilder().append(trace[frame].getClassName()).append(".")

@@ -24,14 +24,15 @@ import com.datastax.driver.core.querybuilder.BuiltStatement;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
-import net.helenus.core.*;
-import net.helenus.core.cache.CacheUtil;
+import net.helenus.core.AbstractSessionOperations;
+import net.helenus.core.Getter;
+import net.helenus.core.Helenus;
+import net.helenus.core.UnitOfWork;
 import net.helenus.core.cache.Facet;
 import net.helenus.core.cache.UnboundFacet;
 import net.helenus.core.reflect.DefaultPrimitiveTypes;
 import net.helenus.core.reflect.Drafted;
 import net.helenus.core.reflect.HelenusPropertyNode;
-import net.helenus.mapping.ColumnType;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
