@@ -317,8 +317,11 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
       Object pojo, String tableName, List<String[]> facetCombinations) {
     for (String[] combination : facetCombinations) {
       String cacheKey = tableName + "." + Arrays.toString(combination);
-      sessionCache.invalidate(cacheKey);
-      sessionCache.put(cacheKey, pojo);
+      if (pojo == null || pojo == HelenusSession.deleted) {
+        sessionCache.invalidate(cacheKey);
+      } else {
+        sessionCache.put(cacheKey, pojo);
+      }
     }
   }
 

@@ -312,8 +312,8 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
         if (allowFiltering == false) {
           switch (prop.getColumnType()) {
             case PARTITION_KEY:
-            case CLUSTERING_COLUMN:
               break;
+            case CLUSTERING_COLUMN:
             default:
               // When using non-Cassandra-standard 2i types or when using more than one
               // indexed column or non-indexed columns the query must include ALLOW FILTERING.

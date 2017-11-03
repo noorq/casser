@@ -369,7 +369,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
               columnMap.forEach(
                   (columnKey, value) -> {
                     if (to.contains(rowKey, columnKey)) {
-                      // TODO(gburd):...
+                      // TODO(gburd): merge case, preserve object identity
                       to.put(
                           rowKey,
                           columnKey,
