@@ -317,7 +317,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
             default:
               // When using non-Cassandra-standard 2i types or when using more than one
               // indexed column or non-indexed columns the query must include ALLOW FILTERING.
-              if (prop.caseSensitiveIndex()) {
+              if (prop.caseSensitiveIndex() == false) {
                 allowFiltering = true;
               } else if (prop.getIndexName() != null) {
                 allowFiltering |= !isFirstIndex;
