@@ -235,7 +235,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
             }
           } else {
             value = valueMap.get(prop.getPropertyName());
-            binder.setValueForProperty(prop, value.toString());
+            if (value != null) binder.setValueForProperty(prop, value.toString());
           }
         }
         if (binder.isBound()) {

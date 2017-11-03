@@ -165,6 +165,14 @@ public final class SchemaUtil {
       }
     }
 
+    if (p.size() == 0 && c.size() == 0)
+      return "{"
+          + properties
+              .stream()
+              .map(HelenusProperty::getPropertyName)
+              .collect(Collectors.joining(", "))
+          + "}";
+
     return "("
         + ((p.size() > 1) ? "(" + String.join(", ", p) + ")" : p.get(0))
         + ((c.size() > 0)

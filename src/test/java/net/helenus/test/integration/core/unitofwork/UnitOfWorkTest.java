@@ -41,8 +41,13 @@ interface Widget {
   UUID id();
 
   @Index
-  @Constraints.Distinct()
+  @Constraints.Distinct
   String name();
+
+  @Constraints.Distinct(value = {"b"})
+  String a();
+
+  String b();
 }
 
 public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
@@ -74,6 +79,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
             .<Widget>insert(widget)
             .value(widget::id, key)
             .value(widget::name, RandomString.make(20))
+            .value(widget::a, RandomString.make(10))
+            .value(widget::b, RandomString.make(10))
             .sync();
 
     try (UnitOfWork uow = session.begin()) {
@@ -118,6 +125,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
               .<Widget>insert(widget)
               .value(widget::id, key1)
               .value(widget::name, RandomString.make(20))
+              .value(widget::a, RandomString.make(10))
+              .value(widget::b, RandomString.make(10))
               .sync(uow1);
 
       try (UnitOfWork uow2 = session.begin(uow1)) {
@@ -138,6 +147,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
                 .<Widget>insert(widget)
                 .value(widget::id, key2)
                 .value(widget::name, RandomString.make(20))
+                .value(widget::a, RandomString.make(10))
+                .value(widget::b, RandomString.make(10))
                 .sync(uow2);
 
         uow2.commit()
@@ -151,7 +162,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
       w4 =
           session
               .<Widget>select(widget)
-              .where(widget::id, eq(key2))
+              .where(widget::a, eq(w3.a()))
+              .and(widget::b, eq(w3.b()))
               .single()
               .sync(uow1)
               .orElse(null);
@@ -175,6 +187,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
           .<Widget>insert(widget)
           .value(widget::id, key)
           .value(widget::name, RandomString.make(20))
+          .value(widget::a, RandomString.make(10))
+          .value(widget::b, RandomString.make(10))
           .sync(uow);
 
       // This should read from the database and return a Widget.
@@ -209,6 +223,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
             .<Widget>insert(widget)
             .value(widget::id, key)
             .value(widget::name, RandomString.make(20))
+            .value(widget::a, RandomString.make(10))
+            .value(widget::b, RandomString.make(10))
             .sync();
 
     try (UnitOfWork uow = session.begin()) {
@@ -271,6 +287,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
             .<Widget>insert(widget)
             .value(widget::id, key)
             .value(widget::name, RandomString.make(20))
+            .value(widget::a, RandomString.make(10))
+            .value(widget::b, RandomString.make(10))
             .sync();
 
     try (UnitOfWork uow = session.begin()) {

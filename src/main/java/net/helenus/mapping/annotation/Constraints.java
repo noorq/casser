@@ -228,10 +228,11 @@ public final class Constraints {
   public @interface Distinct {
 
     /**
-     * User defined Enum to further restrict the items in the set.
+     * User defined list of properties that combine with this one to result in a distinct
+     * combination in the table.
      *
      * @return Java
      */
-    Class<? extends Enum> value() default Enum.class;
+    String[] value() default "";
   }
 }

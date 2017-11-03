@@ -31,6 +31,7 @@ import net.helenus.mapping.annotation.*;
 import net.helenus.mapping.validator.DistinctValidator;
 import net.helenus.support.HelenusMappingException;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public final class HelenusMappingEntity implements HelenusEntity {
 
@@ -128,7 +129,24 @@ public final class HelenusMappingEntity implements HelenusEntity {
           for (ConstraintValidator<?, ?> constraint :
               MappingUtil.getValidators(prop.getGetterMethod())) {
             if (constraint.getClass().isAssignableFrom(DistinctValidator.class)) {
-              UnboundFacet facet = new UnboundFacet(prop);
+              DistinctValidator validator = (DistinctValidator) constraint;
+              String[] values = validator.value();
+              UnboundFacet facet;
+              if (values != null && values.length >= 1 && !(StringUtils.isBlank(values[0]))) {
+                List<HelenusProperty> props = new ArrayList<HelenusProperty>(values.length + 1);
+                props.add(prop);
+                for (String value : values) {
+                  for (HelenusProperty p : orderedProps) {
+                    String name = p.getPropertyName();
+                    if (name.equals(value) && !name.equals(prop.getPropertyName())) {
+                      props.add(p);
+                    }
+                  }
+                }
+                facet = new UnboundFacet(props);
+              } else {
+                facet = new UnboundFacet(prop);
+              }
               facetsBuilder.add(facet);
               break;
             }

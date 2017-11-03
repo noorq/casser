@@ -22,13 +22,20 @@ import net.helenus.mapping.annotation.Constraints;
 public final class DistinctValidator
     implements ConstraintValidator<Constraints.Distinct, CharSequence> {
 
+  private Constraints.Distinct annotation;
+
   @Override
-  public void initialize(Constraints.Distinct constraintAnnotation) {}
+  public void initialize(Constraints.Distinct constraintAnnotation) {
+    annotation = constraintAnnotation;
+  }
 
   @Override
   public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
-    // TODO(gburd): if there is an Enum type supplied, check that value is valid
-    // Enum.name()
+    // TODO(gburd): check that the list contains valid property names.
     return true;
+  }
+
+  public String[] value() {
+    return annotation == null ? null : annotation.value();
   }
 }
