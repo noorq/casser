@@ -15,22 +15,21 @@
  */
 package net.helenus.mapping.validator;
 
+import java.lang.annotation.Annotation;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import net.helenus.mapping.annotation.Constraints;
 
-public final class DistinctValidator
-    extends AbstractConstraintValidator<Constraints.Distinct, CharSequence>
-    implements ConstraintValidator<Constraints.Distinct, CharSequence> {
+public abstract class RelationshipValidator<A extends Annotation>
+    extends AbstractConstraintValidator<A, CharSequence>
+    implements ConstraintValidator<A, CharSequence> {
 
   @Override
-  public void initialize(Constraints.Distinct constraintAnnotation) {
+  public void initialize(A constraintAnnotation) {
     super.initialize(constraintAnnotation);
   }
 
   @Override
   public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
-    // TODO(gburd): check that the list contains valid property names.
-    return true;
+    return false;
   }
 }

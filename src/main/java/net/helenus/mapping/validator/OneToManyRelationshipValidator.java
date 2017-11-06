@@ -15,16 +15,13 @@
  */
 package net.helenus.mapping.validator;
 
-import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import net.helenus.mapping.annotation.Constraints;
 
-public final class DistinctValidator
-    extends AbstractConstraintValidator<Constraints.Distinct, CharSequence>
-    implements ConstraintValidator<Constraints.Distinct, CharSequence> {
+public class OneToManyRelationshipValidator extends RelationshipValidator<Constraints.OneToMany> {
 
   @Override
-  public void initialize(Constraints.Distinct constraintAnnotation) {
+  public void initialize(Constraints.OneToMany constraintAnnotation) {
     super.initialize(constraintAnnotation);
   }
 

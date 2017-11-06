@@ -156,6 +156,8 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
           insert.value(t._1.getColumnName(), t._2);
         });
 
+    //TODO(gburd): IF NOT EXISTS when @Constraints.Relationship is 1:1 or 1:m
+
     if (this.ttl != null) {
       insert.using(QueryBuilder.ttl(this.ttl[0]));
     }

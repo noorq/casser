@@ -22,9 +22,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import net.helenus.core.ConflictingUnitOfWorkException;
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
+import net.helenus.core.UnitOfWork;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -78,6 +81,34 @@ public class MaterializedViewTest extends AbstractEmbeddedCassandraTest {
         .from(CyclistsByAge.class)
         .where(cyclist::age, eq(18))
         .allowFiltering()
+        .single()
         .sync();
+  }
+
+  @Test
+  public void testMvUnitOfWork()
+      throws TimeoutException, ConflictingUnitOfWorkException, Exception {
+    Cyclist c1, c2;
+
+    UnitOfWork uow = session.begin();
+    c1 =
+        session
+            .<Cyclist>select(Cyclist.class)
+            .from(CyclistsByAge.class)
+            .where(cyclist::age, eq(18))
+            .single()
+            .sync(uow)
+            .orElse(null);
+
+    c2 =
+        session
+            .<Cyclist>select(Cyclist.class)
+            .from(CyclistsByAge.class)
+            .where(cyclist::age, eq(18))
+            .single()
+            .sync(uow)
+            .orElse(null);
+    Assert.assertEquals(c1, c2);
+    uow.commit();
   }
 }

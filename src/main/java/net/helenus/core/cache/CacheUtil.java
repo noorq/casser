@@ -45,6 +45,7 @@ public class CacheUtil {
   }
 
   public static Object merge(Object to, Object from) {
+    // TODO(gburd): do a proper merge given that materialized views are cached with their table name
     if (to == from) {
       return to;
     } else {

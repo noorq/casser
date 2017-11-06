@@ -114,7 +114,13 @@ public final class HelenusMappingEntity implements HelenusEntity {
 
     List<HelenusProperty> primaryKeyProperties = new ArrayList<>();
     ImmutableList.Builder<Facet> facetsBuilder = ImmutableList.builder();
-    facetsBuilder.add(new Facet("table", name.toCql()).setFixed());
+    if (iface.getDeclaredAnnotation(MaterializedView.class) == null) {
+      facetsBuilder.add(new Facet("table", name.toCql()).setFixed());
+    } else {
+      facetsBuilder.add(
+          new Facet("table", Helenus.entity(iface.getInterfaces()[0]).getName().toCql())
+              .setFixed());
+    }
     for (HelenusProperty prop : orderedProps) {
       switch (prop.getColumnType()) {
         case PARTITION_KEY:
@@ -130,7 +136,7 @@ public final class HelenusMappingEntity implements HelenusEntity {
               MappingUtil.getValidators(prop.getGetterMethod())) {
             if (constraint.getClass().isAssignableFrom(DistinctValidator.class)) {
               DistinctValidator validator = (DistinctValidator) constraint;
-              String[] values = validator.value();
+              String[] values = validator.constraintAnnotation.value();
               UnboundFacet facet;
               if (values != null && values.length >= 1 && !(StringUtils.isBlank(values[0]))) {
                 List<HelenusProperty> props = new ArrayList<HelenusProperty>(values.length + 1);
