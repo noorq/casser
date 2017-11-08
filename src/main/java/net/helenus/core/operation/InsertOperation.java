@@ -56,6 +56,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 
   private int[] ttl;
   private long[] timestamp;
+  private long writeTime = 0L;
 
   public InsertOperation(AbstractSessionOperations sessionOperations, boolean ifNotExists) {
     super(sessionOperations);
@@ -166,6 +167,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
       insert.using(QueryBuilder.timestamp(this.timestamp[0]));
     }
 
+    writeTime = timestamp == null ? insert.getDefaultTimestamp() : timestamp[0];
     return insert;
   }
 
@@ -191,8 +193,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
           if (backingMap.containsKey(key)) {
             // Some values man need to be converted (e.g. from String to Enum). This is done
             // within the BeanColumnValueProvider below.
-            Optional<Function<Object, Object>> converter =
-                prop.getReadConverter(sessionOps.getSessionRepository());
+            Optional<Function<Object, Object>> converter = prop.getReadConverter(sessionOps.getSessionRepository());
             if (converter.isPresent()) {
               backingMap.put(key, converter.get().apply(backingMap.get(key)));
             }
@@ -200,8 +201,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
             // If we started this operation with an instance of this type, use values from
             // that.
             if (pojo != null) {
-              backingMap.put(
-                  key, BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, immutable));
+              backingMap.put(key, BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, immutable));
             } else {
               // Otherwise we'll use default values for the property type if available.
               Class<?> propType = prop.getJavaType();
@@ -250,7 +250,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
   }
 
   protected void adjustTtlAndWriteTime(MapExportable pojo) {
-    if (ttl != null || timestamp != null) {
+    if (ttl != null || writeTime != 0L) {
       List<String> propertyNames = values.stream()
               .map(t -> t._1.getProperty())
               .filter(prop -> {
@@ -262,15 +262,15 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
                     return true;
                 }
               })
-              .map(prop -> prop.getColumnName().toCql(true))
+              .map(prop -> prop.getColumnName().toCql(false))
               .collect(Collectors.toList());
 
       if (propertyNames.size() > 0) {
         if (ttl != null) {
           propertyNames.forEach(name -> pojo.put(CacheUtil.ttlKey(name), ttl));
         }
-        if (timestamp != null) {
-          propertyNames.forEach(name -> pojo.put(CacheUtil.writeTimeKey(name), timestamp));
+        if (writeTime != 0L) {
+          propertyNames.forEach(name -> pojo.put(CacheUtil.writeTimeKey(name), writeTime));
         }
       }
     }
@@ -280,8 +280,8 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
   public T sync() throws TimeoutException {
     T result = super.sync();
     if (entity.isCacheable() && result != null) {
-      sessionOps.updateCache(result, bindFacetValues());
       adjustTtlAndWriteTime((MapExportable)result);
+      sessionOps.updateCache(result, bindFacetValues());
     }
     return result;
   }
@@ -303,8 +303,8 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     }
     Class<?> iface = entity.getMappingInterface();
     if (resultType == iface) {
+      adjustTtlAndWriteTime((MapExportable)result);
       cacheUpdate(uow, result, bindFacetValues());
-      adjustTtlAndWriteTime((MapExportable)pojo);
     } else {
       if (entity.isCacheable()) {
         sessionOps.cacheEvict(bindFacetValues());
@@ -321,8 +321,8 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     if (this.entity != null && pojo != null) {
       Class<?> iface = this.entity.getMappingInterface();
       if (resultType == iface) {
-        cacheUpdate(uow, pojo, bindFacetValues());
         adjustTtlAndWriteTime((MapExportable)pojo);
+        cacheUpdate(uow, pojo, bindFacetValues());
         uow.batch(this);
         return (T) pojo;
       }

@@ -33,6 +33,7 @@ import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
+import net.helenus.support.Fun;
 
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
     extends AbstractStatementOperation<E, O> {
@@ -98,9 +99,12 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
       }
 
       if (updateCache && result.isPresent()) {
-        List<Facet> facets = getFacets();
-        if (facets != null && facets.size() > 1) {
-          sessionOps.updateCache(result.get(), facets);
+        E r = result.get();
+        if (!(r instanceof Fun)) {
+          List<Facet> facets = getFacets();
+          if (facets != null && facets.size() > 1) {
+            sessionOps.updateCache(r, facets);
+          }
         }
       }
       return result;
@@ -186,8 +190,11 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 
       // If we have a result, it wasn't from the UOW cache, and we're caching things
       // then we need to put this result into the cache for future requests to find.
-      if (updateCache && result.isPresent() && result.get() != deleted) {
-        cacheUpdate(uow, result.get(), getFacets());
+      if (updateCache && result.isPresent()) {
+        E r = result.get();
+        if (!(r instanceof Fun) && r != deleted) {
+          cacheUpdate(uow, r, getFacets());
+        }
       }
 
       return result;

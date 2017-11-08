@@ -122,13 +122,13 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
         key = CacheUtil.writeTimeKey((String)args[0]);
       } else if (args[0] instanceof Getter) {
         Getter getter = (Getter)args[0];
-        key = CacheUtil.writeTimeKey(MappingUtil.resolveMappingProperty(getter).getProperty().getPropertyName());
+        key = CacheUtil.writeTimeKey(MappingUtil.resolveMappingProperty(getter).getProperty().getColumnName().toCql(false));
       } else {
         return 0L;
       }
-      long[] v = (long[])src.get(key);
+      Long v = (Long)src.get(key);
       if (v != null) {
-        return v[0];
+        return v;
       }
       return 0L;
     }
@@ -139,7 +139,7 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
         key = CacheUtil.ttlKey((String)args[0]);
       } else if (args[0] instanceof Getter) {
         Getter getter = (Getter)args[0];
-        key = CacheUtil.ttlKey(MappingUtil.resolveMappingProperty(getter).getProperty().getColumnName().toCql(true));
+        key = CacheUtil.ttlKey(MappingUtil.resolveMappingProperty(getter).getProperty().getColumnName().toCql(false));
       } else {
         return 0;
       }

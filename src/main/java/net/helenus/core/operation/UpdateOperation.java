@@ -51,6 +51,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
   private Object pojo;
   private int[] ttl;
   private long[] timestamp;
+  private long writeTime = 0L;
 
   public UpdateOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
@@ -719,6 +720,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       update.using(QueryBuilder.timestamp(this.timestamp[0]));
     }
 
+    writeTime = timestamp == null ? update.getDefaultTimestamp() : timestamp[0];
     return update;
   }
 
@@ -760,11 +762,11 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
   }
 
   private void adjustTtlAndWriteTime(MapExportable pojo) {
-    if (ttl != null || timestamp != null) {
+    if (ttl != null || writeTime != 0L) {
       List<String> names = new ArrayList<String>(assignments.size());
       for (BoundFacet facet : assignments.values()) {
         for (HelenusProperty prop : facet.getProperties()) {
-          names.add(prop.getColumnName().toCql(true));
+          names.add(prop.getColumnName().toCql(false));
         }
       }
 
@@ -772,8 +774,8 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
         if (ttl != null) {
           names.forEach(name -> pojo.put(CacheUtil.ttlKey(name), ttl));
         }
-        if (timestamp != null) {
-          names.forEach(name -> pojo.put(CacheUtil.writeTimeKey(name), timestamp));
+        if (writeTime != 0L) {
+          names.forEach(name -> pojo.put(CacheUtil.writeTimeKey(name), writeTime));
         }
       }
     }
@@ -803,8 +805,11 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
     }
     E result = super.sync(uow);
     if (draft != null) {
-      cacheUpdate(uow, result, bindFacetValues());
       adjustTtlAndWriteTime(draft);
+      if (entity != null && MapExportable.class.isAssignableFrom(entity.getMappingInterface())) {
+        adjustTtlAndWriteTime((MapExportable) result);
+      }
+      cacheUpdate(uow, result, bindFacetValues());
     } else if (pojo != null) {
       cacheUpdate(uow, (E) pojo, bindFacetValues());
       adjustTtlAndWriteTime((MapExportable)pojo);

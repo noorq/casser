@@ -94,13 +94,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
         .forEach(p -> this.props.add(p));
 
     this.isCacheable = entity.isCacheable();
-    this.implementsEntityType = MappingUtil.extendsInterface(entity.getMappingInterface(), Entity.class);
+    this.implementsEntityType = Entity.class.isAssignableFrom(entity.getMappingInterface());
   }
 
-  public SelectOperation(
-      AbstractSessionOperations sessionOperations,
-      HelenusEntity entity,
-      Function<Row, E> rowMapper) {
+  public SelectOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity, Function<Row, E> rowMapper) {
 
     super(sessionOperations);
     this.rowMapper = rowMapper;
@@ -112,7 +109,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
         .forEach(p -> this.props.add(p));
 
     this.isCacheable = entity.isCacheable();
-    this.implementsEntityType = MappingUtil.extendsInterface(entity.getMappingInterface(), Entity.class);
+    this.implementsEntityType = Entity.class.isAssignableFrom(entity.getMappingInterface());
   }
 
   public SelectOperation(AbstractSessionOperations sessionOperations, Function<Row, E> rowMapper,
@@ -125,7 +122,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
     HelenusEntity entity = props[0].getEntity();
     this.isCacheable = entity.isCacheable();
-    this.implementsEntityType = MappingUtil.extendsInterface(entity.getMappingInterface(), Entity.class);
+    this.implementsEntityType = Entity.class.isAssignableFrom(entity.getMappingInterface());
   }
 
   public CountOperation count() {

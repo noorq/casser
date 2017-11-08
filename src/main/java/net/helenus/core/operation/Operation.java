@@ -42,6 +42,10 @@ public abstract class Operation<E> {
   private static final Logger LOG = LoggerFactory.getLogger(Operation.class);
 
   protected final AbstractSessionOperations sessionOps;
+  protected boolean showValues = true;
+  protected TraceContext traceContext;
+  protected long queryExecutionTimeout = 10;
+  protected TimeUnit queryTimeoutUnits = TimeUnit.SECONDS;
   protected final Meter uowCacheHits;
   protected final Meter uowCacheMiss;
   protected final Meter sessionCacheHits;
@@ -177,7 +181,7 @@ public abstract class Operation<E> {
         timerString = String.format(" %s ", timer.toString());
       }
       LOG.info(
-          String.format("%s%s%s", uowString, timerString, Operation.queryString(statement, false)));
+          String.format("%s%s%s", uowString, timerString, Operation.queryString(statement, showValues)));
     }
   }
 

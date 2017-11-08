@@ -18,6 +18,7 @@ package net.helenus.core;
 import static net.helenus.core.HelenusSession.deleted;
 
 import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.ResultSet;
 import com.diffplug.common.base.Errors;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.HashBasedTable;
@@ -25,10 +26,12 @@ import com.google.common.collect.Table;
 import com.google.common.collect.TreeTraverser;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
 import net.helenus.core.operation.AbstractOperation;
+import net.helenus.core.operation.BatchOperation;
 import net.helenus.support.Either;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +59,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   private boolean aborted = false;
   private boolean committed = false;
   private long committedAt = 0L;
-  private List<AbstractOperation<?, ?>> operations = new ArrayList<AbstractOperation<?, ?>>();
+  private BatchOperation batch;
 
   protected AbstractUnitOfWork(HelenusSession session, AbstractUnitOfWork<E> parent) {
     Objects.requireNonNull(session, "containing session cannot be null");
@@ -269,7 +272,10 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   }
 
   public void batch(AbstractOperation s) {
-    operations.add(s);
+    if (batch == null) {
+      batch = new BatchOperation(session);
+    }
+    batch.add(s);
   }
 
   private Iterator<AbstractUnitOfWork<E>> getChildNodes() {
@@ -282,17 +288,11 @@ public abstract class AbstractUnitOfWork<E extends Exception>
    * @return a function from which to chain work that only happens when commit is successful
    * @throws E when the work overlaps with other concurrent writers.
    */
-  public PostCommitFunction<Void, Void> commit() throws E {
+  public PostCommitFunction<Void, Void> commit() throws E, TimeoutException {
 
-    if (operations != null && operations.size() > 0) {
-      if (parent == null) {
-        BatchStatement batch = new BatchStatement();
-        batch.addAll(operations.stream().map(o -> o.buildStatement(false)).collect(Collectors.toList()));
-        batch.setConsistencyLevel(session.getDefaultConsistencyLevel());
-        session.getSession().execute(batch);
-      } else {
-        parent.operations.addAll(operations);
-      }
+    if (batch != null) {
+        committedAt = batch.sync(this);
+        //TODO(gburd) update cache with writeTime...
     }
 
     // All nested UnitOfWork should be committed (not aborted) before calls to
@@ -337,6 +337,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
 
         // Merge cache and statistics into parent if there is one.
         parent.mergeCache(cache);
+        parent.addBatched(batch);
         if (purpose != null) {
           parent.nestedPurposes.add(purpose);
         }
@@ -362,7 +363,15 @@ public abstract class AbstractUnitOfWork<E extends Exception>
     return new PostCommitFunction(this, postCommit);
   }
 
-  /* Explicitly discard the work and mark it as as such in the log. */
+  private void addBatched(BatchOperation batch) {
+      if (this.batch == null) {
+          this.batch = batch;
+      } else {
+          this.batch.addAll(batch);
+      }
+  }
+
+    /* Explicitly discard the work and mark it as as such in the log. */
   public synchronized void abort() {
     TreeTraverser<AbstractUnitOfWork<E>> traverser =
         TreeTraverser.using(node -> node::getChildNodes);

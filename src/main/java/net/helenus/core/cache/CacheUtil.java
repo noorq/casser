@@ -81,6 +81,13 @@ public class CacheUtil {
     return combinations;
   }
 
+    /**
+     * Merge changed values in the map behind `from` into `to`.
+     *
+     * @param to
+     * @param from
+     * @return
+     */
   public static Object merge(Object to, Object from) {
     if (to == from) {
       return to;
@@ -112,7 +119,5 @@ public class CacheUtil {
     return "_" + propertyName + "_writeTime";
   }
 
-  public static String ttlKey(String propertyName) {
-    return "_" + propertyName + "_ttl";
-  }
+  public static String ttlKey(String propertyName) { return "_" + propertyName + "_ttl"; }
 }

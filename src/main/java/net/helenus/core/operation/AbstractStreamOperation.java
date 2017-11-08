@@ -34,6 +34,7 @@ import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
+import net.helenus.support.Fun;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>>
     extends AbstractStatementOperation<E, O> {
@@ -104,7 +105,9 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
           List<E> again = new ArrayList<>();
           resultStream.forEach(
               result -> {
-                sessionOps.updateCache(result, facets);
+                if (!(result instanceof Fun)) {
+                    sessionOps.updateCache(result, facets);
+                }
                 again.add(result);
               });
           resultStream = again.stream();
@@ -184,18 +187,18 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
       // If we have a result and we're caching then we need to put it into the cache
       // for future requests to find.
       if (resultStream != null) {
-        List<E> again = new ArrayList<>();
-        List<Facet> facets = getFacets();
-        resultStream.forEach(
-            result -> {
-              if (result != deleted) {
-                if (updateCache) {
-                  cacheUpdate(uow, result, facets);
-                }
-                again.add(result);
-              }
-            });
-        resultStream = again.stream();
+        if (updateCache) {
+          List<E> again = new ArrayList<>();
+          List<Facet> facets = getFacets();
+          resultStream.forEach(
+               result -> {
+                   if (result != deleted && !(result instanceof Fun)) {
+                     cacheUpdate(uow, result, facets);
+                   }
+                   again.add(result);
+               });
+          resultStream = again.stream();
+        }
       }
 
       return resultStream;

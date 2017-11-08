@@ -43,11 +43,6 @@ import net.helenus.support.HelenusException;
 
 public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>>
     extends Operation<E> {
-
-  protected boolean showValues = true;
-  protected TraceContext traceContext;
-  long queryExecutionTimeout = 10;
-  TimeUnit queryTimeoutUnits = TimeUnit.SECONDS;
   private boolean ignoreCache = false;
   private ConsistencyLevel consistencyLevel;
   private ConsistencyLevel serialConsistencyLevel;

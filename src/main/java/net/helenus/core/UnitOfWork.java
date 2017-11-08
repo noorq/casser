@@ -19,6 +19,8 @@ import com.datastax.driver.core.Statement;
 import com.google.common.base.Stopwatch;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
+
 import net.helenus.core.cache.Facet;
 import net.helenus.core.operation.AbstractOperation;
 
@@ -40,7 +42,7 @@ public interface UnitOfWork<X extends Exception> extends AutoCloseable {
    * @return a function from which to chain work that only happens when commit is successful
    * @throws X when the work overlaps with other concurrent writers.
    */
-  PostCommitFunction<Void, Void> commit() throws X;
+  PostCommitFunction<Void, Void> commit() throws X, TimeoutException;
 
   /**
    * Explicitly abort the work within this unit of work. Any nested aborted unit of work will
