@@ -134,7 +134,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
               result = Optional.of(cachedResult);
               uowCacheHits.mark();
               cacheHits.mark();
-              uow.recordCacheAndDatabaseOperationCount(1, 0);
+                uow.recordCacheAndDatabaseOperationCount(1, 0);
             } else {
               updateCache = true;
               uowCacheMiss.mark();

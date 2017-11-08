@@ -42,7 +42,7 @@ public abstract class Operation<E> {
   private static final Logger LOG = LoggerFactory.getLogger(Operation.class);
 
   protected final AbstractSessionOperations sessionOps;
-  protected boolean showValues = true;
+  protected boolean showValues = false;
   protected TraceContext traceContext;
   protected long queryExecutionTimeout = 10;
   protected TimeUnit queryTimeoutUnits = TimeUnit.SECONDS;

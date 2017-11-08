@@ -693,7 +693,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
     } catch (HelenusMappingException e) {
     }
     if (entity != null) {
-      return new InsertOperation<T>(this, entity.getMappingInterface(), true);
+      return new InsertOperation<T>(this, entity, entity.getMappingInterface(), true);
     } else {
       return this.<T>insert(pojo, null);
     }
@@ -733,7 +733,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
     } catch (HelenusMappingException e) {
     }
     if (entity != null) {
-      return new InsertOperation<T>(this, entity.getMappingInterface(), false);
+      return new InsertOperation<T>(this, entity, entity.getMappingInterface(), false);
     } else {
       return this.<T>upsert(pojo, null);
     }

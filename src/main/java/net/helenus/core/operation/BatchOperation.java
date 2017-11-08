@@ -18,7 +18,7 @@ package net.helenus.core.operation;
 import com.codahale.metrics.Timer;
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.querybuilder.BuiltStatement;
+import com.google.common.base.Stopwatch;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
 import net.helenus.support.HelenusException;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 public class BatchOperation extends Operation<Long> {
     private BatchStatement batch = null;
     private List<AbstractOperation<?, ?>> operations = new ArrayList<AbstractOperation<?, ?>>();
-    private boolean logged = false;
+    private boolean logged = true;
     private long timestamp = 0L;
 
     public BatchOperation(AbstractSessionOperations sessionOperations) {
@@ -47,7 +47,8 @@ public class BatchOperation extends Operation<Long> {
         batch = new BatchStatement();
         batch.addAll(operations.stream().map(o -> o.buildStatement(cached)).collect(Collectors.toList()));
         batch.setConsistencyLevel(sessionOps.getDefaultConsistencyLevel());
-        timestamp = batch.getDefaultTimestamp();
+        timestamp = System.nanoTime();
+        batch.setDefaultTimestamp(timestamp);
         return batch;
     }
 
@@ -65,6 +66,8 @@ public class BatchOperation extends Operation<Long> {
         if (operations.size() == 0) return 0L;
         final Timer.Context context = requestLatency.time();
         try {
+            timestamp = System.nanoTime();
+            batch.setDefaultTimestamp(timestamp);
             ResultSet resultSet = this.execute(sessionOps, null, traceContext, queryExecutionTimeout, queryTimeoutUnits, showValues, false);
             if (!resultSet.wasApplied()) {
                 throw new HelenusException("Failed to apply batch.");
@@ -81,14 +84,18 @@ public class BatchOperation extends Operation<Long> {
             return sync();
 
         final Timer.Context context = requestLatency.time();
+        final Stopwatch timer = Stopwatch.createStarted();
         try {
+            uow.recordCacheAndDatabaseOperationCount(0, 1);
             ResultSet resultSet = this.execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits, showValues, false);
             if (!resultSet.wasApplied()) {
                 throw new HelenusException("Failed to apply batch.");
             }
         } finally {
             context.stop();
+            timer.stop();
         }
+        uow.addDatabaseTime("Cassandra", timer);
         return timestamp;
     }
 
@@ -101,7 +108,7 @@ public class BatchOperation extends Operation<Long> {
         s.append("BEGIN ");
         if (!logged) { s.append("UN"); }
         s.append("LOGGED BATCH; ");
-        s.append(operations.stream().map(o -> Operation.queryString(o.buildStatement(false), showValues)).collect(Collectors.joining("; ")));
+        s.append(operations.stream().map(o -> Operation.queryString(o.buildStatement(false), showValues)).collect(Collectors.joining(" ")));
         s.append(" APPLY BATCH;");
         return s.toString();
     }

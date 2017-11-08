@@ -720,7 +720,6 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       update.using(QueryBuilder.timestamp(this.timestamp[0]));
     }
 
-    writeTime = timestamp == null ? update.getDefaultTimestamp() : timestamp[0];
     return update;
   }
 
