@@ -92,7 +92,7 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
                 queryExecutionTimeout,
                 queryTimeoutUnits,
                 showValues,
-                false);
+                isSessionCacheable());
 
         // Transform the query result set into the desired shape.
         resultStream = transform(resultSet);

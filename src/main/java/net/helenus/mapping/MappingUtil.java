@@ -314,6 +314,15 @@ public final class MappingUtil {
     }
   }
 
+  public static boolean extendsInterface(Class<?> clazz, Class<?> iface) {
+    Class<?>[] interfaces = clazz.getInterfaces();
+    for (Class<?> i : interfaces) {
+      if (i == iface)
+        return true;
+    }
+    return false;
+  }
+
   private static void rethrow(Throwable cause) throws CloneNotSupportedException {
     if (cause instanceof RuntimeException) {
       throw (RuntimeException) cause;

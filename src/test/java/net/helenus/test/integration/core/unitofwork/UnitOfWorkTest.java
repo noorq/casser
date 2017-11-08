@@ -381,8 +381,9 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
       uow.commit();
       committedAt = uow.committedAt();
     }
+    // 'c' is distinct, but not on it's own so this should miss cache
     w4 = session.<Widget>select(Widget.class)
-            .where(widget::id, eq(key))
+            .where(widget::c, eq(w3.c()))
             .single()
             .sync()
             .orElse(null);

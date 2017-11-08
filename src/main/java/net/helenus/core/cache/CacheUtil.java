@@ -51,20 +51,27 @@ public class CacheUtil {
                     })
                 .collect(Collectors.toList()));
     // TODO(gburd): rework so as to not generate the combinations at all rather than filter
+    facets = facets.stream()
+            .filter(f -> !f.fixed())
+            .filter(f -> !f.alone() || !f.combined())
+            .collect(Collectors.toList());
     for (Facet facet : facets) {
-      if (facet.fixed()) continue;
-      if (facet.alone() && facet.combined() && true) continue;
       combinations = combinations
               .stream()
               .filter(combo -> {
-                for (String c : combo) {
-                  // When used alone, this facet is not distinct so don't use it as a key.
-                  if (facet.alone() == false && c.equals(facet.name())) {
+                // When used alone, this facet is not distinct so don't use it as a key.
+                if (combo.length == 1) {
+                  if (!facet.alone() && combo[0].startsWith(facet.name() + "==")) {
                     return false;
                   }
-                  // Don't use this facet in combination with others to create keys.
-                  if (facet.combined() == false && c.split("==")[0].equals(facet.name())) {
-                    return false;
+                } else {
+                  if (!facet.combined()) {
+                    for (String c : combo) {
+                      // Don't use this facet in combination with others to create keys.
+                      if (c.startsWith(facet.name() + "==")) {
+                        return false;
+                      }
+                    }
                   }
                 }
                 return true;

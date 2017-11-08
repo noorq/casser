@@ -117,8 +117,7 @@ public final class HelenusMappingEntity implements HelenusEntity {
     if (iface.getDeclaredAnnotation(MaterializedView.class) == null) {
       facetsBuilder.add(new Facet("table", name.toCql()).setFixed());
     } else {
-      facetsBuilder.add(
-          new Facet("table", Helenus.entity(iface.getInterfaces()[0]).getName().toCql())
+      facetsBuilder.add(new Facet("table", Helenus.entity(iface.getInterfaces()[0]).getName().toCql())
               .setFixed());
     }
     for (HelenusProperty prop : orderedProps) {
@@ -150,7 +149,7 @@ public final class HelenusMappingEntity implements HelenusEntity {
                 }
                 facet = new UnboundFacet(props, validator.alone(), validator.combined());
               } else {
-                facet = new UnboundFacet(prop);
+                facet = new UnboundFacet(prop, validator.alone(), validator.combined());
               }
               facetsBuilder.add(facet);
               break;

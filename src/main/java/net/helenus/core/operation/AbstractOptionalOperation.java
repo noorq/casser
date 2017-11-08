@@ -91,7 +91,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
                 queryExecutionTimeout,
                 queryTimeoutUnits,
                 showValues,
-                false);
+                isSessionCacheable());
 
         // Transform the query result set into the desired shape.
         result = transform(resultSet);

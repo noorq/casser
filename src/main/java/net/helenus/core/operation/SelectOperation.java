@@ -57,7 +57,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
   protected String alternateTableName = null;
   protected boolean isCacheable = false;
-  protected boolean implmentsEntityType = false;
+  protected boolean implementsEntityType = false;
 
   @SuppressWarnings("unchecked")
   public SelectOperation(AbstractSessionOperations sessionOperations) {
@@ -94,7 +94,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
         .forEach(p -> this.props.add(p));
 
     this.isCacheable = entity.isCacheable();
-    this.implmentsEntityType = entity.getMappingInterface().getClass().isAssignableFrom(Entity.class);
+    this.implementsEntityType = MappingUtil.extendsInterface(entity.getMappingInterface(), Entity.class);
   }
 
   public SelectOperation(
@@ -112,7 +112,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
         .forEach(p -> this.props.add(p));
 
     this.isCacheable = entity.isCacheable();
-    this.implmentsEntityType = entity.getMappingInterface().getClass().isAssignableFrom(Entity.class);
+    this.implementsEntityType = MappingUtil.extendsInterface(entity.getMappingInterface(), Entity.class);
   }
 
   public SelectOperation(AbstractSessionOperations sessionOperations, Function<Row, E> rowMapper,
@@ -125,7 +125,7 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
 
     HelenusEntity entity = props[0].getEntity();
     this.isCacheable = entity.isCacheable();
-    this.implmentsEntityType = entity.getMappingInterface().getClass().isAssignableFrom(Entity.class);
+    this.implementsEntityType = MappingUtil.extendsInterface(entity.getMappingInterface(), Entity.class);
   }
 
   public CountOperation count() {
@@ -272,19 +272,17 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
                 + prop.getEntity().getMappingInterface());
       }
 
-      if (cached && implmentsEntityType) {
+      if (cached && implementsEntityType) {
         switch (prop.getProperty().getColumnType()) {
           case PARTITION_KEY:
           case CLUSTERING_COLUMN:
             break;
           default:
             if (entity.equals(prop.getEntity())) {
-              if (prop.getNext().isPresent()) {
-                columnName = Iterables.getLast(prop).getColumnName().toCql(true);
-                if (!prop.getProperty().getDataType().isCollectionType()) {
-                  selection.writeTime(columnName).as(CacheUtil.writeTimeKey(columnName));
-                  selection.ttl(columnName).as(CacheUtil.ttlKey(columnName));
-                }
+              if (!prop.getProperty().getDataType().isCollectionType()) {
+                columnName = prop.getProperty().getColumnName().toCql(false);
+                selection.ttl(columnName).as('"' + CacheUtil.ttlKey(columnName) + '"');
+                selection.writeTime(columnName).as('"' + CacheUtil.writeTimeKey(columnName) + '"');
               }
             }
             break;
