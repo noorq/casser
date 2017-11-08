@@ -77,6 +77,10 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
     return value;
   }
 
+  public void put(String key, Object value) {
+    backingMap.put(key, value);
+  }
+
   @SuppressWarnings("unchecked")
   public <T> T mutate(Getter<T> getter, T value) {
     return (T) mutate(this.<T>methodNameFor(getter), value);

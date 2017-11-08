@@ -40,8 +40,7 @@ public final class RowColumnValueProvider implements ColumnValueProvider {
   }
 
   @Override
-  public <V> V getColumnValue(
-      Object sourceObj, int columnIndex, HelenusProperty property, boolean immutable) {
+  public <V> V getColumnValue(Object sourceObj, int columnIndex, HelenusProperty property, boolean immutable) {
 
     Row source = (Row) sourceObj;
 

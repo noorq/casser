@@ -234,6 +234,11 @@ public final class Constraints {
      * @return Java
      */
     String[] value() default "";
+
+    boolean alone() default true;
+
+    boolean combined() default true;
+    
   }
 
   /**

@@ -25,16 +25,30 @@ import net.helenus.mapping.HelenusProperty;
 public class UnboundFacet extends Facet<String> {
 
   private final List<HelenusProperty> properties;
+  private final boolean alone;
+  private final boolean combined;
 
-  public UnboundFacet(List<HelenusProperty> properties) {
+  public UnboundFacet(List<HelenusProperty> properties, boolean alone, boolean combined) {
     super(SchemaUtil.createPrimaryKeyPhrase(properties));
     this.properties = properties;
+    this.alone = alone;
+    this.combined = combined;
   }
 
-  public UnboundFacet(HelenusProperty property) {
+  public UnboundFacet(List<HelenusProperty> properties) {
+    this(properties, true, true);
+  }
+
+  public UnboundFacet(HelenusProperty property, boolean alone, boolean combined) {
     super(property.getPropertyName());
     properties = new ArrayList<HelenusProperty>();
     properties.add(property);
+    this.alone = alone;
+    this.combined = combined;
+  }
+
+  public UnboundFacet(HelenusProperty property) {
+    this(property, true, true);
   }
 
   public List<HelenusProperty> getProperties() {
@@ -42,18 +56,22 @@ public class UnboundFacet extends Facet<String> {
   }
 
   public Binder binder() {
-    return new Binder(name(), properties);
+    return new Binder(name(), properties, alone, combined);
   }
 
   public static class Binder {
 
     private final String name;
+    private final boolean alone;
+    private final boolean combined;
     private final List<HelenusProperty> properties = new ArrayList<HelenusProperty>();
     private Map<HelenusProperty, Object> boundProperties = new HashMap<HelenusProperty, Object>();
 
-    Binder(String name, List<HelenusProperty> properties) {
+    Binder(String name, List<HelenusProperty> properties, boolean alone, boolean combined) {
       this.name = name;
       this.properties.addAll(properties);
+      this.alone = alone;
+      this.combined = combined;
     }
 
     public Binder setValueForProperty(HelenusProperty prop, Object value) {
@@ -67,7 +85,10 @@ public class UnboundFacet extends Facet<String> {
     }
 
     public BoundFacet bind() {
-      return new BoundFacet(name, boundProperties);
+      BoundFacet facet = new BoundFacet(name, boundProperties);
+      facet.setUniquelyIdentifyingWhenAlone(alone);
+      facet.setUniquelyIdentifyingWhenCombined(combined);
+      return facet;
     }
   }
 }

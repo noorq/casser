@@ -195,11 +195,9 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 
   @Override
   public Object checkCache(String tableName, List<Facet> facets) {
-    List<String[]> facetCombinations = CacheUtil.flattenFacets(facets);
     Object result = null;
-    for (String[] combination : facetCombinations) {
-      String cacheKey = tableName + "." + Arrays.toString(combination);
-      result = sessionCache.get(cacheKey);
+    for (String key : CacheUtil.flatKeys(tableName, facets)) {
+      result = sessionCache.get(key);
       if (result != null) {
         return result;
       }
@@ -210,11 +208,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
   @Override
   public void cacheEvict(List<Facet> facets) {
     String tableName = CacheUtil.schemaName(facets);
-    List<String[]> facetCombinations = CacheUtil.flattenFacets(facets);
-    for (String[] combination : facetCombinations) {
-      String cacheKey = tableName + "." + Arrays.toString(combination);
-      sessionCache.invalidate(cacheKey);
-    }
+    CacheUtil.flatKeys(tableName, facets).forEach(key -> sessionCache.invalidate(key));
   }
 
   @Override
@@ -279,8 +273,10 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
                             BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
                         binder.setValueForProperty(prop, value.toString());
                       } else {
-                        binder.setValueForProperty(
-                            prop, valueMap.get(prop.getPropertyName()).toString());
+                        Object v = valueMap.get(prop.getPropertyName());
+                        if (v != null) {
+                          binder.setValueForProperty(prop, v.toString());
+                        }
                       }
                     });
             if (binder.isBound()) {
@@ -305,11 +301,8 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
             .collect(Collectors.toList());
     for (List<Facet> facets : deletedFacetSets) {
       String tableName = CacheUtil.schemaName(facets);
-      List<String[]> combinations = CacheUtil.flattenFacets(facets);
-      for (String[] combination : combinations) {
-        String cacheKey = tableName + "." + Arrays.toString(combination);
-        sessionCache.invalidate(cacheKey);
-      }
+      List<String> keys = CacheUtil.flatKeys(tableName, facets);
+      keys.forEach(key -> sessionCache.invalidate(key));
     }
   }
 
@@ -449,8 +442,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
     Objects.requireNonNull(getter1, "field 1 is empty");
 
     HelenusPropertyNode p1 = MappingUtil.resolveMappingProperty(getter1);
-    return new SelectOperation<Tuple1<V1>>(
-        this, new Mappers.Mapper1<V1>(getValueProvider(), p1), p1);
+    return new SelectOperation<Tuple1<V1>>(this, new Mappers.Mapper1<V1>(getValueProvider(), p1), p1);
   }
 
   public <V1, V2> SelectOperation<Tuple2<V1, V2>> select(Getter<V1> getter1, Getter<V2> getter2) {
@@ -459,8 +451,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 
     HelenusPropertyNode p1 = MappingUtil.resolveMappingProperty(getter1);
     HelenusPropertyNode p2 = MappingUtil.resolveMappingProperty(getter2);
-    return new SelectOperation<Fun.Tuple2<V1, V2>>(
-        this, new Mappers.Mapper2<V1, V2>(getValueProvider(), p1, p2), p1, p2);
+    return new SelectOperation<Fun.Tuple2<V1, V2>>(this, new Mappers.Mapper2<V1, V2>(getValueProvider(), p1, p2), p1, p2);
   }
 
   public <V1, V2, V3> SelectOperation<Fun.Tuple3<V1, V2, V3>> select(
@@ -734,8 +725,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
   }
 
   public <T> InsertOperation<T> upsert(T pojo) {
-    Objects.requireNonNull(
-        pojo,
+    Objects.requireNonNull(pojo,
         "supplied object must be either an instance of the entity class or a dsl for it, but cannot be null");
     HelenusEntity entity = null;
     try {

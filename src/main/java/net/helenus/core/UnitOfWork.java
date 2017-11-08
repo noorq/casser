@@ -15,10 +15,12 @@
  */
 package net.helenus.core;
 
+import com.datastax.driver.core.Statement;
 import com.google.common.base.Stopwatch;
 import java.util.List;
 import java.util.Optional;
 import net.helenus.core.cache.Facet;
+import net.helenus.core.operation.AbstractOperation;
 
 public interface UnitOfWork<X extends Exception> extends AutoCloseable {
 
@@ -49,6 +51,10 @@ public interface UnitOfWork<X extends Exception> extends AutoCloseable {
   boolean hasAborted();
 
   boolean hasCommitted();
+
+  long committedAt();
+
+  void batch(AbstractOperation operation);
 
   Optional<Object> cacheLookup(List<Facet> facets);
 

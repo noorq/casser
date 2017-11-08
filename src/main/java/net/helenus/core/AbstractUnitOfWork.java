@@ -17,6 +17,7 @@ package net.helenus.core;
 
 import static net.helenus.core.HelenusSession.deleted;
 
+import com.datastax.driver.core.BatchStatement;
 import com.diffplug.common.base.Errors;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.HashBasedTable;
@@ -27,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
+import net.helenus.core.operation.AbstractOperation;
 import net.helenus.support.Either;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +55,8 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   private List<CommitThunk> postCommit = new ArrayList<CommitThunk>();
   private boolean aborted = false;
   private boolean committed = false;
+  private long committedAt = 0L;
+  private List<AbstractOperation<?, ?>> operations = new ArrayList<AbstractOperation<?, ?>>();
 
   protected AbstractUnitOfWork(HelenusSession session, AbstractUnitOfWork<E> parent) {
     Objects.requireNonNull(session, "containing session cannot be null");
@@ -256,10 +260,16 @@ public abstract class AbstractUnitOfWork<E extends Exception>
     String tableName = CacheUtil.schemaName(facets);
     for (Facet facet : facets) {
       if (!facet.fixed()) {
-        String columnName = facet.name() + "==" + facet.value();
-        cache.put(tableName, columnName, Either.left(value));
+        if (facet.alone()) {
+          String columnName = facet.name() + "==" + facet.value();
+          cache.put(tableName, columnName, Either.left(value));
+        }
       }
     }
+  }
+
+  public void batch(AbstractOperation s) {
+    operations.add(s);
   }
 
   private Iterator<AbstractUnitOfWork<E>> getChildNodes() {
@@ -273,6 +283,18 @@ public abstract class AbstractUnitOfWork<E extends Exception>
    * @throws E when the work overlaps with other concurrent writers.
    */
   public PostCommitFunction<Void, Void> commit() throws E {
+
+    if (operations != null && operations.size() > 0) {
+      if (parent == null) {
+        BatchStatement batch = new BatchStatement();
+        batch.addAll(operations.stream().map(o -> o.buildStatement(false)).collect(Collectors.toList()));
+        batch.setConsistencyLevel(session.getDefaultConsistencyLevel());
+        session.getSession().execute(batch);
+      } else {
+        parent.operations.addAll(operations);
+      }
+    }
+
     // All nested UnitOfWork should be committed (not aborted) before calls to
     // commit, check.
     boolean canCommit = true;
@@ -404,4 +426,6 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   public boolean hasCommitted() {
     return committed;
   }
+
+  public long committedAt() { return committedAt; }
 }

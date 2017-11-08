@@ -64,9 +64,9 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
     try {
       Optional<E> result = Optional.empty();
       E cacheResult = null;
-      boolean updateCache = isSessionCacheable() && checkCache;
+      boolean updateCache = isSessionCacheable() && !ignoreCache();
 
-      if (checkCache && isSessionCacheable()) {
+      if (updateCache) {
         List<Facet> facets = bindFacetValues();
         String tableName = CacheUtil.schemaName(facets);
         cacheResult = (E) sessionOps.checkCache(tableName, facets);
@@ -119,7 +119,7 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
       E cachedResult = null;
       final boolean updateCache;
 
-      if (checkCache) {
+      if (!ignoreCache()) {
         Stopwatch timer = Stopwatch.createStarted();
         try {
           List<Facet> facets = bindFacetValues();

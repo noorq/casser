@@ -21,6 +21,8 @@ public class Facet<T> {
   private final String name;
   private T value;
   private boolean fixed = false;
+  private boolean alone = true;
+  private boolean combined = true;
 
   public Facet(String name) {
     this.name = name;
@@ -47,4 +49,15 @@ public class Facet<T> {
   public boolean fixed() {
     return fixed;
   }
+
+  public void setUniquelyIdentifyingWhenAlone(boolean alone) {
+    this.alone = alone;
+  }
+
+  public void setUniquelyIdentifyingWhenCombined(boolean combined) {
+    this.combined = combined;
+  }
+
+  public boolean alone() { return alone; }
+  public boolean combined() { return combined; }
 }

@@ -15,13 +15,15 @@
  */
 package net.helenus.core.reflect;
 
-import java.util.Map;
+import net.helenus.core.Getter;
 
-public interface MapExportable {
-  String TO_MAP_METHOD = "toMap";
-  String PUT_METHOD = "put";
+public interface Entity {
+    String WRITTEN_AT_METHOD = "writtenAt";
+    String TTL_OF_METHOD = "ttlOf";
 
-  Map<String, Object> toMap();
-  default Map<String, Object> toMap(boolean mutable) { return null; }
-  default void put(String key, Object value) { }
+    default Long writtenAt(Getter getter) { return 0L; }
+    default Long writtenAt(String prop) { return 0L; };
+
+    default Integer ttlOf(Getter getter) { return 0; };
+    default Integer ttlOf(String prop) {return 0; };
 }

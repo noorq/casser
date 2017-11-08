@@ -44,11 +44,11 @@ import net.helenus.support.HelenusException;
 public abstract class AbstractStatementOperation<E, O extends AbstractStatementOperation<E, O>>
     extends Operation<E> {
 
-  protected boolean checkCache = true;
   protected boolean showValues = true;
   protected TraceContext traceContext;
   long queryExecutionTimeout = 10;
   TimeUnit queryTimeoutUnits = TimeUnit.SECONDS;
+  private boolean ignoreCache = false;
   private ConsistencyLevel consistencyLevel;
   private ConsistencyLevel serialConsistencyLevel;
   private RetryPolicy retryPolicy;
@@ -66,12 +66,12 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
   public abstract Statement buildStatement(boolean cached);
 
   public O uncached(boolean enabled) {
-    checkCache = enabled;
+    ignoreCache = !enabled;
     return (O) this;
   }
 
   public O uncached() {
-    checkCache = false;
+    ignoreCache = true;
     return (O) this;
   }
 
@@ -311,6 +311,10 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
     }
 
     throw new HelenusException("only RegularStatements can be prepared");
+  }
+
+  protected boolean ignoreCache() {
+    return ignoreCache;
   }
 
   protected E checkCache(UnitOfWork<?> uow, List<Facet> facets) {

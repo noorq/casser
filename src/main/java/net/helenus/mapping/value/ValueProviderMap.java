@@ -16,6 +16,7 @@
 package net.helenus.mapping.value;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,8 +46,7 @@ public final class ValueProviderMap implements Map<String, Object> {
             methodName));
   }
 
-  @Override
-  public Object get(Object key) {
+  public Object get(Object key, boolean immutable) {
     if (key instanceof String) {
       String name = (String) key;
       HelenusProperty prop = entity.getProperty(name);
@@ -55,6 +55,11 @@ public final class ValueProviderMap implements Map<String, Object> {
       }
     }
     return null;
+  }
+
+  @Override
+  public Object get(Object key) {
+    return get(key, this.immutable);
   }
 
   @Override
@@ -78,7 +83,7 @@ public final class ValueProviderMap implements Map<String, Object> {
 
   @Override
   public boolean containsKey(Object key) {
-    if (key instanceof Object) {
+    if (key instanceof String) {
       String s = (String) key;
       return keySet().contains(s);
     }
@@ -149,7 +154,7 @@ public final class ValueProviderMap implements Map<String, Object> {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (o == null || (!o.getClass().isAssignableFrom(Map.class) && getClass() != o.getClass()))
+    if (o == null || !(o.getClass().isAssignableFrom(Map.class) || o.getClass().getSimpleName().equals("UnmodifiableMap")))
       return false;
 
     Map that = (Map) o;

@@ -22,15 +22,19 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.Getter;
 import net.helenus.core.Helenus;
 import net.helenus.core.UnitOfWork;
+import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
 import net.helenus.core.cache.UnboundFacet;
 import net.helenus.core.reflect.DefaultPrimitiveTypes;
 import net.helenus.core.reflect.Drafted;
 import net.helenus.core.reflect.HelenusPropertyNode;
+import net.helenus.core.reflect.MapExportable;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
@@ -39,10 +43,12 @@ import net.helenus.support.Fun;
 import net.helenus.support.HelenusException;
 import net.helenus.support.HelenusMappingException;
 
+import static net.helenus.mapping.ColumnType.CLUSTERING_COLUMN;
+import static net.helenus.mapping.ColumnType.PARTITION_KEY;
+
 public final class InsertOperation<T> extends AbstractOperation<T, InsertOperation<T>> {
 
-  private final List<Fun.Tuple2<HelenusPropertyNode, Object>> values =
-      new ArrayList<Fun.Tuple2<HelenusPropertyNode, Object>>();
+  private final List<Fun.Tuple2<HelenusPropertyNode, Object>> values = new ArrayList<Fun.Tuple2<HelenusPropertyNode, Object>>();
   private final T pojo;
   private final Class<?> resultType;
   private HelenusEntity entity;
@@ -59,8 +65,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     this.resultType = ResultSet.class;
   }
 
-  public InsertOperation(
-      AbstractSessionOperations sessionOperations, Class<?> resultType, boolean ifNotExists) {
+  public InsertOperation(AbstractSessionOperations sessionOperations, Class<?> resultType, boolean ifNotExists) {
     super(sessionOperations);
 
     this.ifNotExists = ifNotExists;
@@ -68,12 +73,8 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     this.resultType = resultType;
   }
 
-  public InsertOperation(
-      AbstractSessionOperations sessionOperations,
-      HelenusEntity entity,
-      T pojo,
-      Set<String> mutations,
-      boolean ifNotExists) {
+  public InsertOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity, T pojo,
+                         Set<String> mutations, boolean ifNotExists) {
     super(sessionOperations);
 
     this.entity = entity;
@@ -248,11 +249,39 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     }
   }
 
+  protected void adjustTtlAndWriteTime(MapExportable pojo) {
+    if (ttl != null || timestamp != null) {
+      List<String> propertyNames = values.stream()
+              .map(t -> t._1.getProperty())
+              .filter(prop -> {
+                switch (prop.getColumnType()) {
+                  case PARTITION_KEY:
+                  case CLUSTERING_COLUMN:
+                    return false;
+                  default:
+                    return true;
+                }
+              })
+              .map(prop -> prop.getColumnName().toCql(true))
+              .collect(Collectors.toList());
+
+      if (propertyNames.size() > 0) {
+        if (ttl != null) {
+          propertyNames.forEach(name -> pojo.put(CacheUtil.ttlKey(name), ttl));
+        }
+        if (timestamp != null) {
+          propertyNames.forEach(name -> pojo.put(CacheUtil.writeTimeKey(name), timestamp));
+        }
+      }
+    }
+  }
+
   @Override
   public T sync() throws TimeoutException {
     T result = super.sync();
     if (entity.isCacheable() && result != null) {
-      sessionOps.updateCache(result, entity.getFacets());
+      sessionOps.updateCache(result, bindFacetValues());
+      adjustTtlAndWriteTime((MapExportable)result);
     }
     return result;
   }
@@ -274,13 +303,32 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     }
     Class<?> iface = entity.getMappingInterface();
     if (resultType == iface) {
-      cacheUpdate(uow, result, entity.getFacets());
+      cacheUpdate(uow, result, bindFacetValues());
+      adjustTtlAndWriteTime((MapExportable)pojo);
     } else {
       if (entity.isCacheable()) {
         sessionOps.cacheEvict(bindFacetValues());
       }
     }
     return result;
+  }
+
+  public T batch(UnitOfWork uow) throws TimeoutException {
+    if (uow == null) {
+      throw new HelenusException("UnitOfWork cannot be null when batching operations.");
+    }
+
+    if (this.entity != null && pojo != null) {
+      Class<?> iface = this.entity.getMappingInterface();
+      if (resultType == iface) {
+        cacheUpdate(uow, pojo, bindFacetValues());
+        adjustTtlAndWriteTime((MapExportable)pojo);
+        uow.batch(this);
+        return (T) pojo;
+      }
+    }
+
+    return sync(uow);
   }
 
   @Override

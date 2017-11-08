@@ -55,5 +55,6 @@ public interface Account {
     public Map<String, Object> toMap() {
       return null;
     }
+
   }
 }

@@ -14,7 +14,7 @@ Operation/
 |   |   `-- BoundOptionalOperation
 |   `-- AbstractStreamOperation
 |       |-- AbstractFilterStreamOperation
-|       |   |-- SelectOperation
+    |       |   |-- SelectOperation
 |       |   `-- SelectTransformingOperation
 |       `-- BoundStreamOperation
 |-- PreparedOperation
@@ -183,3 +183,12 @@ InsertOperation
 		if (resultType == iface) {
 			if (values.size() > 0 && includesNonIdentityValues) {
 				boolean immutable = iface.isAssignableFrom(Drafted.class);
+-------------------
+
+    final Object value;
+    if (method.getParameterCount() == 1 && args[0] instanceof Boolean && src instanceof ValueProviderMap) {
+      value = ((ValueProviderMap)src).get(methodName, (Boolean)args[0]);
+    } else {
+      value = src.get(methodName);
+    }
+--------------------

@@ -79,6 +79,12 @@ public final class Filter<V> {
     return new Filter<V>(node, postulate);
   }
 
+  public static <V> Filter<V> create(Getter<V> getter, HelenusPropertyNode node, Postulate<V> postulate) {
+    Objects.requireNonNull(getter, "empty getter");
+    Objects.requireNonNull(postulate, "empty operator");
+    return new Filter<V>(node, postulate);
+  }
+
   public static <V> Filter<V> create(Getter<V> getter, Operator op, V val) {
     Objects.requireNonNull(getter, "empty getter");
     Objects.requireNonNull(op, "empty op");

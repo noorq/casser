@@ -25,13 +25,13 @@ public enum BeanColumnValueProvider implements ColumnValueProvider {
   INSTANCE;
 
   @Override
-  public <V> V getColumnValue(
-      Object bean, int columnIndexUnused, HelenusProperty property, boolean immutable) {
+  public <V> V getColumnValue(Object bean, int columnIndexUnused, HelenusProperty property, boolean immutable) {
 
     Method getter = property.getGetterMethod();
 
     Object value = null;
     try {
+      getter.setAccessible(true);
       value = getter.invoke(bean, new Object[] {});
     } catch (InvocationTargetException e) {
       if (e.getCause() != null) {

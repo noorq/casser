@@ -1,5 +1,6 @@
 package net.helenus.test.integration.core.draft;
 
+import java.util.Map;
 import java.util.UUID;
 import net.helenus.core.AbstractAuditedEntityDraft;
 import net.helenus.core.Helenus;
@@ -89,5 +90,6 @@ public interface Inventory {
       mutate(inventory::NORAM, count);
       return this;
     }
+
   }
 }

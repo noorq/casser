@@ -104,8 +104,7 @@ public abstract class AbstractSessionOperations {
     return executeAsync(statement, uow, null, showValues);
   }
 
-  public ResultSetFuture executeAsync(
-      Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
+  public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
     try {
       logStatement(statement, showValues);
       return currentSession().executeAsync(statement);

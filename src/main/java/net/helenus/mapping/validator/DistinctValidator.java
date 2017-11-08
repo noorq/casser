@@ -23,9 +23,12 @@ public final class DistinctValidator
     extends AbstractConstraintValidator<Constraints.Distinct, CharSequence>
     implements ConstraintValidator<Constraints.Distinct, CharSequence> {
 
+  private Constraints.Distinct annotation;
+
   @Override
   public void initialize(Constraints.Distinct constraintAnnotation) {
     super.initialize(constraintAnnotation);
+    this.annotation = constraintAnnotation;
   }
 
   @Override
@@ -33,4 +36,17 @@ public final class DistinctValidator
     // TODO(gburd): check that the list contains valid property names.
     return true;
   }
+
+  public String[] value() {
+    return annotation == null ? null : annotation.value();
+  }
+
+  public boolean alone() {
+    return annotation == null ? true : annotation.alone();
+  }
+
+  public boolean combined() {
+    return annotation == null ? true : annotation.combined();
+  }
+
 }

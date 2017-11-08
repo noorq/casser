@@ -94,8 +94,7 @@ public abstract class Operation<E> {
       boolean cached)
       throws TimeoutException {
 
-    // Start recording in a Zipkin sub-span our execution time to perform this
-    // operation.
+    // Start recording in a Zipkin sub-span our execution time to perform this operation.
     Tracer tracer = session.getZipkinTracer();
     Span span = null;
     if (tracer != null && traceContext != null) {

@@ -56,4 +56,7 @@ public final class SelectFirstTransformingOperation<R, E>
   public boolean isSessionCacheable() {
     return delegate.isSessionCacheable();
   }
+
+  @Override
+  public boolean ignoreCache() { return delegate.ignoreCache(); }
 }

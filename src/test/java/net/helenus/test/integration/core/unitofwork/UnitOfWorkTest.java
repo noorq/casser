@@ -25,6 +25,7 @@ import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.annotation.Cacheable;
+import net.helenus.core.reflect.Entity;
 import net.helenus.mapping.annotation.Constraints;
 import net.helenus.mapping.annotation.Index;
 import net.helenus.mapping.annotation.PartitionKey;
@@ -36,7 +37,7 @@ import org.junit.Test;
 
 @Table
 @Cacheable
-interface Widget {
+interface Widget extends Entity {
   @PartitionKey
   UUID id();
 
@@ -48,6 +49,12 @@ interface Widget {
   String a();
 
   String b();
+
+  @Constraints.Distinct(alone=false)
+  String c();
+
+  @Constraints.Distinct(combined=false)
+  String d();
 }
 
 public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
@@ -81,6 +88,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
             .value(widget::name, RandomString.make(20))
             .value(widget::a, RandomString.make(10))
             .value(widget::b, RandomString.make(10))
+            .value(widget::c, RandomString.make(10))
+            .value(widget::d, RandomString.make(10))
             .sync();
 
     try (UnitOfWork uow = session.begin()) {
@@ -127,6 +136,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
               .value(widget::name, RandomString.make(20))
               .value(widget::a, RandomString.make(10))
               .value(widget::b, RandomString.make(10))
+              .value(widget::c, RandomString.make(10))
+              .value(widget::d, RandomString.make(10))
               .sync(uow1);
 
       try (UnitOfWork uow2 = session.begin(uow1)) {
@@ -149,6 +160,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
                 .value(widget::name, RandomString.make(20))
                 .value(widget::a, RandomString.make(10))
                 .value(widget::b, RandomString.make(10))
+                .value(widget::c, RandomString.make(10))
+                .value(widget::d, RandomString.make(10))
                 .sync(uow2);
 
         uow2.commit()
@@ -189,6 +202,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
           .value(widget::name, RandomString.make(20))
           .value(widget::a, RandomString.make(10))
           .value(widget::b, RandomString.make(10))
+          .value(widget::c, RandomString.make(10))
+          .value(widget::d, RandomString.make(10))
           .sync(uow);
 
       // This should read from the database and return a Widget.
@@ -225,6 +240,8 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
             .value(widget::name, RandomString.make(20))
             .value(widget::a, RandomString.make(10))
             .value(widget::b, RandomString.make(10))
+            .value(widget::c, RandomString.make(10))
+            .value(widget::d, RandomString.make(10))
             .sync();
 
     try (UnitOfWork uow = session.begin()) {
@@ -235,13 +252,16 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
       Assert.assertEquals(w1, w2);
 
       // This should remove the object from the session cache.
-      w3 =
-          session.<Widget>update(w2).set(widget::name, "Bill").where(widget::id, eq(key)).sync(uow);
+      w3 = session
+              .<Widget>update(w2)
+              .set(widget::name, "Bill")
+              .where(widget::id, eq(key))
+              .sync(uow);
 
-      // Fetch from session cache, should have old name.
+      // Fetch from session cache will cache miss (as it was updated) and trigger a SELECT.
       w4 = session.<Widget>select(widget).where(widget::id, eq(key)).single().sync().orElse(null);
       Assert.assertEquals(w4, w2);
-      Assert.assertEquals(w4.name(), w1.name());
+      Assert.assertEquals(w4.name(), w3.name());
 
       // This should skip the cache.
       w5 =
@@ -253,15 +273,14 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
               .sync()
               .orElse(null);
 
-      Assert.assertNotEquals(w5, w2); // Not the same instance,
-      Assert.assertTrue(w2.equals(w5)); // but they have the same values,
-      Assert.assertFalse(w5.equals(w2)); // regardless of the order when comparing.
+      Assert.assertTrue(w5.equals(w2));
+      Assert.assertTrue(w2.equals(w5));
       Assert.assertEquals(w5.name(), "Bill");
 
       uow.commit()
           .andThen(
               () -> {
-                Assert.assertEquals(w1, w2);
+                Assert.assertEquals(w2, w3);
               });
     }
 
@@ -289,82 +308,166 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
             .value(widget::name, RandomString.make(20))
             .value(widget::a, RandomString.make(10))
             .value(widget::b, RandomString.make(10))
+            .value(widget::c, RandomString.make(10))
+            .value(widget::d, RandomString.make(10))
             .sync();
 
     try (UnitOfWork uow = session.begin()) {
 
       // This should read from the database and return a Widget.
-      w2 =
-          session.<Widget>select(widget).where(widget::id, eq(key)).single().sync(uow).orElse(null);
+      w2 = session.<Widget>select(widget).where(widget::id, eq(key)).single().sync(uow).orElse(null);
 
       // This should remove the object from the cache.
-      session.delete(widget).where(widget::id, eq(key)).sync(uow);
+      session.delete(widget).where(widget::id, eq(key))
+              .sync(uow);
 
       // This should fail to read from the cache.
-      w3 =
-          session.<Widget>select(widget).where(widget::id, eq(key)).single().sync(uow).orElse(null);
+      w3 = session.<Widget>select(widget).where(widget::id, eq(key)).single().sync(uow).orElse(null);
 
-      Assert.assertEquals(w3, null);
+      Assert.assertEquals(null, w3);
 
       uow.commit()
           .andThen(
               () -> {
                 Assert.assertEquals(w1, w2);
-                Assert.assertEquals(w3, null);
+                Assert.assertEquals(null, w3);
               });
     }
 
     w4 =
         session
             .<Widget>select(widget)
-            .where(widget::name, eq(w1.name()))
+            .where(widget::id, eq(key))
             .single()
             .sync()
             .orElse(null);
 
-    Assert.assertEquals(w4, null);
+    Assert.assertEquals(null, w4);
   }
-  /*
-  	@Test
-  	public void testInsertNoOp() throws Exception {
-  		Widget w1, w2;
-  		UUID key = UUIDs.timeBased();
 
+  @Test
+  public void testBatchingUpdatesAndInserts() throws Exception {
+    Widget w1, w2, w3, w4, w5;
+    Long committedAt = 0L;
+    UUID key = UUIDs.timeBased();
 
-  		try (UnitOfWork uow = session.begin()) {
-  			// This should inserted Widget, but not cache it.
-  			w1 = session.<Widget>insert(widget).value(widget::id, key).value(widget::name, RandomString.make(20)).sync(uow);
-  			w2 = session.<Widget>insert(w1).value(widget::id, key).sync(uow);
-  		}
-  		Assert.assertEquals(w1, w2);
-  	}
-  */
-  /*
-   * @Test public void testSelectAfterInsertProperlyCachesEntity() throws
-   * Exception { Widget w1, w2, w3, w4; UUID key = UUIDs.timeBased();
-   *
-   * try (UnitOfWork uow = session.begin()) {
-   *
-   * // This should cache the inserted Widget. w1 = session.<Widget>insert(widget)
-   * .value(widget::id, key) .value(widget::name, RandomString.make(20))
-   * .sync(uow);
-   *
-   * // This should read from the cache and get the same instance of a Widget. w2
-   * = session.<Widget>select(widget) .where(widget::id, eq(key)) .single()
-   * .sync(uow) .orElse(null);
-   *
-   * uow.commit() .andThen(() -> { Assert.assertEquals(w1, w2); }); }
-   *
-   * // This should read the widget from the session cache and maintain object
-   * identity. w3 = session.<Widget>select(widget) .where(widget::id, eq(key))
-   * .single() .sync() .orElse(null);
-   *
-   * Assert.assertEquals(w1, w3);
-   *
-   * // This should read the widget from the database, no object identity but
-   * values should match. w4 = session.<Widget>select(widget) .where(widget::id,
-   * eq(key)) .uncached() .single() .sync() .orElse(null);
-   *
-   * Assert.assertNotEquals(w1, w4); Assert.assertTrue(w1.equals(w4)); }
-   */
+    try (UnitOfWork uow = session.begin()) {
+      w1 = session.<Widget>upsert(widget)
+              .value(widget::id, key)
+              .value(widget::name, RandomString.make(20))
+              .value(widget::a, RandomString.make(10))
+              .value(widget::b, RandomString.make(10))
+              .value(widget::c, RandomString.make(10))
+              .value(widget::d, RandomString.make(10))
+              .batch(uow);
+      Assert.assertTrue(0L == w1.writtenAt(widget::name));
+      Assert.assertTrue(0 == w1.ttlOf(widget::name));
+      w2 = session.<Widget>update(w1)
+              .set(widget::name, RandomString.make(10))
+              .where(widget::id, eq(key))
+              .usingTtl(30)
+              .batch(uow);
+      Assert.assertEquals(w1, w2);
+      Assert.assertTrue(0L == w2.writtenAt(widget::name));
+      Assert.assertTrue(30 == w1.ttlOf(widget::name));
+      w3 = session.<Widget>select(Widget.class)
+              .where(widget::id, eq(key))
+              .single()
+              .sync(uow)
+              .orElse(null);
+      Assert.assertEquals(w2, w3);
+      Assert.assertTrue(0L == w3.writtenAt(widget::name));
+      Assert.assertTrue(30 <= w3.ttlOf(widget::name));
+      uow.commit();
+      committedAt = uow.committedAt();
+    }
+    w4 = session.<Widget>select(Widget.class)
+            .where(widget::id, eq(key))
+            .single()
+            .sync()
+            .orElse(null);
+    Assert.assertEquals(w3, w4);
+    Assert.assertTrue(w4.writtenAt(widget::name) == committedAt);
+    int ttl4 = w4.ttlOf(widget::name);
+    Assert.assertTrue(ttl4 <= 30);
+    w5 = session.<Widget>select(Widget.class)
+            .where(widget::id, eq(key))
+            .uncached()
+            .single()
+            .sync()
+            .orElse(null);
+    Assert.assertTrue(w4.equals(w5));
+    Assert.assertTrue(w5.writtenAt(widget::name) == committedAt);
+    int ttl5 = w5.ttlOf(widget::name);
+    Assert.assertTrue(ttl5 <= 30);
+  }
+
+  @Test
+  public void testInsertNoOp() throws Exception {
+    Widget w1, w2;
+    UUID key1 = UUIDs.timeBased();
+
+    try (UnitOfWork uow = session.begin()) {
+      // This should inserted Widget, but not cache it.
+      w1 = session.<Widget>insert(widget)
+              .value(widget::id, key1)
+              .value(widget::name, RandomString.make(20))
+              .sync(uow);
+      w2 = session.<Widget>upsert(w1)
+              .value(widget::a, RandomString.make(10))
+              .value(widget::b, RandomString.make(10))
+              .value(widget::c, RandomString.make(10))
+              .value(widget::d, RandomString.make(10))
+              .sync(uow);
+      uow.commit();
+    }
+    //TODO(gburd): Assert.assertEquals(w1, w2);
+  }
+
+  @Test public void testSelectAfterInsertProperlyCachesEntity() throws
+  Exception { Widget w1, w2, w3, w4; UUID key = UUIDs.timeBased();
+
+    try (UnitOfWork uow = session.begin()) {
+      // This should cache the inserted Widget.
+      w1 = session.<Widget>insert(widget)
+              .value(widget::id, key)
+              .value(widget::name, RandomString.make(20))
+              .value(widget::a, RandomString.make(10))
+              .value(widget::b, RandomString.make(10))
+              .value(widget::c, RandomString.make(10))
+              .value(widget::d, RandomString.make(10))
+              .sync(uow);
+
+      // This should read from the cache and get the same instance of a Widget.
+      w2  = session.<Widget>select(widget)
+              .where(widget::id, eq(key))
+              .single()
+              .sync(uow)
+              .orElse(null);
+
+      uow.commit() .andThen(() -> { Assert.assertEquals(w1, w2); }); }
+
+    // This should read the widget from the session cache and maintain object identity.
+    w3 = session.<Widget>select(widget)
+           .where(widget::id, eq(key))
+           .single()
+           .sync()
+           .orElse(null);
+
+    Assert.assertEquals(w1, w3);
+
+    // This should read the widget from the database, no object identity but
+    // values should match.
+    w4 = session.<Widget>select(widget)
+            .where(widget::id,eq(key))
+            .uncached()
+            .single()
+            .sync()
+            .orElse(null);
+
+    Assert.assertFalse(w1 == w4);
+    Assert.assertTrue(w1.equals(w4));
+    Assert.assertTrue(w4.equals(w1));
+  }
+
 }

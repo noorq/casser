@@ -20,6 +20,8 @@ import com.datastax.driver.core.ResultSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
+
+import com.datastax.driver.core.Statement;
 import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
 
@@ -39,15 +41,8 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
   public E sync() throws TimeoutException {
     final Timer.Context context = requestLatency.time();
     try {
-      ResultSet resultSet =
-          this.execute(
-              sessionOps,
-              null,
-              traceContext,
-              queryExecutionTimeout,
-              queryTimeoutUnits,
-              showValues,
-              false);
+      ResultSet resultSet = this.execute(sessionOps,null, traceContext, queryExecutionTimeout, queryTimeoutUnits,
+              showValues,false);
       return transform(resultSet);
     } finally {
       context.stop();
@@ -59,11 +54,7 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
 
     final Timer.Context context = requestLatency.time();
     try {
-      ResultSet resultSet =
-          execute(
-              sessionOps,
-              uow,
-              traceContext,
+      ResultSet resultSet = execute(sessionOps, uow, traceContext,
               queryExecutionTimeout,
               queryTimeoutUnits,
               showValues,

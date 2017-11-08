@@ -37,6 +37,7 @@ public final class CountOperation extends AbstractFilterOperation<Long, CountOpe
   public CountOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity) {
     super(sessionOperations);
     this.entity = entity;
+    //TODO(gburd): cache SELECT COUNT results within the scope of a UOW
   }
 
   @Override
