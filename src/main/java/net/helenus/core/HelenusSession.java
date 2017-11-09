@@ -796,11 +796,11 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 
     switch (entity.getType()) {
       case TABLE:
-        execute(SchemaUtil.dropTable(entity), true);
+        execute(SchemaUtil.dropTable(entity));
         break;
 
       case UDT:
-        execute(SchemaUtil.dropUserType(entity), true);
+        execute(SchemaUtil.dropUserType(entity));
         break;
 
       default:

@@ -69,6 +69,10 @@ public abstract class Operation<E> {
     this.requestLatency = metrics.timer("net.helenus.request-latency");
   }
 
+  public static String queryString(BatchOperation operation, boolean includeValues) {
+      return operation.toString(includeValues);
+  }
+
   public static String queryString(Statement statement, boolean includeValues) {
     String query = null;
     if (statement instanceof BuiltStatement) {
@@ -88,15 +92,8 @@ public abstract class Operation<E> {
     return query;
   }
 
-  public ResultSet execute(
-      AbstractSessionOperations session,
-      UnitOfWork uow,
-      TraceContext traceContext,
-      long timeout,
-      TimeUnit units,
-      boolean showValues,
-      boolean cached)
-      throws TimeoutException {
+  public ResultSet execute(AbstractSessionOperations session, UnitOfWork uow, TraceContext traceContext,
+      long timeout, TimeUnit units, boolean showValues, boolean cached) throws TimeoutException {
 
     // Start recording in a Zipkin sub-span our execution time to perform this operation.
     Tracer tracer = session.getZipkinTracer();
@@ -113,9 +110,18 @@ public abstract class Operation<E> {
       }
 
       Statement statement = options(buildStatement(cached));
+
+      if (session.isShowCql() ) {
+        String stmt = (this instanceof BatchOperation) ? queryString((BatchOperation)this, showValues) : queryString(statement, showValues);
+        session.getPrintStream().println(stmt);
+      } else if (LOG.isDebugEnabled()) {
+        String stmt = (this instanceof BatchOperation) ? queryString((BatchOperation)this, showValues) : queryString(statement, showValues);
+        LOG.info("CQL> " + stmt);
+      }
+
       Stopwatch timer = Stopwatch.createStarted();
       try {
-        ResultSetFuture futureResultSet = session.executeAsync(statement, uow, timer, showValues);
+        ResultSetFuture futureResultSet = session.executeAsync(statement, uow, timer);
         if (uow != null) uow.recordCacheAndDatabaseOperationCount(0, 1);
         ResultSet resultSet = futureResultSet.getUninterruptibly(timeout, units);
         ColumnDefinitions columnDefinitions = resultSet.getColumnDefinitions();
@@ -129,11 +135,12 @@ public abstract class Operation<E> {
                   .map(InetAddress::toString)
                   .collect(Collectors.joining(", "));
           ConsistencyLevel cl = ei.getAchievedConsistencyLevel();
+          if (cl == null) { cl = statement.getConsistencyLevel(); }
           int se = ei.getSpeculativeExecutions();
           String warn = ei.getWarnings().stream().collect(Collectors.joining(", "));
           String ri =
               String.format(
-                  "%s %s %s %s %s %s%sspec-retries: %d",
+                  "%s %s ~%s %s %s%s%sspec-retries: %d",
                   "server v" + qh.getCassandraVersion(),
                   qh.getAddress().toString(),
                   (oh != null && !oh.equals("")) ? " [tried: " + oh + "]" : "",
@@ -141,7 +148,7 @@ public abstract class Operation<E> {
                   qh.getRack(),
                   (cl != null)
                       ? (" consistency: "
-                          + cl.name()
+                          + cl.name() + " "
                           + (cl.isDCLocal() ? " DC " : "")
                           + (cl.isSerial() ? " SC " : ""))
                       : "",

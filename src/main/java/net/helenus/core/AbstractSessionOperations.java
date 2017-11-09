@@ -59,7 +59,6 @@ public abstract class AbstractSessionOperations {
 
   public PreparedStatement prepare(RegularStatement statement) {
     try {
-      logStatement(statement, false);
       return currentSession().prepare(statement);
     } catch (RuntimeException e) {
       throw translateException(e);
@@ -68,56 +67,45 @@ public abstract class AbstractSessionOperations {
 
   public ListenableFuture<PreparedStatement> prepareAsync(RegularStatement statement) {
     try {
-      logStatement(statement, false);
       return currentSession().prepareAsync(statement);
     } catch (RuntimeException e) {
       throw translateException(e);
     }
   }
 
-  public ResultSet execute(Statement statement, boolean showValues) {
-    return execute(statement, null, null, showValues);
+  public ResultSet execute(Statement statement) {
+    return execute(statement, null, null);
   }
 
-  public ResultSet execute(Statement statement, Stopwatch timer, boolean showValues) {
-    return execute(statement, null, timer, showValues);
+  public ResultSet execute(Statement statement, Stopwatch timer) {
+    return execute(statement, null, timer);
   }
 
-  public ResultSet execute(Statement statement, UnitOfWork uow, boolean showValues) {
-    return execute(statement, uow, null, showValues);
+  public ResultSet execute(Statement statement, UnitOfWork uow) {
+    return execute(statement, uow, null);
   }
 
-  public ResultSet execute(
-      Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
-    return executeAsync(statement, uow, timer, showValues).getUninterruptibly();
+  public ResultSet execute(Statement statement, UnitOfWork uow, Stopwatch timer) {
+    return executeAsync(statement, uow, timer).getUninterruptibly();
   }
 
-  public ResultSetFuture executeAsync(Statement statement, boolean showValues) {
-    return executeAsync(statement, null, null, showValues);
+  public ResultSetFuture executeAsync(Statement statement) {
+    return executeAsync(statement, null, null);
   }
 
-  public ResultSetFuture executeAsync(Statement statement, Stopwatch timer, boolean showValues) {
-    return executeAsync(statement, null, timer, showValues);
+  public ResultSetFuture executeAsync(Statement statement, Stopwatch timer) {
+    return executeAsync(statement, null, timer);
   }
 
-  public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, boolean showValues) {
-    return executeAsync(statement, uow, null, showValues);
+  public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow) {
+    return executeAsync(statement, uow, null);
   }
 
-  public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, Stopwatch timer, boolean showValues) {
+  public ResultSetFuture executeAsync(Statement statement, UnitOfWork uow, Stopwatch timer) {
     try {
-      logStatement(statement, showValues);
       return currentSession().executeAsync(statement);
     } catch (RuntimeException e) {
       throw translateException(e);
-    }
-  }
-
-  private void logStatement(Statement statement, boolean showValues) {
-    if (isShowCql()) {
-      printCql(Operation.queryString(statement, showValues));
-    } else if (LOG.isDebugEnabled()) {
-      LOG.info("CQL> " + Operation.queryString(statement, showValues));
     }
   }
 
@@ -143,10 +131,6 @@ public abstract class AbstractSessionOperations {
   }
 
   public void updateCache(Object pojo, List<Facet> facets) {}
-
-  void printCql(String cql) {
-    getPrintStream().println(cql);
-  }
 
   public void cacheEvict(List<Facet> facets) {}
 }

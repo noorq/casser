@@ -104,11 +104,15 @@ public class BatchOperation extends Operation<Long> {
     }
 
     public String toString() {
+        return toString(true); //TODO(gburd): sessionOps.showQueryValues()
+    }
+
+    public String toString(boolean showValues) {
         StringBuilder s = new StringBuilder();
         s.append("BEGIN ");
         if (!logged) { s.append("UN"); }
         s.append("LOGGED BATCH; ");
-        s.append(operations.stream().map(o -> Operation.queryString(o.buildStatement(false), showValues)).collect(Collectors.joining(" ")));
+        s.append(operations.stream().map(o -> Operation.queryString(o.buildStatement(showValues), showValues)).collect(Collectors.joining(" ")));
         s.append(" APPLY BATCH;");
         return s.toString();
     }

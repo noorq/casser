@@ -33,12 +33,12 @@ public final class UserTypeOperations {
 
   public void createUserType(HelenusEntity entity) {
 
-    sessionOps.execute(SchemaUtil.createUserType(entity), true);
+    sessionOps.execute(SchemaUtil.createUserType(entity));
   }
 
   public void dropUserType(HelenusEntity entity) {
 
-    sessionOps.execute(SchemaUtil.dropUserType(entity), true);
+    sessionOps.execute(SchemaUtil.dropUserType(entity));
   }
 
   public void validateUserType(UserType userType, HelenusEntity entity) {
@@ -71,9 +71,6 @@ public final class UserTypeOperations {
 
   private void executeBatch(List<SchemaStatement> list) {
 
-    list.forEach(
-        s -> {
-          sessionOps.execute(s, true);
-        });
+    list.forEach(s -> sessionOps.execute(s));
   }
 }
