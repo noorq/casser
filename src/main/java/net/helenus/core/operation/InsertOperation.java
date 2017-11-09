@@ -145,9 +145,18 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
   @Override
   public BuiltStatement buildStatement(boolean cached) {
     List<HelenusEntity> entities = values.stream().map(t -> t._1.getProperty().getEntity()).distinct().collect(Collectors.toList());
-    if (entities.size() == 0) {
-        throw new HelenusMappingException("you can insert only single entity, found: "
-                + entities.stream().map(e -> e.getMappingInterface().toString()).collect(Collectors.joining(", ")));
+    if (entities.size() != 1) {
+      throw new HelenusMappingException("you can insert only single entity at a time, found: "
+              + entities.stream().map(e -> e.getMappingInterface().toString()).collect(Collectors.joining(", ")));
+    }
+    HelenusEntity entity = entities.get(0);
+    if (this.entity != null) {
+      if (this.entity != entity) {
+        throw new HelenusMappingException("you can insert only single entity at a time, found: " +
+                this.entity.getMappingInterface().toString() + ", " + entity.getMappingInterface().toString());
+      }
+    } else {
+      this.entity = entity;
     }
 
     if (values.isEmpty()) return null;
@@ -237,6 +246,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
             // Oddly, this insert didn't change anything so simply return the pojo.
             return (T) pojo;
         }
+        return o;
     }
     return (T) resultSet;
   }
@@ -307,7 +317,9 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
     }
     Class<?> iface = entity.getMappingInterface();
     if (resultType == iface) {
-      adjustTtlAndWriteTime((MapExportable)result);
+      if (entity != null && MapExportable.class.isAssignableFrom(entity.getMappingInterface())) {
+        adjustTtlAndWriteTime((MapExportable) result);
+      }
       cacheUpdate(uow, result, bindFacetValues());
     } else {
       if (entity.isCacheable()) {
