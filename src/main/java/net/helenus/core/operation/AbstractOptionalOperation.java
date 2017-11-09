@@ -100,7 +100,8 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 
       if (updateCache && result.isPresent()) {
         E r = result.get();
-        if (!(r instanceof Fun)) {
+          Class<?> resultClass = r.getClass();
+          if (!(resultClass.getEnclosingClass() != null && resultClass.getEnclosingClass() == Fun.class)) {
           List<Facet> facets = getFacets();
           if (facets != null && facets.size() > 1) {
             sessionOps.updateCache(r, facets);

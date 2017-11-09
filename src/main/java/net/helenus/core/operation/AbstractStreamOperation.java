@@ -192,7 +192,10 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
           List<Facet> facets = getFacets();
           resultStream.forEach(
                result -> {
-                   if (result != deleted && !(result instanceof Fun)) {
+                   Class<?> resultClass = result.getClass();
+                   if (result != deleted
+                           && !(resultClass.getEnclosingClass() != null
+                           && resultClass.getEnclosingClass() == Fun.class)) {
                      cacheUpdate(uow, result, facets);
                    }
                    again.add(result);
