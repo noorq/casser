@@ -15,6 +15,8 @@
  */
 package net.helenus.core.reflect;
 
+import net.helenus.core.Getter;
+
 import java.util.Map;
 
 public interface MapExportable {
@@ -24,4 +26,6 @@ public interface MapExportable {
   Map<String, Object> toMap();
   default Map<String, Object> toMap(boolean mutable) { return null; }
   default void put(String key, Object value) { }
+  default <T> void put(Getter<T> getter, T value) { }
+
 }

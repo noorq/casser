@@ -256,8 +256,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
             .collect(Collectors.toList());
     for (Object pojo : items) {
       HelenusEntity entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
-      Map<String, Object> valueMap =
-          pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
+      Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
       if (entity.isCacheable()) {
         List<Facet> boundFacets = new ArrayList<>();
         for (Facet facet : entity.getFacets()) {
@@ -266,11 +265,9 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
             UnboundFacet.Binder binder = unboundFacet.binder();
             unboundFacet
                 .getProperties()
-                .forEach(
-                    prop -> {
+                .forEach(prop -> {
                       if (valueMap == null) {
-                        Object value =
-                            BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
+                        Object value = BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop);
                         binder.setValueForProperty(prop, value.toString());
                       } else {
                         Object v = valueMap.get(prop.getPropertyName());
@@ -393,9 +390,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
     HelenusEntity entity = Helenus.resolve(pojo);
     Class<?> entityClass = entity.getMappingInterface();
 
-    return new SelectOperation<E>(
-        this,
-        entity,
+    return new SelectOperation<E>(this, entity,
         (r) -> {
           Map<String, Object> map = new ValueProviderMap(r, valueProvider, entity);
           return (E) Helenus.map(entityClass, map);
@@ -407,9 +402,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
     ColumnValueProvider valueProvider = getValueProvider();
     HelenusEntity entity = Helenus.entity(entityClass);
 
-    return new SelectOperation<E>(
-        this,
-        entity,
+    return new SelectOperation<E>(this, entity,
         (r) -> {
           Map<String, Object> map = new ValueProviderMap(r, valueProvider, entity);
           return (E) Helenus.map(entityClass, map);
@@ -420,14 +413,19 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
     return new SelectOperation<Fun.ArrayTuple>(this);
   }
 
-  public SelectOperation<Row> selectAll(Class<?> entityClass) {
+  public <E> SelectOperation<E> selectAll(Class<E> entityClass) {
     Objects.requireNonNull(entityClass, "entityClass is empty");
-    return new SelectOperation<Row>(this, Helenus.entity(entityClass));
+    HelenusEntity entity = Helenus.entity(entityClass);
+
+    return new SelectOperation<E>(this, entity,
+        (r) -> {
+          Map<String, Object> map = new ValueProviderMap(r, valueProvider, entity);
+          return (E) Helenus.map(entityClass, map);
+        });
   }
 
   public <E> SelectOperation<Row> selectAll(E pojo) {
-    Objects.requireNonNull(
-        pojo, "supplied object must be a dsl for a registered entity but cannot be null");
+    Objects.requireNonNull(pojo, "supplied object must be a dsl for a registered entity but cannot be null");
     HelenusEntity entity = Helenus.resolve(pojo);
     return new SelectOperation<Row>(this, entity);
   }

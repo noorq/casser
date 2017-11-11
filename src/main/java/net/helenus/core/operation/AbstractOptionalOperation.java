@@ -33,6 +33,8 @@ import net.helenus.core.AbstractSessionOperations;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
+import net.helenus.core.reflect.Drafted;
+import net.helenus.mapping.MappingUtil;
 import net.helenus.support.Fun;
 
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
@@ -68,18 +70,24 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
       boolean updateCache = isSessionCacheable() && !ignoreCache();
 
       if (updateCache) {
-        List<Facet> facets = bindFacetValues();
-        String tableName = CacheUtil.schemaName(facets);
-        cacheResult = (E) sessionOps.checkCache(tableName, facets);
-        if (cacheResult != null) {
-          result = Optional.of(cacheResult);
-          updateCache = false;
-          sessionCacheHits.mark();
-          cacheHits.mark();
-        } else {
-          sessionCacheMiss.mark();
-          cacheMiss.mark();
-        }
+          List<Facet> facets = bindFacetValues();
+          if (facets != null && facets.size() > 0) {
+              if (facets.stream().filter(f -> !f.fixed()).distinct().count() > 0) {
+                  String tableName = CacheUtil.schemaName(facets);
+                  cacheResult = (E) sessionOps.checkCache(tableName, facets);
+                  if (cacheResult != null) {
+                      result = Optional.of(cacheResult);
+                      updateCache = false;
+                      sessionCacheHits.mark();
+                      cacheHits.mark();
+                  } else {
+                      sessionCacheMiss.mark();
+                      cacheMiss.mark();
+                  }
+              }
+          } else {
+              //TODO(gburd): look in statement cache for results
+          }
       }
 
       if (!result.isPresent()) {
@@ -128,31 +136,58 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
         Stopwatch timer = Stopwatch.createStarted();
         try {
           List<Facet> facets = bindFacetValues();
-          if (facets != null) {
-            cachedResult = checkCache(uow, facets);
-            if (cachedResult != null) {
-              updateCache = false;
-              result = Optional.of(cachedResult);
-              uowCacheHits.mark();
-              cacheHits.mark();
-                uow.recordCacheAndDatabaseOperationCount(1, 0);
-            } else {
-              updateCache = true;
-              uowCacheMiss.mark();
-              if (isSessionCacheable()) {
-                String tableName = CacheUtil.schemaName(facets);
-                cachedResult = (E) sessionOps.checkCache(tableName, facets);
+          if (facets != null && facets.size() > 0) {
+              if (facets.stream().filter(f -> !f.fixed()).distinct().count() > 0) {
+                cachedResult = checkCache(uow, facets);
                 if (cachedResult != null) {
-                  result = Optional.of(cachedResult);
-                  sessionCacheHits.mark();
-                  cacheHits.mark();
-                  uow.recordCacheAndDatabaseOperationCount(1, 0);
+                    updateCache = false;
+                    result = Optional.of(cachedResult);
+                    uowCacheHits.mark();
+                    cacheHits.mark();
+                    uow.recordCacheAndDatabaseOperationCount(1, 0);
                 } else {
-                  sessionCacheMiss.mark();
+                    uowCacheMiss.mark();
+                    if (isSessionCacheable()) {
+                        String tableName = CacheUtil.schemaName(facets);
+                        cachedResult = (E) sessionOps.checkCache(tableName, facets);
+                        Class<?> iface = MappingUtil.getMappingInterface(cachedResult);
+                        if (cachedResult != null) {
+                            try {
+                                if (Drafted.class.isAssignableFrom(iface)) {
+                                    result = Optional.of(cachedResult);
+                                } else {
+                                    result = Optional.of(MappingUtil.clone(cachedResult));
+                                }
+                                sessionCacheHits.mark();
+                                cacheHits.mark();
+                                uow.recordCacheAndDatabaseOperationCount(1, 0);
+                            } catch (CloneNotSupportedException e) {
+                                result = Optional.empty();
+                                sessionCacheMiss.mark();
+                                cacheMiss.mark();
+                                uow.recordCacheAndDatabaseOperationCount(-1, 0);
+                            } finally {
+                                if (result.isPresent()) {
+                                    updateCache = true;
+                                } else {
+                                    updateCache = false;
+                                }
+                            }
+                        } else {
+                            updateCache = false;
+                            sessionCacheMiss.mark();
+                            cacheMiss.mark();
+                            uow.recordCacheAndDatabaseOperationCount(-1, 0);
+                        }
+                    } else {
+                        updateCache = false;
+                    }
+                }
+            } else {
+                  //TODO(gburd): look in statement cache for results
                   cacheMiss.mark();
                   uow.recordCacheAndDatabaseOperationCount(-1, 0);
-                }
-              }
+                  updateCache = false; //true;
             }
           } else {
             updateCache = false;
@@ -175,15 +210,8 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
       } else {
 
         // Formulate the query and execute it against the Cassandra cluster.
-        ResultSet resultSet =
-            execute(
-                sessionOps,
-                uow,
-                traceContext,
-                queryExecutionTimeout,
-                queryTimeoutUnits,
-                showValues,
-                true);
+        ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
+                showValues, true);
 
         // Transform the query result set into the desired shape.
         result = transform(resultSet);

@@ -28,6 +28,7 @@ import net.helenus.core.HelenusSession;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.annotation.Cacheable;
 import net.helenus.core.reflect.Entity;
+import net.helenus.core.reflect.MapExportable;
 import net.helenus.mapping.annotation.Constraints;
 import net.helenus.mapping.annotation.Index;
 import net.helenus.mapping.annotation.PartitionKey;
@@ -125,14 +126,13 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 
   @Test
   public void testSelectAfterNestedSelect() throws Exception {
-    Widget w1, w2, w3, w4;
+    Widget w1, w1a, w2, w3, w4;
     UUID key1 = UUIDs.timeBased();
     UUID key2 = UUIDs.timeBased();
 
     // This should inserted Widget, and not cache it in uow1.
     try (UnitOfWork uow1 = session.begin()) {
-      w1 =
-          session
+      w1 = session
               .<Widget>insert(widget)
               .value(widget::id, key1)
               .value(widget::name, RandomString.make(20))
@@ -144,9 +144,18 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 
       try (UnitOfWork uow2 = session.begin(uow1)) {
 
+          // A "SELECT * FROM widget" query does not contain enough information to fetch an item from cache.
+          // This will miss, until we implement a statement cache.
+          w1a = session
+                  .<Widget>selectAll(Widget.class)
+                  .sync(uow2)
+                  .filter(w -> w.id().equals(key1))
+                  .findFirst()
+                  .orElse(null);
+          Assert.assertTrue(w1.equals(w1a));
+
         // This should read from uow1's cache and return the same Widget.
-        w2 =
-            session
+        w2 = session
                 .<Widget>select(widget)
                 .where(widget::id, eq(key1))
                 .single()
@@ -155,8 +164,7 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 
         Assert.assertEquals(w1, w2);
 
-        w3 =
-            session
+        w3 = session
                 .<Widget>insert(widget)
                 .value(widget::id, key2)
                 .value(widget::name, RandomString.make(20))
@@ -174,8 +182,7 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
       }
 
       // This should read from the cache and get the same instance of a Widget.
-      w4 =
-          session
+      w4 = session
               .<Widget>select(widget)
               .where(widget::a, eq(w3.a()))
               .and(widget::b, eq(w3.b()))

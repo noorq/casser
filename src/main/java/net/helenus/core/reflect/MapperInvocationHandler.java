@@ -107,12 +107,21 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
     }
 
     if (MapExportable.PUT_METHOD.equals(methodName) && method.getParameterCount() == 2) {
-      final String key = (String)args[0];
-      final Object value = (Object)args[1];
-      if (src instanceof ValueProviderMap) {
-        this.src = fromValueProviderMap(src);
+      final String key;
+      if (args[0] instanceof String) {
+        key = (String) args[0];
+      } else if (args[0] instanceof Getter) {
+        key = MappingUtil.resolveMappingProperty((Getter)args[0]).getProperty().getPropertyName();
+      } else {
+        key = null;
       }
-      src.put(key, value);
+      if (key != null) {
+        final Object value = (Object) args[1];
+        if (src instanceof ValueProviderMap) {
+          this.src = fromValueProviderMap(src);
+        }
+        src.put(key, value);
+      }
       return null;
     }
 

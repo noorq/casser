@@ -1,8 +1,18 @@
 package net.helenus.core.cache;
 
+import net.helenus.core.Helenus;
+import net.helenus.core.reflect.Entity;
+import net.helenus.core.reflect.MapExportable;
+import net.helenus.mapping.HelenusEntity;
+import net.helenus.mapping.HelenusProperty;
+import net.helenus.mapping.MappingUtil;
+import net.helenus.mapping.value.BeanColumnValueProvider;
+import net.helenus.support.HelenusException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CacheUtil {
@@ -83,28 +93,98 @@ public class CacheUtil {
 
     /**
      * Merge changed values in the map behind `from` into `to`.
-     *
-     * @param to
-     * @param from
-     * @return
      */
-  public static Object merge(Object to, Object from) {
-    if (to == from) {
-      return to;
-    } else {
-      return from;
-    }
-    /*
-     * // TODO(gburd): take ttl and writeTime into account when merging. Map<String,
-     * Object> toValueMap = to instanceof MapExportable ? ((MapExportable)
-     * to).toMap() : null; Map<String, Object> fromValueMap = to instanceof
-     * MapExportable ? ((MapExportable) from).toMap() : null;
-     *
-     * if (toValueMap != null && fromValueMap != null) { for (String key :
-     * fromValueMap.keySet()) { if (toValueMap.containsKey(key) &&
-     * toValueMap.get(key) != fromValueMap.get(key)) { toValueMap.put(key,
-     * fromValueMap.get(key)); } } } return to;
-     */
+  public static Object merge(Object t, Object f) {
+      HelenusEntity entity = Helenus.resolve(MappingUtil.getMappingInterface(t));
+
+      if (t == f) return t;
+      if (f == null) return t;
+      if (t == null) return f;
+
+      if (t instanceof MapExportable && t instanceof Entity && f instanceof MapExportable && f instanceof Entity) {
+          Entity to = (Entity) t;
+          Entity from = (Entity) f;
+          Map<String, Object> toValueMap = ((MapExportable) to).toMap();
+          Map<String, Object> fromValueMap = ((MapExportable) from).toMap();
+          for (HelenusProperty prop : entity.getOrderedProperties()) {
+              switch (prop.getColumnType()) {
+              case PARTITION_KEY:
+              case CLUSTERING_COLUMN:
+                  continue;
+              default:
+                  Object toVal = BeanColumnValueProvider.INSTANCE.getColumnValue(to, -1, prop, false);
+                  Object fromVal = BeanColumnValueProvider.INSTANCE.getColumnValue(from, -1, prop, false);
+                  String ttlKey = ttlKey(prop);
+                  String writeTimeKey = writeTimeKey(prop);
+                  int[] toTtlI = (int[]) toValueMap.get(ttlKey);
+                  int toTtl = (toTtlI != null) ? toTtlI[0] : 0;
+                  Long toWriteTime = (Long) toValueMap.get(writeTimeKey);
+                  int[] fromTtlI = (int[]) fromValueMap.get(ttlKey);
+                  int fromTtl = (fromTtlI != null) ? fromTtlI[0] : 0;
+                  Long fromWriteTime = (Long) fromValueMap.get(writeTimeKey);
+
+                  if (toVal != null) {
+                      if (fromVal != null) {
+                          if (toVal == fromVal) {
+                              // Case: object identity
+                              // Goal: ensure write time and ttl are also in sync
+                              if (fromWriteTime != null && fromWriteTime != 0L &&
+                                      (toWriteTime == null || fromWriteTime > toWriteTime)) {
+                                  ((MapExportable) to).put(writeTimeKey, fromWriteTime);
+                              }
+                              if (fromTtl > 0 && fromTtl > toTtl) {
+                                  ((MapExportable) to).put(ttlKey, fromTtl);
+                              }
+                          } else if (fromWriteTime != null && fromWriteTime != 0L) {
+                              // Case: to exists and from exists
+                              // Goal: copy over from -> to iff from.writeTime > to.writeTime
+                              if (toWriteTime != null && toWriteTime != 0L) {
+                                  if (fromWriteTime > toWriteTime) {
+                                      ((MapExportable) to).put(prop.getPropertyName(), fromVal);
+                                      ((MapExportable) to).put(writeTimeKey, fromWriteTime);
+                                      if (fromTtl > 0) {
+                                          ((MapExportable) to).put(ttlKey, fromTtl);
+                                      }
+                                  }
+                              } else {
+                                  ((MapExportable) to).put(prop.getPropertyName(), fromVal);
+                                  ((MapExportable) to).put(writeTimeKey, fromWriteTime);
+                                  if (fromTtl > 0) {
+                                      ((MapExportable) to).put(ttlKey, fromTtl);
+                                  }
+                              }
+                          } else {
+                              if (toWriteTime == null || toWriteTime == 0L) {
+                                  // Caution, entering grey area...
+                                  if (!toVal.equals(fromVal)) {
+                                      // dangerous waters here, values diverge without information that enables resolution,
+                                      // policy (for now) is to move value from -> to anyway.
+                                      ((MapExportable) to).put(prop.getPropertyName(), fromVal);
+                                      if (fromTtl > 0) {
+                                          ((MapExportable) to).put(ttlKey, fromTtl);
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  } else {
+                      // Case: from exists, but to doesn't (it's null)
+                      // Goal: copy over from -> to, include ttl and writeTime if present
+                      if (fromVal != null) {
+                          ((MapExportable) to).put(prop.getPropertyName(), fromVal);
+                          if (fromWriteTime != null && fromWriteTime != 0L) {
+                              ((MapExportable) to).put(writeTimeKey, fromWriteTime);
+                          }
+                          if (fromTtl > 0) {
+                              ((MapExportable) to).put(ttlKey, fromTtl);
+                          }
+                      }
+                  }
+              }
+          }
+          return to;
+      }
+      return t;
   }
 
   public static String schemaName(List<Facet> facets) {
@@ -115,9 +195,17 @@ public class CacheUtil {
         .collect(Collectors.joining("."));
   }
 
-  public static String writeTimeKey(String propertyName) {
-    return "_" + propertyName + "_writeTime";
+  public static String writeTimeKey(HelenusProperty prop) {
+      return writeTimeKey(prop.getColumnName().toCql(false));
   }
 
-  public static String ttlKey(String propertyName) { return "_" + propertyName + "_ttl"; }
+  public static String ttlKey(HelenusProperty prop) {
+      return ttlKey(prop.getColumnName().toCql(false));
+  }
+
+  public static String writeTimeKey(String columnName) {
+    return "_" + columnName + "_writeTime";
+  }
+
+  public static String ttlKey(String columnName) { return "_" + columnName + "_ttl"; }
 }

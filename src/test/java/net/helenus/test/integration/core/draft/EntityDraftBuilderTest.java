@@ -21,9 +21,11 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
+import net.helenus.core.UnitOfWork;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -34,6 +36,8 @@ public class EntityDraftBuilderTest extends AbstractEmbeddedCassandraTest {
   static Supply supply;
   static HelenusSession session;
   static Supply.Draft draft = null;
+  static UUID id = null;
+  static String region = null;
 
   @BeforeClass
   public static void beforeTest() throws TimeoutException {
@@ -68,25 +72,28 @@ public class EntityDraftBuilderTest extends AbstractEmbeddedCassandraTest {
                 });
 
     Supply s1 = session.<Supply>insert(draft).sync();
+    id = s1.id();
+    region = s1.region();
   }
 
   @Test
   public void testFoo() throws Exception {
 
-    Supply s1 =
-        session
-            .<Supply>select(Supply.class)
-            .where(supply::id, eq(draft.id()))
-            .single()
-            .sync()
-            .orElse(null);
+      Supply s1 = session
+              .<Supply>select(Supply.class)
+              .where(supply::id, eq(id))
+              .and(supply::region, eq(region))
+              .single()
+              .sync()
+              .orElse(null);
 
-    // List
-    Supply s2 =
-        session
-            .<Supply>update(s1.update())
-            .prepend(supply::suppliers, "Pignose Supply, LLC.")
-            .sync();
+      // List
+      Supply s2 = session
+              .<Supply>update(s1.update())
+              .and(supply::region, eq(region))
+              .prepend(supply::suppliers, "Pignose Supply, LLC.")
+              .sync();
+
     Assert.assertEquals(s2.suppliers().get(0), "Pignose Supply, LLC.");
 
     // Set
@@ -97,6 +104,58 @@ public class EntityDraftBuilderTest extends AbstractEmbeddedCassandraTest {
     // Map
     Supply s4 = session.<Supply>update(s3.update()).put(supply::demand, "NORAM", 10L).sync();
     Assert.assertEquals((long) s4.demand().get("NORAM"), 10L);
+  }
+
+  @Test
+  public void testDraftMergeInNestedUow() throws Exception {
+      Supply s1, s2, s3, s4, s5;
+      Supply.Draft d1;
+
+      s1 = session
+              .<Supply>select(Supply.class)
+              .where(supply::id, eq(id))
+              .and(supply::region, eq(region))
+              .single()
+              .sync()
+              .orElse(null);
+
+      try(UnitOfWork uow1 = session.begin()) {
+          s2 = session
+                  .<Supply>select(Supply.class)
+                  .where(supply::id, eq(id))
+                  .and(supply::region, eq(region))
+                  .single()
+                  .sync(uow1)
+                  .orElse(null);
+
+          try(UnitOfWork uow2 = session.begin(uow1)) {
+              s3 = session
+                      .<Supply>select(Supply.class)
+                      .where(supply::id, eq(id))
+                      .and(supply::region, eq(region))
+                      .single()
+                      .sync(uow2)
+                      .orElse(null);
+
+              d1 = s3.update()
+                      .setCode("WIDGET-002-UPDATED");
+
+              s4 = session.update(d1)
+                      .usingTtl(20)
+                      .defaultTimestamp(System.currentTimeMillis())
+                      .sync(uow2);
+
+              uow2.commit();
+          }
+
+          s5 = session
+                  .<Supply>select(Supply.class)
+                  .where(supply::id, eq(id))
+                  .and(supply::region, eq(region))
+                  .single()
+                  .sync(uow1)
+                  .orElse(null);
+      }
   }
 
   @Test

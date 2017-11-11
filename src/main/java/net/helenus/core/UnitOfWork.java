@@ -60,7 +60,7 @@ public interface UnitOfWork<X extends Exception> extends AutoCloseable {
 
   Optional<Object> cacheLookup(List<Facet> facets);
 
-  void cacheUpdate(Object pojo, List<Facet> facets);
+  Object cacheUpdate(Object pojo, List<Facet> facets);
 
   List<Facet> cacheEvict(List<Facet> facets);
 

@@ -265,7 +265,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 
   protected void adjustTtlAndWriteTime(MapExportable pojo) {
     if (ttl != null || writeTime != 0L) {
-      List<String> propertyNames = values.stream()
+      List<String> columnNames = values.stream()
               .map(t -> t._1.getProperty())
               .filter(prop -> {
                 switch (prop.getColumnType()) {
@@ -279,12 +279,12 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
               .map(prop -> prop.getColumnName().toCql(false))
               .collect(Collectors.toList());
 
-      if (propertyNames.size() > 0) {
+      if (columnNames.size() > 0) {
         if (ttl != null) {
-          propertyNames.forEach(name -> pojo.put(CacheUtil.ttlKey(name), ttl));
+          columnNames.forEach(name -> pojo.put(CacheUtil.ttlKey(name), ttl));
         }
         if (writeTime != 0L) {
-          propertyNames.forEach(name -> pojo.put(CacheUtil.writeTimeKey(name), writeTime));
+          columnNames.forEach(name -> pojo.put(CacheUtil.writeTimeKey(name), writeTime));
         }
       }
     }

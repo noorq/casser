@@ -7,11 +7,15 @@ import java.util.Set;
 import java.util.UUID;
 import net.helenus.core.AbstractEntityDraft;
 import net.helenus.core.Helenus;
+import net.helenus.core.annotation.Cacheable;
+import net.helenus.core.reflect.Drafted;
+import net.helenus.core.reflect.Entity;
 import net.helenus.core.reflect.MapExportable;
 import net.helenus.mapping.annotation.*;
 
 @Table
-public interface Supply {
+@Cacheable
+public interface Supply extends Entity, Drafted<Supply> {
 
   static Supply supply = Helenus.dsl(Supply.class);
 

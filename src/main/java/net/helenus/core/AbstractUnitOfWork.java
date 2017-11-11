@@ -32,6 +32,8 @@ import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
 import net.helenus.core.operation.AbstractOperation;
 import net.helenus.core.operation.BatchOperation;
+import net.helenus.core.reflect.Drafted;
+import net.helenus.mapping.MappingUtil;
 import net.helenus.support.Either;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -209,18 +211,35 @@ public abstract class AbstractUnitOfWork<E extends Exception>
           if (eitherValue.isLeft()) {
             value = eitherValue.getLeft();
           }
-          result = Optional.of(value);
-          break;
+          return Optional.of(value);
         }
       }
     }
-    if (!result.isPresent()) {
-      // Be sure to check all enclosing UnitOfWork caches as well, we may be nested.
-      if (parent != null) {
-        return parent.cacheLookup(facets);
+
+    // Be sure to check all enclosing UnitOfWork caches as well, we may be nested.
+    result = checkParentCache(facets);
+    if (result.isPresent()) {
+      Object r = result.get();
+      try {
+        Class<?> iface = MappingUtil.getMappingInterface(r);
+        if (Drafted.class.isAssignableFrom(iface)) {
+            cacheUpdate(r, facets);
+        } else {
+            cacheUpdate(MappingUtil.clone(r), facets);
+        }
+      } catch (CloneNotSupportedException e) {
+        result = Optional.empty();
       }
     }
     return result;
+  }
+
+  private Optional<Object> checkParentCache(List<Facet> facets) {
+      Optional<Object> result = Optional.empty();
+      if (parent != null) {
+          result = parent.checkParentCache(facets);
+      }
+      return result;
   }
 
   @Override
@@ -259,16 +278,20 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   }
 
   @Override
-  public void cacheUpdate(Object value, List<Facet> facets) {
+  public Object cacheUpdate(Object value, List<Facet> facets) {
+    Object result = null;
     String tableName = CacheUtil.schemaName(facets);
     for (Facet facet : facets) {
       if (!facet.fixed()) {
         if (facet.alone()) {
           String columnName = facet.name() + "==" + facet.value();
+          if (result == null)
+              result = cache.get(tableName, columnName);
           cache.put(tableName, columnName, Either.left(value));
         }
       }
     }
+    return result;
   }
 
   public void batch(AbstractOperation s) {
@@ -395,19 +418,13 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   private void mergeCache(Table<String, String, Either<Object, List<Facet>>> from) {
     Table<String, String, Either<Object, List<Facet>>> to = this.cache;
     from.rowMap()
-        .forEach(
-            (rowKey, columnMap) -> {
-              columnMap.forEach(
-                  (columnKey, value) -> {
-                    if (to.contains(rowKey, columnKey)) {
-                      // TODO(gburd): merge case, preserve object identity
-                      to.put(
-                          rowKey,
-                          columnKey,
-                          Either.left(
+        .forEach((rowKey, columnMap) -> {
+              columnMap.forEach((columnKey, value) -> {
+                  if (to.contains(rowKey, columnKey)) {
+                      to.put(rowKey, columnKey, Either.left(
                               CacheUtil.merge(
-                                  to.get(rowKey, columnKey).getLeft(),
-                                  from.get(rowKey, columnKey).getLeft())));
+                                      to.get(rowKey, columnKey).getLeft(),
+                                      from.get(rowKey, columnKey).getLeft())));
                     } else {
                       to.put(rowKey, columnKey, from.get(rowKey, columnKey));
                     }

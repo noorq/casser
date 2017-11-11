@@ -326,10 +326,9 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
     return result;
   }
 
-  protected void cacheUpdate(UnitOfWork<?> uow, E pojo, List<Facet> identifyingFacets) {
+  protected Object cacheUpdate(UnitOfWork<?> uow, E pojo, List<Facet> identifyingFacets) {
     List<Facet> facets = new ArrayList<>();
-    Map<String, Object> valueMap =
-        pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
+    Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
 
     for (Facet facet : identifyingFacets) {
       if (facet instanceof UnboundFacet) {
@@ -358,6 +357,6 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
     }
 
     // Cache the value (pojo), the statement key, and the fully bound facets.
-    uow.cacheUpdate(pojo, facets);
+    return uow.cacheUpdate(pojo, facets);
   }
 }
