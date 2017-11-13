@@ -34,4 +34,6 @@ public interface HelenusEntity {
   HelenusProperty getProperty(String name);
 
   List<Facet> getFacets();
+
+  boolean isDraftable();
 }

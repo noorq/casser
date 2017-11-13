@@ -22,6 +22,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.google.common.collect.TreeTraverser;
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -30,9 +31,9 @@ import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
 import net.helenus.core.operation.AbstractOperation;
 import net.helenus.core.operation.BatchOperation;
-import net.helenus.core.reflect.Drafted;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.support.Either;
+import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -218,15 +219,11 @@ public abstract class AbstractUnitOfWork<E extends Exception>
     result = checkParentCache(facets);
     if (result.isPresent()) {
       Object r = result.get();
-      try {
-        Class<?> iface = MappingUtil.getMappingInterface(r);
-        if (Drafted.class.isAssignableFrom(iface)) {
-          cacheUpdate(r, facets);
-        } else {
-          cacheUpdate(MappingUtil.clone(r), facets);
-        }
-      } catch (CloneNotSupportedException e) {
-        result = Optional.empty();
+      Class<?> iface = MappingUtil.getMappingInterface(r);
+      if (Helenus.entity(iface).isDraftable()) {
+        cacheUpdate(r, facets);
+      } else {
+        cacheUpdate(SerializationUtils.<Serializable>clone((Serializable) r), facets);
       }
     }
     return result;

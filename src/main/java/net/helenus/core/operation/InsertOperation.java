@@ -31,7 +31,6 @@ import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
 import net.helenus.core.cache.UnboundFacet;
 import net.helenus.core.reflect.DefaultPrimitiveTypes;
-import net.helenus.core.reflect.Drafted;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.core.reflect.MapExportable;
 import net.helenus.mapping.HelenusEntity;
@@ -211,7 +210,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
 
   private T newInstance(Class<?> iface) {
     if (values.size() > 0) {
-      boolean immutable = iface.isAssignableFrom(Drafted.class);
+      boolean immutable = entity.isDraftable();
       Collection<HelenusProperty> properties = entity.getOrderedProperties();
       Map<String, Object> backingMap = new HashMap<String, Object>(properties.size());
 

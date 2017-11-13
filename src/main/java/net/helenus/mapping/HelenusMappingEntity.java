@@ -39,6 +39,7 @@ public final class HelenusMappingEntity implements HelenusEntity {
   private final HelenusEntityType type;
   private final IdentityName name;
   private final boolean cacheable;
+  private final boolean draftable;
   private final ImmutableMap<String, Method> methods;
   private final ImmutableMap<String, HelenusProperty> props;
   private final ImmutableList<HelenusProperty> orderedProps;
@@ -112,6 +113,16 @@ public final class HelenusMappingEntity implements HelenusEntity {
     // Caching
     cacheable = (null != iface.getDeclaredAnnotation(Cacheable.class));
 
+    // Draft
+    Class<?> draft;
+    try {
+      draft = Class.forName(iface.getName() + "$Draft");
+    } catch (Exception ignored) {
+      draft = null;
+    }
+    draftable = (draft != null);
+
+    // Materialized view
     List<HelenusProperty> primaryKeyProperties = new ArrayList<>();
     ImmutableList.Builder<Facet> facetsBuilder = ImmutableList.builder();
     if (iface.getDeclaredAnnotation(MaterializedView.class) == null) {
@@ -210,6 +221,11 @@ public final class HelenusMappingEntity implements HelenusEntity {
   @Override
   public boolean isCacheable() {
     return cacheable;
+  }
+
+  @Override
+  public boolean isDraftable() {
+    return draftable;
   }
 
   @Override

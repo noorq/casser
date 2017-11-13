@@ -19,6 +19,7 @@ import static net.helenus.core.Query.eq;
 
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.utils.UUIDs;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 import net.bytebuddy.utility.RandomString;
@@ -38,7 +39,7 @@ import org.junit.Test;
 
 @Table
 @Cacheable
-interface Widget extends Entity {
+interface Widget extends Entity, Serializable {
   @PartitionKey
   UUID id();
 

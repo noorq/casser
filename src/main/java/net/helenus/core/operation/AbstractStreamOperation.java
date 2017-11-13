@@ -24,6 +24,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -31,12 +32,13 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import net.helenus.core.AbstractSessionOperations;
+import net.helenus.core.Helenus;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
-import net.helenus.core.reflect.Drafted;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.support.Fun;
+import org.apache.commons.lang3.SerializationUtils;
 
 public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperation<E, O>>
     extends AbstractStatementOperation<E, O> {
@@ -160,26 +162,20 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
                   if (cachedResult != null) {
                     Class<?> iface = MappingUtil.getMappingInterface(cachedResult);
                     E result = null;
-                    try {
-                      if (Drafted.class.isAssignableFrom(iface)) {
-                        result = cachedResult;
-                      } else {
-                        result = MappingUtil.clone(cachedResult);
-                      }
-                      resultStream = Stream.of(result);
-                      sessionCacheHits.mark();
-                      cacheHits.mark();
-                      uow.recordCacheAndDatabaseOperationCount(1, 0);
-                    } catch (CloneNotSupportedException e) {
-                      resultStream = null;
-                      sessionCacheMiss.mark();
-                      uow.recordCacheAndDatabaseOperationCount(-1, 0);
-                    } finally {
-                      if (result != null) {
-                        updateCache = true;
-                      } else {
-                        updateCache = false;
-                      }
+                    if (Helenus.entity(iface).isDraftable()) {
+                      result = cachedResult;
+                    } else {
+                      result =
+                          (E) SerializationUtils.<Serializable>clone((Serializable) cachedResult);
+                    }
+                    resultStream = Stream.of(result);
+                    sessionCacheHits.mark();
+                    cacheHits.mark();
+                    uow.recordCacheAndDatabaseOperationCount(1, 0);
+                    if (result != null) {
+                      updateCache = true;
+                    } else {
+                      updateCache = false;
                     }
                   } else {
                     updateCache = false;

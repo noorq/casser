@@ -39,7 +39,7 @@ public interface Account {
     return new Draft();
   }
 
-  class Draft implements Drafted { // TODO
+  class Draft implements Drafted<Account> {
 
     @Override
     public Set<String> mutated() {
@@ -47,7 +47,7 @@ public interface Account {
     }
 
     @Override
-    public Object build() {
+    public Account build() {
       return null;
     }
 

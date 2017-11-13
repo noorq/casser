@@ -203,7 +203,9 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       facet = new BoundFacet(prop, list);
     } else if (draft != null) {
       String key = prop.getPropertyName();
-      list = (List<V>) draftMap.get(key);
+      list =
+          (List<V>) new ArrayList<V>((List<V>) draftMap.get(key)); // copy immutable -> mutable list
+      draft.put(key, list);
       list.add(0, value);
       facet = new BoundFacet(prop, list);
     } else {
@@ -235,7 +237,9 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       facet = new BoundFacet(prop, list);
     } else if (draft != null && value.size() > 0) {
       String key = p.getProperty().getPropertyName();
-      list = (List<V>) draftMap.get(key);
+      list =
+          (List<V>) new ArrayList<V>((List<V>) draftMap.get(key)); // copy immutable -> mutable list
+      draft.put(key, list);
       list.addAll(0, value);
       facet = new BoundFacet(prop, list);
     } else {
@@ -266,7 +270,10 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
         list = (List<V>) BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop, false);
       } else {
         String key = prop.getPropertyName();
-        list = (List<V>) draftMap.get(key);
+        list =
+            (List<V>)
+                new ArrayList<V>((List<V>) draftMap.get(key)); // copy immutable -> mutable list
+        draft.put(key, list);
       }
       if (idx < 0) {
         list.add(0, value);
@@ -305,7 +312,9 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       facet = new BoundFacet(prop, list);
     } else if (draft != null) {
       String key = prop.getPropertyName();
-      list = (List<V>) draftMap.get(key);
+      list =
+          (List<V>) new ArrayList<V>((List<V>) draftMap.get(key)); // copy immutable -> mutable list
+      draft.put(key, list);
       list.add(value);
       facet = new BoundFacet(prop, list);
     } else {
@@ -336,7 +345,9 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       facet = new BoundFacet(prop, list);
     } else if (draft != null && value.size() > 0) {
       String key = prop.getPropertyName();
-      list = (List<V>) draftMap.get(key);
+      list =
+          (List<V>) new ArrayList<V>((List<V>) draftMap.get(key)); // copy immutable -> mutable list
+      draft.put(key, list);
       list.addAll(value);
       facet = new BoundFacet(prop, list);
     } else {
@@ -367,7 +378,9 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       facet = new BoundFacet(prop, list);
     } else if (draft != null) {
       String key = prop.getPropertyName();
-      list = (List<V>) draftMap.get(key);
+      list =
+          (List<V>) new ArrayList<V>((List<V>) draftMap.get(key)); // copy immutable -> mutable list
+      draft.put(key, list);
       list.remove(value);
       facet = new BoundFacet(prop, list);
     } else {
@@ -398,7 +411,9 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       facet = new BoundFacet(prop, list);
     } else if (draft != null) {
       String key = prop.getPropertyName();
-      list = (List<V>) draftMap.get(key);
+      list =
+          (List<V>) new ArrayList<V>((List<V>) draftMap.get(key)); // copy immutable -> mutable list
+      draft.put(key, list);
       list.removeAll(value);
       facet = new BoundFacet(prop, list);
     } else {
@@ -467,7 +482,8 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       facet = new BoundFacet(prop, set);
     } else if (draft != null) {
       String key = prop.getPropertyName();
-      set = (Set<V>) draftMap.get(key);
+      set = (Set<V>) new HashSet<V>((Set<V>) draftMap.get(key));
+      draft.put(key, set);
       set.add(value);
       facet = new BoundFacet(prop, set);
     } else {

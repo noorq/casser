@@ -19,7 +19,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import net.helenus.core.reflect.Drafted;
 import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.support.HelenusMappingException;
@@ -35,7 +34,7 @@ public final class ValueProviderMap implements Map<String, Object> {
     this.source = source;
     this.valueProvider = valueProvider;
     this.entity = entity;
-    this.immutable = entity.getMappingInterface().isAssignableFrom(Drafted.class);
+    this.immutable = entity.isDraftable();
   }
 
   private static void throwShouldNeverCall(String methodName) {

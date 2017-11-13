@@ -24,18 +24,20 @@ import com.google.common.base.Function;
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 import net.helenus.core.AbstractSessionOperations;
+import net.helenus.core.Helenus;
 import net.helenus.core.UnitOfWork;
 import net.helenus.core.cache.CacheUtil;
 import net.helenus.core.cache.Facet;
-import net.helenus.core.reflect.Drafted;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.support.Fun;
+import org.apache.commons.lang3.SerializationUtils;
 
 public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOperation<E, O>>
     extends AbstractStatementOperation<E, O> {
@@ -153,26 +155,22 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
                   cachedResult = (E) sessionOps.checkCache(tableName, facets);
                   if (cachedResult != null) {
                     Class<?> iface = MappingUtil.getMappingInterface(cachedResult);
-                    try {
-                      if (Drafted.class.isAssignableFrom(iface)) {
-                        result = Optional.of(cachedResult);
-                      } else {
-                        result = Optional.of(MappingUtil.clone(cachedResult));
-                      }
-                      sessionCacheHits.mark();
-                      cacheHits.mark();
-                      uow.recordCacheAndDatabaseOperationCount(1, 0);
-                    } catch (CloneNotSupportedException e) {
-                      result = Optional.empty();
-                      sessionCacheMiss.mark();
-                      cacheMiss.mark();
-                      uow.recordCacheAndDatabaseOperationCount(-1, 0);
-                    } finally {
-                      if (result.isPresent()) {
-                        updateCache = true;
-                      } else {
-                        updateCache = false;
-                      }
+                    if (Helenus.entity(iface).isDraftable()) {
+                      result = Optional.of(cachedResult);
+                    } else {
+                      result =
+                          Optional.of(
+                              (E)
+                                  SerializationUtils.<Serializable>clone(
+                                      (Serializable) cachedResult));
+                    }
+                    sessionCacheHits.mark();
+                    cacheHits.mark();
+                    uow.recordCacheAndDatabaseOperationCount(1, 0);
+                    if (result.isPresent()) {
+                      updateCache = true;
+                    } else {
+                      updateCache = false;
                     }
                   } else {
                     updateCache = false;

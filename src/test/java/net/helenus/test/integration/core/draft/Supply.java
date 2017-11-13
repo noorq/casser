@@ -15,7 +15,7 @@ import net.helenus.mapping.annotation.*;
 
 @Table
 @Cacheable
-public interface Supply extends Entity, Drafted<Supply> {
+public interface Supply extends Entity {
 
   static Supply supply = Helenus.dsl(Supply.class);
 
@@ -52,8 +52,7 @@ public interface Supply extends Entity, Drafted<Supply> {
     return new Draft(this);
   }
 
-  class Draft extends AbstractEntityDraft<Supply> {
-
+  class Draft extends AbstractEntityDraft<Supply> implements Drafted<Supply> {
     // Entity/Draft pattern-enabling methods:
     Draft(String region) {
       super(null);

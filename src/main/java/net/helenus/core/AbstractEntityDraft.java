@@ -51,12 +51,7 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
       } else {
         // Collections fetched from the entityMap
         if (value instanceof Collection) {
-          try {
-            value = MappingUtil.<T>clone(value);
-          } catch (CloneNotSupportedException e) {
-            // TODO(gburd): deep?shallow? copy of List, Map, Set to a mutable collection.
-            value = (T) SerializationUtils.<Serializable>clone((Serializable) value);
-          }
+          value = (T) SerializationUtils.<Serializable>clone((Serializable) value);
         }
       }
     }
