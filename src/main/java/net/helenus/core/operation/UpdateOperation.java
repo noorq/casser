@@ -34,13 +34,10 @@ import net.helenus.mapping.HelenusEntity;
 import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.mapping.value.BeanColumnValueProvider;
-import net.helenus.mapping.value.ValueProviderMap;
 import net.helenus.support.HelenusException;
 import net.helenus.support.HelenusMappingException;
 import net.helenus.support.Immutables;
 
-import static net.helenus.mapping.ColumnType.CLUSTERING_COLUMN;
-import static net.helenus.mapping.ColumnType.PARTITION_KEY;
 
 public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateOperation<E>> {
 
@@ -110,7 +107,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
     if (pojo != null) {
       if (!BeanColumnValueProvider.INSTANCE.getColumnValue(pojo, -1, prop).equals(v)) {
         String key = prop.getPropertyName();
-        ((MapExportable)pojo).put(key, v);
+        ((MapExportable) pojo).put(key, v);
       }
     }
 
@@ -421,7 +418,8 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 
     Object valueObj = value;
 
-    Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+    Optional<Function<Object, Object>> converter =
+        prop.getWriteConverter(sessionOps.getSessionRepository());
     if (converter.isPresent()) {
       List convertedList = (List) converter.get().apply(Immutables.listOf(value));
       valueObj = convertedList.get(0);
@@ -436,7 +434,8 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
 
     List valueObj = value;
 
-    Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+    Optional<Function<Object, Object>> converter =
+        prop.getWriteConverter(sessionOps.getSessionRepository());
     if (converter.isPresent()) {
       valueObj = (List) converter.get().apply(value);
     }
@@ -581,7 +580,8 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
     HelenusProperty prop = p.getProperty();
     Object valueObj = value;
 
-    Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+    Optional<Function<Object, Object>> converter =
+        prop.getWriteConverter(sessionOps.getSessionRepository());
     if (converter.isPresent()) {
       Set convertedSet = (Set) converter.get().apply(Immutables.setOf(value));
       valueObj = convertedSet.iterator().next();
@@ -595,7 +595,8 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
     HelenusProperty prop = p.getProperty();
     Set valueObj = value;
 
-    Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+    Optional<Function<Object, Object>> converter =
+        prop.getWriteConverter(sessionOps.getSessionRepository());
     if (converter.isPresent()) {
       valueObj = (Set) converter.get().apply(value);
     }
@@ -634,9 +635,11 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       facet = null;
     }
 
-    Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+    Optional<Function<Object, Object>> converter =
+        prop.getWriteConverter(sessionOps.getSessionRepository());
     if (converter.isPresent()) {
-      Map<Object, Object> convertedMap = (Map<Object, Object>) converter.get().apply(Immutables.mapOf(key, value));
+      Map<Object, Object> convertedMap =
+          (Map<Object, Object>) converter.get().apply(Immutables.mapOf(key, value));
       for (Map.Entry<Object, Object> e : convertedMap.entrySet()) {
         assignments.put(QueryBuilder.put(p.getColumnName(), e.getKey(), e.getValue()), facet);
       }
@@ -672,7 +675,8 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       facet = null;
     }
 
-    Optional<Function<Object, Object>> converter = prop.getWriteConverter(sessionOps.getSessionRepository());
+    Optional<Function<Object, Object>> converter =
+        prop.getWriteConverter(sessionOps.getSessionRepository());
     if (converter.isPresent()) {
       Map convertedMap = (Map) converter.get().apply(map);
       assignments.put(QueryBuilder.putAll(p.getColumnName(), convertedMap), facet);
@@ -789,7 +793,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
         adjustTtlAndWriteTime(draft);
       } else if (pojo != null) {
         sessionOps.updateCache(pojo, bindFacetValues());
-        adjustTtlAndWriteTime((MapExportable)pojo);
+        adjustTtlAndWriteTime((MapExportable) pojo);
       } else {
         sessionOps.cacheEvict(bindFacetValues());
       }
@@ -811,7 +815,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       cacheUpdate(uow, result, bindFacetValues());
     } else if (pojo != null) {
       cacheUpdate(uow, (E) pojo, bindFacetValues());
-      adjustTtlAndWriteTime((MapExportable)pojo);
+      adjustTtlAndWriteTime((MapExportable) pojo);
       return (E) pojo;
     }
     return result;
@@ -828,7 +832,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       adjustTtlAndWriteTime(draft);
     } else if (pojo != null) {
       result = (E) pojo;
-      adjustTtlAndWriteTime((MapExportable)pojo);
+      adjustTtlAndWriteTime((MapExportable) pojo);
     } else {
       result = null;
     }

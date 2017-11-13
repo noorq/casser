@@ -129,9 +129,13 @@ public final class MappingUtil {
   }
 
   public static HelenusProperty getPropertyForColumn(HelenusEntity entity, String name) {
-    if (name == null)
-      return null;
-    return entity.getOrderedProperties().stream().filter(p -> p.getColumnName().equals(name)).findFirst().orElse(null);
+    if (name == null) return null;
+    return entity
+        .getOrderedProperties()
+        .stream()
+        .filter(p -> p.getColumnName().equals(name))
+        .findFirst()
+        .orElse(null);
   }
 
   public static String getDefaultColumnName(Method getter) {
@@ -331,22 +335,24 @@ public final class MappingUtil {
 
   public static boolean compareMaps(MapExportable me, Map<String, Object> m2) {
     Map<String, Object> m1 = me.toMap();
-    List<String> matching = m2.entrySet()
+    List<String> matching =
+        m2.entrySet()
             .stream()
             .filter(e -> !e.getKey().matches("^_.*_(ttl|writeTime)$"))
-            .filter(e -> {
-              String k = e.getKey();
-              if (m1.containsKey(k)) {
-                Object o1 = e.getValue();
-                Object o2 = m1.get(k);
-                if (o1 == o2 || o1.equals(o2))
-                  return true;
-              }
-              return false;
-            })
+            .filter(
+                e -> {
+                  String k = e.getKey();
+                  if (m1.containsKey(k)) {
+                    Object o1 = e.getValue();
+                    Object o2 = m1.get(k);
+                    if (o1 == o2 || o1.equals(o2)) return true;
+                  }
+                  return false;
+                })
             .map(e -> e.getKey())
             .collect(Collectors.toList());
-    List<String> divergent = m1.entrySet()
+    List<String> divergent =
+        m1.entrySet()
             .stream()
             .filter(e -> !e.getKey().matches("^_.*_(ttl|writeTime)$"))
             .filter(e -> !matching.contains(e.getKey()))
@@ -354,5 +360,4 @@ public final class MappingUtil {
             .collect(Collectors.toList());
     return divergent.size() > 0 ? false : true;
   }
-
 }

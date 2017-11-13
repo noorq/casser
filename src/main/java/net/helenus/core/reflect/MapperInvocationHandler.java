@@ -15,14 +15,6 @@
  */
 package net.helenus.core.reflect;
 
-import net.helenus.core.Getter;
-import net.helenus.core.Helenus;
-import net.helenus.core.cache.CacheUtil;
-import net.helenus.mapping.MappingUtil;
-import net.helenus.mapping.annotation.Transient;
-import net.helenus.mapping.value.ValueProviderMap;
-import net.helenus.support.HelenusException;
-
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamException;
@@ -36,6 +28,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import net.helenus.core.Getter;
+import net.helenus.core.Helenus;
+import net.helenus.core.cache.CacheUtil;
+import net.helenus.mapping.MappingUtil;
+import net.helenus.mapping.annotation.Transient;
+import net.helenus.mapping.value.ValueProviderMap;
+import net.helenus.support.HelenusException;
 
 public class MapperInvocationHandler<E> implements InvocationHandler, Serializable {
   private static final long serialVersionUID = -7044209982830584984L;
@@ -101,7 +100,7 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
         }
       }
       if (otherObj instanceof MapExportable) {
-        return MappingUtil.compareMaps((MapExportable)otherObj, src);
+        return MappingUtil.compareMaps((MapExportable) otherObj, src);
       }
       return false;
     }
@@ -111,7 +110,7 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
       if (args[0] instanceof String) {
         key = (String) args[0];
       } else if (args[0] instanceof Getter) {
-        key = MappingUtil.resolveMappingProperty((Getter)args[0]).getProperty().getPropertyName();
+        key = MappingUtil.resolveMappingProperty((Getter) args[0]).getProperty().getPropertyName();
       } else {
         key = null;
       }
@@ -128,14 +127,19 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
     if (Entity.WRITTEN_AT_METHOD.equals(methodName) && method.getParameterCount() == 1) {
       final String key;
       if (args[0] instanceof String) {
-        key = CacheUtil.writeTimeKey((String)args[0]);
+        key = CacheUtil.writeTimeKey((String) args[0]);
       } else if (args[0] instanceof Getter) {
-        Getter getter = (Getter)args[0];
-        key = CacheUtil.writeTimeKey(MappingUtil.resolveMappingProperty(getter).getProperty().getColumnName().toCql(false));
+        Getter getter = (Getter) args[0];
+        key =
+            CacheUtil.writeTimeKey(
+                MappingUtil.resolveMappingProperty(getter)
+                    .getProperty()
+                    .getColumnName()
+                    .toCql(false));
       } else {
         return 0L;
       }
-      Long v = (Long)src.get(key);
+      Long v = (Long) src.get(key);
       if (v != null) {
         return v;
       }
@@ -145,14 +149,19 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
     if (Entity.TTL_OF_METHOD.equals(methodName) && method.getParameterCount() == 1) {
       final String key;
       if (args[0] instanceof String) {
-        key = CacheUtil.ttlKey((String)args[0]);
+        key = CacheUtil.ttlKey((String) args[0]);
       } else if (args[0] instanceof Getter) {
-        Getter getter = (Getter)args[0];
-        key = CacheUtil.ttlKey(MappingUtil.resolveMappingProperty(getter).getProperty().getColumnName().toCql(false));
+        Getter getter = (Getter) args[0];
+        key =
+            CacheUtil.ttlKey(
+                MappingUtil.resolveMappingProperty(getter)
+                    .getProperty()
+                    .getColumnName()
+                    .toCql(false));
       } else {
         return 0;
       }
-      int v[] = (int[])src.get(key);
+      int v[] = (int[]) src.get(key);
       if (v != null) {
         return v[0];
       }
@@ -185,7 +194,9 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
 
     if (MapExportable.TO_MAP_METHOD.equals(methodName)) {
       if (method.getParameterCount() == 1 && args[0] instanceof Boolean) {
-        if ((boolean)args[0] == true) { return src; }
+        if ((boolean) args[0] == true) {
+          return src;
+        }
       }
       return Collections.unmodifiableMap(src);
     }

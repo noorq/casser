@@ -22,7 +22,8 @@ import java.util.Map;
 import net.helenus.core.*;
 import net.helenus.mapping.HelenusProperty;
 
-public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterStreamOperation<E, O>>
+public abstract class AbstractFilterStreamOperation<
+        E, O extends AbstractFilterStreamOperation<E, O>>
     extends AbstractStreamOperation<E, O> {
 
   protected Map<HelenusProperty, Filter<?>> filters = null;
@@ -41,8 +42,7 @@ public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterS
 
   public <V> O where(Getter<V> getter, Operator operator, V val) {
 
-    if (val != null)
-        addFilter(Filter.create(getter, operator, val));
+    if (val != null) addFilter(Filter.create(getter, operator, val));
 
     return (O) this;
   }
@@ -63,8 +63,7 @@ public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterS
 
   public <V> O and(Getter<V> getter, Operator operator, V val) {
 
-    if (val != null)
-      addFilter(Filter.create(getter, operator, val));
+    if (val != null) addFilter(Filter.create(getter, operator, val));
 
     return (O) this;
   }
@@ -85,8 +84,7 @@ public abstract class AbstractFilterStreamOperation<E, O extends AbstractFilterS
 
   public <V> O onlyIf(Getter<V> getter, Operator operator, V val) {
 
-    if (val != null)
-      addIfFilter(Filter.create(getter, operator, val));
+    if (val != null) addIfFilter(Filter.create(getter, operator, val));
 
     return (O) this;
   }

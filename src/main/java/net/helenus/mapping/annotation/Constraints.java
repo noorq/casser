@@ -238,7 +238,6 @@ public final class Constraints {
     boolean alone() default true;
 
     boolean combined() default true;
-    
   }
 
   /**

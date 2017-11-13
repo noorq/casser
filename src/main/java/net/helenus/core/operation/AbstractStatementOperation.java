@@ -328,7 +328,8 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
 
   protected Object cacheUpdate(UnitOfWork<?> uow, E pojo, List<Facet> identifyingFacets) {
     List<Facet> facets = new ArrayList<>();
-    Map<String, Object> valueMap = pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
+    Map<String, Object> valueMap =
+        pojo instanceof MapExportable ? ((MapExportable) pojo).toMap() : null;
 
     for (Facet facet : identifyingFacets) {
       if (facet instanceof UnboundFacet) {

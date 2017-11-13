@@ -65,5 +65,7 @@ public final class SelectFirstOperation<E>
   }
 
   @Override
-  public boolean ignoreCache() { return delegate.ignoreCache(); }
+  public boolean ignoreCache() {
+    return delegate.ignoreCache();
+  }
 }

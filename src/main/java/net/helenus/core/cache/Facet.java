@@ -58,6 +58,11 @@ public class Facet<T> {
     this.combined = combined;
   }
 
-  public boolean alone() { return alone; }
-  public boolean combined() { return combined; }
+  public boolean alone() {
+    return alone;
+  }
+
+  public boolean combined() {
+    return combined;
+  }
 }

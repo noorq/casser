@@ -70,7 +70,7 @@ public abstract class Operation<E> {
   }
 
   public static String queryString(BatchOperation operation, boolean includeValues) {
-      return operation.toString(includeValues);
+    return operation.toString(includeValues);
   }
 
   public static String queryString(Statement statement, boolean includeValues) {
@@ -92,8 +92,15 @@ public abstract class Operation<E> {
     return query;
   }
 
-  public ResultSet execute(AbstractSessionOperations session, UnitOfWork uow, TraceContext traceContext,
-      long timeout, TimeUnit units, boolean showValues, boolean cached) throws TimeoutException {
+  public ResultSet execute(
+      AbstractSessionOperations session,
+      UnitOfWork uow,
+      TraceContext traceContext,
+      long timeout,
+      TimeUnit units,
+      boolean showValues,
+      boolean cached)
+      throws TimeoutException {
 
     // Start recording in a Zipkin sub-span our execution time to perform this operation.
     Tracer tracer = session.getZipkinTracer();
@@ -111,11 +118,17 @@ public abstract class Operation<E> {
 
       Statement statement = options(buildStatement(cached));
 
-      if (session.isShowCql() ) {
-        String stmt = (this instanceof BatchOperation) ? queryString((BatchOperation)this, showValues) : queryString(statement, showValues);
+      if (session.isShowCql()) {
+        String stmt =
+            (this instanceof BatchOperation)
+                ? queryString((BatchOperation) this, showValues)
+                : queryString(statement, showValues);
         session.getPrintStream().println(stmt);
       } else if (LOG.isDebugEnabled()) {
-        String stmt = (this instanceof BatchOperation) ? queryString((BatchOperation)this, showValues) : queryString(statement, showValues);
+        String stmt =
+            (this instanceof BatchOperation)
+                ? queryString((BatchOperation) this, showValues)
+                : queryString(statement, showValues);
         LOG.info("CQL> " + stmt);
       }
 
@@ -135,7 +148,9 @@ public abstract class Operation<E> {
                   .map(InetAddress::toString)
                   .collect(Collectors.joining(", "));
           ConsistencyLevel cl = ei.getAchievedConsistencyLevel();
-          if (cl == null) { cl = statement.getConsistencyLevel(); }
+          if (cl == null) {
+            cl = statement.getConsistencyLevel();
+          }
           int se = ei.getSpeculativeExecutions();
           String warn = ei.getWarnings().stream().collect(Collectors.joining(", "));
           String ri =
@@ -148,7 +163,8 @@ public abstract class Operation<E> {
                   qh.getRack(),
                   (cl != null)
                       ? (" consistency: "
-                          + cl.name() + " "
+                          + cl.name()
+                          + " "
                           + (cl.isDCLocal() ? " DC " : "")
                           + (cl.isSerial() ? " SC " : ""))
                       : "",
@@ -188,7 +204,8 @@ public abstract class Operation<E> {
         timerString = String.format(" %s ", timer.toString());
       }
       LOG.info(
-          String.format("%s%s%s", uowString, timerString, Operation.queryString(statement, showValues)));
+          String.format(
+              "%s%s%s", uowString, timerString, Operation.queryString(statement, showValues)));
     }
   }
 

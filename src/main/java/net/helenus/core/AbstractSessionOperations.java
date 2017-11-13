@@ -25,7 +25,6 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.concurrent.Executor;
 import net.helenus.core.cache.Facet;
-import net.helenus.core.operation.Operation;
 import net.helenus.mapping.value.ColumnValuePreparer;
 import net.helenus.mapping.value.ColumnValueProvider;
 import net.helenus.support.Either;

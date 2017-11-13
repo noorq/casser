@@ -16,7 +16,6 @@
 package net.helenus.mapping.value;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -154,8 +153,9 @@ public final class ValueProviderMap implements Map<String, Object> {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (o == null || !(o.getClass().isAssignableFrom(Map.class) || o.getClass().getSimpleName().equals("UnmodifiableMap")))
-      return false;
+    if (o == null
+        || !(o.getClass().isAssignableFrom(Map.class)
+            || o.getClass().getSimpleName().equals("UnmodifiableMap"))) return false;
 
     Map that = (Map) o;
     if (this.size() != that.size()) return false;

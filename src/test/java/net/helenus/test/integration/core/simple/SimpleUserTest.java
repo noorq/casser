@@ -208,17 +208,13 @@ public class SimpleUserTest extends AbstractEmbeddedCassandraTest {
   }
 
   public void testFunTuple() throws TimeoutException {
-      Fun.Tuple1<String> tf = session
-              .select(user::name)
-              .where(user::id, eq(100L))
-              .single()
-              .sync()
-              .orElse(null);
-      if (tf != null) {
-          Assert.assertEquals(Fun.class, tf.getClass().getEnclosingClass());
-          String name = tf._1;
-          Assert.assertEquals("greg", name);
-      }
+    Fun.Tuple1<String> tf =
+        session.select(user::name).where(user::id, eq(100L)).single().sync().orElse(null);
+    if (tf != null) {
+      Assert.assertEquals(Fun.class, tf.getClass().getEnclosingClass());
+      String name = tf._1;
+      Assert.assertEquals("greg", name);
+    }
   }
 
   public void testZipkin() throws TimeoutException {

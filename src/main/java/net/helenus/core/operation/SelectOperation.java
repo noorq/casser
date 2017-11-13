@@ -23,7 +23,6 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Select.Selection;
 import com.datastax.driver.core.querybuilder.Select.Where;
-import com.google.common.collect.Iterables;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -97,7 +96,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
     this.implementsEntityType = Entity.class.isAssignableFrom(entity.getMappingInterface());
   }
 
-  public SelectOperation(AbstractSessionOperations sessionOperations, HelenusEntity entity, Function<Row, E> rowMapper) {
+  public SelectOperation(
+      AbstractSessionOperations sessionOperations,
+      HelenusEntity entity,
+      Function<Row, E> rowMapper) {
 
     super(sessionOperations);
     this.rowMapper = rowMapper;
@@ -112,8 +114,10 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
     this.implementsEntityType = Entity.class.isAssignableFrom(entity.getMappingInterface());
   }
 
-  public SelectOperation(AbstractSessionOperations sessionOperations, Function<Row, E> rowMapper,
-                         HelenusPropertyNode... props) {
+  public SelectOperation(
+      AbstractSessionOperations sessionOperations,
+      Function<Row, E> rowMapper,
+      HelenusPropertyNode... props) {
 
     super(sessionOperations);
 
@@ -310,7 +314,9 @@ public final class SelectOperation<E> extends AbstractFilterStreamOperation<E, S
       for (Filter<?> filter : filters.values()) {
         where.and(filter.getClause(sessionOps.getValuePreparer()));
         HelenusProperty filterProp = filter.getNode().getProperty();
-        HelenusProperty prop = props.stream()
+        HelenusProperty prop =
+            props
+                .stream()
                 .map(HelenusPropertyNode::getProperty)
                 .filter(thisProp -> thisProp.getPropertyName().equals(filterProp.getPropertyName()))
                 .findFirst()

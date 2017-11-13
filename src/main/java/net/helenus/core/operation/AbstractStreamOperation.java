@@ -73,21 +73,21 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
       if (!ignoreCache() && isSessionCacheable()) {
         List<Facet> facets = bindFacetValues();
         if (facets != null && facets.size() > 0) {
-            if (facets.stream().filter(f -> !f.fixed()).distinct().count() > 0) {
-                String tableName = CacheUtil.schemaName(facets);
-                cacheResult = (E) sessionOps.checkCache(tableName, facets);
-                if (cacheResult != null) {
-                    resultStream = Stream.of(cacheResult);
-                    updateCache = false;
-                    sessionCacheHits.mark();
-                    cacheHits.mark();
-                } else {
-                    sessionCacheMiss.mark();
-                    cacheMiss.mark();
-                }
+          if (facets.stream().filter(f -> !f.fixed()).distinct().count() > 0) {
+            String tableName = CacheUtil.schemaName(facets);
+            cacheResult = (E) sessionOps.checkCache(tableName, facets);
+            if (cacheResult != null) {
+              resultStream = Stream.of(cacheResult);
+              updateCache = false;
+              sessionCacheHits.mark();
+              cacheHits.mark();
             } else {
-                //TODO(gburd): look in statement cache for results
+              sessionCacheMiss.mark();
+              cacheMiss.mark();
             }
+          } else {
+            //TODO(gburd): look in statement cache for results
+          }
         }
       }
 
@@ -114,7 +114,8 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
           resultStream.forEach(
               result -> {
                 Class<?> resultClass = result.getClass();
-                if (!(resultClass.getEnclosingClass() != null && resultClass.getEnclosingClass() == Fun.class)) {
+                if (!(resultClass.getEnclosingClass() != null
+                    && resultClass.getEnclosingClass() == Fun.class)) {
                   sessionOps.updateCache(result, facets);
                 }
                 again.add(result);
@@ -144,57 +145,57 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
           List<Facet> facets = bindFacetValues();
           if (facets != null && facets.size() > 0) {
             if (facets.stream().filter(f -> !f.fixed()).distinct().count() > 0) {
-                cachedResult = checkCache(uow, facets);
-                if (cachedResult != null) {
-                    updateCache = false;
-                    resultStream = Stream.of(cachedResult);
-                    uowCacheHits.mark();
-                    cacheHits.mark();
-                    uow.recordCacheAndDatabaseOperationCount(1, 0);
-                } else {
-                    uowCacheMiss.mark();
-                    if (isSessionCacheable()) {
-                        String tableName = CacheUtil.schemaName(facets);
-                        cachedResult = (E) sessionOps.checkCache(tableName, facets);
-                        Class<?> iface = MappingUtil.getMappingInterface(cachedResult);
-                        if (cachedResult != null) {
-                            E result = null;
-                            try {
-                                if (Drafted.class.isAssignableFrom(iface)) {
-                                    result = cachedResult;
-                                } else {
-                                    result = MappingUtil.clone(cachedResult);
-                                }
-                                resultStream = Stream.of(result);
-                                sessionCacheHits.mark();
-                                cacheHits.mark();
-                                uow.recordCacheAndDatabaseOperationCount(1, 0);
-                            } catch (CloneNotSupportedException e) {
-                                resultStream = null;
-                                sessionCacheMiss.mark();
-                                uow.recordCacheAndDatabaseOperationCount(-1, 0);
-                            } finally {
-                                if (result != null) {
-                                    updateCache = true;
-                                } else {
-                                    updateCache = false;
-                                }
-                            }
-                        } else {
-                            updateCache = false;
-                            sessionCacheMiss.mark();
-                            cacheMiss.mark();
-                            uow.recordCacheAndDatabaseOperationCount(-1, 0);
-                        }
-                    } else {
+              cachedResult = checkCache(uow, facets);
+              if (cachedResult != null) {
+                updateCache = false;
+                resultStream = Stream.of(cachedResult);
+                uowCacheHits.mark();
+                cacheHits.mark();
+                uow.recordCacheAndDatabaseOperationCount(1, 0);
+              } else {
+                uowCacheMiss.mark();
+                if (isSessionCacheable()) {
+                  String tableName = CacheUtil.schemaName(facets);
+                  cachedResult = (E) sessionOps.checkCache(tableName, facets);
+                  Class<?> iface = MappingUtil.getMappingInterface(cachedResult);
+                  if (cachedResult != null) {
+                    E result = null;
+                    try {
+                      if (Drafted.class.isAssignableFrom(iface)) {
+                        result = cachedResult;
+                      } else {
+                        result = MappingUtil.clone(cachedResult);
+                      }
+                      resultStream = Stream.of(result);
+                      sessionCacheHits.mark();
+                      cacheHits.mark();
+                      uow.recordCacheAndDatabaseOperationCount(1, 0);
+                    } catch (CloneNotSupportedException e) {
+                      resultStream = null;
+                      sessionCacheMiss.mark();
+                      uow.recordCacheAndDatabaseOperationCount(-1, 0);
+                    } finally {
+                      if (result != null) {
+                        updateCache = true;
+                      } else {
                         updateCache = false;
+                      }
                     }
+                  } else {
+                    updateCache = false;
+                    sessionCacheMiss.mark();
+                    cacheMiss.mark();
+                    uow.recordCacheAndDatabaseOperationCount(-1, 0);
+                  }
+                } else {
+                  updateCache = false;
                 }
+              }
             } else {
-                //TODO(gburd): look in statement cache for results
-                updateCache = false; //true;
-                cacheMiss.mark();
-                uow.recordCacheAndDatabaseOperationCount(-1, 0);
+              //TODO(gburd): look in statement cache for results
+              updateCache = false; //true;
+              cacheMiss.mark();
+              uow.recordCacheAndDatabaseOperationCount(-1, 0);
             }
           } else {
             updateCache = false;
@@ -209,8 +210,15 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
       // Check to see if we fetched the object from the cache
       if (resultStream == null) {
-        ResultSet resultSet = execute(sessionOps, uow, traceContext, queryExecutionTimeout, queryTimeoutUnits,
-                showValues, true);
+        ResultSet resultSet =
+            execute(
+                sessionOps,
+                uow,
+                traceContext,
+                queryExecutionTimeout,
+                queryTimeoutUnits,
+                showValues,
+                true);
         resultStream = transform(resultSet);
       }
 
@@ -221,15 +229,15 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
           List<E> again = new ArrayList<>();
           List<Facet> facets = getFacets();
           resultStream.forEach(
-               result -> {
-                   Class<?> resultClass = result.getClass();
-                   if (result != deleted
-                           && !(resultClass.getEnclosingClass() != null
-                           && resultClass.getEnclosingClass() == Fun.class)) {
-                     result = (E) cacheUpdate(uow, result, facets);
-                   }
-                   again.add(result);
-               });
+              result -> {
+                Class<?> resultClass = result.getClass();
+                if (result != deleted
+                    && !(resultClass.getEnclosingClass() != null
+                        && resultClass.getEnclosingClass() == Fun.class)) {
+                  result = (E) cacheUpdate(uow, result, facets);
+                }
+                again.add(result);
+              });
           resultStream = again.stream();
         }
       }

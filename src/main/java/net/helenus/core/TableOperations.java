@@ -77,14 +77,16 @@ public final class TableOperations {
   }
 
   public void createView(HelenusEntity entity) {
-    sessionOps.execute(SchemaUtil.createMaterializedView(
+    sessionOps.execute(
+        SchemaUtil.createMaterializedView(
             sessionOps.usingKeyspace(), entity.getName().toCql(), entity));
     // executeBatch(SchemaUtil.createIndexes(entity)); NOTE: Unfortunately C* 3.10 does not yet support 2i on materialized views.
   }
 
   public void dropView(HelenusEntity entity) {
     sessionOps.execute(
-        SchemaUtil.dropMaterializedView(sessionOps.usingKeyspace(), entity.getName().toCql(), entity));
+        SchemaUtil.dropMaterializedView(
+            sessionOps.usingKeyspace(), entity.getName().toCql(), entity));
   }
 
   public void updateView(TableMetadata tmd, HelenusEntity entity) {

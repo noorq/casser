@@ -30,7 +30,9 @@ public class BoundFacet extends Facet<String> {
     this.properties.put(property, value);
   }
 
-  public Set<HelenusProperty> getProperties() { return properties.keySet(); }
+  public Set<HelenusProperty> getProperties() {
+    return properties.keySet();
+  }
 
   public BoundFacet(String name, Map<HelenusProperty, Object> properties) {
     super(

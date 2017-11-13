@@ -48,5 +48,4 @@ public final class DistinctValidator
   public boolean combined() {
     return annotation == null ? true : annotation.combined();
   }
-
 }

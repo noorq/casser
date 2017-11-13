@@ -17,8 +17,6 @@ package net.helenus.core;
 
 import static net.helenus.core.HelenusSession.deleted;
 
-import com.datastax.driver.core.BatchStatement;
-import com.datastax.driver.core.ResultSet;
 import com.diffplug.common.base.Errors;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.HashBasedTable;
@@ -223,9 +221,9 @@ public abstract class AbstractUnitOfWork<E extends Exception>
       try {
         Class<?> iface = MappingUtil.getMappingInterface(r);
         if (Drafted.class.isAssignableFrom(iface)) {
-            cacheUpdate(r, facets);
+          cacheUpdate(r, facets);
         } else {
-            cacheUpdate(MappingUtil.clone(r), facets);
+          cacheUpdate(MappingUtil.clone(r), facets);
         }
       } catch (CloneNotSupportedException e) {
         result = Optional.empty();
@@ -235,11 +233,11 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   }
 
   private Optional<Object> checkParentCache(List<Facet> facets) {
-      Optional<Object> result = Optional.empty();
-      if (parent != null) {
-          result = parent.checkParentCache(facets);
-      }
-      return result;
+    Optional<Object> result = Optional.empty();
+    if (parent != null) {
+      result = parent.checkParentCache(facets);
+    }
+    return result;
   }
 
   @Override
@@ -285,8 +283,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
       if (!facet.fixed()) {
         if (facet.alone()) {
           String columnName = facet.name() + "==" + facet.value();
-          if (result == null)
-              result = cache.get(tableName, columnName);
+          if (result == null) result = cache.get(tableName, columnName);
           cache.put(tableName, columnName, Either.left(value));
         }
       }
@@ -314,8 +311,8 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   public PostCommitFunction<Void, Void> commit() throws E, TimeoutException {
 
     if (batch != null) {
-        committedAt = batch.sync(this);
-        //TODO(gburd) update cache with writeTime...
+      committedAt = batch.sync(this);
+      //TODO(gburd) update cache with writeTime...
     }
 
     // All nested UnitOfWork should be committed (not aborted) before calls to
@@ -387,14 +384,14 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   }
 
   private void addBatched(BatchOperation batch) {
-      if (this.batch == null) {
-          this.batch = batch;
-      } else {
-          this.batch.addAll(batch);
-      }
+    if (this.batch == null) {
+      this.batch = batch;
+    } else {
+      this.batch.addAll(batch);
+    }
   }
 
-    /* Explicitly discard the work and mark it as as such in the log. */
+  /* Explicitly discard the work and mark it as as such in the log. */
   public synchronized void abort() {
     TreeTraverser<AbstractUnitOfWork<E>> traverser =
         TreeTraverser.using(node -> node::getChildNodes);
@@ -418,13 +415,18 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   private void mergeCache(Table<String, String, Either<Object, List<Facet>>> from) {
     Table<String, String, Either<Object, List<Facet>>> to = this.cache;
     from.rowMap()
-        .forEach((rowKey, columnMap) -> {
-              columnMap.forEach((columnKey, value) -> {
-                  if (to.contains(rowKey, columnKey)) {
-                      to.put(rowKey, columnKey, Either.left(
+        .forEach(
+            (rowKey, columnMap) -> {
+              columnMap.forEach(
+                  (columnKey, value) -> {
+                    if (to.contains(rowKey, columnKey)) {
+                      to.put(
+                          rowKey,
+                          columnKey,
+                          Either.left(
                               CacheUtil.merge(
-                                      to.get(rowKey, columnKey).getLeft(),
-                                      from.get(rowKey, columnKey).getLeft())));
+                                  to.get(rowKey, columnKey).getLeft(),
+                                  from.get(rowKey, columnKey).getLeft())));
                     } else {
                       to.put(rowKey, columnKey, from.get(rowKey, columnKey));
                     }
@@ -453,5 +455,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
     return committed;
   }
 
-  public long committedAt() { return committedAt; }
+  public long committedAt() {
+    return committedAt;
+  }
 }

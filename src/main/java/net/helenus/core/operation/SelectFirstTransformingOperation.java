@@ -58,5 +58,7 @@ public final class SelectFirstTransformingOperation<R, E>
   }
 
   @Override
-  public boolean ignoreCache() { return delegate.ignoreCache(); }
+  public boolean ignoreCache() {
+    return delegate.ignoreCache();
+  }
 }

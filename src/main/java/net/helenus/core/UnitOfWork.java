@@ -15,12 +15,10 @@
  */
 package net.helenus.core;
 
-import com.datastax.driver.core.Statement;
 import com.google.common.base.Stopwatch;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
-
 import net.helenus.core.cache.Facet;
 import net.helenus.core.operation.AbstractOperation;
 

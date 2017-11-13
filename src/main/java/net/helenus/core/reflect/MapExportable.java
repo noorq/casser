@@ -15,17 +15,20 @@
  */
 package net.helenus.core.reflect;
 
-import net.helenus.core.Getter;
-
 import java.util.Map;
+import net.helenus.core.Getter;
 
 public interface MapExportable {
   String TO_MAP_METHOD = "toMap";
   String PUT_METHOD = "put";
 
   Map<String, Object> toMap();
-  default Map<String, Object> toMap(boolean mutable) { return null; }
-  default void put(String key, Object value) { }
-  default <T> void put(Getter<T> getter, T value) { }
 
+  default Map<String, Object> toMap(boolean mutable) {
+    return null;
+  }
+
+  default void put(String key, Object value) {}
+
+  default <T> void put(Getter<T> getter, T value) {}
 }

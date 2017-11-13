@@ -58,8 +58,12 @@ public final class SelectTransformingOperation<R, E>
   }
 
   @Override
-  public boolean isSessionCacheable() { return delegate.isSessionCacheable(); }
+  public boolean isSessionCacheable() {
+    return delegate.isSessionCacheable();
+  }
 
   @Override
-  public boolean ignoreCache() { return delegate.ignoreCache(); }
+  public boolean ignoreCache() {
+    return delegate.ignoreCache();
+  }
 }

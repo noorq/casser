@@ -79,20 +79,22 @@ public class EntityDraftBuilderTest extends AbstractEmbeddedCassandraTest {
   @Test
   public void testFoo() throws Exception {
 
-      Supply s1 = session
-              .<Supply>select(Supply.class)
-              .where(supply::id, eq(id))
-              .and(supply::region, eq(region))
-              .single()
-              .sync()
-              .orElse(null);
+    Supply s1 =
+        session
+            .<Supply>select(Supply.class)
+            .where(supply::id, eq(id))
+            .and(supply::region, eq(region))
+            .single()
+            .sync()
+            .orElse(null);
 
-      // List
-      Supply s2 = session
-              .<Supply>update(s1.update())
-              .and(supply::region, eq(region))
-              .prepend(supply::suppliers, "Pignose Supply, LLC.")
-              .sync();
+    // List
+    Supply s2 =
+        session
+            .<Supply>update(s1.update())
+            .and(supply::region, eq(region))
+            .prepend(supply::suppliers, "Pignose Supply, LLC.")
+            .sync();
 
     Assert.assertEquals(s2.suppliers().get(0), "Pignose Supply, LLC.");
 
@@ -108,54 +110,55 @@ public class EntityDraftBuilderTest extends AbstractEmbeddedCassandraTest {
 
   @Test
   public void testDraftMergeInNestedUow() throws Exception {
-      Supply s1, s2, s3, s4, s5;
-      Supply.Draft d1;
+    Supply s1, s2, s3, s4, s5;
+    Supply.Draft d1;
 
-      s1 = session
+    s1 =
+        session
+            .<Supply>select(Supply.class)
+            .where(supply::id, eq(id))
+            .and(supply::region, eq(region))
+            .single()
+            .sync()
+            .orElse(null);
+
+    try (UnitOfWork uow1 = session.begin()) {
+      s2 =
+          session
               .<Supply>select(Supply.class)
               .where(supply::id, eq(id))
               .and(supply::region, eq(region))
               .single()
-              .sync()
+              .sync(uow1)
               .orElse(null);
 
-      try(UnitOfWork uow1 = session.begin()) {
-          s2 = session
-                  .<Supply>select(Supply.class)
-                  .where(supply::id, eq(id))
-                  .and(supply::region, eq(region))
-                  .single()
-                  .sync(uow1)
-                  .orElse(null);
+      try (UnitOfWork uow2 = session.begin(uow1)) {
+        s3 =
+            session
+                .<Supply>select(Supply.class)
+                .where(supply::id, eq(id))
+                .and(supply::region, eq(region))
+                .single()
+                .sync(uow2)
+                .orElse(null);
 
-          try(UnitOfWork uow2 = session.begin(uow1)) {
-              s3 = session
-                      .<Supply>select(Supply.class)
-                      .where(supply::id, eq(id))
-                      .and(supply::region, eq(region))
-                      .single()
-                      .sync(uow2)
-                      .orElse(null);
+        d1 = s3.update().setCode("WIDGET-002-UPDATED");
 
-              d1 = s3.update()
-                      .setCode("WIDGET-002-UPDATED");
+        s4 =
+            session.update(d1).usingTtl(20).defaultTimestamp(System.currentTimeMillis()).sync(uow2);
 
-              s4 = session.update(d1)
-                      .usingTtl(20)
-                      .defaultTimestamp(System.currentTimeMillis())
-                      .sync(uow2);
-
-              uow2.commit();
-          }
-
-          s5 = session
-                  .<Supply>select(Supply.class)
-                  .where(supply::id, eq(id))
-                  .and(supply::region, eq(region))
-                  .single()
-                  .sync(uow1)
-                  .orElse(null);
+        uow2.commit();
       }
+
+      s5 =
+          session
+              .<Supply>select(Supply.class)
+              .where(supply::id, eq(id))
+              .and(supply::region, eq(region))
+              .single()
+              .sync(uow1)
+              .orElse(null);
+    }
   }
 
   @Test
