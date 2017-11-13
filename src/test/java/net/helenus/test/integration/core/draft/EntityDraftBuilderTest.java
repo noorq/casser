@@ -92,7 +92,6 @@ public class EntityDraftBuilderTest extends AbstractEmbeddedCassandraTest {
     Supply s2 =
         session
             .<Supply>update(s1.update())
-            .and(supply::region, eq(region))
             .prepend(supply::suppliers, "Pignose Supply, LLC.")
             .sync();
 

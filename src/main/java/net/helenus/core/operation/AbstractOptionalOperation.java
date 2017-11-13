@@ -151,8 +151,8 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
                 if (isSessionCacheable()) {
                   String tableName = CacheUtil.schemaName(facets);
                   cachedResult = (E) sessionOps.checkCache(tableName, facets);
-                  Class<?> iface = MappingUtil.getMappingInterface(cachedResult);
                   if (cachedResult != null) {
+                    Class<?> iface = MappingUtil.getMappingInterface(cachedResult);
                     try {
                       if (Drafted.class.isAssignableFrom(iface)) {
                         result = Optional.of(cachedResult);

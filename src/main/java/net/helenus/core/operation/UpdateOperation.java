@@ -38,7 +38,6 @@ import net.helenus.support.HelenusException;
 import net.helenus.support.HelenusMappingException;
 import net.helenus.support.Immutables;
 
-
 public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateOperation<E>> {
 
   private final Map<Assignment, BoundFacet> assignments = new HashMap<>();
@@ -787,13 +786,14 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
   @Override
   public E sync() throws TimeoutException {
     E result = super.sync();
-    if (entity.isCacheable()) {
+    if (result != null && entity.isCacheable()) {
       if (draft != null) {
-        sessionOps.updateCache(draft, bindFacetValues());
         adjustTtlAndWriteTime(draft);
+        adjustTtlAndWriteTime((MapExportable) result);
+        sessionOps.updateCache(result, bindFacetValues());
       } else if (pojo != null) {
-        sessionOps.updateCache(pojo, bindFacetValues());
         adjustTtlAndWriteTime((MapExportable) pojo);
+        sessionOps.updateCache(pojo, bindFacetValues());
       } else {
         sessionOps.cacheEvict(bindFacetValues());
       }
@@ -807,16 +807,18 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       return sync();
     }
     E result = super.sync(uow);
-    if (draft != null) {
-      adjustTtlAndWriteTime(draft);
+    if (result != null) {
+      if (draft != null) {
+        adjustTtlAndWriteTime(draft);
+      }
       if (entity != null && MapExportable.class.isAssignableFrom(entity.getMappingInterface())) {
         adjustTtlAndWriteTime((MapExportable) result);
+        cacheUpdate(uow, result, bindFacetValues());
+      } else if (pojo != null) {
+        adjustTtlAndWriteTime((MapExportable) pojo);
+        cacheUpdate(uow, (E) pojo, bindFacetValues());
+        return (E) pojo;
       }
-      cacheUpdate(uow, result, bindFacetValues());
-    } else if (pojo != null) {
-      cacheUpdate(uow, (E) pojo, bindFacetValues());
-      adjustTtlAndWriteTime((MapExportable) pojo);
-      return (E) pojo;
     }
     return result;
   }

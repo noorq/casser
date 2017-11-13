@@ -245,18 +245,19 @@ public abstract class AbstractUnitOfWork<E extends Exception>
     Either<Object, List<Facet>> deletedObjectFacets = Either.right(facets);
     String tableName = CacheUtil.schemaName(facets);
     Optional<Object> optionalValue = cacheLookup(facets);
+
+    for (Facet facet : facets) {
+      if (!facet.fixed()) {
+        String columnKey = facet.name() + "==" + facet.value();
+        // mark the value identified by the facet to `deleted`
+        cache.put(tableName, columnKey, deletedObjectFacets);
+      }
+    }
+
+    // Now, look for other row/col pairs that referenced the same object, mark them
+    // `deleted` if the cache had a value before we added the deleted marker objects.
     if (optionalValue.isPresent()) {
       Object value = optionalValue.get();
-
-      for (Facet facet : facets) {
-        if (!facet.fixed()) {
-          String columnKey = facet.name() + "==" + facet.value();
-          // mark the value identified by the facet to `deleted`
-          cache.put(tableName, columnKey, deletedObjectFacets);
-        }
-      }
-      // look for other row/col pairs that referenced the same object, mark them
-      // `deleted`
       cache
           .columnKeySet()
           .forEach(
@@ -325,13 +326,6 @@ public abstract class AbstractUnitOfWork<E extends Exception>
         canCommit &= (!uow.aborted && uow.committed);
       }
     }
-
-    // log.record(txn::provisionalCommit)
-    // examine log for conflicts in read-set and write-set between begin and
-    // provisional commit
-    // if (conflict) { throw new ConflictingUnitOfWorkException(this) }
-    // else return function so as to enable commit.andThen(() -> { do something iff
-    // commit was successful; })
 
     if (canCommit) {
       committed = true;

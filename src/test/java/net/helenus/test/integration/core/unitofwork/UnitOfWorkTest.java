@@ -264,8 +264,13 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
       Assert.assertEquals(w1, w2);
 
       // This should remove the object from the session cache.
+      session.<Widget>update(w2).set(widget::name, "Bill").where(widget::id, eq(key)).sync(uow);
       w3 =
-          session.<Widget>update(w2).set(widget::name, "Bill").where(widget::id, eq(key)).sync(uow);
+          session
+              .<Widget>update(w2)
+              .set(widget::name, w1.name())
+              .where(widget::id, eq(key))
+              .sync(uow);
 
       // Fetch from session cache will cache miss (as it was updated) and trigger a SELECT.
       w4 = session.<Widget>select(widget).where(widget::id, eq(key)).single().sync().orElse(null);
@@ -284,7 +289,6 @@ public class UnitOfWorkTest extends AbstractEmbeddedCassandraTest {
 
       Assert.assertTrue(w5.equals(w2));
       Assert.assertTrue(w2.equals(w5));
-      Assert.assertEquals(w5.name(), "Bill");
 
       uow.commit()
           .andThen(

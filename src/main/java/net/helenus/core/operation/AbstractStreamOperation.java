@@ -157,8 +157,8 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
                 if (isSessionCacheable()) {
                   String tableName = CacheUtil.schemaName(facets);
                   cachedResult = (E) sessionOps.checkCache(tableName, facets);
-                  Class<?> iface = MappingUtil.getMappingInterface(cachedResult);
                   if (cachedResult != null) {
+                    Class<?> iface = MappingUtil.getMappingInterface(cachedResult);
                     E result = null;
                     try {
                       if (Drafted.class.isAssignableFrom(iface)) {
