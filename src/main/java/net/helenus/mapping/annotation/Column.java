@@ -59,4 +59,12 @@ public @interface Column {
    * @return true if name have to be quoted
    */
   boolean forceQuote() default false;
+
+  /**
+   * Used to determin if updates can be retried. Also, mutations to this field do not trigger
+   * objects in the session cache to be evicted.
+   *
+   * @return
+   */
+  boolean idempotent() default false;
 }

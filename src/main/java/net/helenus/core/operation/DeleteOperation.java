@@ -134,6 +134,10 @@ public final class DeleteOperation extends AbstractFilterOperation<ResultSet, De
     return bindFacetValues(getFacets());
   }
 
+  protected boolean isIdempotentOperation() {
+    return true;
+  }
+
   @Override
   public ResultSet sync() throws TimeoutException {
     ResultSet result = super.sync();

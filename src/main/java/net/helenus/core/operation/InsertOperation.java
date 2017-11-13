@@ -316,6 +316,12 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
   }
 
   @Override
+  protected boolean isIdempotentOperation() {
+    return values.stream().map(v -> v._1.getProperty()).allMatch(prop -> prop.isIdempotent())
+        || super.isIdempotentOperation();
+  }
+
+  @Override
   public T sync() throws TimeoutException {
     T result = super.sync();
     if (entity.isCacheable() && result != null) {
@@ -346,10 +352,6 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
         adjustTtlAndWriteTime((MapExportable) result);
       }
       cacheUpdate(uow, result, bindFacetValues());
-    } else {
-      if (entity.isCacheable()) {
-        sessionOps.cacheEvict(bindFacetValues());
-      }
     }
     return result;
   }

@@ -784,6 +784,28 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
   }
 
   @Override
+  protected boolean isIdempotentOperation() {
+    return assignments
+            .values()
+            .stream()
+            .allMatch(
+                facet -> {
+                  if (facet != null) {
+                    Set<HelenusProperty> props = facet.getProperties();
+                    if (props != null && props.size() > 0) {
+                      return props.stream().allMatch(prop -> prop.isIdempotent());
+                    } else {
+                      return true;
+                    }
+                  } else {
+                    // In this case our UPDATE statement made mutations via the List, Set, Map methods only.
+                    return false;
+                  }
+                })
+        || super.isIdempotentOperation();
+  }
+
+  @Override
   public E sync() throws TimeoutException {
     E result = super.sync();
     if (result != null && entity.isCacheable()) {

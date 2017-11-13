@@ -124,6 +124,15 @@ public final class MappingUtil {
     return false;
   }
 
+  public static boolean idempotent(Method getterMethod) {
+    Column column = getterMethod.getDeclaredAnnotation(Column.class);
+
+    if (column != null) {
+      return column.idempotent();
+    }
+    return false;
+  }
+
   public static String getPropertyName(Method getter) {
     return getter.getName();
   }

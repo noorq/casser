@@ -47,10 +47,10 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
   private ConsistencyLevel consistencyLevel;
   private ConsistencyLevel serialConsistencyLevel;
   private RetryPolicy retryPolicy;
-  private boolean idempotent = false;
   private boolean enableTracing = false;
   private long[] defaultTimestamp = null;
   private int[] fetchSize = null;
+  protected boolean idempotent = false;
 
   public AbstractStatementOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
@@ -247,7 +247,7 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
       statement.setFetchSize(fetchSize[0]);
     }
 
-    if (idempotent) {
+    if (isIdempotentOperation()) {
       statement.setIdempotent(true);
     }
 
@@ -263,6 +263,11 @@ public abstract class AbstractStatementOperation<E, O extends AbstractStatementO
     }
 
     return (O) this;
+  }
+
+  @Override
+  protected boolean isIdempotentOperation() {
+    return idempotent;
   }
 
   public Statement statement() {

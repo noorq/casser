@@ -37,6 +37,8 @@ public interface HelenusProperty {
 
   boolean caseSensitiveIndex();
 
+  boolean isIdempotent();
+
   Class<?> getJavaType();
 
   AbstractDataType getDataType();

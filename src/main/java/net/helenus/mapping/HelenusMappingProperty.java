@@ -35,6 +35,7 @@ public final class HelenusMappingProperty implements HelenusProperty {
   private final String propertyName;
   private final Optional<IdentityName> indexName;
   private final boolean caseSensitiveIndex;
+  private final boolean idempotent;
 
   private final ColumnInformation columnInfo;
 
@@ -55,6 +56,15 @@ public final class HelenusMappingProperty implements HelenusProperty {
     this.caseSensitiveIndex = MappingUtil.caseSensitiveIndex(getter);
 
     this.columnInfo = new ColumnInformation(getter);
+
+    switch (this.columnInfo.getColumnType()) {
+      case PARTITION_KEY:
+      case CLUSTERING_COLUMN:
+        this.idempotent = true;
+        break;
+      default:
+        this.idempotent = MappingUtil.idempotent(getter);
+    }
 
     this.genericJavaType = getter.getGenericReturnType();
     this.javaType = getter.getReturnType();
@@ -110,6 +120,11 @@ public final class HelenusMappingProperty implements HelenusProperty {
   @Override
   public boolean caseSensitiveIndex() {
     return caseSensitiveIndex;
+  }
+
+  @Override
+  public boolean isIdempotent() {
+    return idempotent;
   }
 
   @Override

@@ -64,6 +64,11 @@ public final class HelenusNamedProperty implements HelenusProperty {
   }
 
   @Override
+  public boolean isIdempotent() {
+    return false;
+  }
+
+  @Override
   public Class<?> getJavaType() {
     throw new HelenusMappingException("will never called");
   }

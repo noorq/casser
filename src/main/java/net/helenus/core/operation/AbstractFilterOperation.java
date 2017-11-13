@@ -108,6 +108,12 @@ public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperati
     ifFilters.add(filter);
   }
 
+  @Override
+  protected boolean isIdempotentOperation() {
+    return filters.stream().anyMatch(filter -> !filter.getNode().getProperty().isIdempotent())
+        || super.isIdempotentOperation();
+  }
+
   protected List<Facet> bindFacetValues(List<Facet> facets) {
     if (facets == null) {
       return new ArrayList<Facet>();

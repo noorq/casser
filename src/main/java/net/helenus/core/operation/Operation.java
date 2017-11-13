@@ -210,6 +210,10 @@ public abstract class Operation<E> {
     }
   }
 
+  protected boolean isIdempotentOperation() {
+    return false;
+  }
+
   public Statement options(Statement statement) {
     return statement;
   }
