@@ -19,6 +19,7 @@ import java.util.*;
 import net.helenus.core.*;
 import net.helenus.core.cache.Facet;
 import net.helenus.core.cache.UnboundFacet;
+import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.HelenusProperty;
 
 public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperation<E, O>>
@@ -110,7 +111,21 @@ public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperati
 
   @Override
   protected boolean isIdempotentOperation() {
-    return filters.stream().anyMatch(filter -> !filter.getNode().getProperty().isIdempotent())
+    return filters
+            .stream()
+            .anyMatch(
+                filter -> {
+                  if (filter != null) {
+                    HelenusPropertyNode node = filter.getNode();
+                    if (node != null) {
+                      HelenusProperty prop = node.getProperty();
+                      if (prop != null) {
+                        return prop.isIdempotent();
+                      }
+                    }
+                  }
+                  return false;
+                })
         || super.isIdempotentOperation();
   }
 
