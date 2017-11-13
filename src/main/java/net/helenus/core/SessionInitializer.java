@@ -43,6 +43,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
   private CodecRegistry registry;
   private String usingKeyspace;
   private boolean showCql = false;
+  private boolean showValues = true;
   private ConsistencyLevel consistencyLevel;
   private boolean idempotent = true;
   private MetricRegistry metricRegistry = new MetricRegistry();
@@ -101,6 +102,20 @@ public final class SessionInitializer extends AbstractSessionOperations {
   public SessionInitializer showCql(boolean enabled) {
     this.showCql = enabled;
     return this;
+  }
+
+  public SessionInitializer showQueryValuesInLog(boolean showValues) {
+    this.showValues = showValues;
+    return this;
+  }
+
+  public SessionInitializer showQueryValuesInLog() {
+    this.showValues = true;
+    return this;
+  }
+
+  public boolean showValues() {
+    return showValues;
   }
 
   public SessionInitializer metricRegistry(MetricRegistry metricRegistry) {
@@ -255,6 +270,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
         usingKeyspace,
         registry,
         showCql,
+        showValues,
         printStream,
         sessionRepository,
         executor,

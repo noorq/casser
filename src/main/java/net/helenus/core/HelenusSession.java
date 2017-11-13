@@ -74,12 +74,14 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
   private final Metadata metadata;
   private volatile String usingKeyspace;
   private volatile boolean showCql;
+  private volatile boolean showValues;
 
   HelenusSession(
       Session session,
       String usingKeyspace,
       CodecRegistry registry,
       boolean showCql,
+      boolean showValues,
       PrintStream printStream,
       SessionRepositoryBuilder sessionRepositoryBuilder,
       Executor executor,
@@ -96,6 +98,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
         Objects.requireNonNull(
             usingKeyspace, "keyspace needs to be selected before creating session");
     this.showCql = showCql;
+    this.showValues = showValues;
     this.printStream = printStream;
     this.sessionRepository = sessionRepositoryBuilder.build();
     this.executor = executor;
@@ -151,6 +154,20 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
   public HelenusSession showCql(boolean showCql) {
     this.showCql = showCql;
     return this;
+  }
+
+  public HelenusSession showQueryValuesInLog(boolean showValues) {
+    this.showValues = showValues;
+    return this;
+  }
+
+  public HelenusSession showQueryValuesInLog() {
+    this.showValues = true;
+    return this;
+  }
+
+  public boolean showValues() {
+    return showValues;
   }
 
   @Override

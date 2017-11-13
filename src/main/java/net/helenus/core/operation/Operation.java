@@ -42,7 +42,7 @@ public abstract class Operation<E> {
   private static final Logger LOG = LoggerFactory.getLogger(Operation.class);
 
   protected final AbstractSessionOperations sessionOps;
-  protected boolean showValues = false;
+  protected boolean showValues;
   protected TraceContext traceContext;
   protected long queryExecutionTimeout = 10;
   protected TimeUnit queryTimeoutUnits = TimeUnit.SECONDS;
@@ -56,6 +56,7 @@ public abstract class Operation<E> {
 
   Operation(AbstractSessionOperations sessionOperations) {
     this.sessionOps = sessionOperations;
+    this.showValues = sessionOps.showValues();
     MetricRegistry metrics = sessionOperations.getMetricRegistry();
     if (metrics == null) {
       metrics = new MetricRegistry();

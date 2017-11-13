@@ -42,6 +42,8 @@ public abstract class AbstractSessionOperations {
 
   public abstract boolean isShowCql();
 
+  public abstract boolean showValues();
+
   public abstract PrintStream getPrintStream();
 
   public abstract Executor getExecutor();
