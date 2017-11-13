@@ -111,17 +111,19 @@ public abstract class AbstractFilterOperation<E, O extends AbstractFilterOperati
 
   @Override
   protected boolean isIdempotentOperation() {
+    if (filters == null) {
+      return super.isIdempotentOperation();
+    }
+
     return filters
             .stream()
             .anyMatch(
                 filter -> {
-                  if (filter != null) {
-                    HelenusPropertyNode node = filter.getNode();
-                    if (node != null) {
-                      HelenusProperty prop = node.getProperty();
-                      if (prop != null) {
-                        return prop.isIdempotent();
-                      }
+                  HelenusPropertyNode node = filter.getNode();
+                  if (node != null) {
+                    HelenusProperty prop = node.getProperty();
+                    if (prop != null) {
+                      return prop.isIdempotent();
                     }
                   }
                   return false;
