@@ -237,7 +237,7 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
       Set<String> keys = v.keySet();
       for (String key : keys) {
         Object value = v.get(key);
-        if (mutable) {
+        if (value != null && mutable) {
           if (ImmutableList.class.isAssignableFrom(value.getClass())) {
             m.put(key, new ArrayList((List) value));
           } else if (ImmutableMap.class.isAssignableFrom(value.getClass())) {
