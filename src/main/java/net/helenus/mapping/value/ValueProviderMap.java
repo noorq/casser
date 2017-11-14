@@ -15,6 +15,7 @@
  */
 package net.helenus.mapping.value;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -153,7 +154,8 @@ public final class ValueProviderMap implements Map<String, Object> {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null
-        || !(o.getClass().isAssignableFrom(Map.class)
+        || !((Map.class.isAssignableFrom(o.getClass())
+                || ImmutableMap.class.isAssignableFrom(o.getClass()))
             || o.getClass().getSimpleName().equals("UnmodifiableMap"))) return false;
 
     Map that = (Map) o;

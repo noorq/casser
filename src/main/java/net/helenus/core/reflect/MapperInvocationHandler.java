@@ -15,6 +15,9 @@
  */
 package net.helenus.core.reflect;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamException;
@@ -24,10 +27,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import net.helenus.core.Getter;
 import net.helenus.core.Helenus;
 import net.helenus.core.cache.CacheUtil;
@@ -168,6 +168,15 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
       return 0;
     }
 
+    if (MapExportable.TO_MAP_METHOD.equals(methodName)) {
+      if (method.getParameterCount() == 1 && args[0] instanceof Boolean) {
+        if ((boolean) args[0] == true) {
+          return fromValueProviderMap(src, true);
+        }
+      }
+      return Collections.unmodifiableMap(src);
+    }
+
     if (method.getParameterCount() != 0 || method.getReturnType() == void.class) {
       throw new HelenusException("invalid getter method " + method);
     }
@@ -190,15 +199,6 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
 
     if ("dsl".equals(methodName)) {
       return Helenus.dsl(iface);
-    }
-
-    if (MapExportable.TO_MAP_METHOD.equals(methodName)) {
-      if (method.getParameterCount() == 1 && args[0] instanceof Boolean) {
-        if ((boolean) args[0] == true) {
-          return src;
-        }
-      }
-      return Collections.unmodifiableMap(src);
     }
 
     final Object value = src.get(methodName);
@@ -228,12 +228,32 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
   }
 
   static Map<String, Object> fromValueProviderMap(Map v) {
-    Map<String, Object> m = new HashMap<String, Object>(v.size());
-    Set<String> keys = v.keySet();
-    for (String key : keys) {
-      m.put(key, v.get(key));
+    return fromValueProviderMap(v, false);
+  }
+
+  static Map<String, Object> fromValueProviderMap(Map v, boolean mutable) {
+    if (v instanceof ValueProviderMap) {
+      Map<String, Object> m = new HashMap<String, Object>(v.size());
+      Set<String> keys = v.keySet();
+      for (String key : keys) {
+        Object value = v.get(key);
+        if (mutable) {
+          if (ImmutableList.class.isAssignableFrom(value.getClass())) {
+            m.put(key, new ArrayList((List) value));
+          } else if (ImmutableMap.class.isAssignableFrom(value.getClass())) {
+            m.put(key, new HashMap((Map) value));
+          } else if (ImmutableSet.class.isAssignableFrom(value.getClass())) {
+            m.put(key, new HashSet((Set) value));
+          } else {
+            m.put(key, value);
+          }
+        } else {
+          m.put(key, value);
+        }
+      }
+      return m;
     }
-    return m;
+    return v;
   }
 
   static class SerializationProxy<E> implements Serializable {

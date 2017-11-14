@@ -17,7 +17,8 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
   public AbstractEntityDraft(MapExportable entity) {
     this.entity = entity;
-    this.entityMap = entity != null ? entity.toMap() : new HashMap<String, Object>();
+    // Entities can mutate their map.
+    this.entityMap = entity != null ? entity.toMap(true) : new HashMap<String, Object>();
   }
 
   public abstract Class<E> getEntityClass();

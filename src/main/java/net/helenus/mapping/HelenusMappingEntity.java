@@ -145,7 +145,7 @@ public final class HelenusMappingEntity implements HelenusEntity {
           }
           for (ConstraintValidator<?, ?> constraint :
               MappingUtil.getValidators(prop.getGetterMethod())) {
-            if (constraint.getClass().isAssignableFrom(DistinctValidator.class)) {
+            if (constraint instanceof DistinctValidator) {
               DistinctValidator validator = (DistinctValidator) constraint;
               String[] values = validator.constraintAnnotation.value();
               UnboundFacet facet;
