@@ -61,7 +61,7 @@ public @interface Column {
   boolean forceQuote() default false;
 
   /**
-   * Used to determin if updates can be retried. Also, mutations to this field do not trigger
+   * Used to determine if updates can be retried. Also, mutations to this field do not trigger
    * objects in the session cache to be evicted.
    *
    * @return

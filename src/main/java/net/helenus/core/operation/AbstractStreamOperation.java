@@ -168,17 +168,13 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
                       result =
                           (E) SerializationUtils.<Serializable>clone((Serializable) cachedResult);
                     }
+                    updateCache = false;
                     resultStream = Stream.of(result);
                     sessionCacheHits.mark();
                     cacheHits.mark();
                     uow.recordCacheAndDatabaseOperationCount(1, 0);
-                    if (result != null) {
-                      updateCache = true;
-                    } else {
-                      updateCache = false;
-                    }
                   } else {
-                    updateCache = false;
+                    updateCache = true;
                     sessionCacheMiss.mark();
                     cacheMiss.mark();
                     uow.recordCacheAndDatabaseOperationCount(-1, 0);

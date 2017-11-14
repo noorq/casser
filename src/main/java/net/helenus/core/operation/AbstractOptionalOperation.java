@@ -164,16 +164,12 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
                                   SerializationUtils.<Serializable>clone(
                                       (Serializable) cachedResult));
                     }
+                    updateCache = false;
                     sessionCacheHits.mark();
                     cacheHits.mark();
                     uow.recordCacheAndDatabaseOperationCount(1, 0);
-                    if (result.isPresent()) {
-                      updateCache = true;
-                    } else {
-                      updateCache = false;
-                    }
                   } else {
-                    updateCache = false;
+                    updateCache = true;
                     sessionCacheMiss.mark();
                     cacheMiss.mark();
                     uow.recordCacheAndDatabaseOperationCount(-1, 0);
@@ -184,9 +180,9 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
               }
             } else {
               //TODO(gburd): look in statement cache for results
+              updateCache = false; //true;
               cacheMiss.mark();
               uow.recordCacheAndDatabaseOperationCount(-1, 0);
-              updateCache = false; //true;
             }
           } else {
             updateCache = false;
