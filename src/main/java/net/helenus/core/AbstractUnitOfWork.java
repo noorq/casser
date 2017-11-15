@@ -17,7 +17,6 @@ package net.helenus.core;
 
 import static net.helenus.core.HelenusSession.deleted;
 
-import com.diffplug.common.base.Errors;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
@@ -309,6 +308,18 @@ public abstract class AbstractUnitOfWork<E extends Exception>
    */
   public PostCommitFunction<Void, Void> commit() throws E, TimeoutException {
 
+    // Only the outter-most UOW batches statements for commit time, execute them.
+    if (batch != null) {
+      try {
+        committedAt = batch.sync(this); //TODO(gburd): update cache with writeTime...
+      } catch (Exception e) {
+        if (!(e instanceof ConflictingUnitOfWorkException)) {
+          aborted = true;
+        }
+        throw e;
+      }
+    }
+
     // All nested UnitOfWork should be committed (not aborted) before calls to
     // commit, check.
     boolean canCommit = true;
@@ -321,7 +332,6 @@ public abstract class AbstractUnitOfWork<E extends Exception>
     }
 
     if (!canCommit) {
-      nested.forEach((uow) -> Errors.rethrow().wrap(uow::abort));
       elapsedTime.stop();
 
       if (parent == null) {
@@ -337,16 +347,9 @@ public abstract class AbstractUnitOfWork<E extends Exception>
 
       return new PostCommitFunction(this, null, null, false);
     } else {
-      // Only the outter-most UOW batches statements for commit time, execute them.
-      if (batch != null) {
-        committedAt = batch.sync(this); //TODO(gburd): update cache with writeTime...
-      }
-
+      elapsedTime.stop();
       committed = true;
       aborted = false;
-
-      nested.forEach((uow) -> Errors.rethrow().wrap(uow::commit));
-      elapsedTime.stop();
 
       if (parent == null) {
 
@@ -355,7 +358,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
             .postOrderTraversal(this)
             .forEach(
                 uow -> {
-                  applyPostCommitFunctions("committed", commitThunks);
+                  applyPostCommitFunctions("committed", uow.commitThunks);
                 });
 
         // Merge our cache into the session cache.
