@@ -6,20 +6,43 @@ import java.util.Objects;
 public class PostCommitFunction<T, R> implements java.util.function.Function<T, R> {
 
   private final UnitOfWork uow;
-  private final List<CommitThunk> postCommit;
+  private final List<CommitThunk> commitThunks;
+  private final List<CommitThunk> abortThunks;
+  private boolean committed;
 
-  PostCommitFunction(UnitOfWork uow, List<CommitThunk> postCommit) {
+  PostCommitFunction(
+      UnitOfWork uow,
+      List<CommitThunk> postCommit,
+      List<CommitThunk> abortThunks,
+      boolean committed) {
     this.uow = uow;
-    this.postCommit = postCommit;
+    this.commitThunks = postCommit;
+    this.abortThunks = abortThunks;
+    this.committed = committed;
   }
 
-  public void andThen(CommitThunk after) {
+  public PostCommitFunction<T, R> andThen(CommitThunk after) {
     Objects.requireNonNull(after);
-    if (postCommit == null) {
-      after.apply();
+    if (commitThunks == null) {
+      if (committed) {
+        after.apply();
+      }
     } else {
-      postCommit.add(after);
+      commitThunks.add(after);
     }
+    return this;
+  }
+
+  public PostCommitFunction<T, R> exceptionally(CommitThunk after) {
+    Objects.requireNonNull(after);
+    if (abortThunks == null) {
+      if (!committed) {
+        after.apply();
+      }
+    } else {
+      abortThunks.add(after);
+    }
+    return this;
   }
 
   @Override

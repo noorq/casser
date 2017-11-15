@@ -56,7 +56,8 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   protected Stopwatch elapsedTime;
   protected Map<String, Double> databaseTime = new HashMap<>();
   protected double cacheLookupTime = 0.0;
-  private List<CommitThunk> postCommit = new ArrayList<CommitThunk>();
+  private List<CommitThunk> commitThunks = new ArrayList<CommitThunk>();
+  private List<CommitThunk> abortThunks = new ArrayList<CommitThunk>();
   private boolean aborted = false;
   private boolean committed = false;
   private long committedAt = 0L;
@@ -186,14 +187,14 @@ public abstract class AbstractUnitOfWork<E extends Exception>
     return s;
   }
 
-  private void applyPostCommitFunctions() {
-    if (!postCommit.isEmpty()) {
-      for (CommitThunk f : postCommit) {
+  private void applyPostCommitFunctions(String what, List<CommitThunk> thunks) {
+    if (!thunks.isEmpty()) {
+      for (CommitThunk f : thunks) {
         f.apply();
       }
     }
     if (LOG.isInfoEnabled()) {
-      LOG.info(logTimers("committed"));
+      LOG.info(logTimers(what));
     }
   }
 
@@ -308,11 +309,6 @@ public abstract class AbstractUnitOfWork<E extends Exception>
    */
   public PostCommitFunction<Void, Void> commit() throws E, TimeoutException {
 
-    if (batch != null) {
-      committedAt = batch.sync(this);
-      //TODO(gburd) update cache with writeTime...
-    }
-
     // All nested UnitOfWork should be committed (not aborted) before calls to
     // commit, check.
     boolean canCommit = true;
@@ -324,7 +320,28 @@ public abstract class AbstractUnitOfWork<E extends Exception>
       }
     }
 
-    if (canCommit) {
+    if (!canCommit) {
+      nested.forEach((uow) -> Errors.rethrow().wrap(uow::abort));
+      elapsedTime.stop();
+
+      if (parent == null) {
+
+        // Apply all post-commit abort functions, this is the outter-most UnitOfWork.
+        traverser
+            .postOrderTraversal(this)
+            .forEach(
+                uow -> {
+                  applyPostCommitFunctions("aborted", abortThunks);
+                });
+      }
+
+      return new PostCommitFunction(this, null, null, false);
+    } else {
+      // Only the outter-most UOW batches statements for commit time, execute them.
+      if (batch != null) {
+        committedAt = batch.sync(this); //TODO(gburd): update cache with writeTime...
+      }
+
       committed = true;
       aborted = false;
 
@@ -332,18 +349,19 @@ public abstract class AbstractUnitOfWork<E extends Exception>
       elapsedTime.stop();
 
       if (parent == null) {
-        // Apply all post-commit functions, this is the outter-most UnitOfWork.
+
+        // Apply all post-commit commit functions, this is the outter-most UnitOfWork.
         traverser
             .postOrderTraversal(this)
             .forEach(
                 uow -> {
-                  uow.applyPostCommitFunctions();
+                  applyPostCommitFunctions("committed", commitThunks);
                 });
 
         // Merge our cache into the session cache.
         session.mergeCache(cache);
 
-        return new PostCommitFunction(this, null);
+        return new PostCommitFunction(this, null, null, true);
       } else {
 
         // Merge cache and statistics into parent if there is one.
@@ -371,7 +389,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
     // Constructor<T> ctor = clazz.getConstructor(conflictExceptionClass);
     // T object = ctor.newInstance(new Object[] { String message });
     // }
-    return new PostCommitFunction(this, postCommit);
+    return new PostCommitFunction(this, commitThunks, abortThunks, true);
   }
 
   private void addBatched(BatchOperation batch) {
@@ -384,22 +402,21 @@ public abstract class AbstractUnitOfWork<E extends Exception>
 
   /* Explicitly discard the work and mark it as as such in the log. */
   public synchronized void abort() {
-    TreeTraverser<AbstractUnitOfWork<E>> traverser =
-        TreeTraverser.using(node -> node::getChildNodes);
-    traverser
-        .postOrderTraversal(this)
-        .forEach(
-            uow -> {
-              uow.committed = false;
-              uow.aborted = true;
-            });
-    // log.record(txn::abort)
-    // cache.invalidateSince(txn::start time)
-    if (LOG.isInfoEnabled()) {
-      if (elapsedTime.isRunning()) {
-        elapsedTime.stop();
-      }
-      LOG.info(logTimers("aborted"));
+    if (!aborted) {
+      aborted = true;
+
+      TreeTraverser<AbstractUnitOfWork<E>> traverser =
+          TreeTraverser.using(node -> node::getChildNodes);
+      traverser
+          .postOrderTraversal(this)
+          .forEach(
+              uow -> {
+                applyPostCommitFunctions("aborted", uow.abortThunks);
+                uow.abortThunks.clear();
+              });
+
+      // log.record(txn::abort)
+      // cache.invalidateSince(txn::start time)
     }
   }
 
