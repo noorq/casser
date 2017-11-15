@@ -22,4 +22,6 @@ public interface Drafted<T> extends MapExportable {
   Set<String> mutated();
 
   T build();
+
+  Set<String> read();
 }

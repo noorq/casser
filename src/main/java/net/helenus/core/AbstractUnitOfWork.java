@@ -23,6 +23,7 @@ import com.google.common.collect.Table;
 import com.google.common.collect.TreeTraverser;
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -32,6 +33,7 @@ import net.helenus.core.operation.AbstractOperation;
 import net.helenus.core.operation.BatchOperation;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.support.Either;
+import net.helenus.support.HelenusException;
 import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +59,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   protected double cacheLookupTime = 0.0;
   private List<CommitThunk> commitThunks = new ArrayList<CommitThunk>();
   private List<CommitThunk> abortThunks = new ArrayList<CommitThunk>();
+  private List<CompletableFuture<?>> asyncOperationFutures = new ArrayList<CompletableFuture<?>>();
   private boolean aborted = false;
   private boolean committed = false;
   private long committedAt = 0L;
@@ -109,6 +112,11 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   public UnitOfWork setPurpose(String purpose) {
     this.purpose = purpose;
     return this;
+  }
+
+  @Override
+  public void addFuture(CompletableFuture<?> future) {
+    asyncOperationFutures.add(future);
   }
 
   @Override
@@ -308,16 +316,9 @@ public abstract class AbstractUnitOfWork<E extends Exception>
    */
   public PostCommitFunction<Void, Void> commit() throws E, TimeoutException {
 
-    // Only the outter-most UOW batches statements for commit time, execute them.
+    // Only the outer-most UOW batches statements for commit time, execute them.
     if (batch != null) {
-      try {
-        committedAt = batch.sync(this); //TODO(gburd): update cache with writeTime...
-      } catch (Exception e) {
-        if (!(e instanceof ConflictingUnitOfWorkException)) {
-          aborted = true;
-        }
-        throw e;
-      }
+      committedAt = batch.sync(this); //TODO(gburd): update cache with writeTime...
     }
 
     // All nested UnitOfWork should be committed (not aborted) before calls to
@@ -336,7 +337,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
 
       if (parent == null) {
 
-        // Apply all post-commit abort functions, this is the outter-most UnitOfWork.
+        // Apply all post-commit abort functions, this is the outer-most UnitOfWork.
         traverser
             .postOrderTraversal(this)
             .forEach(
@@ -353,7 +354,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
 
       if (parent == null) {
 
-        // Apply all post-commit commit functions, this is the outter-most UnitOfWork.
+        // Apply all post-commit commit functions, this is the outer-most UnitOfWork.
         traverser
             .postOrderTraversal(this)
             .forEach(
@@ -363,6 +364,13 @@ public abstract class AbstractUnitOfWork<E extends Exception>
 
         // Merge our cache into the session cache.
         session.mergeCache(cache);
+
+        // Spoil any lingering futures that may be out there.
+        asyncOperationFutures.forEach(
+            f ->
+                f.completeExceptionally(
+                    new HelenusException(
+                        "Futures must be resolved before their unit of work has committed/aborted.")));
 
         return new PostCommitFunction(this, null, null, true);
       } else {
@@ -407,6 +415,13 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   public synchronized void abort() {
     if (!aborted) {
       aborted = true;
+
+      // Spoil any pending futures created within the context of this unit of work.
+      asyncOperationFutures.forEach(
+          f ->
+              f.completeExceptionally(
+                  new HelenusException(
+                      "Futures must be resolved before their unit of work has committed/aborted.")));
 
       TreeTraverser<AbstractUnitOfWork<E>> traverser =
           TreeTraverser.using(node -> node::getChildNodes);

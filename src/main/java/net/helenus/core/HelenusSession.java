@@ -722,21 +722,21 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
     if (entity != null) {
       return new InsertOperation<T>(this, entity, entity.getMappingInterface(), true);
     } else {
-      return this.<T>insert(pojo, null);
+      return this.<T>insert(pojo, null, null);
     }
   }
 
   public <T> InsertOperation<T> insert(Drafted draft) {
-    return insert(draft.build(), draft.mutated());
+    return insert(draft.build(), draft.mutated(), draft.read());
   }
 
-  private <T> InsertOperation<T> insert(T pojo, Set<String> mutations) {
+  private <T> InsertOperation<T> insert(T pojo, Set<String> mutations, Set<String> read) {
     Objects.requireNonNull(pojo, "pojo is empty");
 
     Class<?> iface = MappingUtil.getMappingInterface(pojo);
     HelenusEntity entity = Helenus.entity(iface);
 
-    return new InsertOperation<T>(this, entity, pojo, mutations, true);
+    return new InsertOperation<T>(this, entity, pojo, mutations, read, true);
   }
 
   public InsertOperation<ResultSet> upsert() {
@@ -748,7 +748,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
   }
 
   public <T> InsertOperation<T> upsert(Drafted draft) {
-    return this.<T>upsert((T) draft.build(), draft.mutated());
+    return this.<T>upsert((T) draft.build(), draft.mutated(), draft.read());
   }
 
   public <T> InsertOperation<T> upsert(T pojo) {
@@ -763,17 +763,17 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
     if (entity != null) {
       return new InsertOperation<T>(this, entity, entity.getMappingInterface(), false);
     } else {
-      return this.<T>upsert(pojo, null);
+      return this.<T>upsert(pojo, null, null);
     }
   }
 
-  private <T> InsertOperation<T> upsert(T pojo, Set<String> mutations) {
+  private <T> InsertOperation<T> upsert(T pojo, Set<String> mutations, Set<String> read) {
     Objects.requireNonNull(pojo, "pojo is empty");
 
     Class<?> iface = MappingUtil.getMappingInterface(pojo);
     HelenusEntity entity = Helenus.entity(iface);
 
-    return new InsertOperation<T>(this, entity, pojo, mutations, false);
+    return new InsertOperation<T>(this, entity, pojo, mutations, read, false);
   }
 
   public DeleteOperation delete() {

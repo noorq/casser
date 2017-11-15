@@ -247,13 +247,16 @@ public abstract class AbstractOptionalOperation<E, O extends AbstractOptionalOpe
 
   public CompletableFuture<Optional<E>> async(UnitOfWork<?> uow) {
     if (uow == null) return async();
-    return CompletableFuture.<Optional<E>>supplyAsync(
-        () -> {
-          try {
-            return sync();
-          } catch (TimeoutException ex) {
-            throw new CompletionException(ex);
-          }
-        });
+    CompletableFuture<Optional<E>> f =
+        CompletableFuture.<Optional<E>>supplyAsync(
+            () -> {
+              try {
+                return sync();
+              } catch (TimeoutException ex) {
+                throw new CompletionException(ex);
+              }
+            });
+    uow.addFuture(f);
+    return f;
   }
 }

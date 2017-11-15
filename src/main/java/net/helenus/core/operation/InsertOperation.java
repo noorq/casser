@@ -47,6 +47,7 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
       new ArrayList<Fun.Tuple2<HelenusPropertyNode, Object>>();
   private final T pojo;
   private final Class<?> resultType;
+  private final Set<String> readSet;
   private HelenusEntity entity;
   private boolean ifNotExists;
 
@@ -57,8 +58,9 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
   public InsertOperation(AbstractSessionOperations sessionOperations, boolean ifNotExists) {
     super(sessionOperations);
 
-    this.ifNotExists = ifNotExists;
     this.pojo = null;
+    this.readSet = null;
+    this.ifNotExists = ifNotExists;
     this.resultType = ResultSet.class;
   }
 
@@ -69,8 +71,9 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
       boolean ifNotExists) {
     super(sessionOperations);
 
-    this.ifNotExists = ifNotExists;
     this.pojo = null;
+    this.readSet = null;
+    this.ifNotExists = ifNotExists;
     this.resultType = resultType;
     this.entity = entity;
   }
@@ -79,8 +82,9 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
       AbstractSessionOperations sessionOperations, Class<?> resultType, boolean ifNotExists) {
     super(sessionOperations);
 
-    this.ifNotExists = ifNotExists;
     this.pojo = null;
+    this.readSet = null;
+    this.ifNotExists = ifNotExists;
     this.resultType = resultType;
   }
 
@@ -89,11 +93,13 @@ public final class InsertOperation<T> extends AbstractOperation<T, InsertOperati
       HelenusEntity entity,
       T pojo,
       Set<String> mutations,
+      Set<String> read,
       boolean ifNotExists) {
     super(sessionOperations);
 
-    this.entity = entity;
     this.pojo = pojo;
+    this.readSet = read;
+    this.entity = entity;
     this.ifNotExists = ifNotExists;
     this.resultType = entity.getMappingInterface();
 

@@ -61,8 +61,9 @@ public @interface Column {
   boolean forceQuote() default false;
 
   /**
-   * Used to determine if updates can be retried. Also, mutations to this field do not trigger
-   * objects in the session cache to be evicted.
+   * Used to determine if mutations (insert, upsert, update) can be retried by the server. When all
+   * fields in a query are idempotent the query is marked idempotent. Optionally, a user can
+   * explicitly mark a query idempotent even if all fields are not marked as such.
    *
    * @return
    */

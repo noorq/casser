@@ -43,6 +43,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
   private final Map<Assignment, BoundFacet> assignments = new HashMap<>();
   private final AbstractEntityDraft<E> draft;
   private final Map<String, Object> draftMap;
+  private final Set<String> readSet;
   private HelenusEntity entity = null;
   private Object pojo;
   private int[] ttl;
@@ -53,6 +54,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
     super(sessionOperations);
     this.draft = null;
     this.draftMap = null;
+    this.readSet = null;
   }
 
   public UpdateOperation(
@@ -60,6 +62,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
     super(sessionOperations);
     this.draft = draft;
     this.draftMap = draft.toMap();
+    this.readSet = draft.read();
   }
 
   public UpdateOperation(AbstractSessionOperations sessionOperations, Object pojo) {
@@ -71,7 +74,12 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
       this.entity = Helenus.resolve(MappingUtil.getMappingInterface(pojo));
       if (this.entity != null && entity.isCacheable() && pojo instanceof MapExportable) {
         this.pojo = pojo;
+        this.readSet = ((MapExportable) pojo).toReadSet();
+      } else {
+        this.readSet = null;
       }
+    } else {
+      this.readSet = null;
     }
   }
 
@@ -80,6 +88,7 @@ public final class UpdateOperation<E> extends AbstractFilterOperation<E, UpdateO
     super(sessionOperations);
     this.draft = null;
     this.draftMap = null;
+    this.readSet = null;
 
     Object value = sessionOps.getValuePreparer().prepareColumnValue(v, p.getProperty());
     assignments.put(QueryBuilder.set(p.getColumnName(), value), new BoundFacet(p.getProperty(), v));

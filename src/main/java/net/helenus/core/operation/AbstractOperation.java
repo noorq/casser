@@ -88,13 +88,16 @@ public abstract class AbstractOperation<E, O extends AbstractOperation<E, O>>
 
   public CompletableFuture<E> async(UnitOfWork uow) {
     if (uow == null) return async();
-    return CompletableFuture.<E>supplyAsync(
-        () -> {
-          try {
-            return sync();
-          } catch (TimeoutException ex) {
-            throw new CompletionException(ex);
-          }
-        });
+    CompletableFuture<E> f =
+        CompletableFuture.<E>supplyAsync(
+            () -> {
+              try {
+                return sync();
+              } catch (TimeoutException ex) {
+                throw new CompletionException(ex);
+              }
+            });
+    uow.addFuture(f);
+    return f;
   }
 }

@@ -210,10 +210,12 @@ public class CacheUtil {
   }
 
   public static String writeTimeKey(String columnName) {
-    return "_" + columnName + "_writeTime";
+    String key = "_" + columnName + "_writeTime";
+    return key.toLowerCase();
   }
 
   public static String ttlKey(String columnName) {
-    return "_" + columnName + "_ttl";
+      String key = "_" + columnName + "_ttl";
+    return key.toLowerCase();
   }
 }

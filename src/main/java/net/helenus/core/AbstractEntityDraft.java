@@ -6,19 +6,27 @@ import java.util.*;
 import net.helenus.core.reflect.DefaultPrimitiveTypes;
 import net.helenus.core.reflect.Drafted;
 import net.helenus.core.reflect.MapExportable;
+import net.helenus.mapping.HelenusProperty;
 import net.helenus.mapping.MappingUtil;
 import org.apache.commons.lang3.SerializationUtils;
 
 public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
-  private final Map<String, Object> backingMap = new HashMap<String, Object>();
   private final MapExportable entity;
+  private final Map<String, Object> backingMap = new HashMap<String, Object>();
+  private final Set<String> read;
   private final Map<String, Object> entityMap;
 
   public AbstractEntityDraft(MapExportable entity) {
     this.entity = entity;
     // Entities can mutate their map.
-    this.entityMap = entity != null ? entity.toMap(true) : new HashMap<String, Object>();
+    if (entity != null) {
+      this.entityMap = entity.toMap(true);
+      this.read = entity.toReadSet();
+    } else {
+      this.entityMap = new HashMap<String, Object>();
+      this.read = new HashSet<String>();
+    }
   }
 
   public abstract Class<E> getEntityClass();
@@ -34,6 +42,7 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
   @SuppressWarnings("unchecked")
   public <T> T get(String key, Class<?> returnType) {
+    read.add(key);
     T value = (T) backingMap.get(key);
 
     if (value == null) {
@@ -61,7 +70,17 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
   }
 
   public <T> Object set(Getter<T> getter, Object value) {
-    return set(this.<T>methodNameFor(getter), value);
+    HelenusProperty prop = MappingUtil.resolveMappingProperty(getter).getProperty();
+    String key = prop.getPropertyName();
+
+    HelenusValidator.INSTANCE.validate(prop, value);
+
+    if (key == null || value == null) {
+      return null;
+    }
+
+    backingMap.put(key, value);
+    return value;
   }
 
   public Object set(String key, Object value) {
@@ -162,6 +181,11 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
   @Override
   public Set<String> mutated() {
     return backingMap.keySet();
+  }
+
+  @Override
+  public Set<String> read() {
+    return read;
   }
 
   @Override

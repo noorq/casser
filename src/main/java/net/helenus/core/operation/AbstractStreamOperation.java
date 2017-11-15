@@ -253,13 +253,16 @@ public abstract class AbstractStreamOperation<E, O extends AbstractStreamOperati
 
   public CompletableFuture<Stream<E>> async(UnitOfWork uow) {
     if (uow == null) return async();
-    return CompletableFuture.<Stream<E>>supplyAsync(
-        () -> {
-          try {
-            return sync();
-          } catch (TimeoutException ex) {
-            throw new CompletionException(ex);
-          }
-        });
+    CompletableFuture<Stream<E>> f =
+        CompletableFuture.<Stream<E>>supplyAsync(
+            () -> {
+              try {
+                return sync();
+              } catch (TimeoutException ex) {
+                throw new CompletionException(ex);
+              }
+            });
+    uow.addFuture(f);
+    return f;
   }
 }

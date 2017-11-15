@@ -52,6 +52,11 @@ public interface Account {
     }
 
     @Override
+    public Set<String> read() {
+      return null;
+    }
+
+    @Override
     public Map<String, Object> toMap() {
       return null;
     }

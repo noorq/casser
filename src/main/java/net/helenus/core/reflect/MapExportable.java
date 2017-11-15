@@ -16,15 +16,21 @@
 package net.helenus.core.reflect;
 
 import java.util.Map;
+import java.util.Set;
 import net.helenus.core.Getter;
 
 public interface MapExportable {
   String TO_MAP_METHOD = "toMap";
+  String TO_READ_SET_METHOD = "toReadSet";
   String PUT_METHOD = "put";
 
   Map<String, Object> toMap();
 
   default Map<String, Object> toMap(boolean mutable) {
+    return null;
+  }
+
+  default Set<String> toReadSet() {
     return null;
   }
 

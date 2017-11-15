@@ -18,6 +18,7 @@ package net.helenus.core;
 import com.google.common.base.Stopwatch;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 import net.helenus.core.cache.Facet;
 import net.helenus.core.operation.AbstractOperation;
@@ -55,6 +56,8 @@ public interface UnitOfWork<X extends Exception> extends AutoCloseable {
   long committedAt();
 
   void batch(AbstractOperation operation);
+
+  void addFuture(CompletableFuture<?> future);
 
   Optional<Object> cacheLookup(List<Facet> facets);
 

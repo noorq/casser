@@ -40,6 +40,7 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
   private static final long serialVersionUID = -7044209982830584984L;
 
   private Map<String, Object> src;
+  private final Set<String> read = new HashSet<String>();
   private final Class<E> iface;
 
   public MapperInvocationHandler(Class<E> iface, Map<String, Object> src) {
@@ -177,6 +178,10 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
       return Collections.unmodifiableMap(src);
     }
 
+    if (MapExportable.TO_READ_SET_METHOD.equals(methodName)) {
+      return read;
+    }
+
     if (method.getParameterCount() != 0 || method.getReturnType() == void.class) {
       throw new HelenusException("invalid getter method " + method);
     }
@@ -202,6 +207,7 @@ public class MapperInvocationHandler<E> implements InvocationHandler, Serializab
     }
 
     final Object value = src.get(methodName);
+    read.add(methodName);
 
     if (value == null) {
 
