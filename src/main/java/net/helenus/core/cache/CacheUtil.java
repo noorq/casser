@@ -215,7 +215,7 @@ public class CacheUtil {
   }
 
   public static String ttlKey(String columnName) {
-      String key = "_" + columnName + "_ttl";
+    String key = "_" + columnName + "_ttl";
     return key.toLowerCase();
   }
 }
