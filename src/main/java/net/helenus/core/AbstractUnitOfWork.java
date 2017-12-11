@@ -96,9 +96,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
 
   @Override
   public synchronized UnitOfWork<E> begin() {
-    if (LOG.isInfoEnabled()) {
-      elapsedTime = Stopwatch.createStarted();
-    }
+    elapsedTime = Stopwatch.createStarted();
     // log.record(txn::start)
     return this;
   }
