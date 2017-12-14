@@ -11,7 +11,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: com.datastax.cassandra:cassandra-driver-core:3.3.0" level="project" />
+    <orderEntry type="library" name="Maven: com.datastax.cassandra:cassandra-driver-core:3.3.2" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-handler:4.0.47.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-buffer:4.0.47.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-common:4.0.47.Final" level="project" />
