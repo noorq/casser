@@ -312,7 +312,11 @@ public abstract class AbstractUnitOfWork<E extends Exception>
    * @return a function from which to chain work that only happens when commit is successful
    * @throws E when the work overlaps with other concurrent writers.
    */
-  public PostCommitFunction<Void, Void> commit() throws E, TimeoutException {
+  public synchronized PostCommitFunction<Void, Void> commit() throws E, TimeoutException {
+
+    if (isDone()) {
+      return new PostCommitFunction(this, null, null, false);
+    }
 
     // Only the outer-most UOW batches statements for commit time, execute them.
     if (batch != null) {
@@ -411,7 +415,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
 
   /* Explicitly discard the work and mark it as as such in the log. */
   public synchronized void abort() {
-    if (!aborted) {
+    if (!isDone()) {
       aborted = true;
 
       // Spoil any pending futures created within the context of this unit of work.
@@ -456,6 +460,10 @@ public abstract class AbstractUnitOfWork<E extends Exception>
                     }
                   });
             });
+  }
+
+  public boolean isDone() {
+      return aborted || committed;
   }
 
   public String describeConflicts() {

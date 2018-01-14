@@ -53,6 +53,8 @@ public interface UnitOfWork<X extends Exception> extends AutoCloseable {
 
   boolean hasCommitted();
 
+  boolean isDone();
+
   long committedAt();
 
   void batch(AbstractOperation operation);
