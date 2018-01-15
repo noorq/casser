@@ -56,7 +56,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   protected int databaseLookups = 0;
   protected Stopwatch elapsedTime;
   protected Map<String, Double> databaseTime = new HashMap<>();
-  protected double cacheLookupTime = 0.0;
+  protected double cacheLookupTimeMSecs = 0.0;
   private List<CommitThunk> commitThunks = new ArrayList<CommitThunk>();
   private List<CommitThunk> abortThunks = new ArrayList<CommitThunk>();
   private List<CompletableFuture<?>> asyncOperationFutures = new ArrayList<CompletableFuture<?>>();
@@ -84,7 +84,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
 
   @Override
   public void addCacheLookupTime(Stopwatch amount) {
-    cacheLookupTime += amount.elapsed(TimeUnit.MICROSECONDS);
+    cacheLookupTimeMSecs += amount.elapsed(TimeUnit.MICROSECONDS);
   }
 
   @Override
@@ -137,7 +137,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   public String logTimers(String what) {
     double e = (double) elapsedTime.elapsed(TimeUnit.MICROSECONDS) / 1000.0;
     double d = 0.0;
-    double c = cacheLookupTime / 1000.0;
+    double c = cacheLookupTimeMSecs / 1000.0;
     double fc = (c / e) * 100.0;
     String database = "";
     if (databaseTime.size() > 0) {
@@ -154,7 +154,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
               databaseLookups, (databaseLookups > 1) ? "ies" : "y", d, fd, String.join(", ", dbt));
     }
     String cache = "";
-    if (cacheLookupTime > 0) {
+    if (cacheLookupTimeMSecs > 0) {
       int cacheLookups = cacheHits + cacheMisses;
       cache =
           String.format(
@@ -162,7 +162,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
               cacheLookups, cacheLookups > 1 ? "s" : "", c, fc, cacheHits, cacheMisses);
     }
     String da = "";
-    if (databaseTime.size() > 0 || cacheLookupTime > 0) {
+    if (databaseTime.size() > 0 || cacheLookupTimeMSecs > 0) {
       double dat = d + c;
       double daf = (dat / e) * 100;
       da =
@@ -386,7 +386,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
         parent.cacheHits += cacheHits;
         parent.cacheMisses += cacheMisses;
         parent.databaseLookups += databaseLookups;
-        parent.cacheLookupTime += cacheLookupTime;
+        parent.cacheLookupTimeMSecs += cacheLookupTimeMSecs;
         for (Map.Entry<String, Double> dt : databaseTime.entrySet()) {
           String name = dt.getKey();
           if (parent.databaseTime.containsKey(name)) {
@@ -398,6 +398,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
         }
       }
     }
+    // TODO(gburd): hopefully we'll be able to detect conflicts here and so we'd want to...
     // else {
     // Constructor<T> ctor = clazz.getConstructor(conflictExceptionClass);
     // T object = ctor.newInstance(new Object[] { String message });
@@ -435,6 +436,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
                 uow.abortThunks.clear();
               });
 
+      // TODO(gburd): when we integrate the transaction support we'll need to...
       // log.record(txn::abort)
       // cache.invalidateSince(txn::start time)
     }
@@ -472,8 +474,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
 
   @Override
   public void close() throws E {
-    // Closing a AbstractUnitOfWork will abort iff we've not already aborted or
-    // committed this unit of work.
+    // Closing a AbstractUnitOfWork will abort iff we've not already aborted or committed this unit of work.
     if (aborted == false && committed == false) {
       abort();
     }

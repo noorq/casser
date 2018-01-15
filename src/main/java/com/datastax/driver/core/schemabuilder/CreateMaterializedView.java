@@ -5,7 +5,7 @@ import com.datastax.driver.core.querybuilder.Select;
 
 public class CreateMaterializedView extends Create {
 
-  private String viewName;
+  private final String viewName;
   private Select.Where selection;
   private String primaryKey;
   private String clustering;

@@ -33,6 +33,6 @@ public abstract class AbstractAuditedEntityDraft<E> extends AbstractEntityDraft<
   }
 
   public Date createdAt() {
-    return (Date) get("createdAt", Date.class);
+    return get("createdAt", Date.class);
   }
 }

@@ -15,8 +15,9 @@
  */
 package net.helenus.core;
 
-import com.datastax.driver.core.querybuilder.Clause;
 import java.util.Objects;
+
+import com.datastax.driver.core.querybuilder.Clause;
 import net.helenus.core.reflect.HelenusPropertyNode;
 import net.helenus.mapping.MappingUtil;
 import net.helenus.mapping.value.ColumnValuePreparer;
