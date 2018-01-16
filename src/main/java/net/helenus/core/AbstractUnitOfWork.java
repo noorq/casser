@@ -416,7 +416,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
 
   /* Explicitly discard the work and mark it as as such in the log. */
   public synchronized void abort() {
-    if (!isDone()) {
+    if (!aborted) {
       aborted = true;
 
       // Spoil any pending futures created within the context of this unit of work.

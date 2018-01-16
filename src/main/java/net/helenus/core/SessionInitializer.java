@@ -304,7 +304,6 @@ public final class SessionInitializer extends AbstractSessionOperations {
         idempotent,
         unitOfWorkClass,
         sessionCache,
-        statementCache,
         metricRegistry,
         zipkinTracer);
   }

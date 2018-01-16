@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [ "X$1" == "Xall" ]; then
   for f in $(find ./src -name \*.java); do
