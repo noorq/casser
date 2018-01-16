@@ -15,16 +15,28 @@
  */
 package net.helenus.core;
 
-import brave.Tracer;
-import com.codahale.metrics.MetricRegistry;
-import com.datastax.driver.core.*;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+
+import brave.Tracer;
+import com.codahale.metrics.MetricRegistry;
+import com.datastax.driver.core.CodecRegistry;
+import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.KeyspaceMetadata;
+import com.datastax.driver.core.Session;
+import com.datastax.driver.core.TableMetadata;
+import com.datastax.driver.core.UserType;
+import com.google.common.util.concurrent.MoreExecutors;
 import net.helenus.core.cache.SessionCache;
 import net.helenus.core.reflect.DslExportable;
 import net.helenus.mapping.HelenusEntity;
@@ -58,10 +70,18 @@ public final class SessionInitializer extends AbstractSessionOperations {
   private AutoDdl autoDdl = AutoDdl.UPDATE;
   private SessionCache sessionCache = null;
 
+  SessionInitializer(Session session, String keyspace) {
+      this.session = session;
+      this.usingKeyspace = keyspace;
+      if (session != null) {
+          this.sessionRepository = new SessionRepositoryBuilder(session);
+      }
+  }
+
   SessionInitializer(Session session) {
-    this.session = Objects.requireNonNull(session, "empty session");
-    this.usingKeyspace = session.getLoggedKeyspace(); // can be null
-    this.sessionRepository = new SessionRepositoryBuilder(session);
+      this.session = Objects.requireNonNull(session, "empty session");
+      this.usingKeyspace = session.getLoggedKeyspace(); // can be null
+      this.sessionRepository = new SessionRepositoryBuilder(session);
   }
 
   @Override
@@ -284,6 +304,7 @@ public final class SessionInitializer extends AbstractSessionOperations {
         idempotent,
         unitOfWorkClass,
         sessionCache,
+        statementCache,
         metricRegistry,
         zipkinTracer);
   }
@@ -302,9 +323,16 @@ public final class SessionInitializer extends AbstractSessionOperations {
           }
 
           DslExportable dsl = (DslExportable) Helenus.dsl(iface);
-          dsl.setCassandraMetadataForHelenusSession(session.getCluster().getMetadata());
-          sessionRepository.add(dsl);
+          if (session != null) {
+              dsl.setCassandraMetadataForHelenusSession(session.getCluster().getMetadata());
+          }
+          if (sessionRepository != null) {
+              sessionRepository.add(dsl);
+          }
         });
+
+    if (session == null)
+        return;
 
     TableOperations tableOps = new TableOperations(this, dropUnusedColumns, dropUnusedIndexes);
     UserTypeOperations userTypeOps = new UserTypeOperations(this, dropUnusedColumns);

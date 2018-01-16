@@ -100,7 +100,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
     this.showCql = showCql;
     this.showValues = showValues;
     this.printStream = printStream;
-    this.sessionRepository = sessionRepositoryBuilder.build();
+    this.sessionRepository = sessionRepositoryBuilder == null ? null : sessionRepositoryBuilder.build();
     this.executor = executor;
     this.dropSchemaOnClose = dropSchemaOnClose;
     this.defaultConsistencyLevel = consistencyLevel;
@@ -117,7 +117,7 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
 
     this.valueProvider = new RowColumnValueProvider(this.sessionRepository);
     this.valuePreparer = new StatementColumnValuePreparer(this.sessionRepository);
-    this.metadata = session.getCluster().getMetadata();
+    this.metadata = session == null ? null : session.getCluster().getMetadata();
   }
 
   @Override
@@ -794,6 +794,9 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
   }
 
   public void close() {
+    if (session == null) {
+      return;
+    }
 
     if (session.isClosed()) {
       return;
