@@ -273,8 +273,10 @@ public final class SessionInitializer extends AbstractSessionOperations {
   }
 
   public SessionInitializer use(String keyspace) {
-    session.execute(SchemaUtil.use(keyspace, false));
-    this.usingKeyspace = keyspace;
+    if (session != null) {
+      session.execute(SchemaUtil.use(keyspace, false));
+      this.usingKeyspace = keyspace;
+    }
     return this;
   }
 

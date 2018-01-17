@@ -24,6 +24,7 @@ import com.google.common.collect.TreeTraverser;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -48,6 +49,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   private final HelenusSession session;
   private final AbstractUnitOfWork<E> parent;
   private final Table<String, String, Either<Object, List<Facet>>> cache = HashBasedTable.create();
+  private final Map<String, Object> statementCache = new ConcurrentHashMap<String, Object>();
   protected String purpose;
   protected List<String> nestedPurposes = new ArrayList<String>();
   protected String info;
@@ -204,9 +206,22 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   }
 
   @Override
+  public Optional<Object> cacheLookup(String key) {
+      AbstractUnitOfWork self = this;
+      do {
+          Object result = self.statementCache.get(key);
+          if (result != null) {
+              return result == deleted ? Optional.ofNullable(null) : Optional.of(result);
+          }
+          self = self.parent;
+      } while (self != null);
+      return Optional.empty();
+  }
+
+  @Override
   public Optional<Object> cacheLookup(List<Facet> facets) {
     String tableName = CacheUtil.schemaName(facets);
-    Optional<Object> result = Optional.empty();
+      Optional<Object> result = Optional.empty();
     for (Facet facet : facets) {
       if (!facet.fixed()) {
         String columnName = facet.name() + "==" + facet.value();
@@ -244,6 +259,16 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   }
 
   @Override
+  public void cacheEvict(String key) {
+      statementCache.remove(key);
+  }
+
+  @Override
+  public void cacheDelete(String key) {
+      statementCache.replace(key, deleted);
+  }
+
+  @Override
   public List<Facet> cacheEvict(List<Facet> facets) {
     Either<Object, List<Facet>> deletedObjectFacets = Either.right(facets);
     String tableName = CacheUtil.schemaName(facets);
@@ -277,6 +302,11 @@ public abstract class AbstractUnitOfWork<E extends Exception>
               });
     }
     return facets;
+  }
+
+  @Override
+  public Object cacheUpdate(String key, Object value) {
+      return statementCache.replace(key, value);
   }
 
   @Override
@@ -378,6 +408,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
       } else {
 
         // Merge cache and statistics into parent if there is one.
+        parent.statementCache.putAll(statementCache);
         parent.mergeCache(cache);
         parent.addBatched(batch);
         if (purpose != null) {
