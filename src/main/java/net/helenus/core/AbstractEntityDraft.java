@@ -151,10 +151,19 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
     return this.<T>reset(this.<T>methodNameFor(getter), desiredValue);
   }
 
+  private <T> T fetch(String key) {
+      T value = (T) backingMap.get(key);
+
+      if (value == null) {
+          value = (T) entityMap.get(key);
+      }
+      return value;
+  }
+
   public <T> boolean reset(String key, T desiredValue) {
     if (key != null && desiredValue != null) {
       @SuppressWarnings("unchecked")
-      T currentValue = (T) backingMap.get(key);
+      T currentValue = (T) this.<T>fetch(key);
       if (currentValue == null || !currentValue.equals(desiredValue)) {
         set(key, desiredValue);
         return true;

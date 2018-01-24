@@ -200,9 +200,6 @@ public abstract class AbstractUnitOfWork<E extends Exception>
         f.apply();
       }
     }
-    if (LOG.isInfoEnabled()) {
-      LOG.info(logTimers(what));
-    }
   }
 
   @Override
@@ -365,7 +362,6 @@ public abstract class AbstractUnitOfWork<E extends Exception>
     }
 
     if (!canCommit) {
-      elapsedTime.stop();
 
       if (parent == null) {
 
@@ -376,11 +372,16 @@ public abstract class AbstractUnitOfWork<E extends Exception>
                 uow -> {
                   applyPostCommitFunctions("aborted", abortThunks);
                 });
+
+        elapsedTime.stop();
+        if (LOG.isInfoEnabled()) {
+          LOG.info(logTimers("aborted"));
+        }
+
       }
 
       return new PostCommitFunction(this, null, null, false);
     } else {
-      elapsedTime.stop();
       committed = true;
       aborted = false;
 
@@ -403,6 +404,11 @@ public abstract class AbstractUnitOfWork<E extends Exception>
                 f.completeExceptionally(
                     new HelenusException(
                         "Futures must be resolved before their unit of work has committed/aborted.")));
+
+        elapsedTime.stop();
+        if (LOG.isInfoEnabled()) {
+          LOG.info(logTimers("committed"));
+        }
 
         return new PostCommitFunction(this, null, null, true);
       } else {
