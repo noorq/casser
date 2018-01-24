@@ -29,12 +29,13 @@ import net.helenus.core.UnitOfWork;
 import net.helenus.support.HelenusException;
 
 public class BatchOperation extends Operation<Long> {
-  private BatchStatement batch = null;
+  private final BatchStatement batch;
   private List<AbstractOperation<?, ?>> operations = new ArrayList<AbstractOperation<?, ?>>();
   private boolean logged = true;
 
   public BatchOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
+      batch = new BatchStatement();
   }
 
   public void add(AbstractOperation<?, ?> operation) {
@@ -43,7 +44,6 @@ public class BatchOperation extends Operation<Long> {
 
   @Override
   public BatchStatement buildStatement(boolean cached) {
-    batch = new BatchStatement();
     batch.addAll(
         operations.stream().map(o -> o.buildStatement(cached)).collect(Collectors.toList()));
     batch.setConsistencyLevel(sessionOps.getDefaultConsistencyLevel());
