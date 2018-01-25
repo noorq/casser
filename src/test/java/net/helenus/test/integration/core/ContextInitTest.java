@@ -17,7 +17,6 @@ package net.helenus.test.integration.core;
 
 import net.helenus.core.Helenus;
 import net.helenus.core.HelenusSession;
-import net.helenus.core.SessionInitializer;
 import net.helenus.core.UnitOfWork;
 import net.helenus.test.integration.build.AbstractEmbeddedCassandraTest;
 import org.junit.Test;
@@ -34,8 +33,8 @@ public class ContextInitTest extends AbstractEmbeddedCassandraTest {
 
   @Test
   public void testWithNullSession() {
-      HelenusSession session = Helenus.init(null, "foo").get();
-      UnitOfWork uow = session.begin();
-      uow.abort();
+    HelenusSession session = Helenus.init(null, "foo").get();
+    UnitOfWork uow = session.begin();
+    uow.abort();
   }
 }

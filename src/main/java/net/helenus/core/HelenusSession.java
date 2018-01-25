@@ -100,7 +100,8 @@ public class HelenusSession extends AbstractSessionOperations implements Closeab
     this.showCql = showCql;
     this.showValues = showValues;
     this.printStream = printStream;
-    this.sessionRepository = sessionRepositoryBuilder == null ? null : sessionRepositoryBuilder.build();
+    this.sessionRepository =
+        sessionRepositoryBuilder == null ? null : sessionRepositoryBuilder.build();
     this.executor = executor;
     this.dropSchemaOnClose = dropSchemaOnClose;
     this.defaultConsistencyLevel = consistencyLevel;

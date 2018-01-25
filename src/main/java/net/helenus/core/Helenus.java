@@ -33,8 +33,10 @@ import net.helenus.support.HelenusMappingException;
 
 public final class Helenus {
 
-  private static final ConcurrentMap<Class<?>, Object> dslCache = new ConcurrentHashMap<Class<?>, Object>();
-  private static final ConcurrentMap<Class<?>, Metadata> metadataForEntity = new ConcurrentHashMap<Class<?>, Metadata>();
+  private static final ConcurrentMap<Class<?>, Object> dslCache =
+      new ConcurrentHashMap<Class<?>, Object>();
+  private static final ConcurrentMap<Class<?>, Metadata> metadataForEntity =
+      new ConcurrentHashMap<Class<?>, Metadata>();
   private static final Set<HelenusSession> sessions = new HashSet<HelenusSession>();
   private static volatile HelenusSettings settings = new DefaultHelenusSettings();
   private static volatile HelenusSession singleton;
@@ -80,7 +82,7 @@ public final class Helenus {
   }
 
   public static SessionInitializer init(Session session, String keyspace) {
-      return new SessionInitializer(session, keyspace);
+    return new SessionInitializer(session, keyspace);
   }
 
   public static SessionInitializer init(Session session) {

@@ -35,7 +35,7 @@ public class BatchOperation extends Operation<Long> {
 
   public BatchOperation(AbstractSessionOperations sessionOperations) {
     super(sessionOperations);
-      batch = new BatchStatement();
+    batch = new BatchStatement();
   }
 
   public void add(AbstractOperation<?, ?> operation) {
@@ -51,8 +51,8 @@ public class BatchOperation extends Operation<Long> {
   }
 
   private long captureTimestampMsec() {
-      // Java 9: Instant.now().truncatedTo( ChronoUnit.MICROSECONDS );
-      return TimeUnit.NANOSECONDS.convert(System.nanoTime(), TimeUnit.MICROSECONDS);
+    // Java 9: Instant.now().truncatedTo( ChronoUnit.MICROSECONDS );
+    return TimeUnit.NANOSECONDS.convert(System.nanoTime(), TimeUnit.MICROSECONDS);
   }
 
   public BatchOperation logged() {
@@ -134,7 +134,7 @@ public class BatchOperation extends Operation<Long> {
     s.append("BATCH ");
 
     if (batch.getDefaultTimestamp() > -9223372036854775808L) {
-        s.append("USING TIMESTAMP ").append(String.valueOf(batch.getDefaultTimestamp())).append(" ");
+      s.append("USING TIMESTAMP ").append(String.valueOf(batch.getDefaultTimestamp())).append(" ");
     }
     s.append(
         operations

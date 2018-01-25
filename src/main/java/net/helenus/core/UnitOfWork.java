@@ -62,12 +62,15 @@ public interface UnitOfWork<X extends Exception> extends AutoCloseable {
   void addFuture(CompletableFuture<?> future);
 
   Optional<Object> cacheLookup(String key);
+
   Optional<Object> cacheLookup(List<Facet> facets);
 
   Object cacheUpdate(String key, Object value);
+
   Object cacheUpdate(Object pojo, List<Facet> facets);
 
   void cacheEvict(String key);
+
   List<Facet> cacheEvict(List<Facet> facets);
 
   public void cacheDelete(String key);

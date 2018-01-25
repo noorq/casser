@@ -204,21 +204,21 @@ public abstract class AbstractUnitOfWork<E extends Exception>
 
   @Override
   public Optional<Object> cacheLookup(String key) {
-      AbstractUnitOfWork self = this;
-      do {
-          Object result = self.statementCache.get(key);
-          if (result != null) {
-              return result == deleted ? Optional.ofNullable(null) : Optional.of(result);
-          }
-          self = self.parent;
-      } while (self != null);
-      return Optional.empty();
+    AbstractUnitOfWork self = this;
+    do {
+      Object result = self.statementCache.get(key);
+      if (result != null) {
+        return result == deleted ? Optional.ofNullable(null) : Optional.of(result);
+      }
+      self = self.parent;
+    } while (self != null);
+    return Optional.empty();
   }
 
   @Override
   public Optional<Object> cacheLookup(List<Facet> facets) {
     String tableName = CacheUtil.schemaName(facets);
-      Optional<Object> result = Optional.empty();
+    Optional<Object> result = Optional.empty();
     for (Facet facet : facets) {
       if (!facet.fixed()) {
         String columnName = facet.name() + "==" + facet.value();
@@ -257,12 +257,12 @@ public abstract class AbstractUnitOfWork<E extends Exception>
 
   @Override
   public void cacheEvict(String key) {
-      statementCache.remove(key);
+    statementCache.remove(key);
   }
 
   @Override
   public void cacheDelete(String key) {
-      statementCache.replace(key, deleted);
+    statementCache.replace(key, deleted);
   }
 
   @Override
@@ -303,7 +303,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
 
   @Override
   public Object cacheUpdate(String key, Object value) {
-      return statementCache.replace(key, value);
+    return statementCache.replace(key, value);
   }
 
   @Override
@@ -377,7 +377,6 @@ public abstract class AbstractUnitOfWork<E extends Exception>
         if (LOG.isInfoEnabled()) {
           LOG.info(logTimers("aborted"));
         }
-
       }
 
       return new PostCommitFunction(this, null, null, false);
@@ -502,7 +501,7 @@ public abstract class AbstractUnitOfWork<E extends Exception>
   }
 
   public boolean isDone() {
-      return aborted || committed;
+    return aborted || committed;
   }
 
   public String describeConflicts() {

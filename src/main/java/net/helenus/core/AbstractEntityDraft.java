@@ -1,13 +1,6 @@
 package net.helenus.core;
 
 import com.google.common.primitives.Primitives;
-import net.helenus.core.reflect.DefaultPrimitiveTypes;
-import net.helenus.core.reflect.Drafted;
-import net.helenus.core.reflect.MapExportable;
-import net.helenus.mapping.HelenusProperty;
-import net.helenus.mapping.MappingUtil;
-import org.apache.commons.lang3.SerializationUtils;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,6 +8,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import net.helenus.core.reflect.DefaultPrimitiveTypes;
+import net.helenus.core.reflect.Drafted;
+import net.helenus.core.reflect.MapExportable;
+import net.helenus.mapping.HelenusProperty;
+import net.helenus.mapping.MappingUtil;
+import org.apache.commons.lang3.SerializationUtils;
 
 public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
@@ -111,17 +110,17 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
     Objects.requireNonNull(key);
 
     if (value != null) {
-        if (entity != null) {
-            if (entityMap.containsKey(key)) {
-                T currentValue = this.<T>fetch(key);
-                if (currentValue != null && !value.equals(currentValue)) {
-                    backingMap.put(key, value);
-                    return value;
-                }
-            }
-        } else {
+      if (entity != null) {
+        if (entityMap.containsKey(key)) {
+          T currentValue = this.<T>fetch(key);
+          if (currentValue != null && !value.equals(currentValue)) {
             backingMap.put(key, value);
+            return value;
+          }
         }
+      } else {
+        backingMap.put(key, value);
+      }
     }
     return null;
   }
@@ -148,11 +147,11 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
   }
 
   private <T> T fetch(String key) {
-      T value = (T) backingMap.get(key);
-      if (value == null) {
-          value = (T) entityMap.get(key);
-      }
-      return value;
+    T value = (T) backingMap.get(key);
+    if (value == null) {
+      value = (T) entityMap.get(key);
+    }
+    return value;
   }
 
   public <T> boolean reset(String key, T desiredValue) {
