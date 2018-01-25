@@ -18,10 +18,11 @@ package net.helenus.core.operation;
 import com.codahale.metrics.Timer;
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.TimestampGenerator;
+import com.datastax.driver.core.AtomicMonotonicTimestampGenerator;
 import com.google.common.base.Stopwatch;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import net.helenus.core.AbstractSessionOperations;
@@ -29,6 +30,9 @@ import net.helenus.core.UnitOfWork;
 import net.helenus.support.HelenusException;
 
 public class BatchOperation extends Operation<Long> {
+  //TODO(gburd): find the way to get the driver's timestamp generator
+  private static final TimestampGenerator timestampGenerator = new AtomicMonotonicTimestampGenerator();
+
   private final BatchStatement batch;
   private List<AbstractOperation<?, ?>> operations = new ArrayList<AbstractOperation<?, ?>>();
   private boolean logged = true;
@@ -50,11 +54,6 @@ public class BatchOperation extends Operation<Long> {
     return batch;
   }
 
-  private long captureTimestampMsec() {
-    // Java 9: Instant.now().truncatedTo( ChronoUnit.MICROSECONDS );
-    return TimeUnit.NANOSECONDS.convert(System.nanoTime(), TimeUnit.MICROSECONDS);
-  }
-
   public BatchOperation logged() {
     logged = true;
     return this;
@@ -69,7 +68,7 @@ public class BatchOperation extends Operation<Long> {
     if (operations.size() == 0) return 0L;
     final Timer.Context context = requestLatency.time();
     try {
-      batch.setDefaultTimestamp(captureTimestampMsec());
+      batch.setDefaultTimestamp(timestampGenerator.next());
       ResultSet resultSet =
           this.execute(
               sessionOps,
@@ -96,7 +95,7 @@ public class BatchOperation extends Operation<Long> {
     final Stopwatch timer = Stopwatch.createStarted();
     try {
       uow.recordCacheAndDatabaseOperationCount(0, 1);
-      batch.setDefaultTimestamp(captureTimestampMsec());
+      batch.setDefaultTimestamp(timestampGenerator.next());
       ResultSet resultSet =
           this.execute(
               sessionOps,
