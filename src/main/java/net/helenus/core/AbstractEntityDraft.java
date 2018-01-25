@@ -107,27 +107,23 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
     return (T) mutate(this.<T>methodNameFor(getter), value);
   }
 
-  public Object mutate(String key, Object value) {
+  public <T> T mutate(String key, T value) {
     Objects.requireNonNull(key);
 
-    if (value == null) {
-      return null;
+    if (value != null) {
+        if (entity != null) {
+            if (entityMap.containsKey(key)) {
+                T currentValue = this.<T>fetch(key);
+                if (currentValue != null && !value.equals(currentValue)) {
+                    backingMap.put(key, value);
+                    return value;
+                }
+            }
+        } else {
+            backingMap.put(key, value);
+        }
     }
-
-    if (entity != null) {
-      Map<String, Object> map = entity.toMap();
-
-      if (map.containsKey(key) && !value.equals(map.get(key))) {
-        backingMap.put(key, value);
-        return value;
-      }
-
-      return map.get(key);
-    } else {
-      backingMap.put(key, value);
-
-      return null;
-    }
+    return null;
   }
 
   private <T> String methodNameFor(Getter<T> getter) {
@@ -153,7 +149,6 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
   private <T> T fetch(String key) {
       T value = (T) backingMap.get(key);
-
       if (value == null) {
           value = (T) entityMap.get(key);
       }
