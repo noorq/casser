@@ -111,12 +111,10 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
     if (value != null) {
       if (entity != null) {
-        if (entityMap.containsKey(key)) {
-          T currentValue = this.<T>fetch(key);
-          if (currentValue != null && !value.equals(currentValue)) {
-            backingMap.put(key, value);
-            return value;
-          }
+        T currentValue = this.<T>fetch(key);
+        if (currentValue != null && !value.equals(currentValue)) {
+          backingMap.put(key, value);
+          return value;
         }
       } else {
         backingMap.put(key, value);
