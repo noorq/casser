@@ -18,19 +18,19 @@ import org.apache.commons.lang3.SerializationUtils;
 public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
   private final MapExportable entity;
-  private final Map<String, Object> backingMap = new HashMap<String, Object>();
-  private final Set<String> read;
-  private final Map<String, Object> entityMap;
+  private final Map<String, Object> valuesMap;
+  private final Set<String> readSet;
+  private final Map<String, Object> mutationsMap = new HashMap<String, Object>();
 
   public AbstractEntityDraft(MapExportable entity) {
     this.entity = entity;
     // Entities can mutate their map.
     if (entity != null) {
-      this.entityMap = entity.toMap(true);
-      this.read = entity.toReadSet();
+      this.valuesMap = entity.toMap(true);
+      this.readSet = entity.toReadSet();
     } else {
-      this.entityMap = new HashMap<String, Object>();
-      this.read = new HashSet<String>();
+      this.valuesMap = new HashMap<String, Object>();
+      this.readSet = new HashSet<String>();
     }
   }
 
@@ -47,11 +47,11 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
   @SuppressWarnings("unchecked")
   public <T> T get(String key, Class<?> returnType) {
-    read.add(key);
-    T value = (T) backingMap.get(key);
+    readSet.add(key);
+    T value = (T) mutationsMap.get(key);
 
     if (value == null) {
-      value = (T) entityMap.get(key);
+      value = (T) valuesMap.get(key);
       if (value == null) {
 
         if (Primitives.allPrimitiveTypes().contains(returnType)) {
@@ -64,7 +64,7 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
           return (T) type.getDefaultValue();
         }
       } else {
-        // Collections fetched from the entityMap
+        // Collections fetched from the valuesMap
         if (value instanceof Collection) {
           value = (T) SerializationUtils.<Serializable>clone((Serializable) value);
         }
@@ -84,7 +84,7 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
       return null;
     }
 
-    backingMap.put(key, value);
+    mutationsMap.put(key, value);
     return value;
   }
 
@@ -93,12 +93,12 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
       return null;
     }
 
-    backingMap.put(key, value);
+    mutationsMap.put(key, value);
     return value;
   }
 
   public void put(String key, Object value) {
-    backingMap.put(key, value);
+    mutationsMap.put(key, value);
   }
 
   @SuppressWarnings("unchecked")
@@ -112,12 +112,12 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
     if (value != null) {
       if (entity != null) {
         T currentValue = this.<T>fetch(key);
-        if (currentValue != null && !value.equals(currentValue)) {
-          backingMap.put(key, value);
+        if (!value.equals(currentValue)) {
+          mutationsMap.put(key, value);
           return value;
         }
       } else {
-        backingMap.put(key, value);
+        mutationsMap.put(key, value);
       }
     }
     return null;
@@ -133,8 +133,8 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
   public Object unset(String key) {
     if (key != null) {
-      Object value = backingMap.get(key);
-      backingMap.put(key, null);
+      Object value = mutationsMap.get(key);
+      mutationsMap.put(key, null);
       return value;
     }
     return null;
@@ -145,9 +145,9 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
   }
 
   private <T> T fetch(String key) {
-    T value = (T) backingMap.get(key);
+    T value = (T) mutationsMap.get(key);
     if (value == null) {
-      value = (T) entityMap.get(key);
+      value = (T) valuesMap.get(key);
     }
     return value;
   }
@@ -166,7 +166,7 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
 
   @Override
   public Map<String, Object> toMap() {
-    return toMap(entityMap);
+    return toMap(valuesMap);
   }
 
   public Map<String, Object> toMap(Map<String, Object> entityMap) {
@@ -177,26 +177,26 @@ public abstract class AbstractEntityDraft<E> implements Drafted<E> {
         combined.put(e.getKey(), e.getValue());
       }
     } else {
-      combined = new HashMap<String, Object>(backingMap.size());
+      combined = new HashMap<String, Object>(mutationsMap.size());
     }
     for (String key : mutated()) {
-      combined.put(key, backingMap.get(key));
+      combined.put(key, mutationsMap.get(key));
     }
     return combined;
   }
 
   @Override
   public Set<String> mutated() {
-    return backingMap.keySet();
+    return mutationsMap.keySet();
   }
 
   @Override
   public Set<String> read() {
-    return read;
+    return readSet;
   }
 
   @Override
   public String toString() {
-    return backingMap.toString();
+    return mutationsMap.toString();
   }
 }
