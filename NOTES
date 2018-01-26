@@ -1,0 +1,194 @@
+Operation/
+|-- AbstractStatementOperation
+|   |-- AbstractOperation
+|   |   |-- AbstractFilterOperation
+|   |   |   |-- CountOperation
+|   |   |   |-- DeleteOperation
+|   |   |   `-- UpdateOperation
+|   |   |-- BoundOperation
+|   |   `-- InsertOperation
+|   |-- AbstractOptionalOperation
+|   |   |-- AbstractFilterOptionalOperation
+|   |   |   |-- SelectFirstOperation
+|   |   |   `-- SelectFirstTransformingOperation
+|   |   `-- BoundOptionalOperation
+|   `-- AbstractStreamOperation
+|       |-- AbstractFilterStreamOperation
+    |       |   |-- SelectOperation
+|       |   `-- SelectTransformingOperation
+|       `-- BoundStreamOperation
+|-- PreparedOperation
+|-- PreparedOptionalOperation
+`-- PreparedStreamOperation
+
+
+    // TODO(gburd): create a statement that matches one that wasn't prepared
+    //String key =
+    //    "use " + preparedStatement.getQueryKeyspace() + "; " + preparedStatement.getQueryString();
+    //for (Object param : params) {
+    //  key = key.replaceFirst(Pattern.quote("?"), param.toString());
+    //}
+
+
+
+
+primitive types have default values, (e.g. boolean, int, ...) but primative wrapper classes do not and can be null (e.g. Boolean, Integer, ...)
+
+create table wal {
+  id timeuuid,
+  follows timeuuid,
+  read <Counting Quotient Filter, Set<{keyspace, col, schema generation, timestamp}>>
+  write <Counting Quotient Filter, Set<{keyspace, col, schema generation, timestamp}>>
+  primary key (id, follows)
+}
+begin:
+  - insert into wal (timeuuid, parent timeuuid,
+
+
+
+        // NOTE: Update operations have no meaning when they only contain primary key components, so
+        // given that `properties` is ordered with the keys first if we find that the last element
+        // is either a partition key or clustering column then we know we should just skip this operation.
+        ColumnType ct = ((HelenusProperty) properties.toArray()[properties.size() - 1]).getColumnType();
+        if (ct != ColumnType.PARTITION_KEY && ct != ColumnType.CLUSTERING_COLUMN) {
+            return;
+        }
+
+
+
+	public Stream<E> sync() {
+	    ListenableFuture<Stream<E>> future = async();
+        Futures.addCallback(future, new FutureCallback<String>() {
+            @Override
+            public void onSuccess(String contents) {
+                //...process web site contents
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                log.error("Exception in task", throwable);
+            }
+        });
+	}
+-------
+  private mergeCache(Map<String, Set<Object>>
+
+  private static <E> Iterable<E> concat(
+          Iterable<? extends E> i1,
+          Iterable<? extends E> i2) {
+    return new Iterable<E>() {
+      public Iterator<E> iterator() {
+        return new Iterator<E>() {
+          Iterator<? extends E> listIterator = i1.iterator();
+          Boolean checkedHasNext;
+          E nextValue;
+          private boolean startTheSecond;
+
+          void theNext() {
+            if (listIterator.hasNext()) {
+              checkedHasNext = true;
+              nextValue = listIterator.next();
+            } else if (startTheSecond)
+              checkedHasNext = false;
+            else {
+              startTheSecond = true;
+              listIterator = i2.iterator();
+              theNext();
+            }
+          }
+
+          public boolean hasNext() {
+            if (checkedHasNext == null)
+              theNext();
+            return checkedHasNext;
+          }
+
+          public E next() {
+            if (!hasNext())
+              throw new NoSuchElementException();
+            checkedHasNext = null;
+            return nextValue;
+          }
+
+          public void remove() {
+            listIterator.remove();
+          }
+        };
+      }
+    };
+  }
+----------------------------------
+      if ("ttl".equals(methodName) && method.getParameterCount() == 1 && method.getReturnType() == int.class) {
+          Getter getter = (Getter) args[0];
+          if (getter == null) {
+              return false;
+          }
+          HelenusProperty prop = MappingUtil.resolveMappingProperty(getter).getProperty();
+          String getterName = prop.getPropertyName();
+          String ttlKeyForProperty = prop.getColumnName().toCql() + "_ttl";
+          if (src.containsKey(ttlKeyForProperty)) {
+              return src.get(ttlKeyForProperty);
+          } else {
+              return 0;
+          }
+      }
+
+      if ("written".equals(methodName) && method.getParameterCount() == 1 && method.getReturnType() == int.class) {
+          Getter getter = (Getter) args[0];
+          if (getter == null) {
+              return false;
+          }
+          HelenusProperty prop = MappingUtil.resolveMappingProperty(getter).getProperty();
+          String getterName = prop.getPropertyName();
+          String ttlKeyForProperty = prop.getColumnName().toCql() + "_ttl";
+          if (src.containsKey(ttlKeyForProperty)) {
+              return src.get(ttlKeyForProperty);
+          } else {
+              return 0;
+          }
+      }
+
+
+
+-----------------
+
+
+/*else {
+			    Cache<String, Object> cache = session.getSessionCache();
+				Map<String, Object> rowMap = this.cache.rowMap();
+				for (String rowKey : rowMap.keySet()) {
+					String keys = flattenFacets(facets);
+					for (String key : keys) {
+						Object value = cache.getIfPresent(key);
+						if (value != null) {
+							result = Optional.of(value);
+							break;
+						}
+					}
+				}
+			    cache.put
+            }
+			*/
+------------------
+
+InsertOperation
+
+
+		Class<?> iface = entity.getMappingInterface();
+		boolean includesNonIdentityValues = values.stream().map(t -> {
+					ColumnType type = t._1.getProperty().getColumnType();
+					return !((type == ColumnType.PARTITION_KEY) || (type == ColumnType.CLUSTERING_COLUMN));
+				})
+				.reduce(false, (acc, t) -> acc || t);
+		if (resultType == iface) {
+			if (values.size() > 0 && includesNonIdentityValues) {
+				boolean immutable = iface.isAssignableFrom(Drafted.class);
+-------------------
+
+    final Object value;
+    if (method.getParameterCount() == 1 && args[0] instanceof Boolean && src instanceof ValueProviderMap) {
+      value = ((ValueProviderMap)src).get(methodName, (Boolean)args[0]);
+    } else {
+      value = src.get(methodName);
+    }
+--------------------

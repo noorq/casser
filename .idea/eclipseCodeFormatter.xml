@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="EclipseCodeFormatterProjectSettings">
+    <option name="projectSpecificProfile">
+      <ProjectSpecificProfile>
+        <option name="pathToConfigFileJava" value="$PROJECT_DIR$/../newton/formatting/onshape-eclipse-general-preferences.epf" />
+      </ProjectSpecificProfile>
+    </option>
+  </component>
+</project>
